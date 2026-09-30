@@ -1,0 +1,1256 @@
+﻿/* ============================================================
+   EVE PI Planner — оформление
+   Структура рассчитана на текущую разметку Index.html
+   ============================================================ */
+
+/* ---------- Переменные ---------- */
+:root {
+    --bg-deep:      #070b12;
+    --bg-base:      #0b111c;
+    --bg-panel:     #111a29;
+    --bg-panel-2:   #16223a;
+    --bg-hover:     #1c2b45;
+
+    --border:       #22314c;
+    --border-lit:   #2f4468;
+
+    --text:         #cdd9ec;
+    --text-dim:     #8296b3;
+    --text-faint:   #5b6b87;
+
+    --accent:       #ff9d2e;
+    --accent-soft:  rgba(255, 157, 46, 0.12);
+    --accent-line:  rgba(255, 157, 46, 0.35);
+
+    --cyan:         #4ec9e0;
+    --cyan-soft:    rgba(78, 201, 224, 0.12);
+
+    --green:        #4fd18b;
+    --red:          #ff6b6b;
+
+    --radius:       10px;
+    --radius-sm:    7px;
+
+    --gap:          1.25rem;
+    --shadow:       0 10px 30px rgba(0, 0, 0, 0.45);
+    --font: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ---------- Сброс ---------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text);
+    background-color: var(--bg-deep);
+    background-image:
+        radial-gradient(1100px 520px at 12% -8%, rgba(78, 201, 224, 0.07), transparent 60%),
+        radial-gradient(900px 460px at 88% 0%, rgba(255, 157, 46, 0.06), transparent 62%),
+        radial-gradient(1.4px 1.4px at 18% 26%, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(1.2px 1.2px at 64% 12%, rgba(255, 255, 255, 0.38), transparent),
+        radial-gradient(1.6px 1.6px at 82% 58%, rgba(255, 255, 255, 0.32), transparent),
+        radial-gradient(1.1px 1.1px at 32% 74%, rgba(255, 255, 255, 0.3), transparent),
+        radial-gradient(1.3px 1.3px at 48% 44%, rgba(255, 255, 255, 0.26), transparent);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Шапка ---------- */
+header {
+    padding: 1.4rem clamp(0.75rem, 2vw, 1.5rem) 0;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(17, 26, 41, 0.92), rgba(11, 17, 28, 0.65));
+    backdrop-filter: blur(6px);
+}
+
+header h1 {
+    margin: 0 0 1rem;
+    font-size: clamp(1.15rem, 2.6vw, 1.6rem);
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    background: linear-gradient(92deg, var(--accent), var(--cyan));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* ---------- Навигация / вкладки ---------- */
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+nav button {
+    position: relative;
+    padding: 0.6rem 1.05rem;
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    cursor: pointer;
+    transition: color 0.16s, background-color 0.16s, border-color 0.16s;
+}
+
+nav button:hover {
+    color: var(--text);
+    background: var(--bg-panel);
+    border-color: var(--border);
+}
+
+/* Активная вкладка. JS ставит класс .active на секцию, но не на кнопку,
+   поэтому определяем состояние через :has() — без правок JS.
+   Специфичность выше, чем у :hover, поэтому правило выигрывает и при наведении. */
+body:has(#planets.active)    nav button[data-tab="planets"],
+body:has(#chains.active)     nav button[data-tab="chains"],
+body:has(#calculator.active) nav button[data-tab="calculator"],
+body:has(#colonies.active)   nav button[data-tab="colonies"] {
+    color: var(--accent);
+    background: var(--bg-panel-2);
+    border-color: var(--border-lit);
+}
+
+body:has(#planets.active)    nav button[data-tab="planets"]::after,
+body:has(#chains.active)     nav button[data-tab="chains"]::after,
+body:has(#calculator.active) nav button[data-tab="calculator"]::after,
+body:has(#colonies.active)   nav button[data-tab="colonies"]::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 -1px 0;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+}
+
+/* Клавиатурный фокус — отдельный, более заметный индикатор */
+nav button:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: -2px;
+}
+
+/* ---------- Основная область ---------- */
+/* Ширину не ограничиваем: карточки должны занять всё окно,
+   иначе под три карточки остаётся слишком мало места. */
+main {
+    max-width: none;
+    margin: 0 auto;
+    padding: var(--gap) clamp(0.75rem, 2vw, 1.5rem) 4rem;
+}
+
+.tab-content {
+    display: none;
+    padding: clamp(0.9rem, 2vw, 1.4rem);
+    background: linear-gradient(180deg, var(--bg-panel), var(--bg-base));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.tab-content.active {
+    display: block;
+    animation: fade-in 0.24s ease both;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.tab-content h2 {
+    margin: 0 0 1.1rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--border);
+}
+
+/* ---------- Поля ввода ---------- */
+select,
+input[type="number"],
+input[type="text"] {
+    width: 100%;
+    max-width: 340px;
+    padding: 0.6rem 0.8rem;
+    font: inherit;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.16s, box-shadow 0.16s;
+}
+
+select {
+    appearance: none;
+    padding-right: 2.2rem;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--text-dim) 50%),
+        linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+    background-position:
+        calc(100% - 17px) calc(50% + 2px),
+        calc(100% - 12px) calc(50% + 2px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+select:hover,
+input:hover {
+    border-color: var(--border-lit);
+}
+
+select:focus,
+input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+input::placeholder {
+    color: var(--text-faint);
+}
+
+/* Убираем стандартные стрелки у number */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* ---------- Кнопки ---------- */
+button {
+    font: inherit;
+    cursor: pointer;
+}
+
+.btn,
+form button,
+#add-colony {
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #14100a;
+    background: linear-gradient(180deg, #ffb257, var(--accent));
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    transition: filter 0.16s, transform 0.08s;
+}
+
+form button:hover,
+#add-colony:hover {
+    filter: brightness(1.1);
+}
+
+form button:active,
+#add-colony:active {
+    transform: translateY(1px);
+}
+
+form button:focus-visible,
+#add-colony:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+/* ---------- Форма калькулятора ---------- */
+#calc-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--gap);
+    align-items: end;
+}
+
+#calc-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-dim);
+}
+
+#calc-form input {
+    max-width: none;
+}
+
+#calc-form button {
+    height: 41px;
+    white-space: nowrap;
+}
+
+#calc-result {
+    margin-top: var(--gap);
+}
+
+#calc-result:not(:empty) {
+    padding: 0.9rem 1.1rem;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    border-radius: var(--radius-sm);
+}
+
+/* Иконка ресурса. Используется и в ячейках P0/P1 карточки,
+   поэтому размер и подложку задаёт блок карточки ниже. */
+.res-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 0.6rem;
+    vertical-align: -6px;
+    border-radius: 3px;
+    /* тёмная подложка, чтобы светлые иконки не сливались с фоном строки */
+    background: radial-gradient(circle at 30% 25%, #2a3648, #131b28);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    object-fit: contain;
+}
+
+/* ---------- Пустые состояния ---------- */
+#chain-builder:empty::after,
+#colonies-list:empty::after {
+    display: block;
+    padding: 2rem 1rem;
+    font-size: 0.88rem;
+    color: var(--text-faint);
+    text-align: center;
+    background: var(--bg-deep);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+}
+
+/* Пустое состояние вкладки «Цепочки» теперь означает не «ещё не
+   построено», а «js/chains.js не отработал». */
+#chain-builder:empty::after {
+    content: "Цепочки не загрузились: не отработал js/chains.js";
+}
+
+#colonies-list:empty::after {
+    content: "Пока нет ни одной колонии";
+}
+
+#calc-result:empty::after {
+    content: "Здесь появится расчёт ISK в час";
+}
+
+#add-colony {
+    margin-bottom: var(--gap);
+}
+
+/* ---------- Скроллбар ---------- */
+::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border: 2px solid var(--bg-deep);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--border-lit);
+}
+
+/* ---------- Шапка карточки: выбор персонажа ---------- */
+.card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.4rem;
+    padding: 0.7rem 0.8rem;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.card-pilot-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    white-space: nowrap;
+}
+
+.card-new   { min-width: 160px; flex: 1 1 160px; }
+
+.card-add {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.84rem;
+}
+
+.card-add:hover { filter: brightness(1.1); }
+.card-add:active { transform: translateY(1px); }
+.card-add:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+/* ---------- Карточки: ряд, не больше трёх ---------- */
+/* Ширина карточки постоянная — ровно треть ряда, --card-gap делится на
+   три части, потому что между тремя карточками два зазора.
+   Отсюда и нужное соотношение: 1 карточка занимает 33 % ширины,
+   2 карточки — 66 %, 3 карточки — все 100 %. Расти карточкам нельзя
+   (flex-grow: 0), иначе две карточки растянулись бы на весь ряд.
+   Сжиматься можно (flex-shrink: 1) — на копеечные доли пикселя, чтобы
+   ряд не уезжал за край. min-width: 0 обязателен: без него поле с длинным
+   названием системы распирает карточку. Три карточки — предел,
+   заданный CARDS_LIMIT в app.js. */
+.cards-row {
+    --card-gap: 0.7rem;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--card-gap);
+    margin-top: 0.8rem;
+    padding-bottom: 0.6rem;
+}
+
+.card {
+    flex: 0 1 calc(33.3333% - var(--card-gap) * 2 / 3);
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Пустое состояние: карточек ещё нет */
+.card-hint {
+    margin-top: 0.8rem;
+    padding: 1.1rem;
+    font-size: 0.86rem;
+    text-align: center;
+    color: var(--text-faint);
+    background: var(--bg-panel);
+    border: 1px dashed var(--border-lit);
+    border-radius: var(--radius-sm);
+}
+
+.card-hint[hidden] {
+    display: none;
+}
+
+.card-counter {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--text-faint);
+    white-space: nowrap;
+}
+
+.card-add:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.card-add:disabled:hover,
+.card-add:disabled:active {
+    filter: none;
+    transform: none;
+}
+
+/* ---------- Вход в EVE через SSO ---------- */
+.eve-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.8rem;
+}
+
+.eve-bar[hidden] {
+    display: none;
+}
+
+.eve-who {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.82rem;
+    color: var(--text);
+    background: var(--bg-panel);
+    border: 1px solid var(--border-lit);
+    border-radius: var(--radius-sm);
+}
+
+.eve-who[hidden] {
+    display: none;
+}
+
+.eve-hint {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+}
+
+.eve-hint:empty {
+    display: none;
+}
+
+/* ---------- Аккаунты: одна линия — один аккаунт ----------
+   Линия занимает всю ширину, а её карточки уже раскладываются рядом
+   по той же формуле, что и раньше (треть ряда, не больше трёх).
+   Предел CARDS_LIMIT в app.js считается теперь для каждой линии
+   отдельно, а не на всю страницу сразу. */
+.account-line {
+    margin-top: 1.5rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--border);
+}
+
+.account-line:first-child {
+    margin-top: 1.1rem;
+    padding-top: 0;
+    border-top: none;
+}
+
+/* Полоса с именем аккаунта. Имя — заголовок линии, а не поле:
+   назвать аккаунт можно один раз в общем блоке наверху страницы. */
+.account-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.account-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    /* Длинное имя переносится по словам, а не растягивает полосу */
+    overflow-wrap: anywhere;
+}
+
+/* Поле персонажа стоит сразу под именем аккаунта, а не через
+   полутораремный отступ, как блок выбора аккаунта наверху страницы. */
+.account-bar + .card-head {
+    margin-top: 0.6rem;
+}
+
+/* Крестик линии — у правого края полосы, у карточки свой */
+.account-del {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    margin-left: auto;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--text-faint);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    transition: color 0.16s, border-color 0.16s, background 0.16s;
+}
+
+.account-del:hover {
+    color: var(--red);
+    border-color: var(--red);
+    background: rgba(255, 107, 107, 0.12);
+}
+
+.account-del:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+/* Поле имени персонажа: подсветка, если имя не введено */
+.ct-invalid {
+    border-color: var(--red);
+    box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.22);
+}
+
+/* ---------- Таблица карточки 7×7 ---------- */
+.colony-table {
+    width: 100%;
+    /* Ширины колонок задаёт <colgroup> в app.js — таблица ужимается
+       до ширины карточки и не вылезает за её пределы. */
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.86rem;
+}
+
+.colony-table th,
+.colony-table td {
+    padding: 0.4rem 0.35rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    vertical-align: middle;
+    /* Содержимое не должно раздувать узкую колонку */
+    overflow: hidden;
+}
+
+.colony-table th:last-child,
+.colony-table td:last-child {
+    border-right: none;
+}
+
+/* Фон под выпадающими спинками — один на всю таблицу.
+   Раньше он был разным: «Планета», «№», «P0» и «P1» стояли прямо
+   на цвете самой таблицы (светлее, чем у объединённых ячеек
+   «Система», «Статус» и «Корабль»), и под списками получались
+   два разных фона. Теперь под каждым списком один и тот же. */
+.colony-table td {
+    background: var(--bg-panel-2);
+}
+
+.colony-table thead th {
+    text-align: center;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--bg-panel-2);
+    /* Заголовок переносится, иначе он распирает колонку */
+    white-space: normal;
+    /* Длинное слово («КОРАБЛЬ») переносится по буквам, а не обрезается */
+    overflow-wrap: anywhere;
+}
+
+/* Шапка карточки с именем персонажа использует те же классы, что и
+   линия аккаунта (.account-bar/.account-name/.account-del) — вид тот же.
+   Здесь только отступ между шапкой и таблицей. */
+.card > .account-bar {
+    margin-bottom: 0.5rem;
+}
+
+/* Кнопка подсветки в объединённой ячейке «Статус».
+   Нажатие красит карточку в бирюзовый, повторное — возвращает обычный вид. */
+.card-light {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 38px;
+    height: 38px;
+    margin: 0 auto;
+    padding: 0;
+    font-size: 1.05rem;
+    line-height: 1;
+    color: var(--text-faint);
+    background: var(--bg-deep);
+    border: 1px solid var(--border-lit);
+    border-radius: 50%;
+    transition: color 0.16s, border-color 0.16s, background 0.16s, box-shadow 0.16s;
+}
+
+.card-light:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+}
+
+.card-light:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+/* Карточка подсвечена: красим таблицу целиком.
+   Подложка таблицы и ячеек своя у каждой, поэтому переопределяем их все. */
+.card.is-lit .colony-table {
+    background: rgba(78, 201, 224, 0.10);
+    border-color: rgba(78, 201, 224, 0.38);
+}
+
+/* Фон ячеек у всех колонок одинаковый, поэтому перечисляем их здесь
+   все: иначе подсветка красила бы только объединённые ячейки, а
+   «Планета», «№», «P0» и «P1» остались бы серыми.
+   Ячейку «Корабль» здесь не называем — у неё своё правило ниже. */
+.card.is-lit .colony-table thead th,
+.card.is-lit .colony-table td.ct-system,
+.card.is-lit .colony-table td.ct-status,
+.card.is-lit .colony-table td.ct-planet,
+.card.is-lit .colony-table td.ct-number,
+.card.is-lit .colony-table td.ct-p0,
+.card.is-lit .colony-table td.ct-p1 {
+    background: rgba(78, 201, 224, 0.15);
+}
+
+/* Ячейку корабля красим отдельно и через background-color: картинка
+   корабля лежит в background-image, а сокращение background обнуляет
+   его — с ним подсветка гасила бы картинку. */
+.card.is-lit .colony-table td.ct-ship {
+    background-color: rgba(78, 201, 224, 0.15);
+}
+
+/* Шапка карточки в подсвеченном состоянии подкрашивается вместе с таблицей */
+.card.is-lit .account-name {
+    color: var(--cyan);
+}
+
+.card.is-lit .account-del {
+    color: var(--cyan);
+    border-color: rgba(78, 201, 224, 0.45);
+}
+
+/* Подсвеченная кнопка — состояние «включено» */
+.card.is-lit .card-light {
+    color: var(--bg-deep);
+    background: var(--cyan);
+    border-color: var(--cyan);
+    box-shadow: 0 0 12px rgba(78, 201, 224, 0.55);
+}
+
+/* Крестик карточки — это тот же .account-del: круглый, у правого края
+   шапки, с красным при наведении. Отдельных правил не нужно. */
+
+/* Объединённые по вертикали ячейки (1, 2, 7):
+   фоном выделяем, а содержимое центрируем по горизонтали и вертикали.
+   По бокам отступ меньше, чем сверху и снизу: колонка узкая,
+   а полю «Система» и списку «Корабль» нужна ширина. */
+.colony-table td.ct-system,
+.colony-table td.ct-status,
+.colony-table td.ct-ship {
+    background: var(--bg-panel-2);
+    vertical-align: middle;
+    text-align: center;
+    padding: 0.6rem 0.35rem;
+}
+
+/* У «Статуса» боковые отступы минимальные: вся колонка — 46px, и при
+   обычных 0.35rem ни кнопка 💡 в 38px, ни слово «СТАТУС» в 38px
+   в неё не влезают — заголовок переносился на три строки. */
+.colony-table td.ct-status {
+    padding-left: 0.1rem;
+    padding-right: 0.1rem;
+}
+
+.colony-table thead th.ct-status {
+    padding-left: 0.1rem;
+    padding-right: 0.1rem;
+}
+
+.ct-input {
+    width: 100%;
+    min-width: 92px;
+    padding: 0.4rem 0.5rem;
+    font: inherit;
+    font-size: 0.84rem;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+}
+
+.ct-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.ct-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Поле «Система» шире остальных */
+.ct-system {
+    min-width: 150px;
+}
+
+/* В ячейке «Система» теперь два списка — регион над системой. Ячейка
+   объединена на шесть строк, места с запасом, прижимаем оба списка к
+   верхней кромке, иначе они разъедутся по центру. */
+.colony-table td.ct-system {
+    vertical-align: top;
+    padding-top: 0.4rem;
+}
+
+.colony-table td.ct-system select.ct-input {
+    display: block;
+}
+
+.colony-table td.ct-system select.ct-input + select.ct-input {
+    margin-top: 0.15rem;
+}
+
+/* Ячейка «Корабль»: список прижат к верхней кромке, а картинка корабля
+   растянута фоном на всю высоту объединённой ячейки (6 строк).
+   Фон задаёт JS из SHIP_IMAGES, здесь — только его укладка. */
+.colony-table td.ct-ship {
+    vertical-align: top;
+    padding-top: 0.4rem;
+    background-repeat: no-repeat;
+    background-position: center 58%;
+    background-size: 76% auto;
+}
+
+/* Ячейка P0/P1: иконка ресурса слева от выпадающего списка */
+.res-stack {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    /* тот же кегль, что у полей карточки: иконка ниже мерится в em
+       и потому остаётся равной списку и на узком экране */
+    font-size: 0.74rem;
+}
+
+/* Иконка в размер списка: 2.58em — это высота .ct-input внутри карточки
+   (0.74rem кегль, 0.32rem отступы сверху и снизу, рамка в 1px). */
+.colony-table .res-stack .res-icon {
+    flex: 0 0 auto;
+    width: 2.58em;
+    height: 2.58em;
+    margin-right: 0;
+    vertical-align: baseline;
+}
+
+/* У P0 и P1 горизонтальные отступы ячейки урезаны: иконка и длинное
+   слово съедают ширину, а по краям поле почти не нужно. */
+.colony-table td.ct-p0,
+.colony-table td.ct-p1 {
+    padding-left: 0.15rem;
+    padding-right: 0.15rem;
+}
+
+/* Внутри карточки ширину полей задаёт колонка таблицы, а не само поле:
+   без min-width: 0 растянутый select вытолкнул бы карточку за край. */
+.colony-table .ct-input,
+.colony-table .ct-system {
+    min-width: 0;
+    padding: 0.32rem 0.22rem;
+    font-size: 0.74rem;
+}
+
+/* Системная стрелка браузера отнимает у списка около 19px, а в колонке
+   шириной 60px это треть места. Рисуем свою: шеврон из двух половинок
+   квадрата, направленных градиентами. */
+.colony-table select.ct-input {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-left: 0.3rem;
+    padding-right: 0.75rem;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--text-faint) 50%),
+        linear-gradient(135deg, var(--text-faint) 50%, transparent 50%);
+    background-position: right 0.36rem center, right 0.19rem center;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+}
+
+/* У заблокированного списка стрелки нет — там прочерк */
+.colony-table select.ct-input:disabled {
+    background-image: none;
+}
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 640px) {
+    body {
+        font-size: 14px;
+    }
+
+    header {
+        padding-top: 1.1rem;
+    }
+
+    nav {
+        gap: 0.3rem;
+    }
+
+    nav button {
+        flex: 1 1 auto;
+        padding: 0.55rem 0.7rem;
+        font-size: 0.82rem;
+        text-align: center;
+    }
+
+    #calc-form {
+        grid-template-columns: 1fr;
+    }
+
+    #calc-form button {
+        width: 100%;
+    }
+
+    select,
+    input[type="number"] {
+        max-width: none;
+    }
+
+    /* Три карточки в ряд на телефоне нечитаемы — ставим их друг под другом.
+       flex-basis карточки задан в процентах от ширины ряда, а в колонке
+       процент считается от высоты, поэтому здесь ширину возвращаем
+       карточке явно: иначе карточки схлопнутся в узкие полоски. */
+    .cards-row {
+        flex-direction: column;
+    }
+
+    .card {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+}
+
+/* ---------- Уважение к настройкам движения ---------- */
+/* ---------- Схема производства (вкладка «Цепочки») ---------- */
+/* Схема занимает всю ширину окна, но растягивают её не колонки, а
+   промежутки между ними: колонка по ширине самой длинной подписи
+   (ширину ставит js/chains.js), остаток уходит в space-between.
+   Иначе колонки растянутся, а промежуток между ними останется
+   прежним — и линии связи превратятся в короткие обрубки.
+   Колонки не сжимаются (flex: 0 0 auto), поэтому на узком экране
+   карта целиком прокручивается вбок внутри .chain-scroll. */
+.chain-scroll {
+    overflow: auto;
+    padding-bottom: 0.4rem;
+}
+
+.chain-map {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+/* Линии рисует js/chains.js по координатам карточек. Им нельзя
+   перехватывать щелчки, иначе схема перестанет отзываться. */
+.chain-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.chain-line {
+    fill: none;
+    stroke: var(--text-faint);
+    stroke-width: 1;
+    opacity: 0.28;
+}
+
+/* Колонка держит ширину, которую отмерил fitColumns, и не сжимается:
+   иначе на узком окне подпись переносится на вторую строку и строки
+   P0/P1 съезжают по высоте. Не поместилось — карта прокручивается
+   вбок внутри .chain-scroll. */
+.chain-col {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+/* Планет восемь, а товаров в колонках правее — до 24, поэтому без
+   отдельного правила такие колонки висели бы пустым блоком у верха.
+   Растягиваем их на всю высоту схемы; блок центрирует по вертикали
+   контейнер .chain-col-stretch-list. P2 (24 товара) уже занимает
+   всю высоту и растяжку не получает. */
+.chain-col-stretch {
+    align-self: stretch;
+}
+
+/* Контейнер с плитками заполняет оставшуюся высоту колонки, и блок
+   встаёт ровно по середине схемы. Промежуток между плитками — как
+   в остальных колонках (0.3rem). */
+.chain-col-stretch-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.chain-col > h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.chain-col-note {
+    margin: 0 0 0.35rem;
+    min-height: 2.5em;
+    font-size: 0.66rem;
+    line-height: 1.25;
+    text-align: center;
+    color: var(--text-faint);
+}
+
+/* Строка товара: плитка, а справа от неё поле ввода (у P1..P4).
+   Посчитанный итог живёт внутри плитки, у правого края. Ширину
+   колонки под них отводит fitColumns. */
+.chain-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.chain-item > .chain-chip {
+    flex: 1 1 auto;
+    width: auto;
+}
+
+/* Поле ввода. Селектор с input — иначе его перебивает общее правило
+   input[type="number"] (у него специфичность выше).
+   Ширина — под шесть знаков: 6ch на цифры, плюс отступы и рамка
+   (у всех элементов box-sizing: border-box, поэтому отступы и рамка
+   уже внутри ширины). */
+input.chain-amount {
+    flex: 0 0 calc(6ch + 0.6rem + 2px);
+    width: calc(6ch + 0.6rem + 2px);
+    min-width: 0;
+    max-width: none;
+    padding: 0.1rem 0.3rem;
+    font: inherit;
+    font-size: 0.72rem;
+    line-height: 1.3;
+    text-align: right;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.16s, box-shadow 0.16s;
+}
+
+input.chain-amount::placeholder {
+    color: var(--text-faint);
+    opacity: 0.55;
+}
+
+input.chain-amount:hover {
+    border-color: var(--border-lit);
+}
+
+input.chain-amount:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/* Посчитанный итог — внутри плитки, у самого правого края, по центру
+   плитки: в потоке он сидел на первой строке, и после того как иконка
+   встала по центру (см. .chain-chip img), он повис над ней.
+   Место под итог зарезервировано отступом справа у .chain-chip
+   (:has(.chain-total)) — иначе плитка потеряла бы его ширину.
+   Само место фиксировано (width, а не min-width): сколько бы цифр
+   в числе ни было, плитка и колонки остаются прежней ширины, и при
+   расчёте схема не ёрхает. Число длиннее отведённого места ужимает
+   шрифт js/chains.js (piFitTotals).
+   Ширина в rem, а не в ch: ch зависит от кегля самого элемента, и
+   ужимание шрифта уменьшало бы ещё и само место под число. */
+.chain-chip > .chain-total {
+    position: absolute;
+    right: var(--chip-pad);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2.9rem;
+    font-size: 0.74rem;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    color: var(--cyan);
+}
+
+/* Справа у плитки с итогом — место под него, иначе плитка стала бы
+   уже на всю ширину блока. У типа планеты итога нет, и отступа
+   справа у него тоже нет. */
+.chain-chip:has(.chain-total) {
+    padding-right: calc(var(--chip-pad) + 2.9rem + var(--chip-gap));
+}
+
+.chain-total:not(.is-set) {
+    color: var(--text-faint);
+}
+
+/* Отступы плитки заданы переменными, а не числами в разных правилах:
+   отступ под названием у .chain-price и положение иконки считаются от
+   них же, иначе цена съезжала бы вслед за любым изменением. */
+.chain-chip {
+    --chip-pad: 0.2rem;         /* внутренний отступ плитки */
+    --chip-icon: 26px;          /* размер иконки, задан в makeItem, js/chains.js */
+    --chip-gap: 0.3rem;         /* разрядка названия и итога */
+    --chip-price-line: 1.05em;  /* высота строки цены */
+
+    display: flex;
+    align-items: center;
+    gap: var(--chip-gap);
+    /* Плитка двухстрочная: иконка, название и итог сверху, цена под
+       названием. Высота второй строки зарезервирована отступом снизу,
+       а сама цена стоит абсолютно — см. .chain-price. */
+    position: relative;
+    width: 100%;
+    padding: var(--chip-pad);
+    /* Слева заранее зарезервировано место под иконку: она стоит по центру
+       плитки, вне потока, иначе первая строка была бы длиннее второй. */
+    padding-left: calc(var(--chip-pad) + var(--chip-icon) + var(--chip-gap));
+    /* Плитки без цены (тип планеты) в потоке иконки ничего не имеют,
+       а высоты им нужно ровно на неё. */
+    min-height: calc(var(--chip-icon) + 2 * var(--chip-pad));
+    font: inherit;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    text-align: left;
+    color: var(--text);
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: opacity 0.16s, border-color 0.16s, background-color 0.16s, box-shadow 0.16s;
+}
+
+/* Место под цену резервируем только там, где она есть. У типа планеты
+   такой строки нет, а пустое место снизу было видно как лишний отступ. */
+.chain-chip:has(.chain-price) {
+    padding-bottom: calc(var(--chip-pad) + var(--chip-price-line));
+}
+
+/* Цена из заявок ESI — второй строкой плитки, под названием.
+
+   Строка заведена у всех товаров P0..P4 сразу, иначе высота колонок
+   разъехалась бы. Значения приходят один раз за заход страницы и сами
+   не меняются (js/prices.js).
+
+   Позиция — абсолютная, и это не украшение: в потоке элемент вошёл бы
+   в замер ширины, который fitColumns делает по .chain-item, и колонка
+   меняла бы ширину в зависимости от того, какие цены уже пришли
+   (проверено: P0 гуляла между 261 и 290). Место под строку забрано
+   отступом снизу у .chain-chip, поэтому высота плитки заранее
+   известна. Слева — под названием, то есть за иконку (26px, размер
+   задан в makeItem, js/chains.js) и её разрядку. Справа — до края
+   блока итога: тот теперь стоит по центру плитки, и без этой границы
+   длинная цена заезжала бы под него. Текст не переносим и обрезаем
+   многоточием: длинная цена не должна ломать плитку. */
+.chain-price {
+    position: absolute;
+    left: calc(var(--chip-pad) + var(--chip-icon) + var(--chip-gap));
+    right: calc(var(--chip-pad) + 2.9rem + var(--chip-gap));
+    bottom: var(--chip-pad);
+    font-size: 0.66rem;
+    line-height: 1.2;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-faint);
+}
+
+.chain-price.is-set {
+    color: var(--cyan);
+}
+
+/* Нет заявок или ESI не ответил: это не цена, поэтому приглушаем и
+   не даём цифрам выглядеть настоящей ценой. */
+.chain-price.is-error {
+    font-style: italic;
+}
+
+/* Иконка — по центру плитки, а не первой строки. Плитка двухстрочная,
+   и прижатая к верху картинка отставала от середины на 7 px; в потоке
+   ей места нет, поэтому высоту задаёт min-height у .chain-chip. */
+.chain-chip img {
+    position: absolute;
+    left: var(--chip-pad);
+    top: 50%;
+    transform: translateY(-50%);
+    object-fit: contain;
+}
+
+.chain-chip:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-lit);
+}
+
+.chain-chip:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 1px;
+}
+
+/* Когда выбран товар, остальные гаснут — иначе подсветка цепочки
+   не читается: свечение обрачивает полсотни плиток. */
+.chain-map.has-focus .chain-chip {
+    opacity: 0.26;
+}
+
+.chain-map.has-focus .chain-chip.is-lit,
+.chain-map.has-focus .chain-chip.is-focus {
+    opacity: 1;
+}
+
+.chain-chip.is-lit {
+    color: var(--text);
+    background: var(--cyan-soft);
+    border-color: var(--cyan);
+}
+
+.chain-chip.is-focus {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-line);
+}
+
+/* Гасим линии при подсветке, но подсвеченные оставляем яркими.
+   Селектор с .has-focus нужен и здесь: без него правило гашения
+   перебивало бы .is-lit по специфичности. */
+.chain-map.has-focus .chain-line {
+    opacity: 0.06;
+}
+
+.chain-line.is-lit,
+.chain-map.has-focus .chain-line.is-lit {
+    stroke: var(--cyan);
+    stroke-width: 1.8;
+    opacity: 0.9;
+}
+
+/* Промежуток в .chain-map задан как минимум: space-between и так
+   разносит колонки по всей ширине. На телефоне мельче только подписи
+   в плитках. */
+@media (max-width: 640px) {
+    .chain-chip {
+        font-size: 0.74rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

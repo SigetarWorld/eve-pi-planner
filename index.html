@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>EVE PI Planner</title>
+    <link rel="stylesheet" href="css/style.css?v=13">
+</head>
+<body>
+    <header>
+        <h1>🚀 EVE Online — Planetary Industry Planner</h1>
+        <nav>
+            <button data-tab="planets">Планеты</button>
+            <button data-tab="chains">Цепочки производства</button>
+            <button data-tab="calculator">Калькулятор</button>
+            <button data-tab="colonies">Мои колонии</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Вкладка: выбор типа планеты -->
+        <section id="planets" class="tab-content active">
+            <h2>Выбор планеты</h2>
+
+            <!-- Выбор аккаунта — аналог выбора персонажа, стоит перед ним.
+                 Кнопка «Добавить» создаёт линию аккаунта, в линию кладётся
+                 до трёх карточек-персонажей. -->
+            <div class="card-head">
+                <label class="card-pilot-label" for="account-new">Аккаунт</label>
+                <input type="text" id="account-new" class="ct-input card-new"
+                       placeholder="Название аккаунта" maxlength="32" autocomplete="off">
+                <button type="button" id="account-add" class="btn card-add">Добавить</button>
+                <span id="account-counter" class="card-counter" aria-live="polite">Аккаунтов: 0</span>
+            </div>
+
+            <div id="cards-hint" class="card-hint">
+                Введите название аккаунта и нажмите «Добавить» — появится линия для трёх персонажей
+            </div>
+
+            <!-- Вход в EVE Online через SSO. Кнопка появляется, когда в
+                 js/eveauth.js вписан client_id приложения с
+                 developers.eveonline.com; без него подсказка объясняет,
+                 что делать. Сам код входа — в js/eveauth.js. -->
+            <div id="eve-bar" class="eve-bar" hidden>
+                <button type="button" id="eve-login" class="btn card-add" hidden>Войти в EVE Online</button>
+                <span id="eve-who" class="eve-who" hidden></span>
+                <button type="button" id="eve-logout" class="btn card-add" hidden>Отключить</button>
+                <span id="eve-hint" class="eve-hint"></span>
+            </div>
+
+            <!-- Линии аккаунтов создаёт app.js. В каждой линии:
+                 заголовок с именем аккаунта, выбор персонажа и ряд карточек.
+                 Внутри карточки шапка с именем персонажа и крестиком
+                 (те же классы, что у линии аккаунта), затем таблица
+                 7 колонок: заголовки и 6 строк данных.
+                 Колонки «Система», «Статус», «Корабль» объединены на 6 строк (rowspan). -->
+            <div id="accounts">
+                <!-- линии аккаунтов создаются в app.js -->
+            </div>
+        </section>
+
+        <!-- Вкладка: цепочки P0->P4. Схему целиком рисует js/chains.js:
+             рецепты из planetSchematics.yaml, уровни из ESI. -->
+        <section id="chains" class="tab-content">
+            <div id="chain-builder"></div>
+        </section>
+
+        <!-- Вкладка: калькулятор экстракторов/фабрик -->
+        <section id="calculator" class="tab-content">
+            <h2>Калькулятор ISK/час</h2>
+            <form id="calc-form">
+                <label>Кол-во экстракторов: <input type="number" id="extractors" value="1"></label>
+                <label>Цикл (часы): <input type="number" id="cycle-time" value="24"></label>
+                <button type="submit">Рассчитать</button>
+            </form>
+            <div id="calc-result"></div>
+        </section>
+
+        <!-- Вкладка: сохранённые колонии -->
+        <section id="colonies" class="tab-content">
+            <h2>Мои колонии</h2>
+            <button id="add-colony">+ Добавить колонию</button>
+            <div id="colonies-list"></div>
+        </section>
+    </main>
+
+    <script src="js/data.js?v=2"></script>
+    <script src="js/systems.js?v=2"></script>
+    <script src="js/planets.js?v=2"></script>
+    <script src="js/eveauth.js?v=2"></script>
+    <script src="js/calculator.js?v=2"></script>
+    <script src="js/prices.js?v=4"></script>
+    <script src="js/chains.js?v=14"></script>
+    <script src="js/app.js?v=3"></script>
+</body>
+</html>

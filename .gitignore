@@ -1,0 +1,16 @@
+# Служебное
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Архивы-бэкапы (не нужны на сайте)
+*.zip
+
+# Редакторы / IDE
+.vscode/
+.idea/
+
+# Локальное окружение
+.env
+.env.local
+node_modules/
