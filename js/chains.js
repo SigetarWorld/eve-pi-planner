@@ -203,20 +203,32 @@ const PI_RECIPES = [
     { out: "Wetware Mainframe", outQty: 1, in: [["Supercomputers", 6], ["Biotech Research Reports", 6], ["Cryoprotectant Solution", 6]], cycle: 3600 }
 ];
 
-/* Рынок, по которому считается цена всех товаров P0..P4. Имена — ESI:
-   /v2/universe/systems/30000142/ и /v2/universe/regions/10000002/;
-   подробности запроса и почему 30000142 — это система, а не станция,
-   написаны в js/prices.js.
+/* Главные торговые хабы: по какому рынку считается цена всех товаров
+   P0..P4. Выпадающее меню вверху вкладки переключает хаб, и цены
+   перечитываются — см. js/prices.js.
+
+   Имена хабов и пары «регион + система» подтверждены ESI 07.10.2026:
+   /v1/universe/ids/, затем /v2/universe/systems/<id>/ ->
+   /v2/universe/constellations/<id>/ -> /v2/universe/regions/<id>/
+   (у системы region_id в ответе нет, только constellation_id).
+   Rens стоит в Heimatar, а не в Metropolis — память врёт, поэтому
+   здесь цепочка запросов, а не суффикс.
 
    Строка под ценой заведена сразу у всех 83 товаров, поэтому колонки
    остаются ровными: появись она у части плиток, высота колонок
    разъехалась бы. */
-const PI_PRICE_MARKET = {
-    regionId: 10000002,
-    regionName: 'The Forge',
-    systemId: 30000142,
-    systemName: 'Jita'
-};
+const PI_PRICE_HUBS = [
+    { name: 'Amarr', regionId: 10000043, regionName: 'Domain', systemId: 30002187, systemName: 'Amarr' },
+    { name: 'Dodixie', regionId: 10000032, regionName: 'Sinq Laison', systemId: 30002659, systemName: 'Dodixie' },
+    { name: 'Jita', regionId: 10000002, regionName: 'The Forge', systemId: 30000142, systemName: 'Jita' },
+    { name: 'Rens', regionId: 10000030, regionName: 'Heimatar', systemId: 30002510, systemName: 'Rens' }
+];
+
+/* С чего начинаем: Jita — на нём и построена формула из шапки
+   js/prices.js. Ранее выбранный хаб запоминается на этом же
+   компьютере: там только название, а не что-нибудь секретное. */
+const PI_PRICE_DEFAULT = 'Jita';
+const PI_HUB_STORAGE = 'eve-pi-hub';
 
 /* Подпись под названием колонки: коротко о роли уровня. */
 const PI_LEVEL_TITLES = [
@@ -227,6 +239,17 @@ const PI_LEVEL_TITLES = [
     "Специализированный",
     "Передовой"
 ];
+
+/* Объём единицы товара по уровням, м³ (индекс = уровень P0..P4).
+   Проверено по ESI /v2/universe/types/<id>/ 07.10.2026 по всем 83
+   товарам: внутри уровня объём у всех один — P0 15 из 15 = 0.005,
+   P1 15 из 15 = 0.19, P2 24 из 24 = 0.75, P3 21 из 21 = 3,
+   P4 8 из 8 = 50. У планеты товара нет, поэтому и объёма нет.
+
+   Цифры в подписи идут точь-в-точь как приходят из SDE (0.005 с
+   точкой), а посчитанный объём — русской запятой (6,08), как и
+   остальные числа на схеме. */
+const PI_VOLUME_BY_LEVEL = [0.005, 0.19, 0.75, 3, 50];
 
 /* ---------- Индексы: строятся один раз ---------- */
 // Колонка P0 идёт по кодам символов без учёта регистра (как и
@@ -350,6 +373,13 @@ if (chainBox) {
     const piThousands = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
     // Количество на схеме: 96 000 целиком, 3.33 с двумя знаками.
     const piAmount = (value) => piThousands(String(Math.round(value * 100) / 100));
+    /* То же число, но с русской запятой: 6.08 -> «6,08», 1.5 -> «1,5»,
+       3 -> «3». Разряды в piAmount — неразрывные пробелы, поэтому
+       точка в числе одна и заменяется целиком. */
+    const piRuNumber = (value) => piAmount(value).replace('.', ',');
+    /* Подпись считаемого объёма в шапке колонки. Сюда приходит уже
+       умноженный на объём единицы: 6,08 — это (16 + 16) × 0.19. */
+    const piVolumeLine = (value) => 'Расчетный объем: ' + piRuNumber(value) + ' м³';
     /* Совсем длинное число в плитку не помещается: 1 199 998 800 ->
        «≈1,2 млрд». Знак «≈» честно говорит, что значение округлено. */
     const piCompact = (value) => {
@@ -399,6 +429,11 @@ if (chainBox) {
     const piTotalNodes = new Map();
     // Узлы строки цены: имя товара -> элемент под плиткой.
     const piPriceNodes = new Map();
+    // Считаемый объём колонки: уровень -> элемент в подписи колонки.
+    const piVolumeNodes = new Map();
+
+    // Подсказка на плитке: она же возвращается в title после копии.
+    const PI_COPY_HINT = 'Клик — скопировать ячейку';
 
     const makeItem = (name, level, icon) => {
         const item = document.createElement('div');
@@ -409,6 +444,10 @@ if (chainBox) {
         chip.className = 'chain-chip' + (level < 0 ? ' is-planet' : '');
         chip.dataset.name = name;
         chip.dataset.level = String(level);
+        // Клик по плитке копирует её в буфер (см. piCopyCell), и без
+        // подсказки об этом никто не догадается: курсор copy у плитки
+        // обещает действие, а title объясняет какое.
+        chip.title = PI_COPY_HINT;
         if (icon) {
             const img = document.createElement('img');
             img.src = icon;
@@ -438,8 +477,11 @@ if (chainBox) {
             // заведена у всех товаров сразу и ждёт своего значения:
             // появись она у части плиток, колонки поехали бы разной
             // высоты. У типа планеты цены нет — планету не продают.
+            // data-name нужен, чтобы получить товар обратно из узла:
+            // цену пишет js/prices.js и приходит ею же — по узлу.
             const price = document.createElement('span');
             price.className = 'chain-price';
+            price.dataset.name = name;
             piPriceNodes.set(name, price);
             chip.append(price);
         }
@@ -528,6 +570,25 @@ if (chainBox) {
             if (value > 0) shown.push({ node, value });
         });
         piFitTotals(shown);
+
+        // Объём колонки: сумма «сколько нужно × объём единицы» по всем
+        // товарам уровня. Считаем по каждому товару, а не умножая сумму
+        // на общий объём уровня: так формула переживёт разный объём
+        // внутри колонки. Сырьё P0 тоже входит — его количество
+        // посчитано той же проходкой, что и остальное.
+        const volumes = [0, 0, 0, 0, 0];
+        piTotals.forEach((value, name) => {
+            const info = PI_COMMODITIES[name];
+            if (!info || !(value > 0)) return;
+            volumes[info[1]] += value * PI_VOLUME_BY_LEVEL[info[1]];
+        });
+        piVolumeNodes.forEach((node, level) => {
+            node.textContent = piVolumeLine(volumes[level]);
+        });
+
+        // Цена и сумма под названием: количество изменилось — сумма
+        // (цена × количество) изменилась вместе с ним.
+        piPriceNodes.forEach((node) => piRenderPrice(node));
     }
 
     /* Число длиннее отведённого места не обрезаем, а ужимаем: место под
@@ -559,6 +620,81 @@ if (chainBox) {
         });
     }
 
+    /* Цена и сумма «цена × расчётное количество» стоят в одной строке
+       с фиксированной шириной (см. .chain-price в css), и вместе они
+       длиннее каждой по отдельности. Обрезать сумму многоточием нельзя:
+       обрезанные деньги читаются как другие деньги. Поэтому сначала
+       ужимаем кегль строки тем же способом, что и итоги, а если и это
+       не выручает — показываем сумму округлённой, «≈1,2 млрд ISK»:
+       примерное число со знаком лучше точного, но обрубленного.
+       Исходный кегль запоминаем один раз — как у итогов. Возвращает,
+       влезла ли строка. */
+    let priceFontPx = 0;
+    function piFitPrice(node) {
+        node.style.fontSize = '';
+        if (!priceFontPx) {
+            priceFontPx = parseFloat(getComputedStyle(node).fontSize) || 10.5;
+        }
+        const room = node.clientWidth;
+        if (!room) return true;
+        // Шаг 0.5px, потолок снизу — 7px: вычитываем, только если после
+        // вычитания останется не меньше семи, иначе последний шаг
+        // увёл бы кегль ниже того, что ещё читается.
+        let size = priceFontPx;
+        while (node.scrollWidth > room && size - 0.5 >= 7) {
+            size -= 0.5;
+            node.style.fontSize = size + 'px';
+        }
+        return node.scrollWidth <= room;
+    }
+
+    /* Вторая половина строки цены: во сколько обойдётся расчётное
+       количество этого товара — цена ESI × итог по плитке.
+
+       Вызывается с двух сторон: приход цены (js/prices.js зовёт колбэк
+       watch, узел в это время уже показывает свежую цену) и каждый
+       ввод (из piRecalcAmounts, где меняется количество). Поэтому
+       рисуем обе половины строки здесь, а не в двух местах.
+
+       Суммы не бывает без цены или без количества: прочерк честнее
+       нуля, который прочитали бы как «стоит ничего». */
+    function piRenderPrice(node) {
+        if (!node) return;
+        const price = Number(node.dataset.isk);
+        const qty = piTotals.get(node.dataset.name) || 0;
+        const product = price > 0 && qty > 0 ? price * qty : 0;
+        const sum = () => node.querySelector('.chain-price-sum');
+        if (!product) {
+            const old = sum();
+            if (old) {
+                old.remove();
+                node.style.fontSize = '';
+            }
+            return;
+        }
+        const full = ' · ' + EVE_PRICES.formatIsk(product) + ' ISK';
+        // Ничего не поменялось — строку и ужимание не трогаем:
+        // лишний замер гоняет вёрстку, а перерисовка сбила бы кегль.
+        if (sum() && sum().dataset.full === full) return;
+        let sumNode = sum();
+        if (!sumNode) {
+            sumNode = document.createElement('span');
+            sumNode.className = 'chain-price-sum';
+            node.append(sumNode);
+        }
+        sumNode.dataset.full = full;
+        // Подсказка прямо раскладывает строку на пример: цену видно
+        // рядом, количество — в плитке, значит, проверить можно глазами.
+        sumNode.title = `${EVE_PRICES.formatIsk(price)} ISK × ${piAmount(qty)} = `
+            + `${EVE_PRICES.formatIsk(product)} ISK`;
+        sumNode.textContent = full;
+        if (!piFitPrice(node)) {
+            sumNode.textContent = ' · ≈' + piCompact(product) + ' ISK';
+            sumNode.dataset.full = sumNode.textContent;
+            piFitPrice(node);
+        }
+    }
+
     const columns = [[PI_PLANET_NAMES, -1]].concat(PI_LEVEL_ORDER.map((list, level) => [list, level]));
     columns.forEach(([names, level], columnIndex) => {
         const col = document.createElement('div');
@@ -574,7 +710,20 @@ if (chainBox) {
         col.append(title);
         const note = document.createElement('p');
         note.className = 'chain-col-note';
-        note.textContent = PI_LEVEL_TITLES[columnIndex];
+        // Колонка с товаром: к подписи уровня прибавляется объём единицы —
+        // он и берётся в расчёт объёма ниже. У планеты уровня и объёма нет.
+        note.append(PI_LEVEL_TITLES[columnIndex] + (level >= 0
+            ? ', V = ' + PI_VOLUME_BY_LEVEL[level] + ' м³'
+            : ''));
+        // Второй строкой — считаемый объём по колонке: сумма
+        // «количество × объём единицы» по всем товарам уровня.
+        if (level >= 0) {
+            const volume = document.createElement('span');
+            volume.className = 'chain-col-volume';
+            volume.textContent = piVolumeLine(0);
+            piVolumeNodes.set(level, volume);
+            note.append(volume);
+        }
         col.append(note);
         // Плитки кладём в отдельный контейнер: он заполняет оставшуюся
         // высоту колонки, и блок встаёт ровно по середине схемы, а шапка
@@ -590,12 +739,50 @@ if (chainBox) {
     });
 
     scroll.append(map);
-    chainBox.replaceChildren(scroll);
+
+    /* Верхняя панель вкладки: выбор торгового хаба. Он меняет только
+       цену в плитках — схема, рецепты и ввод остаются прежними. */
+    let savedHub = '';
+    try {
+        savedHub = localStorage.getItem(PI_HUB_STORAGE) || '';
+    } catch (error) {
+        // Приватный режим localStorage закрывает: обойдёмся без
+        // запоминания, на самих ценах это не сказывается.
+    }
+    const selectedHub = PI_PRICE_HUBS.find((hub) => hub.name === savedHub)
+        || PI_PRICE_HUBS.find((hub) => hub.name === PI_PRICE_DEFAULT)
+        || PI_PRICE_HUBS[0];
+
+    const bar = document.createElement('div');
+    bar.className = 'chain-bar';
+
+    const hubLabel = document.createElement('label');
+    hubLabel.className = 'chain-bar-label';
+    hubLabel.htmlFor = 'chain-hub';
+    hubLabel.textContent = 'Торговый хаб';
+
+    const hubSelect = document.createElement('select');
+    hubSelect.className = 'chain-bar-hub';
+    hubSelect.id = 'chain-hub';
+    PI_PRICE_HUBS.forEach((hub) => {
+        const option = document.createElement('option');
+        option.value = hub.name;
+        option.textContent = hub.name;
+        option.selected = hub === selectedHub;
+        hubSelect.append(option);
+    });
+
+    const hubHint = document.createElement('span');
+    hubHint.className = 'chain-bar-hint';
+    hubHint.textContent = 'Цена в плитках — по заявкам выбранного хаба';
+
+    bar.append(hubLabel, hubSelect, hubHint);
+    chainBox.replaceChildren(bar, scroll);
 
     // Живая цена всех товаров P0..P4. Значения приходят один раз за заход
     // страницы и сами не обновляются: чтобы увидеть свежие, страницу
-    // надо перезагрузить (см. js/prices.js). typeID берём из
-    // PI_COMMODITIES, чтобы он не дублировался здесь.
+    // надо перезагрузить или переключить хаб (см. js/prices.js).
+    // typeID берём из PI_COMMODITIES, чтобы он не дублировался здесь.
     // typeof, а не обращение к переменной: js/prices.js подключается
     // отдельным файлом и теоретически может не загрузиться.
     if (typeof EVE_PRICES !== 'undefined') {
@@ -603,9 +790,27 @@ if (chainBox) {
         piPriceNodes.forEach((node, name) => {
             const typeId = (PI_COMMODITIES[name] || [])[0];
             if (!typeId) return;
-            watched.push({ node, query: Object.assign({ typeId }, PI_PRICE_MARKET) });
+            watched.push({ node, typeId });
         });
-        EVE_PRICES.watch(watched);
+        // Колбэк — сумма под названием: цена ESI × расчётное количество.
+        // Он же ужимает строку, если цена и сумма вместе не влезли.
+        const prices = EVE_PRICES.watch(watched, selectedHub, piRenderPrice);
+
+        hubSelect.addEventListener('change', () => {
+            const hub = PI_PRICE_HUBS.find((item) => item.name === hubSelect.value);
+            if (!hub) return;
+            prices.setMarket(hub);
+            try {
+                localStorage.setItem(PI_HUB_STORAGE, hub.name);
+            } catch (error) {
+                // Запомнить не удалось — цены уже перечитаны, обойдёмся.
+            }
+        });
+    } else {
+        // Без js/prices.js меню ничего не поменяет: честно выключаем,
+        // чтобы пустое обещание не висело над схемой.
+        hubSelect.disabled = true;
+        hubHint.textContent = 'Цены недоступны: js/prices.js не загрузился';
     }
 
     // Рёбра рисуем один раз, дальше только меняем координаты и класс
@@ -777,6 +982,69 @@ if (chainBox) {
         const item = target.closest('.chain-item');
         return item ? item.dataset.name : null;
     };
+
+    // ---------- Копирование ячейки ----------
+
+    // Текст для буфера — только имя ячейки. Цены, количества, объёмы
+    // и уровень в копии не нужны (так просили): лишние цифры мешали и
+    // в сообщении, и в таблице, куда вставляли ячейку.
+    const piCellText = (name) => name;
+
+    // Буфер обмена. navigator.clipboard живёт только в безопасном
+    // контексте (https или localhost), а страницу открывают и по
+    // обычному http, и с файла, — там остаётся старый путь через
+    // временный textarea и execCommand. Без него копия молча
+    // не сработала бы, и человек решил бы, что кнопка не работает.
+    const piCopyToClipboard = async (text) => {
+        if (navigator.clipboard && window.isSecureContext) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (error) {
+                // Браузер отказал (нет разрешения) — идём старым путём.
+            }
+        }
+        const area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.top = '0';
+        area.style.left = '0';
+        area.style.opacity = '0';
+        document.body.append(area);
+        area.select();
+        let copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } catch (error) {
+            copied = false;
+        }
+        area.remove();
+        return copied;
+    };
+
+    // Таймер вспышки у каждой плитки свой: общего хватило бы только для
+    // одного клика подряд, а кликают всегда по разным ячейкам.
+    const piCopyTimers = new WeakMap();
+    const piCopyCell = (name, chip) => {
+        if (!chip) return;
+        const text = piCellText(name);
+        piCopyToClipboard(text).then((copied) => {
+            chip.classList.remove('is-copied', 'is-copy-failed');
+            // Без этого повторный клик по той же ячейке не перезапустил
+            // бы анимацию — класс же уже на месте.
+            void chip.offsetWidth;
+            chip.classList.add(copied ? 'is-copied' : 'is-copy-failed');
+            chip.title = copied ? `Скопировано: ${text}`
+                : 'Скопировать не удалось: браузер не отдал буфер';
+            clearTimeout(piCopyTimers.get(chip));
+            piCopyTimers.set(chip, setTimeout(() => {
+                chip.classList.remove('is-copied', 'is-copy-failed');
+                chip.title = PI_COPY_HINT;
+            }, 2400));
+        });
+    };
+
     map.addEventListener('mouseover', (event) => {
         piHovered = piNameAt(event.target);
         refresh();
@@ -807,6 +1075,17 @@ if (chainBox) {
                 refresh();
             }
             return;
+        }
+        // Клик делает два дела: закрепляет подсветку цепочки (как и
+        // раньше) и кладёт ячейку в буфер. Отделять их нечем — отдельной
+        // кнопки на плитке места нет, а результат копии всё равно
+        // показывает вспышка рамки.
+        //
+        // Выделенный текст копией не считаем: выделяют, чтобы скопировать
+        // сами, и в буфер в этот момент трогать нельзя.
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) {
+            piCopyCell(name, event.target.closest('.chain-chip'));
         }
         piLocked = (piLocked === name) ? null : name;
         piHovered = null;

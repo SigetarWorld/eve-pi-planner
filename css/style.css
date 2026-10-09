@@ -927,6 +927,43 @@ form button:focus-visible,
    прежним — и линии связи превратятся в короткие обрубки.
    Колонки не сжимаются (flex: 0 0 auto), поэтому на узком экране
    карта целиком прокручивается вбок внутри .chain-scroll. */
+/* Панель над схемой: выбор торгового хаба. Список один на вкладку,
+   поэтому ширина по содержимому, а не на всю строку — как у селектов
+   он ведёт себя и на узком экране, где панель переносится целиком. */
+.chain-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.7rem;
+    margin-bottom: 0.9rem;
+}
+
+.chain-bar-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-dim);
+}
+
+/* Глобальный select задаёт width: 100% и max-width: 340px — здесь
+   это мешает: меню должно быть столько, сколько занимает самое
+   длинное имя хаба. */
+.chain-bar-hub {
+    width: auto;
+    max-width: none;
+    padding: 0.45rem 2.2rem 0.45rem 0.7rem;
+    font-size: 0.85rem;
+}
+
+.chain-bar-hub:disabled {
+    color: var(--text-faint);
+    cursor: not-allowed;
+}
+
+.chain-bar-hint {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+}
+
 .chain-scroll {
     overflow: auto;
     padding-bottom: 0.4rem;
@@ -1007,6 +1044,17 @@ form button:focus-visible,
     line-height: 1.25;
     text-align: center;
     color: var(--text-faint);
+}
+
+/* Считаемый объём колонки — второй строкой под подписью уровня.
+   Блок лежит внутри .chain-col-note, а у того min-height: 2.5em — это
+   ровно две строки (line-height 1.25). Пока обе подписи не переносятся,
+   высота шапки бывает прежней, строки P0/P1 остаются напротив, а
+   запас на перенос уходит на длинное число. Цвет ярче подписи: это
+   результат расчёта, а не подпись уровня. */
+.chain-col-volume {
+    display: block;
+    color: var(--text-dim);
 }
 
 /* Строка товара: плитка, а справа от неё поле ввода (у P1..P4).
@@ -1121,6 +1169,11 @@ input.chain-amount:focus {
     /* Плитки без цены (тип планеты) в потоке иконки ничего не имеют,
        а высоты им нужно ровно на неё. */
     min-height: calc(var(--chip-icon) + 2 * var(--chip-pad));
+    /* Клик по плитке копирует её в буфер — см. piCopyCell в js/chains.js.
+       Курсор обещает это действие, а title (там же) объясняет. Поле ввода
+       лежит рядом с плиткой, а не внутри, поэтому отсюда оно не
+       наследуется. */
+    cursor: copy;
     font: inherit;
     font-size: 0.78rem;
     line-height: 1.2;
@@ -1143,6 +1196,16 @@ input.chain-amount:focus {
    Строка заведена у всех товаров P0..P4 сразу, иначе высота колонок
    разъехалась бы. Значения приходят один раз за заход страницы и сами
    не меняются (js/prices.js).
+
+   Внутри строки живут два куска: сама цена
+   (.chain-price-value, пишет js/prices.js) и то, во сколько обойдётся
+   расчётное количество товара — « · 287 856 000 ISK»
+   (.chain-price-sum, рисует js/chains.js). Каждый пишет только свой:
+   если бы цена писалась в узел целиком, она стирала бы суммы при
+   каждом обновлении. Дочерние элементы наследуют цвет, кегль и запрет
+   на перенос, поэтому правила для них отдельные не нужны — а вот
+   ужимание строки, когда обе половины вместе не влезли, делает
+   piFitPrice в js/chains.js: обрезанные деньги читались бы как другие.
 
    Позиция — абсолютная, и это не украшение: в потоке элемент вошёл бы
    в замер ширины, который fitColumns делает по .chain-item, и колонка
@@ -1220,6 +1283,31 @@ input.chain-amount:focus {
     background: var(--accent-soft);
     border-color: var(--accent);
     box-shadow: 0 0 0 1px var(--accent-line);
+}
+
+/* Ячейка ушла в буфер: короткая вспышка вокруг плитки. Классы вешает
+   js/chains.js, там же живёт и красный вариант — браузер может
+   отказать в доступе к буферу, и это надо показать, а не проглотить.
+
+   Анимируем только тень, не рамку: в момент клика рамка занята
+   подсветкой цепочки (.is-lit, .is-focus), и перебивать её цветом
+   значило бы, что подсветка вдруг пропала. */
+.chain-chip.is-copied {
+    animation: chainCopied 0.9s ease-out;
+}
+
+.chain-chip.is-copy-failed {
+    animation: chainCopyFailed 1.2s ease-out;
+}
+
+@keyframes chainCopied {
+    0%, 50% { box-shadow: 0 0 0 2px var(--cyan); }
+    100%    { box-shadow: 0 0 0 0 transparent; }
+}
+
+@keyframes chainCopyFailed {
+    0%, 50% { box-shadow: 0 0 0 2px var(--red); }
+    100%    { box-shadow: 0 0 0 0 transparent; }
 }
 
 /* Гасим линии при подсветке, но подсвеченные оставляем яркими.

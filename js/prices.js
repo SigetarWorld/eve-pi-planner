@@ -18,6 +18,11 @@
 //   Assembly Plant), а 30000142 в staStations.yaml не значится вовсе.
 //   Так что четвёртый аргумент формулы — это система, не станция.
 //
+//   Из формулы берётся сущность, а не константы: пара «регион + система»
+//   задаётся хабом из выпадающего меню вверху вкладки (Amarr, Dodixie,
+//   Jita, Rens), 10000002/30000142 в примере — просто Jita. Пары ID
+//   подтверждены ESI и лежат в PI_PRICE_HUBS (js/chains.js).
+//
 // Формула применена ко всем 83 товарам P0..P4, а не к одному
 // Broadcast Node: тот же рынок и тот же отбор, свой typeID у каждого.
 //
@@ -28,11 +33,12 @@
 // полю system_id, а заявки на продажу запрашиваем параметром
 // order_type=sell: с редакции 2020-01-01 он обязателен, без него 400.
 //
-// Что это стоит: замер 29.09.2026, ветка tranquility — все 83 ответа
-// весили 950 КБ, самый большой 30 КБ (Chiral Structures, typeID 2401),
-// самый долгий 1.8 с, у всех X-Pages: 1 и ни одной ошибки. Один
+// Что это стоит: замер 29.09.2026, ветка tranquility, хаб Jita — все 83
+// ответа весили 950 КБ, самый большой 30 КБ (Chiral Structures, typeID
+// 2401), самый долгий 1.8 с, у всех X-Pages: 1 и ни одной ошибки. Один
 // заход страницы — это 83 запроса примерно на мегабайт, поэтому цены
-// и не обновляются сами: свежие появляются после перезагрузки.
+// и не обновляются сами: свежие появляются после перезагрузки страницы
+// или после смены хаба (смена хаба — это ещё один такой же проход).
 
 const EVE_PRICES = (() => {
     const API = 'https://esi.evetech.net';
@@ -92,84 +98,126 @@ const EVE_PRICES = (() => {
         return text;
     };
 
-    const clock = (date) => [date.getHours(), date.getMinutes(), date.getSeconds()]
-        .map((part) => String(part).padStart(2, '0')).join(':');
-
-    // 1 заявка, 2 заявки, 5 заявок — по-русски без склонений в коде.
-    const plural = (count) => {
-        const tail100 = count % 100;
-        const tail10 = count % 10;
-        if (tail100 > 10 && tail100 < 20) return 'заявок';
-        if (tail10 === 1) return 'заявка';
-        if (tail10 >= 2 && tail10 <= 4) return 'заявки';
-        return 'заявок';
-    };
-
-    const where = (query) => `${query.systemName || 'система ' + query.systemId}`
-        + ` (${query.systemId}), регион ${query.regionName || query.regionId}`;
-
     /* Один узел: подтягиваем заявки и вписываем цену. Наружу ошибку не
-       бросаем — узел сам покажет, что ответа не было, и подскажет, что
-       повтор будет только после перезагрузки. */
-    function showOnce(node, query) {
-        node.textContent = '…';
+       бросаем — узел сам покажет, что ответа не было («заявок нет» или
+       «цены нет»).
+
+       fresh() — признак того, что ответ всё ещё нужен: хаб можно
+       сменить, пока запрос в воздухе, и тогда прежний ответ писать
+       нельзя — он уже про другой рынок.
+
+       Сама цена пишется в дочерний слот, а не в узел целиком: на
+       схеме в той же строке стоит сумма «цена × расчётное
+       количество», которую рисует js/chains.js и которая цена
+       напрямую зависит. Каждая запись гасит узел целиком — «…», «нет
+       заявок» и «цены нет» живут без суммы, — а готовый результат
+       отдаём колбэком onPrice, чтобы chains.js вернул суммы и
+       ужал строку, если она вдруг не влезла. Сырое число уходит в
+       data-isk: сумме нужна цена как величина, а не строка. */
+    function showOnce(node, query, fresh, onPrice) {
+        const write = (text) => {
+            node.textContent = '';
+            const slot = document.createElement('span');
+            slot.className = 'chain-price-value';
+            slot.textContent = text;
+            node.append(slot);
+        };
+        const done = () => {
+            if (typeof onPrice === 'function') onPrice(node);
+        };
         node.classList.remove('is-set', 'is-error');
+        delete node.dataset.isk;
+        write('…');
+        // Подсказка узла — только id товара из базы EVE Online: длинный
+        // текст про «минимум среди заявок» не нужен и только мешал.
+        node.title = `typeID ${query.typeId}`;
         return sellMin(query).then((data) => {
-            const at = clock(new Date());
+            if (!fresh()) return;
             if (data.price === null) {
-                node.textContent = 'заявок нет';
+                write('заявок нет');
                 node.classList.add('is-error');
-                node.title = `В ${where(query)} нет заявок на продажу. `
-                    + `Проверено в ${at}.`;
+                done();
                 return;
             }
-            node.textContent = formatIsk(data.price) + ' ISK';
+            // Кладём в data-isk ту же величину, что уйдёт в строку
+            // (округление до копейки), чтобы посчитанную от неё сумму
+            // можно было проверить глазами по цене под названием.
+            node.dataset.isk = String(Math.round(data.price * 100) / 100);
+            write(formatIsk(data.price) + ' ISK');
             node.classList.add('is-set');
-            node.title = `Минимум среди ${data.orders} ${plural(data.orders)} `
-                + `на продажу в ${where(query)} — по всем заявкам, `
-                + `включая единичные, поэтому у дешёвого сырья выходит `
-                + `неправдоподобно мало. Проверено в ${at}. `
-                + `Источник: ESI, /v1/markets/${data.regionId}/orders.`;
+            done();
         }, (error) => {
-            node.textContent = 'цены нет';
+            if (!fresh()) return;
+            write('цены нет');
             node.classList.add('is-error');
-            node.title = `Цена не пришла: ${error.message}. `
-                + 'Появится после перезагрузки страницы.';
+            done();
         });
     }
 
-    /* Подключает узлы разом. Ждём, пока схема появится на экране: пока
-       вкладка закрыта, заявки смотреть некому, и качать мегабайт впустую
-       незачем. Дальше берём всё сразу, а не по мере прокрутки: список
-       на 83 товара, очередь с ограничением проходит его целиком за
-       несколько секунд, а «…» в плитках, до которых не доскроллили,
-       выглядели бы как поломка. */
-    function watch(items) {
-        const queries = new Map();
+    /* Подключает узлы разом. items — {node, typeId}: рынок в запрос не
+       зашит, он приходит вторым аргументом, потому что меню хаба
+       меняет его на лету. Возвращает очередь: setMarket(hub)
+       перечитывает плитки уже по новому рынку.
+
+       onPrice(item) — что делать после каждой записи: на схеме цена
+       живёт в строке вместе с суммой «цена × количество», и её
+       пересчитывает js/chains.js. Вызывается только на ответах со
+       свежей генерации, то есть ровно тогда, когда узел показывает
+       актуальную цену.
+
+       Ждём, пока схема появится на экране: пока вкладка закрыта, заявки
+       смотреть некому, и качать мегабайт впустую незачем. Дальше берём
+       всё сразу, а не по мере прокрутки: список на 83 товара, очередь с
+       ограничением проходит его целиком за несколько секунд, а «…» в
+       плитках, до которых не доскроллили, выглядели бы как поломка. */
+    function watch(items, market, onPrice) {
+        // В очередь кладём сам предмет, а не узел: typeId нужен в
+        // запросе, а item — колбэку, и держать два списка незачем.
         const waiting = [];
         let running = 0;
         let started = false;
+        let current = market;
+        /* Хаб переключают, пока запросы ещё в воздухе. Номер поколения
+           ловит такие ответы: со старого рынка писать уже нельзя, а
+           узел заново в очередь всё равно встанет. */
+        let generation = 0;
 
         const pump = () => {
             while (running < QUERY_LIMIT && waiting.length) {
-                const node = waiting.shift();
+                const item = waiting.shift();
+                const gen = generation;
                 running += 1;
-                showOnce(node, queries.get(node)).then(() => {
-                    running -= 1;
-                    pump();
-                });
+                showOnce(item.node, Object.assign({ typeId: item.typeId }, current),
+                    () => gen === generation, onPrice)
+                    .then(() => {
+                        running -= 1;
+                        pump();
+                    });
             }
         };
 
         const start = () => {
             if (started) return;
             started = true;
-            waiting.push(...items.map((item) => item.node));
+            waiting.push(...items);
+            pump();
+        };
+
+        /* Смена хаба: очередь ставится заново целиком, уже летящие
+           запросы при сходстве ответа никуда не пишутся. Пока схему не
+           показали, очередь не запускается — стартует сразу на новом
+           рынке. */
+        const setMarket = (hub) => {
+            if (!hub) return;
+            current = hub;
+            generation += 1;
+            if (!started) return;
+            waiting.length = 0;
+            waiting.push(...items);
             pump();
         };
 
         items.forEach((item) => {
-            queries.set(item.node, item.query);
             item.node.textContent = '…';
         });
 
@@ -183,10 +231,11 @@ const EVE_PRICES = (() => {
                 start();
             });
             items.forEach((item) => seen.observe(item.node));
-            return;
+            return { setMarket };
         }
 
         start();
+        return { setMarket };
     }
 
     return { sellMin, formatIsk, watch };
