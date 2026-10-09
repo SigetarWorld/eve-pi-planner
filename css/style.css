@@ -1,39 +1,63 @@
 ﻿/* ============================================================
    EVE PI Planner — оформление
    Структура рассчитана на текущую разметку Index.html
+   Дизайн повторяет визитку из E:\WebSite\Start (стиль
+   scan-stakan.com): Orbitron / Rajdhani / Inter, янтарь +
+   #2F497D, острые углы, сканлайны и свечения.
    ============================================================ */
 
 /* ---------- Переменные ---------- */
 :root {
-    --bg-deep:      #070b12;
-    --bg-base:      #0b111c;
-    --bg-panel:     #111a29;
-    --bg-panel-2:   #16223a;
-    --bg-hover:     #1c2b45;
+    --bg-deep:      #04060c;
+    --bg-base:      #080d18;
+    --bg-panel:     #0c1424;
+    --bg-panel-2:   #101d36;
+    --bg-hover:     #1a2b4d;
 
-    --border:       #22314c;
-    --border-lit:   #2f4468;
+    --border:       #1d3452;
+    --border-lit:   #2c4a75;
 
-    --text:         #cdd9ec;
-    --text-dim:     #8296b3;
-    --text-faint:   #5b6b87;
+    --text:         #d3def0;
+    --text-dim:     #8fa2bd;
+    --text-faint:   #5e6f8c;
 
+    /* Янтарь — главный акцент, как на оригинале */
     --accent:       #ff9d2e;
     --accent-soft:  rgba(255, 157, 46, 0.12);
     --accent-line:  rgba(255, 157, 46, 0.35);
 
+    /* Тёмно-синий — вторичный цвет: рамки, заливки, ховеры */
+    --blue:         #2f497d;
+    --blue-ink:     #3f61a6;
+    --blue-soft:    rgba(47, 73, 125, 0.35);
+
+    /* Бирюза остаётся в подсветке схемы и цене: там она несёт смысл,
+       и с янтарём она читается так же, как на оригинале */
     --cyan:         #4ec9e0;
     --cyan-soft:    rgba(78, 201, 224, 0.12);
 
     --green:        #4fd18b;
     --red:          #ff6b6b;
 
-    --radius:       10px;
-    --radius-sm:    7px;
+    --radius:       6px;
+    --radius-sm:    4px;
 
     --gap:          1.25rem;
     --shadow:       0 10px 30px rgba(0, 0, 0, 0.45);
-    --font: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --glow-amber:   0 0 18px rgba(255, 157, 46, 0.35), 0 0 44px rgba(255, 157, 46, 0.18);
+    --glow-blue:    0 0 18px rgba(47, 73, 125, 0.55), 0 0 44px rgba(47, 73, 125, 0.3);
+
+    /* Типографика как на оригинале: Orbitron — заголовки,
+       Rajdhani — подписи, Inter — основной текст */
+    --font-display: "Orbitron", "Rajdhani", sans-serif;
+    --font-heading: "Rajdhani", sans-serif;
+    --font-body:    "Inter", system-ui, sans-serif;
+
+    /* --font оставлен как синоним основного: его держат многие правила */
+    --font:         var(--font-body);
+
+    --header-h: 64px;
 }
 
 /* ---------- Сброс ---------- */
@@ -68,63 +92,122 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-/* ---------- Шапка ---------- */
-header {
-    padding: 1.4rem clamp(0.75rem, 2vw, 1.5rem) 0;
-    border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(17, 26, 41, 0.92), rgba(11, 17, 28, 0.65));
-    backdrop-filter: blur(6px);
+/* Сканлайны поверх фона, но под содержимым — как на оригинале.
+   Содержимое (main, header) лежит выше по z-index. */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+        0deg,
+        rgba(47, 73, 125, 0.05) 0px,
+        rgba(47, 73, 125, 0.05) 1px,
+        transparent 1px,
+        transparent 3px
+    );
 }
 
-header h1 {
-    margin: 0 0 1rem;
-    font-size: clamp(1.15rem, 2.6vw, 1.6rem);
-    font-weight: 700;
-    letter-spacing: 0.2px;
-    background: linear-gradient(92deg, var(--accent), var(--cyan));
+/* ---------- Шапка ---------- */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: rgba(4, 7, 14, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(29, 52, 82, 0.6);
+}
+
+.container {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.header-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    min-height: var(--header-h);
+}
+
+/* Торговая марка — как на оригинале: имя крупным Orbitron и
+   тег-подпись рядом */
+.brand {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin: 0 auto 0 0;
+    font-size: 0;
+}
+
+.brand-name {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    background: linear-gradient(92deg, var(--accent), #ffd08a 60%, var(--accent));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    filter: drop-shadow(0 0 12px rgba(255, 157, 46, 0.35));
+}
+
+.brand-tag {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--blue-ink);
+    text-shadow: 0 0 14px rgba(63, 97, 166, 0.6);
 }
 
 /* ---------- Навигация / вкладки ---------- */
-nav {
+nav.tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4rem;
+    gap: 0.25rem;
 }
 
-nav button {
+nav.tabs button {
     position: relative;
-    padding: 0.6rem 1.05rem;
-    font: inherit;
+    padding: 8px 14px;
+    font-family: var(--font-heading);
+    font-size: 13px;
     font-weight: 600;
-    font-size: 0.9rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     color: var(--text-dim);
     background: transparent;
-    border: 1px solid transparent;
-    border-bottom: none;
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    border: none;
+    border-radius: 0;
     cursor: pointer;
-    transition: color 0.16s, background-color 0.16s, border-color 0.16s;
+    transition: color 0.2s;
 }
 
-nav button:hover {
+nav.tabs button:hover {
     color: var(--text);
-    background: var(--bg-panel);
-    border-color: var(--border);
+    background: transparent;
+    border: none;
 }
 
-/* Активная вкладка. JS ставит класс .active на секцию, но не на кнопку,
-   поэтому определяем состояние через :has() — без правок JS.
-   Специфичность выше, чем у :hover, поэтому правило выигрывает и при наведении. */
+/* Активная вкладка: состояние секции, как на оригинале. JS ставит
+   класс .active на секцию, а не на кнопку, поэтому состояние
+   определяем через :has(). */
 body:has(#planets.active)    nav button[data-tab="planets"],
 body:has(#chains.active)     nav button[data-tab="chains"],
 body:has(#calculator.active) nav button[data-tab="calculator"],
 body:has(#colonies.active)   nav button[data-tab="colonies"] {
     color: var(--accent);
-    background: var(--bg-panel-2);
-    border-color: var(--border-lit);
+    text-shadow: 0 0 14px rgba(255, 157, 46, 0.55);
 }
 
 body:has(#planets.active)    nav button[data-tab="planets"]::after,
@@ -133,34 +216,73 @@ body:has(#calculator.active) nav button[data-tab="calculator"]::after,
 body:has(#colonies.active)   nav button[data-tab="colonies"]::after {
     content: "";
     position: absolute;
-    inset: auto 0 -1px 0;
+    left: 14px;
+    right: 14px;
+    bottom: 2px;
     height: 2px;
     background: var(--accent);
-    border-radius: 2px 2px 0 0;
+    box-shadow: 0 0 12px rgba(255, 157, 46, 0.8);
 }
 
 /* Клавиатурный фокус — отдельный, более заметный индикатор */
 nav button:focus-visible {
-    outline: 2px solid var(--cyan);
-    outline-offset: -2px;
+    outline: 1px solid var(--blue);
+    outline-offset: -1px;
 }
 
 /* ---------- Основная область ---------- */
-/* Ширину не ограничиваем: карточки должны занять всё окно,
-   иначе под три карточки остаётся слишком мало места. */
+/* Шапка теперь фиксированная, сверху у main — её высота.
+   «Планеты» и «Цепочки производства» — на всю ширину экрана,
+   остальные вкладки центрированы (см. #calculator, #colonies). */
 main {
+    position: relative;
+    z-index: 1;
     max-width: none;
     margin: 0 auto;
-    padding: var(--gap) clamp(0.75rem, 2vw, 1.5rem) 4rem;
+    padding: calc(var(--header-h) + 1.25rem) clamp(0.75rem, 2vw, 1.5rem) 4rem;
+}
+
+/* Вкладки, которые не просили растягивать, остаются в аккуратном
+   центрированном окне — как в шапке (.container) */
+#calculator,
+#colonies {
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
 .tab-content {
+    position: relative;
     display: none;
     padding: clamp(0.9rem, 2vw, 1.4rem);
     background: linear-gradient(180deg, var(--bg-panel), var(--bg-base));
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
+}
+
+/* Угловые скобки панели — фирменный штрих оригинала */
+.tab-content::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    width: 18px;
+    height: 18px;
+    border-top: 1px solid var(--blue);
+    border-left: 1px solid var(--blue);
+    pointer-events: none;
+}
+
+.tab-content::after {
+    content: "";
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 18px;
+    height: 18px;
+    border-right: 1px solid var(--blue);
+    border-bottom: 1px solid var(--blue);
+    pointer-events: none;
 }
 
 .tab-content.active {
@@ -181,8 +303,11 @@ main {
 
 .tab-content h2 {
     margin: 0 0 1.1rem;
-    font-size: 1.1rem;
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
     font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     color: var(--text);
     padding-bottom: 0.7rem;
     border-bottom: 1px solid var(--border);
@@ -251,22 +376,31 @@ button {
     cursor: pointer;
 }
 
+/* Основная кнопка — как на оригинале: янтарная рамка и свечение,
+   при наведении заливается градиентом */
 .btn,
 form button,
 #add-colony {
     padding: 0.6rem 1.2rem;
+    font-family: var(--font-heading);
     font-weight: 600;
-    font-size: 0.9rem;
-    color: #14100a;
-    background: linear-gradient(180deg, #ffb257, var(--accent));
-    border: 1px solid var(--accent);
+    font-size: 0.85rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(255, 157, 46, 0.05);
+    border: 1px solid rgba(255, 157, 46, 0.55);
     border-radius: var(--radius-sm);
-    transition: filter 0.16s, transform 0.08s;
+    box-shadow: 0 0 24px -8px rgba(255, 157, 46, 0.6);
+    transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.08s;
 }
 
 form button:hover,
 #add-colony:hover {
-    filter: brightness(1.1);
+    color: #150d04;
+    background: linear-gradient(135deg, hsl(36 95% 55%), hsl(28 95% 50%));
+    border-color: var(--accent);
+    box-shadow: var(--glow-amber);
 }
 
 form button:active,
@@ -276,7 +410,7 @@ form button:active,
 
 form button:focus-visible,
 #add-colony:focus-visible {
-    outline: 2px solid var(--cyan);
+    outline: 1px solid var(--blue);
     outline-offset: 2px;
 }
 
@@ -876,11 +1010,20 @@ form button:focus-visible,
         font-size: 14px;
     }
 
-    header {
-        padding-top: 1.1rem;
+    /* Фиксированная шапка на мобильном ниже: главное — навигация */
+    :root {
+        --header-h: 56px;
     }
 
-    nav {
+    .header-inner {
+        justify-content: center;
+    }
+
+    .brand {
+        margin-right: 0;
+    }
+
+    nav.tabs {
         gap: 0.3rem;
     }
 

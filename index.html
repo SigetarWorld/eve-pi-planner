@@ -3,17 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <title>EVE PI Planner</title>
-    <link rel="stylesheet" href="css/style.css?v=17">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=19">
 </head>
 <body>
     <header>
-        <h1>🚀 EVE Online — Planetary Industry Planner</h1>
-        <nav>
-            <button data-tab="planets">Планеты</button>
-            <button data-tab="chains">Цепочки производства</button>
-            <button data-tab="calculator">Калькулятор</button>
-            <button data-tab="colonies">Мои колонии</button>
-        </nav>
+        <div class="container header-inner">
+            <h1 class="brand">
+                <span class="brand-name">EVE PI Planner</span>
+                <span class="brand-tag">[ Planetary Industry ]</span>
+            </h1>
+            <nav class="tabs">
+                <button data-tab="planets">Планеты</button>
+                <button data-tab="chains">Цепочки производства</button>
+                <button data-tab="calculator">Калькулятор</button>
+                <button data-tab="colonies">Мои колонии</button>
+            </nav>
+        </div>
     </header>
 
     <main>
