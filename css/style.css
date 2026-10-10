@@ -576,6 +576,8 @@ form button:focus-visible,
     flex: 0 1 calc(33.3333% - var(--card-gap) * 2 / 3);
     min-width: 0;
     max-width: 100%;
+    /* по ширине карточки строка системы решает, где ставить подписи */
+    container: card / inline-size;
 }
 
 /* Пустое состояние: карточек ещё нет */
@@ -784,16 +786,16 @@ form button:focus-visible,
     margin-bottom: 0.5rem;
 }
 
-/* Кнопка подсветки в объединённой ячейке «Статус».
+/* Кнопка подсветки — справа в строке системы.
    Нажатие красит карточку в бирюзовый, повторное — возвращает обычный вид. */
 .card-light {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    max-width: 38px;
+    flex-shrink: 0;
+    width: 38px;
     height: 38px;
-    margin: 0 auto;
+    margin-left: auto;
     padding: 0;
     font-size: 1.05rem;
     line-height: 1;
@@ -823,15 +825,15 @@ form button:focus-visible,
 
 /* Фон ячеек у всех колонок одинаковый, поэтому перечисляем их здесь
    все: иначе подсветка красила бы только объединённые ячейки, а
-   «Планета», «№», «P0» и «P1» остались бы серыми.
+   «Планета», «№», «P0», «P1» и «P2» остались бы серыми.
    Ячейку «Корабль» здесь не называем — у неё своё правило ниже. */
 .card.is-lit .colony-table thead th,
 .card.is-lit .colony-table td.ct-system,
-.card.is-lit .colony-table td.ct-status,
 .card.is-lit .colony-table td.ct-planet,
 .card.is-lit .colony-table td.ct-number,
 .card.is-lit .colony-table td.ct-p0,
-.card.is-lit .colony-table td.ct-p1 {
+.card.is-lit .colony-table td.ct-p1,
+.card.is-lit .colony-table td.ct-p2 {
     background: rgba(78, 201, 224, 0.15);
 }
 
@@ -863,30 +865,14 @@ form button:focus-visible,
 /* Крестик карточки — это тот же .account-del: круглый, у правого края
    шапки, с красным при наведении. Отдельных правил не нужно. */
 
-/* Объединённые по вертикали ячейки (1, 2, 7):
-   фоном выделяем, а содержимое центрируем по горизонтали и вертикали.
-   По бокам отступ меньше, чем сверху и снизу: колонка узкая,
-   а полю «Система» и списку «Корабль» нужна ширина. */
-.colony-table td.ct-system,
-.colony-table td.ct-status,
+/* Объединённая по вертикали ячейка «Корабль»: фоном выделяем,
+   содержимое центрируем по горизонтали и вертикали. Отступ по бокам
+   меньше, чем сверху и снизу: колонка узкая, а списку нужна ширина. */
 .colony-table td.ct-ship {
     background: var(--bg-panel-2);
     vertical-align: middle;
     text-align: center;
     padding: 0.6rem 0.35rem;
-}
-
-/* У «Статуса» боковые отступы минимальные: вся колонка — 46px, и при
-   обычных 0.35rem ни кнопка 💡 в 38px, ни слово «СТАТУС» в 38px
-   в неё не влезают — заголовок переносился на три строки. */
-.colony-table td.ct-status {
-    padding-left: 0.1rem;
-    padding-right: 0.1rem;
-}
-
-.colony-table thead th.ct-status {
-    padding-left: 0.1rem;
-    padding-right: 0.1rem;
 }
 
 .ct-input {
@@ -912,25 +898,66 @@ form button:focus-visible,
     cursor: not-allowed;
 }
 
-/* Поле «Система» шире остальных */
-.ct-system {
-    min-width: 150px;
+/* Строка системы — над заголовками, объединена на всю ширину карточки.
+   Две подписи («Регион:», «Система:») и два списка стоят в ряд и на
+   узкой карточке переносятся, а не ужимаются принудительно. */
+.colony-table tr.ct-system-row td.ct-system {
+    padding: 0.4rem;
+    text-align: left;
+    vertical-align: middle;
 }
 
-/* В ячейке «Система» теперь два списка — регион над системой. Ячейка
-   объединена на шесть строк, места с запасом, прижимаем оба списка к
-   верхней кромке, иначе они разъедутся по центру. */
-.colony-table td.ct-system {
-    vertical-align: top;
-    padding-top: 0.4rem;
+/* Подписи и списки в ряд; на узкой карточке переносимся */
+.ct-system-inner {
+    display: grid;
+    /* подпись | список ×3 | кнопка 💡 — списки делят место поровну (1fr) */
+    grid-template-columns: auto 1fr auto 1fr auto 1fr auto;
+    align-items: center;
+    column-gap: 0.4rem;
 }
 
-.colony-table td.ct-system select.ct-input {
-    display: block;
+.ct-system-label {
+    font-family: var(--font-heading);
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    white-space: nowrap;
 }
 
-.colony-table td.ct-system select.ct-input + select.ct-input {
-    margin-top: 0.15rem;
+/* Региону хватает фиксированной ширины, система тянется на остаток.
+   Флекс-база у системы нарочно маленькая: флекс переносит строку по
+   базовым размерам до сжатия, а у <select> база не бывает уже его
+   содержимого — на узкой карточке система ушла бы на вторую строку.
+   Малой базой удерживаем всё в одну строку; свободное место уходит
+   системе (grow), а в тесноте она ужимается до минимума по тексту. */
+/* Регион, Система, Корабль: в широкой карточке поле «растворяется»
+   в сетке строки — подпись и список становятся её ячейками, и все три
+   списка получают одинаковую долю (1fr), независимо от длины подписи. */
+.ct-field {
+    display: contents;
+}
+
+.colony-table tr.ct-system-row .ct-field select {
+    min-width: 0;
+    width: 100%;
+}
+
+/* Узкая карточка: подписи встают над списками, три поля — равные
+   колонки сетки. Так всё остаётся в одну строку и не сжимается. */
+@container card (max-width: 560px) {
+    .ct-system-inner {
+        grid-template-columns: 1fr 1fr 1fr auto;
+    }
+
+    .ct-field {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.2rem;
+        min-width: 0;
+    }
 }
 
 /* Ячейка «Корабль»: список прижат к верхней кромке, а картинка корабля
@@ -974,6 +1001,191 @@ form button:focus-visible,
     padding-right: 0.15rem;
 }
 
+/* Ячейка P2 карточки P2: список — по центру ячейки (как у корабля),
+   отступы по бокам урезаны (как у P0/P1). */
+.colony-table td.ct-p2 {
+    vertical-align: middle;
+    text-align: center;
+    padding-left: 0.15rem;
+    padding-right: 0.15rem;
+}
+
+/* На карточке P2 столбцы P1 и P0 — не списки, а текст рецепта: в P1 оба
+   входа, в P0 их сырьё, по строке на вход. Строки-ячейки выравниваем
+   сверху, чтобы две линии не растягивали строку таблицы. */
+.colony-table td.ct-p1,
+.colony-table td.ct-p0 {
+    vertical-align: middle;
+}
+
+/* Ячейка рецепта на карточке P2 — «лесенкой»:
+   [иконка 1] Название 1
+                    Название 2 [иконка 2]
+   Иконки по краям во всю высоту ячейки, первое название сверху у левой
+   иконки (прижато влево), второе снизу у правой (прижато вправо). */
+.colony-table .ct-recipe {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 0.4em;
+    /* зазор между названиями — под горизонтальную полоску */
+    row-gap: 0.45em;
+    font-size: 0.74rem;
+    line-height: 1.2;
+    color: var(--text);
+}
+
+.colony-table .ct-recipe > .ct-icon-a {
+    grid-column: 1;
+    grid-row: 1 / 3;
+}
+
+.colony-table .ct-recipe > .ct-icon-b {
+    grid-column: 3;
+    grid-row: 1 / 3;
+}
+
+.colony-table .ct-recipe > .ct-name-a {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: start;
+    text-align: left;
+}
+
+.colony-table .ct-recipe > .ct-name-b {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    text-align: right;
+}
+
+/* Ячейки P1/P0 карточки P2: правая половина чуть светлее, а между
+   первым и вторым названием — горизонтальная пунктирная полоска.
+   Рисуем псевдоэлементами, а не фоном ячейки: фон перекрашивает
+   подсветка карточки 💡, а псевдоэлементы лежат поверх и остаются. */
+.colony-table td.ct-split {
+    position: relative;
+}
+
+/* Светлая правая половина */
+.colony-table td.ct-split::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 50%;
+    background: rgba(255, 255, 255, 0.045);
+    pointer-events: none;
+}
+
+/* Горизонтальная полоска посередине высоты ячейки */
+.colony-table td.ct-split::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0.3rem;
+    right: 0.3rem;
+    border-top: 1px dashed rgba(120, 160, 210, 0.45);
+    pointer-events: none;
+}
+
+/* Содержимое ячейки — над подложкой */
+.colony-table td.ct-split > .ct-recipe {
+    position: relative;
+}
+
+/* Прочерк пустой строки — по центру всей ячейки */
+.colony-table .ct-recipe > .ct-recipe-empty {
+    grid-column: 1 / -1;
+    grid-row: 1 / 3;
+    justify-self: center;
+}
+
+/* Длинное название переносится по слогам (названия английские, у
+   элемента lang="en"); если не делится — переносится, но не обрезается. */
+.colony-table .ct-recipe-name {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+}
+
+/* Узкая карточка: список P2 встаёт под иконку, чтобы ему хватило
+   ширины. Иконки везде остаются одного размера. */
+@container card (max-width: 560px) {
+    /* Рецепт — настоящая лесенка: каждая иконка в строке своего
+       названия, и названию достаётся почти вся ширина ячейки:
+       [иконка 1] Название 1 ............
+       ............ Название 2 [иконка 2] */
+    .colony-table .ct-recipe > .ct-icon-a {
+        grid-row: 1;
+    }
+
+    .colony-table .ct-recipe > .ct-icon-b {
+        grid-row: 2;
+    }
+
+    .colony-table .ct-recipe > .ct-name-a {
+        grid-column: 2 / 4;
+    }
+
+    .colony-table .ct-recipe > .ct-name-b {
+        grid-column: 1 / 3;
+    }
+
+    .colony-table td.ct-p2 .res-stack {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .colony-table td.ct-p2 select {
+        width: 100%;
+    }
+}
+
+/* Подколонки P1/P0: лесенка в обеих — текст сдвигается, иконки по краям */
+.colony-table td.ct-sub {
+    vertical-align: top;
+}
+.colony-table .ct-sub .ct-recipe {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    gap: 0.15em 0.25em;
+    align-items: center;
+    min-width: 0;
+}
+.colony-table .ct-sub .ct-icon-a {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+}
+.colony-table .ct-sub .ct-name-a {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    text-align: left;
+}
+.colony-table .ct-sub .ct-name-b {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    text-align: right;
+}
+.colony-table .ct-sub .ct-icon-b {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    justify-self: end;
+}
+.colony-table .ct-sub .ct-recipe > .res-icon {
+    width: 1.15em;
+    height: 1.15em;
+    margin-right: 0;
+}
+
+.colony-table .ct-recipe-empty {
+    color: var(--text-faint);
+}
+
 /* Внутри карточки ширину полей задаёт колонка таблицы, а не само поле:
    без min-width: 0 растянутый select вытолкнул бы карточку за край. */
 .colony-table .ct-input,
@@ -1002,6 +1214,85 @@ form button:focus-visible,
 /* У заблокированного списка стрелки нет — там прочерк */
 .colony-table select.ct-input:disabled {
     background-image: none;
+}
+
+/* ---------- Модальное окно выбора карточки (P1/P2) ---------- */
+.ct-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(4, 9, 20, 0.66);
+    backdrop-filter: blur(2px);
+}
+
+.ct-modal[hidden] {
+    display: none;
+}
+
+.ct-modal-box {
+    position: relative;
+    width: min(430px, calc(100vw - 2rem));
+    padding: 1.15rem 1.25rem 1.25rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-lit);
+    border-radius: 10px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+}
+
+.ct-modal-title {
+    margin: 0 0 0.45rem;
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    letter-spacing: 0.06em;
+}
+
+.ct-modal-hint {
+    margin: 0 0 1rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--text-dim);
+}
+
+.ct-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.ct-modal-actions .btn {
+    flex: 1 1 0;
+}
+
+.ct-modal-actions .btn:hover {
+    color: #150d04;
+    background: linear-gradient(135deg, hsl(36 95% 55%), hsl(28 95% 50%));
+    border-color: var(--accent);
+    box-shadow: var(--glow-amber);
+}
+
+/* Крестик закрытия — в углу окна */
+.ct-modal-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.6rem;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: var(--text-faint);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.ct-modal-close:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
 }
 
 /* ---------- Адаптив ---------- */
