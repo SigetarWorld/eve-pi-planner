@@ -541,6 +541,25 @@ form button:focus-visible,
 
 .card-new   { min-width: 160px; flex: 1 1 160px; }
 
+/* Строка добавления аккаунта — по ширине своего содержимого, а не на
+   всю страницу: подпись, поле, кнопка и счётчик идут подряд. */
+.card-head.account-head {
+    width: fit-content;
+    max-width: 100%;
+    /* всё в одну строку: счётчик аккаунтов не переносится вниз,
+       в тесноте ужимается поле названия */
+    flex-wrap: nowrap;
+}
+
+.account-head .card-new {
+    flex: 0 1 240px;
+    min-width: 0;
+}
+
+.account-head .card-counter {
+    margin-left: 0.6rem;
+}
+
 .card-add {
     padding: 0.45rem 0.9rem;
     font-size: 0.84rem;
@@ -566,10 +585,10 @@ form button:focus-visible,
 .cards-row {
     --card-gap: 0.7rem;
     display: flex;
-    align-items: flex-start;
+    /* все карточки линии одной высоты — по самой высокой (обычно P2) */
+    align-items: stretch;
     gap: var(--card-gap);
     margin-top: 0.8rem;
-    padding-bottom: 0.6rem;
 }
 
 .card {
@@ -578,9 +597,226 @@ form button:focus-visible,
     max-width: 100%;
     /* по ширине карточки строка системы решает, где ставить подписи */
     container: card / inline-size;
+    /* таблица тянется на всю высоту карточки: если соседняя карточка
+       (P2) выше, лишняя высота делится между строками этой */
+    display: flex;
+    flex-direction: column;
+}
+
+.card > .colony-table {
+    flex: 1 1 auto;
 }
 
 /* Пустое состояние: карточек ещё нет */
+/* ---------- Верх вкладки «Выбор планеты» ----------
+   Слева заголовок со строкой добавления аккаунта: колонка шириной по
+   этой строке, поэтому и полоска под заголовком — той же ширины.
+   Справа «Статистика» — на всю оставшуюся ширину и ровно по высоте
+   левой колонки (от заголовка до низа строки добавления). */
+.planets-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+}
+
+.planets-top-main {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.planets-top-main .account-head {
+    width: auto;
+}
+
+.stats-panel {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0.7rem 0.9rem;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.stats-title {
+    margin: 0 0 0.6rem;
+    padding-bottom: 0.45rem;
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+}
+
+/* Заголовок «Статистика» — кнопка: сворачивает и разворачивает таблицу */
+.stats-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.stats-toggle::after {
+    content: "▾";
+    font-size: 0.9em;
+    transition: transform 0.16s;
+}
+
+.stats-toggle[aria-expanded="false"]::after {
+    transform: rotate(-90deg);
+}
+
+.stats-panel:has(.stats-toggle[aria-expanded="false"]) .stats-title {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.stats-body[hidden] {
+    display: none;
+}
+
+/* Таблица подсчёта P1 — по образцу из Excel пользователя */
+.st-scroll {
+    overflow-x: auto;
+}
+
+.stats-p1 {
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    line-height: 1.2;
+}
+
+.stats-p1 th,
+.stats-p1 td {
+    padding: 0.18rem 0.4rem;
+    border: 1px solid var(--border);
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.stats-p1 thead th {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Буквы типов планет и счётчики под ними */
+.stats-p1 .st-planet {
+    min-width: 1.6rem;
+}
+
+.stats-p1 .st-planet-count {
+    color: var(--text);
+}
+
+/* Название P1 — с иконкой, по левому краю */
+.stats-p1 .st-name {
+    text-align: left;
+    font-weight: 500;
+    color: var(--text);
+}
+
+/* Иконка и название — блоком по центру ячейки по вертикали, чтобы
+   название стояло на одной линии с числами строки */
+.stats-p1 .st-name-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 18px;
+}
+
+.stats-p1 .st-name .res-icon {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    vertical-align: middle;
+}
+
+/* «+» — P1 добывается на этом типе планет; клетка подкрашена */
+.stats-p1 .st-mark.is-on {
+    font-weight: 700;
+    color: var(--text);
+    background: rgba(78, 140, 220, 0.22);
+}
+
+.stats-p1 .st-count {
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* Разница: «+» — нужно ещё, «-» — больше, чем введено */
+.stats-p1 .st-diff {
+    min-width: 2rem;
+    font-weight: 700;
+}
+
+.stats-p1 .st-diff.is-more {
+    color: #5fd38d;
+}
+
+.stats-p1 .st-diff.is-less {
+    color: var(--red);
+}
+
+/* Поле ручного ввода */
+.stats-p1 .st-manual-cell {
+    padding: 0.1rem 0.2rem;
+}
+
+.stats-p1 .st-manual {
+    width: 4.2rem;
+    padding: 0.15rem 0.3rem;
+    font: inherit;
+    text-align: right;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+}
+
+.stats-p1 .st-manual:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* Итоговая строка: суммы Кол-во и Ввод */
+.stats-p1 tfoot td {
+    font-weight: 700;
+    color: var(--accent);
+    border-top: 2px solid var(--border-lit);
+}
+
+.stats-p1 tfoot .st-manual-cell {
+    text-align: right;
+    padding-right: 0.55rem;
+}
+
+/* Узкий экран: статистика уходит под строку добавления */
+@media (max-width: 800px) {
+    .planets-top {
+        flex-wrap: wrap;
+    }
+
+    .stats-panel {
+        flex-basis: 100%;
+    }
+}
+
 .card-hint {
     margin-top: 0.8rem;
     padding: 1.1rem;
@@ -592,6 +828,10 @@ form button:focus-visible,
     border-radius: var(--radius-sm);
 }
 
+/* Панель «Персонаж / Добавить» и заголовок линии с именем аккаунта
+   скрыты, когда в линии уже три персонажа (см. refreshLine в app.js) */
+.account-line > .account-bar[hidden],
+.card-head[hidden],
 .card-hint[hidden] {
     display: none;
 }
@@ -654,10 +894,16 @@ form button:focus-visible,
    по той же формуле, что и раньше (треть ряда, не больше трёх).
    Предел CARDS_LIMIT в app.js считается теперь для каждой линии
    отдельно, а не на всю страницу сразу. */
+/* Линии аккаунтов идут друг под другом с тем же зазором, что и
+   между карточками (0.7rem), без разделительной линии. */
 .account-line {
-    margin-top: 1.5rem;
-    padding-top: 1.2rem;
-    border-top: 1px solid var(--border);
+    margin-top: 0.7rem;
+}
+
+/* В заполненной линии (три персонажа) имя аккаунта и панель
+   добавления скрыты — карточки начинаются сразу, без отступа сверху */
+.account-line.is-full > .cards-row {
+    margin-top: 0;
 }
 
 .account-line:first-child {
@@ -910,10 +1156,80 @@ form button:focus-visible,
 /* Подписи и списки в ряд; на узкой карточке переносимся */
 .ct-system-inner {
     display: grid;
-    /* подпись | список ×3 | кнопка 💡 — списки делят место поровну (1fr) */
-    grid-template-columns: auto 1fr auto 1fr auto 1fr auto;
+    /* имя | подпись | список ×3 | 💡 | × — списки делят место поровну (1fr) */
+    grid-template-columns: auto auto 1fr auto 1fr auto 1fr auto auto;
     align-items: center;
     column-gap: 0.4rem;
+}
+
+/* Имя персонажа в начале строки системы. Длинное имя обрезается
+   многоточием (полностью — в подсказке), чтобы не отнимать место у
+   списков. */
+.ct-pilot-name {
+    margin: 0 0.2rem 0 0;
+    max-width: 8.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.card.is-lit .ct-pilot-name {
+    color: var(--cyan);
+}
+
+/* Крестик карточки в строке системы — не прижимается вправо сам:
+   место ему даёт сетка */
+.ct-system-inner .account-del {
+    margin-left: 0;
+}
+
+/* Средняя ширина: подписи стоят над списками. Имя, 💡 и × выравниваем
+   не по центру строки, а по линии списков — тогда имя стоит вровень
+   со списками, а не посередине между подписью и списком.
+   1.65rem — высота списка в карточке. */
+@container card (min-width: 451px) and (max-width: 760px) {
+    .colony-table .ct-pilot-name {
+        align-self: end;
+        display: flex;
+        align-items: center;
+        height: 1.65rem;
+    }
+
+    .colony-table .ct-system-inner > .card-light,
+    .colony-table .ct-system-inner > .account-del {
+        align-self: end;
+        /* центр кнопки — на средней линии списка */
+        margin-bottom: calc((1.65rem - 100%) / 2);
+    }
+}
+
+/* Совсем узкая карточка (окно ~1280 и меньше): рядом с именем спискам
+   не хватает места, поэтому имя встаёт первой строкой над ними,
+   а 💡 и × остаются справа во всю высоту. */
+@container card (max-width: 450px) {
+    /* .colony-table впереди — чтобы перебить правило для 760px ниже */
+    .colony-table .ct-system-inner {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) auto auto;
+        row-gap: 0.3rem;
+    }
+
+    .ct-pilot-name {
+        grid-column: 1 / 4;
+        grid-row: 1;
+        max-width: none;
+    }
+
+    .ct-system-inner > .ct-field {
+        grid-row: 2;
+    }
+
+    .ct-system-inner > .card-light,
+    .ct-system-inner > .account-del {
+        grid-row: 1 / 3;
+    }
 }
 
 .ct-system-label {
@@ -946,9 +1262,9 @@ form button:focus-visible,
 
 /* Узкая карточка: подписи встают над списками, три поля — равные
    колонки сетки. Так всё остаётся в одну строку и не сжимается. */
-@container card (max-width: 560px) {
+@container card (max-width: 760px) {
     .ct-system-inner {
-        grid-template-columns: 1fr 1fr 1fr auto;
+        grid-template-columns: auto 1fr 1fr 1fr auto auto;
     }
 
     .ct-field {
@@ -1018,82 +1334,79 @@ form button:focus-visible,
     vertical-align: middle;
 }
 
-/* Ячейка рецепта на карточке P2 — «лесенкой»:
-   [иконка 1] Название 1
-                    Название 2 [иконка 2]
-   Иконки по краям во всю высоту ячейки, первое название сверху у левой
-   иконки (прижато влево), второе снизу у правой (прижато вправо). */
+/* Ячейка рецепта на карточке P2 — по макету пользователя: две
+   области-«уголка», сцепленные лесенкой.
+   ┌────────┬───────────────────┐────────┐
+   │        │   Название 1      │        │   светлая область:
+   │ икон 1 └───────┬───────────┘ икон 2 │   левая иконка + верх
+   │        │       Название 2           │   синяя область:
+   └────────┴────────────────────────────┘   низ + правая иконка
+   Граница между областями — ступенькой, снаружи общая рамка,
+   названия по центру средней колонки. */
+.colony-table td.ct-split {
+    padding: 0.2rem;
+}
+
 .colony-table .ct-recipe {
+    --zone-a: rgba(255, 255, 255, 0.08);
+    --zone-b: rgba(78, 140, 220, 0.24);
+    --zone-line: 1.5px solid rgba(150, 185, 230, 0.6);
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-rows: auto auto;
-    align-items: center;
-    column-gap: 0.4em;
-    /* зазор между названиями — под горизонтальную полоску */
-    row-gap: 0.45em;
     font-size: 0.74rem;
     line-height: 1.2;
     color: var(--text);
+    border: var(--zone-line);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Ячейки иконок — во всю высоту, со своим фоном области */
+.colony-table .ct-recipe > .ct-icon-cell {
+    grid-row: 1 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.2em;
 }
 
 .colony-table .ct-recipe > .ct-icon-a {
     grid-column: 1;
-    grid-row: 1 / 3;
+    background: var(--zone-a);
 }
 
 .colony-table .ct-recipe > .ct-icon-b {
     grid-column: 3;
-    grid-row: 1 / 3;
+    background: var(--zone-b);
 }
 
-.colony-table .ct-recipe > .ct-name-a {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: start;
-    text-align: left;
-}
-
+/* Названия — по центру средней колонки */
+.colony-table .ct-recipe > .ct-name-a,
 .colony-table .ct-recipe > .ct-name-b {
     grid-column: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.7em;
+    padding: 0.15em 0.4em;
+    text-align: center;
+}
+
+/* Верхнее название — продолжение светлой области; справа от него
+   ступенька границы */
+.colony-table .ct-recipe > .ct-name-a {
+    grid-row: 1;
+    background: var(--zone-a);
+    border-right: var(--zone-line);
+}
+
+/* Нижнее название — продолжение синей области; граница сверху и слева */
+.colony-table .ct-recipe > .ct-name-b {
     grid-row: 2;
-    justify-self: end;
-    text-align: right;
-}
-
-/* Ячейки P1/P0 карточки P2: правая половина чуть светлее, а между
-   первым и вторым названием — горизонтальная пунктирная полоска.
-   Рисуем псевдоэлементами, а не фоном ячейки: фон перекрашивает
-   подсветка карточки 💡, а псевдоэлементы лежат поверх и остаются. */
-.colony-table td.ct-split {
-    position: relative;
-}
-
-/* Светлая правая половина */
-.colony-table td.ct-split::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 50%;
-    background: rgba(255, 255, 255, 0.045);
-    pointer-events: none;
-}
-
-/* Горизонтальная полоска посередине высоты ячейки */
-.colony-table td.ct-split::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 0.3rem;
-    right: 0.3rem;
-    border-top: 1px dashed rgba(120, 160, 210, 0.45);
-    pointer-events: none;
-}
-
-/* Содержимое ячейки — над подложкой */
-.colony-table td.ct-split > .ct-recipe {
-    position: relative;
+    background: var(--zone-b);
+    border-top: var(--zone-line);
+    border-left: var(--zone-line);
 }
 
 /* Прочерк пустой строки — по центру всей ячейки */
@@ -1115,24 +1428,27 @@ form button:focus-visible,
 /* Узкая карточка: список P2 встаёт под иконку, чтобы ему хватило
    ширины. Иконки везде остаются одного размера. */
 @container card (max-width: 560px) {
-    /* Рецепт — настоящая лесенка: каждая иконка в строке своего
-       названия, и названию достаётся почти вся ширина ячейки:
-       [иконка 1] Название 1 ............
-       ............ Название 2 [иконка 2] */
+    /* Узко: средней колонке между двумя иконками не хватает места,
+       поэтому области становятся просто строками — светлая сверху
+       (иконка 1 + название 1), синяя снизу (название 2 + иконка 2).
+       Названиям достаётся почти вся ширина. */
     .colony-table .ct-recipe > .ct-icon-a {
         grid-row: 1;
     }
 
     .colony-table .ct-recipe > .ct-icon-b {
         grid-row: 2;
+        border-top: var(--zone-line);
     }
 
     .colony-table .ct-recipe > .ct-name-a {
         grid-column: 2 / 4;
+        border-right: none;
     }
 
     .colony-table .ct-recipe > .ct-name-b {
         grid-column: 1 / 3;
+        border-left: none;
     }
 
     .colony-table td.ct-p2 .res-stack {
@@ -1145,40 +1461,12 @@ form button:focus-visible,
     }
 }
 
-/* Подколонки P1/P0: лесенка в обеих — текст сдвигается, иконки по краям */
-.colony-table td.ct-sub {
-    vertical-align: top;
-}
-.colony-table .ct-sub .ct-recipe {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
-    gap: 0.15em 0.25em;
-    align-items: center;
-    min-width: 0;
-}
-.colony-table .ct-sub .ct-icon-a {
-    grid-column: 1 / 2;
-    grid-row: 1 / 2;
-}
-.colony-table .ct-sub .ct-name-a {
-    grid-column: 2 / 3;
-    grid-row: 1 / 2;
-    text-align: left;
-}
-.colony-table .ct-sub .ct-name-b {
-    grid-column: 1 / 2;
-    grid-row: 2 / 3;
-    text-align: right;
-}
-.colony-table .ct-sub .ct-icon-b {
-    grid-column: 2 / 3;
-    grid-row: 2 / 3;
-    justify-self: end;
-}
-.colony-table .ct-sub .ct-recipe > .res-icon {
-    width: 1.15em;
-    height: 1.15em;
+/* Иконка рецепта — постоянного размера, как у P2 (2.58em ≈ 31px):
+   при уменьшении окна не сжимается, ужимается только текст. */
+.colony-table .ct-recipe .res-icon {
+    flex: 0 0 auto;
+    width: 2.58em;
+    height: 2.58em;
     margin-right: 0;
 }
 

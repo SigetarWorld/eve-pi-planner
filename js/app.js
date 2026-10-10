@@ -76,8 +76,11 @@ const CARD_COL_WIDTHS = ['18%', '8%', '37%', '37%'];
    выбираются — это рецепт выбранного P2, выводимый текстом (в P1 оба
    входа, в P0 их сырьё). Планеты фильтруются по рецепту, а выбранная
    система сужает их до своих типов. */
-const CARD_HEADERS_P2 = ['P2', 'Планета', '№', 'P1', 'P1', 'P0', 'P0'];
-const CARD_COL_WIDTHS_P2 = ['13%', '11%', '6%', '15.5%', '15.5%', '19.5%', '19.5%'];
+const CARD_HEADERS_P2 = ['P2', 'Планета', '№', 'P1', 'P0'];
+/* P2 — шире, чтобы название товара в списке влезало целиком (кроме
+   самого длинного, Genetically Enhanced Livestock — оно видно в
+   подсказке и в раскрытом списке). P1 и P0 — одинаковой ширины. */
+const CARD_COL_WIDTHS_P2 = ['30%', '11%', '6%', '26.5%', '26.5%'];
 
 // Товары P2 — это выход рецептов P1->P2 (outQty 5, два входа)
 const PI_P2_LIST = PI_RECIPES
@@ -120,6 +123,7 @@ const accounts = document.getElementById('accounts');
 const accountInput = document.getElementById('account-new');
 const accountAdd = document.getElementById('account-add');
 const accountCounter = document.getElementById('account-counter');
+const statsBody = document.getElementById('stats-body');
 const cardsHint = document.getElementById('cards-hint');
 
 const store = {
@@ -385,17 +389,11 @@ function buildP2ColonyRow(index) {
                     ${optionsHtml(ROMAN_NUMBERS, ROMAN_NUMBERS[index % ROMAN_NUMBERS.length])}
                 </select>
             </td>
-            <td class="ct-p1 ct-sub ct-sub-a">
-                <div class="ct-recipe" data-role="p1-recipe-a" aria-label="Вход 1 рецепта P1"></div>
+            <td class="ct-p1 ct-split">
+                <div class="ct-recipe" data-role="p1-recipe" aria-label="Входы рецепта P1"></div>
             </td>
-            <td class="ct-p1 ct-sub ct-sub-b">
-                <div class="ct-recipe" data-role="p1-recipe-b" aria-label="Вход 2 рецепта P1"></div>
-            </td>
-            <td class="ct-p0 ct-sub ct-sub-a">
-                <div class="ct-recipe" data-role="p0-recipe-a" aria-label="Сырьё P0 для входа 1"></div>
-            </td>
-            <td class="ct-p0 ct-sub ct-sub-b">
-                <div class="ct-recipe" data-role="p0-recipe-b" aria-label="Сырьё P0 для входа 2"></div>
+            <td class="ct-p0 ct-split">
+                <div class="ct-recipe" data-role="p0-recipe" aria-label="Сырьё P0 для рецепта"></div>
             </td>
         </tr>`;
 }
@@ -415,12 +413,6 @@ function buildCard(name, level) {
 
     return `
         <div class="card" data-name="${safe}" data-level="${p2 ? 'P2' : 'P1'}">
-            <div class="account-bar">
-                <h3 class="account-name">${safe}</h3>
-                <button type="button" class="account-del" data-role="card-del"
-                        title="Удалить карточку"
-                        aria-label="Удалить карточку ${safe}">&times;</button>
-            </div>
             <table class="colony-table">
                 <colgroup>${widths.map((w) => `<col style="width:${w}">`).join('')}</colgroup>
                 <thead>
@@ -431,6 +423,8 @@ function buildCard(name, level) {
                     <tr class="ct-system-row">
                         <td colspan="${widths.length}" class="ct-system">
                             <div class="ct-system-inner">
+                                <!-- Имя персонажа — первым в строке, перед регионом -->
+                                <h3 class="ct-pilot-name" title="${safe}">${safe}</h3>
                                 <span class="ct-field">
                                     <span class="ct-system-label">Регион:</span>
                                     <select class="ct-input" data-role="region" aria-label="Регион" title="Регион не выбран">${REGION_PLACEHOLDER}</select>
@@ -444,6 +438,9 @@ function buildCard(name, level) {
                                     <select class="ct-input" data-role="ship" aria-label="Корабль">${optionsHtml(SHIP_OPTIONS, SHIP_OPTIONS[0])}</select>
                                 </span>
                                 <button type="button" class="card-light" aria-pressed="false" title="Подсветить карточку" aria-label="Подсветить карточку">💡</button>
+                                <button type="button" class="account-del" data-role="card-del"
+                                        title="Удалить карточку"
+                                        aria-label="Удалить карточку ${safe}">&times;</button>
                             </div>
                         </td>
                     </tr>
@@ -547,10 +544,8 @@ function rowP2Of(row) {
 function fillP2Row(row, systemName) {
     const list = systemName ? planetTypesOf(systemName) : [];
     const planetCell = row.querySelector('[data-role="planet"]');
-    const p1A = row.querySelector('[data-role="p1-recipe-a"]');
-    const p1B = row.querySelector('[data-role="p1-recipe-b"]');
-    const p0A = row.querySelector('[data-role="p0-recipe-a"]');
-    const p0B = row.querySelector('[data-role="p0-recipe-b"]');
+    const p1Cell = row.querySelector('[data-role="p1-recipe"]');
+    const p0Cell = row.querySelector('[data-role="p0-recipe"]');
     const p2 = rowP2Of(row);
 
     // Иконка товара P2 слева от списка
@@ -561,10 +556,8 @@ function fillP2Row(row, systemName) {
 
     if (!p2) {
         // Строка без товара P2: рецепта нет, планеты — все типы системы
-        if (p1A) p1A.innerHTML = empty;
-        if (p1B) p1B.innerHTML = empty;
-        if (p0A) p0A.innerHTML = empty;
-        if (p0B) p0B.innerHTML = empty;
+        p1Cell.innerHTML = empty;
+        p0Cell.innerHTML = empty;
 
         planetCell.innerHTML = !systemName
             ? optionsHtml(PLANET_TYPES, PLANET_TYPES[0])
@@ -581,26 +574,23 @@ function fillP2Row(row, systemName) {
     // Сырьё P0 для входа: один P1 может добываться из разных P0
     const p0sOf = (p1) => uniqValues((P1_SOURCES.get(p1) || []).map((s) => s.p0));
 
-    /* Ячейка рецепта лесенкой: иконки по краям, первое название
-       сверху у левой иконки, второе снизу у правой. Левая иконка —
-       первый вход рецепта, правая — второй. */
-    const recipeCell = (icons, names) => `${iconFor(icons[0]).replace('class="res-icon"', 'class="res-icon ct-icon-a"')}`
+    /* Ячейка рецепта — две области-«уголка», сцепленные лесенкой:
+       светлая — левая иконка + верхнее название (первый вход),
+       синяя — нижнее название + правая иконка (второй вход).
+       Иконки обёрнуты в ячейки сетки, чтобы у них был свой фон. */
+    const recipeCell = (icons, names) =>
+        `<span class="ct-icon-cell ct-icon-a">${iconFor(icons[0])}</span>`
         + `<span class="ct-recipe-name ct-name-a" lang="en">${escapeHtml(names[0])}</span>`
         + `<span class="ct-recipe-name ct-name-b" lang="en">${escapeHtml(names[1])}</span>`
-        + `${iconFor(icons[1]).replace('class="res-icon"', 'class="res-icon ct-icon-b"')}`;
+        + `<span class="ct-icon-cell ct-icon-b">${iconFor(icons[1])}</span>`;
 
-    const fill = (cell, icon, name) => {
-        cell.innerHTML = `${iconFor(icon).replace('class="res-icon"', 'class="res-icon ct-icon-a"')}`
-            + `<span class="ct-recipe-name ct-name-a" lang="en">${escapeHtml(name || '—')}</span>`
-            + `<span class="ct-recipe-name ct-name-b" lang="en"></span>`
-            + `${iconFor('').replace('class="res-icon"', 'class="res-icon ct-icon-b"')}`;
-    };
-    const rawsA = p0sOf(inputs[0]);
-    const rawsB = p0sOf(inputs[1]);
-    fill(p1A, inputs[0], inputs[0]);
-    fill(p1B, inputs[1], inputs[1] === undefined ? '' : inputs[1]);
-    fill(p0A, rawsA.length ? rawsA[0] : '', rawsA.length ? rawsA.join(' · ') : '—');
-    fill(p0B, rawsB.length ? rawsB[0] : '', rawsB.length ? rawsB.join(' · ') : '—');
+    p1Cell.innerHTML = recipeCell(inputs, inputs);
+
+    const raws = inputs.map((name) => p0sOf(name));
+    p0Cell.innerHTML = recipeCell(
+        raws.map((raw) => (raw.length ? raw[0] : '')),
+        raws.map((raw) => (raw.length ? raw.join(' · ') : '—'))
+    );
 
     // Планеты: где добывается сырьё любого из входов рецепта
     const producing = uniqValues(
@@ -746,6 +736,15 @@ function refreshLine(line) {
     line.querySelector('[data-role="pilot"]').disabled = full;
     line.querySelector('[data-role="pilot-add"]').disabled = full;
     line.querySelector('[data-role="line-hint"]').hidden = count > 0;
+
+    // Три персонажа добавлены — панель добавления больше не нужна.
+    // Удалили карточку — панель возвращается.
+    line.querySelector('.card-head').hidden = full;
+    // Вместе с ней скрывается и заголовок линии с именем аккаунта.
+    // Берём только прямого потомка: у карточек своя шапка того же класса.
+    line.querySelector(':scope > .account-bar').hidden = full;
+    line.classList.toggle('is-full', full);
+    updateStats();
 }
 
 // Счётчик аккаунтов и общая подсказка, пока линий нет
@@ -753,6 +752,176 @@ function refreshAccounts() {
     const count = accounts.children.length;
     accountCounter.textContent = `Аккаунтов: ${count}`;
     cardsHint.hidden = count > 0;
+    updateStats();
+}
+
+/* ---- Статистика: подсчёт P1 по всем карточкам ----
+   Таблица по образцу пользователя (Excel):
+     Разн. | Кол-во | P1 | B G I L O P S T | Ввод
+   • Кол-во — сколько строк всех карточек дают этот P1. На карточке P1
+     это выбранный P1 строки. На карточке P2 в строке два входа рецепта:
+     засчитывается каждый вход, который добывается на планете строки.
+   • B…T — типы планет (Barren, Gas, Ice, Lava, Oceanic, Plasma, Storm,
+     Temperate). Под буквой — сколько таких планет выбрано на всех
+     карточках, «+» — этот P1 добывается на таком типе.
+   • Ввод — число вручную, хранится в браузере (STATS_MANUAL_KEY).
+   • Разн. — как формула пользователя: пусто, если Кол-во = Ввод, иначе
+     Ввод − Кол-во со знаком («+2» — нужно ещё 2, «-2» — на 2 больше).
+   • Склад пока не выводится — добавим позднее. */
+const STATS_MANUAL_KEY = 'evepi.stats.manual';
+const STATS_OPEN_KEY = 'evepi.stats.open';
+
+const STATS_P1_LIST = uniqValues(
+    Object.values(PLANET_RESOURCES).flat().map((r) => r.P1).filter(Boolean)
+).sort();
+
+// Для каждого P1 — типы планет, где он добывается
+const STATS_P1_PLANETS = new Map(STATS_P1_LIST.map((p1) => [
+    p1,
+    new Set(PLANET_TYPES.filter((t) => (PLANET_RESOURCES[t] || []).some((r) => r.P1 === p1)))
+]));
+
+let statsManual = store.get(STATS_MANUAL_KEY, {}) || {};
+
+// Таблица строится один раз, дальше updateStats только меняет числа:
+// иначе поле ручного ввода теряло бы фокус при каждом пересчёте.
+function buildStatsTable() {
+    const letters = PLANET_TYPES.map((t) => `<th scope="col" class="st-planet" title="${escapeHtml(t)}">${escapeHtml(t[0])}</th>`).join('');
+    const counts = PLANET_TYPES.map((t) => `<th class="st-planet-count" data-planet="${escapeHtml(t)}">0</th>`).join('');
+    const rows = STATS_P1_LIST.map((p1) => {
+        const marks = PLANET_TYPES.map((t) => (STATS_P1_PLANETS.get(p1).has(t)
+            ? '<td class="st-mark is-on">+</td>'
+            : '<td class="st-mark"></td>')).join('');
+        const saved = statsManual[p1];
+        return `<tr data-p1="${escapeHtml(p1)}">
+                <td class="st-diff"></td>
+                <td class="st-count">0</td>
+                <th scope="row" class="st-name"><span class="st-name-inner">${iconFor(p1)}<span>${escapeHtml(p1)}</span></span></th>
+                ${marks}
+                <td class="st-manual-cell"><input type="number" min="0" step="1" inputmode="numeric"
+                       class="st-manual" aria-label="Ввод для ${escapeHtml(p1)}"
+                       value="${saved === undefined || saved === null ? '' : escapeHtml(String(saved))}"></td>
+            </tr>`;
+    }).join('');
+
+    statsBody.innerHTML = `
+        <div class="st-scroll">
+            <table class="stats-p1">
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="st-diff" title="Разница: Ввод − Кол-во">±</th>
+                        <th rowspan="2" class="st-count" title="Кол-во P1 на всех карточках">Кол</th>
+                        <th rowspan="2" scope="col" class="st-name">P1</th>
+                        ${letters}
+                        <th rowspan="2" scope="col" class="st-manual-cell">Ввод</th>
+                    </tr>
+                    <tr>${counts}</tr>
+                </thead>
+                <tbody>${rows}</tbody>
+                <tfoot>
+                    <tr>
+                        <td></td>
+                        <td class="st-count" data-role="st-sum-count">0</td>
+                        <td colspan="${PLANET_TYPES.length + 1}"></td>
+                        <td class="st-manual-cell" data-role="st-sum-manual">0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>`;
+}
+
+function statsCount() {
+    const p1 = new Map(STATS_P1_LIST.map((n) => [n, 0]));
+    const planets = new Map(PLANET_TYPES.map((t) => [t, 0]));
+
+    accounts.querySelectorAll('.card').forEach((card) => {
+        const isP2 = card.dataset.level === 'P2';
+        card.querySelectorAll('tbody tr').forEach((row) => {
+            const planet = planetTypeOf(row);
+            if (planets.has(planet)) planets.set(planet, planets.get(planet) + 1);
+
+            if (!isP2) {
+                const value = readValue(row, 'p1');
+                if (p1.has(value)) p1.set(value, p1.get(value) + 1);
+                return;
+            }
+            const recipe = PI_P2_RECIPE_OF.get(rowP2Of(row));
+            if (!recipe) return;
+            recipe.in.forEach(([name]) => {
+                if (p1.has(name) && STATS_P1_PLANETS.get(name).has(planet)) {
+                    p1.set(name, p1.get(name) + 1);
+                }
+            });
+        });
+    });
+    return { p1, planets };
+}
+
+// Разница по формуле пользователя: пусто при равенстве, иначе Ввод − Кол-во со знаком
+function statsDiff(count, manual) {
+    if (manual === '' || manual === null || manual === undefined) return '';
+    const diff = Number(manual) - count;
+    if (!Number.isFinite(diff) || diff === 0) return '';
+    return diff > 0 ? `+${diff}` : String(diff);
+}
+
+function updateStats() {
+    if (!statsBody) return;
+    if (!statsBody.querySelector('.stats-p1')) buildStatsTable();
+
+    const { p1, planets } = statsCount();
+    let sumCount = 0;
+    let sumManual = 0;
+
+    statsBody.querySelectorAll('.st-planet-count').forEach((cell) => {
+        cell.textContent = planets.get(cell.dataset.planet) || 0;
+    });
+
+    statsBody.querySelectorAll('tbody tr').forEach((row) => {
+        const name = row.dataset.p1;
+        const count = p1.get(name) || 0;
+        const manual = row.querySelector('.st-manual').value.trim();
+        const diff = statsDiff(count, manual);
+
+        row.querySelector('.st-count').textContent = count;
+        const diffCell = row.querySelector('.st-diff');
+        diffCell.textContent = diff;
+        diffCell.classList.toggle('is-more', diff.startsWith('+'));
+        diffCell.classList.toggle('is-less', diff.startsWith('-'));
+
+        sumCount += count;
+        if (manual !== '' && Number.isFinite(Number(manual))) sumManual += Number(manual);
+    });
+
+    statsBody.querySelector('[data-role="st-sum-count"]').textContent = sumCount;
+    statsBody.querySelector('[data-role="st-sum-manual"]').textContent = sumManual;
+}
+
+// Ручной ввод: сохраняем и пересчитываем разницу и суммы
+if (statsBody) {
+    statsBody.addEventListener('input', (event) => {
+        const input = event.target.closest('.st-manual');
+        if (!input) return;
+        const name = input.closest('tr').dataset.p1;
+        const value = input.value.trim();
+        if (value === '') delete statsManual[name];
+        else statsManual[name] = Number(value);
+        store.set(STATS_MANUAL_KEY, statsManual);
+        updateStats();
+    });
+
+    // Заголовок «Статистика» сворачивает и разворачивает таблицу
+    const statsToggle = document.getElementById('stats-title');
+    const applyStatsOpen = (open) => {
+        statsBody.hidden = !open;
+        statsToggle.setAttribute('aria-expanded', String(open));
+    };
+    applyStatsOpen(store.get(STATS_OPEN_KEY, true) !== false);
+    statsToggle.addEventListener('click', () => {
+        const open = statsBody.hidden;
+        applyStatsOpen(open);
+        store.set(STATS_OPEN_KEY, open);
+    });
 }
 
 /* Сохраняем структуру «аккаунт → его карточки», а в каждой карточке —
@@ -766,6 +935,8 @@ function saveAccounts() {
         name: line.dataset.account,
         cards: Array.from(line.querySelector('[data-role="cards"]').children).map(readCard)
     })));
+    // любое изменение в карточках — пересчёт статистики P1
+    updateStats();
 }
 
 const readValue = (root, role) => {

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=39">
+    <link rel="stylesheet" href="css/style.css?v=53">
 </head>
 <body>
     <header>
@@ -28,17 +28,33 @@
     <main>
         <!-- Вкладка: выбор типа планеты -->
         <section id="planets" class="tab-content active">
-            <h2>Выбор планеты</h2>
+            <!-- Верх вкладки: слева заголовок и строка добавления аккаунта
+                 (полоска заголовка — ровно по ширине этой строки), справа
+                 блок «Статистика» той же высоты. -->
+            <div class="planets-top">
+                <div class="planets-top-main">
+                    <h2>Выбор планеты</h2>
 
-            <!-- Выбор аккаунта — аналог выбора персонажа, стоит перед ним.
-                 Кнопка «Добавить» создаёт линию аккаунта, в линию кладётся
-                 до трёх карточек-персонажей. -->
-            <div class="card-head">
-                <label class="card-pilot-label" for="account-new">Аккаунт</label>
-                <input type="text" id="account-new" class="ct-input card-new"
-                       placeholder="Название аккаунта" maxlength="32" autocomplete="off">
-                <button type="button" id="account-add" class="btn card-add">Добавить</button>
-                <span id="account-counter" class="card-counter" aria-live="polite">Аккаунтов: 0</span>
+                    <!-- Выбор аккаунта — аналог выбора персонажа, стоит перед ним.
+                         Кнопка «Добавить» создаёт линию аккаунта, в линию кладётся
+                         до трёх карточек-персонажей. -->
+                    <div class="card-head account-head">
+                        <label class="card-pilot-label" for="account-new">Аккаунт</label>
+                        <input type="text" id="account-new" class="ct-input card-new"
+                               placeholder="Название аккаунта" maxlength="32" autocomplete="off">
+                        <button type="button" id="account-add" class="btn card-add">Добавить</button>
+                        <span id="account-counter" class="card-counter" aria-live="polite">Аккаунтов: 0</span>
+                    </div>
+                </div>
+
+                <!-- Таблицу подсчёта P1 строит и заполняет app.js (updateStats) -->
+                <aside class="stats-panel" aria-labelledby="stats-title">
+                    <h3 class="stats-title">
+                        <button type="button" id="stats-title" class="stats-toggle" aria-expanded="true"
+                                aria-controls="stats-body">Статистика</button>
+                    </h3>
+                    <div id="stats-body" class="stats-body"></div>
+                </aside>
             </div>
 
             <div id="cards-hint" class="card-hint">
@@ -100,6 +116,6 @@
     <script src="js/calculator.js?v=2"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=22"></script>
+    <script src="js/app.js?v=37"></script>
 </body>
 </html>
