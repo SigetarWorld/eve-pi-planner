@@ -55,7 +55,7 @@ const PLANET_TYPES = Object.keys(PLANET_RESOURCES);
 // Заголовки карточки — идут под шапкой с именем персонажа,
 // ниже строки системы. «Статус» убрана: кнопка подсветки 💡 живёт
 // в строке системы справа (см. buildCard).
-const CARD_HEADERS = ['Планета', '№', 'P0', 'P1'];
+const CARD_HEADERS = ['Планета', 'P0', 'P1'];
 
 /* Ширины колонок карточки, тот же порядок, что у CARD_HEADERS.
    Таблица ужимается до ширины карточки, и без заданных ширин колонки
@@ -68,7 +68,11 @@ const CARD_HEADERS = ['Планета', '№', 'P0', 'P1'];
 
    Доли: P0 и P1 шире прочих (самое длинное слово плюс иконка слева от
    списка), Планета и № вдвое уже, Корабль — средняя. */
-const CARD_COL_WIDTHS = ['18%', '8%', '37%', '37%'];
+/* Столбца «№» больше нет: номер стоит в списке «Планета» («VII Barren»),
+   поэтому планете отдана его доля. */
+// Ширину «Планеты» подгоняет fitCardColumns (по самому длинному тексту),
+// остальные столбцы делят остаток поровну
+const CARD_COL_WIDTHS = ['auto', 'auto', 'auto'];
 
 /* ---- Карточка P2 ----
    Второй вид карточки, колонки P2|Планета|№|P1|P0|Корабль. Шесть
@@ -76,19 +80,37 @@ const CARD_COL_WIDTHS = ['18%', '8%', '37%', '37%'];
    выбираются — это рецепт выбранного P2, выводимый текстом (в P1 оба
    входа, в P0 их сырьё). Планеты фильтруются по рецепту, а выбранная
    система сужает их до своих типов. */
-const CARD_HEADERS_P2 = ['P2', 'Планета', '№', 'P1', 'P0'];
+const CARD_HEADERS_P2 = ['P2', 'Планета', 'P1', 'P0'];
+
+/* «Тест P2» (T2) — тестовая карточка: как P2, но вход рецепта и его сырьё
+   стоят рядом, каждый в своей клетке: P1 | P0 | P1 | P0 (картинка слева,
+   название справа, без рамок). Ширины столбцов товара и планеты — по самому
+   длинному значению (fitCardColumns). Хранится как P2 (поле p2s). */
+const TEST2_LEVEL = 'T2';
+const isP2Level = (level) => level === 'P2' || level === TEST2_LEVEL;
+/* Карточки P2 и P3 теперь устроены как бывшие тестовые: вход/ресурс —
+   в своей клетке. Прежние «Тест P2»/«Тест P3» (T2/T3) при загрузке
+   становятся обычными P2/P3 (см. addCard). */
+const isSplitP3 = (level) => level === 'P3' || level === 'T3';
+// Тестовые карточки: у каждой клетки свой заголовок, без объединения.
+// «Тест P2» — вход и его сырьё рядом: P1 | P0 | P1 | P0
+const CARD_HEADERS_T2 = ['P2', 'Планета', 'P1', 'P0', 'P1', 'P0'];
+const HEADER_SPANS = {};
 /* P2 — шире, чтобы название товара в списке влезало целиком (кроме
    самого длинного, Genetically Enhanced Livestock — оно видно в
    подсказке и в раскрытом списке). P1 и P0 — одинаковой ширины. */
-const CARD_COL_WIDTHS_P2 = ['30%', '11%', '6%', '26.5%', '26.5%'];
+const CARD_COL_WIDTHS_P2 = ['30%', 'auto', 'auto', 'auto'];
 
 // Товары P2 — это выход рецептов P1->P2 (outQty 5, два входа)
 const PI_P2_LIST = PI_RECIPES
     .filter((recipe) => recipe.outQty === 5)
     .map((recipe) => recipe.out)
     .sort();
-// Заполнителя «P2…» нет: в каждой строке сразу выбран товар P2
-const P2_OPTIONS_HTML = PI_P2_LIST
+/* Первый вариант — пустой «—»: новая карточка создаётся незаполненной,
+   товар выбирает пользователь. Так же у всех зависимых списков карточек;
+   у независимого «Корабля» пустой строки нет. */
+const EMPTY_OPTION = '<option value="" selected>—</option>';
+const P2_OPTIONS_HTML = EMPTY_OPTION + PI_P2_LIST
     .map((n) => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`)
     .join('');
 const PI_P2_RECIPE_OF = new Map(
@@ -107,6 +129,92 @@ Object.keys(PLANET_RESOURCES).forEach((planet) => {
 });
 
 const uniqValues = (list) => Array.from(new Set(list));
+
+/* ---- Карточки P3 и P4 ----
+   Устроены как карточка P2: шесть независимых строк, у каждой свой
+   товар. Колонки:
+     P3 | Планета | № | P2   — входы рецепта P2->P3
+     P4 | Планета | № | P3   — входы рецепта P3->P4
+   Столбец входов не выбирается — это рецепт выбранного товара, как на
+   карточке P2. У P3 входов 2–3, у P4 — три (иногда один из них P1,
+   он идёт в рецепт напрямую).
+   Планеты: фабрика P3 (Advanced Industry Facility) ставится на любой
+   тип планеты, фабрика P4 (High-Tech Production Plant) — только на
+   Barren и Temperate. Выбранная система сужает список до своих типов. */
+/* T3 — тестовая карточка «Тест P3»: товары и планеты как у P3, но
+   столбец P2 разделён на три части — по клетке на ресурс рецепта, а
+   столбцы P3 и «Планета» подогнаны по самому длинному значению
+   (см. fitCardColumns). Хранится как P3 (поле prods). */
+const TEST_LEVEL = 'T3';
+const PROD_LEVELS = ['P3', 'P4', TEST_LEVEL];
+const isProdLevel = (level) => PROD_LEVELS.includes(level);
+const PROD_OUT_QTY = { P3: 3, P4: 1, T3: 3 };
+const PROD_PLANETS = { P3: null, P4: ['Barren', 'Temperate'], T3: null };
+const CARD_HEADERS_PROD = {
+    P3: ['P3', 'Планета', 'P2', 'P2', 'P2'],
+    // P4 — как P2: вход и его состав рядом, каждый в своей клетке
+    P4: ['P4', 'Планета', 'P3', 'P3', 'P3'],
+    T3: ['P3', 'Планета', 'P2', 'P2', 'P2']
+};
+// Сколько столбцов занимает заголовок входов (у T3 — свой заголовок у каждой клетки)
+const PROD_INPUT_SPAN = { P3: 1, P4: 1, T3: 1 };
+// Четыре колонки: товар, планета, №, входы рецепта (самая широкая)
+/* Те же ширины, что у карточки P2: блоки входов встают точно под её
+   столбцы P1 и P0; заголовок входов растянут на оба (colspan 2). */
+const CARD_COL_WIDTHS_PROD = CARD_COL_WIDTHS_P2;
+// PI_RECIPE_OF (товар → рецепт) объявлен в js/chains.js
+
+/* ---- Универсальная карточка (MIX) ----
+   Шесть строк; каждая сначала пустая, с кнопкой «+ Добавить». Кнопка
+   открывает список типов P1…P4 — строка становится строкой этого типа,
+   крестик возвращает её к пустой. В списке товаров тип указан в скобках:
+   «Coolant (P2)». Колонки — по
+   сетке карточки P2: Товар | Планета | № | Состав (два блока).
+     P1 — товар P1; планеты, где он добывается; в составе его P0 на
+          выбранной планете
+     P2 — как карточка P2: входы P1 и их сырьё P0
+     P3 — как карточка P3: входы P2 (до трёх, в два блока)
+     P4 — как карточка P4: входы P3; только Barren и Temperate */
+const MIX_LEVEL = 'MIX';
+const MIX_LEVELS = ['P1', 'P2', 'P3', 'P4'];
+const CARD_HEADERS_MIX = ['Товар', 'Планета', 'Состав'];
+let mixListsCache = null;
+function mixListOf(level) {
+    if (!mixListsCache) {
+        const p1 = uniqValues(Object.values(PLANET_RESOURCES).flat().map((r) => r.P1).filter(Boolean)).sort();
+        mixListsCache = { P1: p1, P2: PI_P2_LIST, P3: PROD_LIST.P3, P4: PROD_LIST.P4 };
+    }
+    return mixListsCache[level] || [];
+}
+const PROD_LIST = {};
+const PROD_OPTIONS_HTML = {};
+PROD_LEVELS.forEach((level) => {
+    PROD_LIST[level] = PI_RECIPES
+        .filter((recipe) => recipe.outQty === PROD_OUT_QTY[level])
+        .map((recipe) => recipe.out)
+        .sort();
+    PROD_OPTIONS_HTML[level] = EMPTY_OPTION + PROD_LIST[level]
+        .map((n) => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`)
+        .join('');
+});
+
+/* Ячейка рецепта. Два входа — по макету карточки P2: две области-
+   «уголка», сцепленные лесенкой. Три входа — три полосы одна под
+   другой (иконка + название), каждая своей области. */
+function recipeCellHtml(icons, names) {
+    if (names.length === 2) {
+        return `<span class="ct-icon-cell ct-icon-a">${iconFor(icons[0])}</span>`
+            + `<span class="ct-recipe-name ct-name-a" lang="en">${escapeHtml(names[0])}</span>`
+            + `<span class="ct-recipe-name ct-name-b" lang="en">${escapeHtml(names[1])}</span>`
+            + `<span class="ct-icon-cell ct-icon-b">${iconFor(icons[1])}</span>`;
+    }
+    return names.map((name, i) =>
+        `<span class="ct-line ct-zone-${i % 3}">`
+        + `<span class="ct-icon-cell">${iconFor(icons[i])}</span>`
+        + `<span class="ct-recipe-name" lang="en">${escapeHtml(name)}</span>`
+        + '</span>'
+    ).join('');
+}
 
 /* ---- Хранилище ----
    Имён пилотов и названий аккаунтов мы не знаем, поэтому их вводит пользователь.
@@ -248,6 +356,33 @@ function syncTitle(select, empty) {
     select.title = option && option.value ? option.value : empty;
 }
 
+/* Подсказка в заблокированном списке: вместо «—» фоном видно, что
+   выбрать сначала («Регион???», «Система???», «Товар???», «Планета???»). Пустой вариант получает текст подсказки и
+   становится выбранным; разблокированный список возвращает свой текст
+   (data-empty-text, по умолчанию «—»). */
+function setLockHint(select, hint) {
+    if (!select) return;
+    let empty = Array.from(select.options).find((o) => o.value === '');
+    if (!empty) {
+        empty = document.createElement('option');
+        empty.value = '';
+        select.insertBefore(empty, select.firstChild);
+    }
+    if (!select.dataset.emptyText) select.dataset.emptyText = empty.textContent || '—';
+    // Фоном — просто что выбрать: «Регион», «Система», «Товар», «Планета».
+    // Полная фраза — в подсказке при наведении.
+    select.disabled = true;
+    empty.textContent = `${hint}???`;
+    select.value = '';
+    select.title = `Сначала выберите: ${hint.toLowerCase()}`;
+}
+
+function clearLockHint(select) {
+    if (!select || !select.dataset.emptyText) return;
+    const empty = Array.from(select.options).find((o) => o.value === '');
+    if (empty) empty.textContent = select.dataset.emptyText;
+}
+
 /* Списки добираем в тот момент, когда их открывают: mousedown ловит
    мышь, focusin — переход с клавиатуры. */
 function prepareCardList(event) {
@@ -297,9 +432,25 @@ function fillPlanets(card, systemName) {
     /* Карточка P2 живёт своим каскадом: каждая строка независима, её
        планеты зависят от выбранного товара P2 и входа рецепта, который
        эта строка берёт (см. fillP2Row). */
-    if (card.dataset.level === 'P2') {
+    if (isP2Level(card.dataset.level)) {
         card.querySelectorAll('tbody tr').forEach((row) => {
             fillP2Row(row, systemName);
+        });
+        return;
+    }
+
+    // Универсальная карточка: у каждой строки свой уровень (см. fillMixRow)
+    if (card.dataset.level === MIX_LEVEL) {
+        card.querySelectorAll('tbody tr').forEach((row) => {
+            fillMixRow(row, systemName);
+        });
+        return;
+    }
+
+    // Карточки P3 и P4 — тот же принцип, свой рецепт (см. fillProdRow)
+    if (isProdLevel(card.dataset.level)) {
+        card.querySelectorAll('tbody tr').forEach((row) => {
+            fillProdRow(row, systemName, card.dataset.level);
         });
         return;
     }
@@ -310,30 +461,28 @@ function fillPlanets(card, systemName) {
        показывать нельзя, они относятся к галактике в целом, а не к этой
        системе. Система не выбрана — другое дело, там список типов
        по умолчанию. */
-    const options = !systemName
-        ? planetOptions(PLANET_TYPES, PLANET_TYPES[0])
-        : (list.length
-            ? planetOptions(list, list[0])
-            : '<option value="">Нет данных о планетах</option>');
-
+    // Каждая строка сохраняет свою планету, если она есть в новом списке,
+    // иначе остаётся пустой «—» — ничего не подставляем сами
+    const kinds = !systemName ? PLANET_TYPES : list;
     card.querySelectorAll('[data-role="planet"]').forEach((cell) => {
-        cell.innerHTML = options;
+        const current = cell.value;
+        cell.innerHTML = kinds.length
+            ? planetOptions(kinds, kinds.includes(current) ? current : '')
+            : '<option value="">Нет данных о планетах</option>';
         syncTitle(cell, 'Тип планеты не выбран');
     });
 
     // Каскад поехал за типами
     card.querySelectorAll('tbody tr').forEach((row) => {
+        numberizePlanets(row, systemName);
         fillP0(row);
         fillP1(row);
     });
 }
 
 // Одна строка карточки. Параметр index — порядковый номер строки от 0 до 5.
-// Значения по умолчанию берём из первого типа планеты в PLANET_RESOURCES.
+// Новая строка пустая: планета и P0 — «—», их выбирает пользователь.
 function buildColonyRow(index) {
-    const firstPlanet = PLANET_TYPES[0] || '';
-    const firstResources = PLANET_RESOURCES[firstPlanet] || [];
-    const firstP0 = firstResources[0] ? firstResources[0].P0 : '';
 
     // В первой строке идут объединённые ячейки, в остальных — нет.
     // Ячейка «Статус» убрана: кнопка подсветки переехала в строку
@@ -342,26 +491,25 @@ function buildColonyRow(index) {
     return `
         <tr data-row="${index}">
             <td class="ct-planet">
-                <select class="ct-input" data-role="planet" aria-label="Тип планеты"
-                        title="Сначала выберите систему — тогда здесь будут типы её планет">
-                    ${planetOptions(PLANET_TYPES, firstPlanet)}
-                </select>
-            </td>
-            <td class="ct-number">
-                <select class="ct-input" data-role="number" aria-label="Номер планеты">
-                    ${optionsHtml(ROMAN_NUMBERS, ROMAN_NUMBERS[index % ROMAN_NUMBERS.length])}
+                <input type="hidden" data-role="number" value="${ROMAN_NUMBERS[index % ROMAN_NUMBERS.length]}">
+                <select class="ct-input" data-role="planet" aria-label="Тип планеты" disabled
+                        title="Сначала выберите регион и систему">
+                    ${planetOptions(PLANET_TYPES, '')}
                 </select>
             </td>
             <td class="ct-p0">
                 <div class="res-stack">
                     <select class="ct-input" data-role="p0" aria-label="Ресурс P0">
-                        ${optionsHtml(firstResources.map((r) => r.P0), firstP0)}
+                        ${EMPTY_OPTION}
                     </select>
                 </div>
             </td>
             <td class="ct-p1">
                 <div class="res-stack">
-                    <select class="ct-input" data-role="p1" aria-label="Ресурс P1"></select>
+                    <!-- P1 не выбирается: он один на пару «планета + P0», поэтому
+                         это текст; значение — в скрытом поле для хранилища -->
+                    <input type="hidden" data-role="p1" value="">
+                    <span class="ct-p1-text" data-role="p1-text">—</span>
                 </div>
             </td>
         </tr>`;
@@ -372,8 +520,7 @@ function buildColonyRow(index) {
    Все шесть строк независимы: у каждой свой товар P2, свои планета,
    P1 и P0. «Корабль», как и в обычной карточке, объединён на все шесть
    строк. */
-function buildP2ColonyRow(index) {
-    const firstPlanet = PLANET_TYPES[0] || '';
+function buildP2ColonyRow(index, test) {
 
     const p2Cell = `<td class="ct-p2">
                <div class="res-stack">
@@ -387,21 +534,99 @@ function buildP2ColonyRow(index) {
         <tr data-row="${index}">
             ${p2Cell}
             <td class="ct-planet">
-                <select class="ct-input" data-role="planet" aria-label="Тип планеты"
-                        title="Сначала выберите систему — тогда здесь будут типы её планет">
-                    ${planetOptions(PLANET_TYPES, firstPlanet)}
+                <input type="hidden" data-role="number" value="${ROMAN_NUMBERS[index % ROMAN_NUMBERS.length]}">
+                <select class="ct-input" data-role="planet" aria-label="Тип планеты" disabled
+                        title="Сначала выберите регион и систему">
+                    ${planetOptions(PLANET_TYPES, '')}
                 </select>
             </td>
-            <td class="ct-number">
-                <select class="ct-input" data-role="number" aria-label="Номер планеты">
-                    ${optionsHtml(ROMAN_NUMBERS, ROMAN_NUMBERS[index % ROMAN_NUMBERS.length])}
-                </select>
+            ${test
+                ? [1, 2].map((k) => `<td class="ct-p1 ct-split">
+                <div class="ct-recipe ct-recipe-one" data-role="p1-one" aria-label="Вход P1 №${k}"></div>
             </td>
-            <td class="ct-p1 ct-split">
+            <td class="ct-p0 ct-split">
+                <div class="ct-recipe ct-recipe-one" data-role="p0-one" aria-label="Сырьё P0 для входа №${k}"></div>
+            </td>`).join('')
+                : `<td class="ct-p1 ct-split">
                 <div class="ct-recipe" data-role="p1-recipe" aria-label="Входы рецепта P1"></div>
             </td>
             <td class="ct-p0 ct-split">
                 <div class="ct-recipe" data-role="p0-recipe" aria-label="Сырьё P0 для рецепта"></div>
+            </td>`}
+        </tr>`;
+}
+
+// Клетки «по ресурсу» тестовых карточек: картинка слева, название справа;
+// пустая клетка держит форму прозрачной картинкой
+function fillOneCells(row, role, icons, labels) {
+    row.querySelectorAll(`[data-role="${role}"]`).forEach((cell, k) => {
+        const has = k < labels.length && labels[k];
+        cell.classList.toggle('ct-one-empty', !has);
+        cell.innerHTML = `<span class="ct-icon-cell">${has && icons[k] ? iconFor(icons[k]) : BLANK_ICON}</span>`
+            + `<span class="ct-recipe-name" lang="en">${has ? escapeHtml(labels[k]) : '&nbsp;'}</span>`;
+    });
+}
+
+/* Строка карточки P3/P4: товар | Планета | № | входы рецепта.
+   Классы ячеек те же, что у карточки P2, — у них одинаковое оформление. */
+function buildProdColonyRow(index, level) {
+    const lower = level === 'P3' ? 'P2' : 'P3';
+
+    return `
+        <tr data-row="${index}">
+            <td class="ct-p2">
+                <div class="res-stack">
+                    <select class="ct-input" data-role="prod" aria-label="Товар ${level}"
+                            title="Выберите товар ${level} — состав строки подберётся по его рецепту">${PROD_OPTIONS_HTML[level]}</select>
+                </div>
+            </td>
+            <td class="ct-planet">
+                <input type="hidden" data-role="number" value="${ROMAN_NUMBERS[index % ROMAN_NUMBERS.length]}">
+                <select class="ct-input" data-role="planet" aria-label="Тип планеты" disabled
+                        title="Сначала выберите регион и систему">
+                    ${planetOptions(PROD_PLANETS[level] || PLANET_TYPES, '')}
+                </select>
+            </td>
+            ${level === 'P4'
+                ? [0, 1, 2].map((k) => `<td class="ct-p1 ct-split">
+                <div class="ct-recipe ct-recipe-one" data-role="p4-in" aria-label="Вход P3 №${k + 1}"></div>
+            </td>`).join('')
+                : isSplitP3(level)
+                ? [0, 1, 2].map((k) => `<td class="ct-p1 ct-split">
+                <div class="ct-recipe ct-recipe-one" data-role="in-one" aria-label="Ресурс ${lower} №${k + 1}"></div>
+            </td>`).join('')
+                : `<td class="ct-p1 ct-split">
+                <div class="ct-recipe" data-role="in-recipe" aria-label="Входы рецепта ${lower}: 1 и 2"></div>
+            </td>
+            <td class="ct-p0 ct-split">
+                <div class="ct-recipe" data-role="in-recipe-b" aria-label="Входы рецепта ${lower}: 3"></div>
+            </td>`}
+        </tr>`;
+}
+
+/* Строка универсальной карточки. Тип строки хранится в скрытом поле
+   mix-level; первую ячейку рисует renderMixHead: пустая строка — кнопка
+   «+ Добавить» и меню типов, выбранная — иконка над списком товаров
+   (как на карточке P2) и крестик очистки. */
+function buildMixColonyRow(index) {
+    return `
+        <tr data-row="${index}">
+            <td class="ct-p2 ct-mix">
+                <input type="hidden" data-role="mix-level" value="">
+                <div class="ct-mix-head"></div>
+            </td>
+            <td class="ct-planet">
+                <input type="hidden" data-role="number" value="${ROMAN_NUMBERS[index % ROMAN_NUMBERS.length]}">
+                <select class="ct-input" data-role="planet" aria-label="Тип планеты" disabled
+                        title="Сначала выберите регион и систему">
+                    ${planetOptions(PLANET_TYPES, '')}
+                </select>
+            </td>
+            <td class="ct-p1 ct-split">
+                <div class="ct-recipe" data-role="in-recipe" aria-label="Состав: блок 1"></div>
+            </td>
+            <td class="ct-p0 ct-split">
+                <div class="ct-recipe" data-role="in-recipe-b" aria-label="Состав: блок 2"></div>
             </td>
         </tr>`;
 }
@@ -410,19 +635,26 @@ function buildP2ColonyRow(index) {
    что у линии аккаунта), под ней таблица с заголовками и 6 строками.
    Имя попадает и в data-name — по нему карточка восстанавливается при загрузке. */
 function buildCard(name, level) {
-    const p2 = level === 'P2';
-    const headers = p2 ? CARD_HEADERS_P2 : CARD_HEADERS;
-    const widths = p2 ? CARD_COL_WIDTHS_P2 : CARD_COL_WIDTHS;
+    const p2 = isP2Level(level);
+    const mix = level === MIX_LEVEL;
+    const prod = isProdLevel(level) || mix;
+    const headers = mix ? CARD_HEADERS_MIX
+        : (prod ? CARD_HEADERS_PROD[level]
+            : (p2 ? CARD_HEADERS_T2 : CARD_HEADERS));
+    const widths = isSplitP3(level) || p2 || level === 'P4'
+        ? headers.flatMap((h, i) => Array(HEADER_SPANS[level] ? HEADER_SPANS[level][i] : 1).fill('auto'))   // ширины ставит fitCardColumns
+        : (prod ? CARD_COL_WIDTHS_PROD : (p2 ? CARD_COL_WIDTHS_P2 : CARD_COL_WIDTHS));
     const rows = Array.from(
         { length: COLONY_ROWS },
-        (_, i) => (p2 ? buildP2ColonyRow(i) : buildColonyRow(i))
+        (_, i) => (mix ? buildMixColonyRow(i)
+            : (prod ? buildProdColonyRow(i, level) : (p2 ? buildP2ColonyRow(i, true) : buildColonyRow(i))))
     ).join('');
     const safe = escapeHtml(name);
 
     return `
-        <div class="card" data-name="${safe}" data-level="${p2 ? 'P2' : 'P1'}">
+        <div class="card" data-name="${safe}" data-level="${prod ? level : (p2 ? level : 'P1')}">
             <table class="colony-table">
-                <colgroup>${widths.map((w) => `<col style="width:${w}">`).join('')}</colgroup>
+                <colgroup>${widths.map((w) => (w === 'auto' ? '<col>' : `<col style="width:${w}">`)).join('')}</colgroup>
                 <thead>
                     <!-- Строка системы: над заголовками, на всю ширину
                          карточки. Списки общие на всю карточку, поэтому
@@ -439,7 +671,7 @@ function buildCard(name, level) {
                                 </span>
                                 <span class="ct-field">
                                     <span class="ct-system-label">Система:</span>
-                                    <select class="ct-input" data-role="system" aria-label="Система" title="Система не выбрана">${SYSTEM_PLACEHOLDER}</select>
+                                    <select class="ct-input" data-role="system" aria-label="Система" title="Сначала выберите регион" data-empty-text="Система" disabled><option value="">Регион???</option></select>
                                 </span>
                                 <span class="ct-field">
                                     <span class="ct-system-label">Корабль:</span>
@@ -452,7 +684,12 @@ function buildCard(name, level) {
                             </div>
                         </td>
                     </tr>
-                    <tr>${headers.map((h) => `<th scope="col">${h}</th>`).join('')}</tr>
+                    <tr>${headers.map((h, i) => {
+                        const span = HEADER_SPANS[level]
+                            ? HEADER_SPANS[level][i]
+                            : (prod && i === headers.length - 1 ? (PROD_INPUT_SPAN[level] || 2) : 1);
+                        return span > 1 ? `<th scope="col" colspan="${span}">${h}</th>` : `<th scope="col">${h}</th>`;
+                    }).join('')}</tr>
                 </thead>
                 <tbody>${rows}</tbody>
             </table>
@@ -469,27 +706,29 @@ function fillP0(row) {
 
     const p0 = p0Select.value;
     const resources = (PLANET_RESOURCES[planetTypeOf(row)] || []).map((r) => r.P0);
-    p0Select.innerHTML = resources.length
-        ? optionsHtml(resources, resources.includes(p0) ? p0 : resources[0])
-        : '<option value="">—</option>';
+    // Пустая строка «—» первой: P0 выбирает пользователь — после планеты
+    p0Select.innerHTML = `<option value="">—</option>${optionsHtml(resources, resources.includes(p0) ? p0 : '')}`;
+    p0Select.disabled = !planetTypeOf(row);
+    if (p0Select.disabled) setLockHint(p0Select, 'Планета');
+    else p0Select.title = p0Select.value || 'P0 не выбран';
 }
 
 // Значение P1 берём из PLANET_RESOURCES по выбранному типу планеты и P0.
 // На карточке P2 столбца-списка P1 нет: там рецепт выводится текстом
 // (см. fillP2Row), поэтому функция выходит сразу.
 function fillP1(row) {
-    const p1Select = row.querySelector('[data-role="p1"]');
-    if (!p1Select) return; // карточка P2: столбец P1 — текст, не список
+    const p1Value = row.querySelector('[data-role="p1"]');
+    const p1Text = row.querySelector('[data-role="p1-text"]');
+    if (!p1Value || !p1Text) return; // другие карточки: P1 — рецепт, не эта ячейка
 
     const resources = PLANET_RESOURCES[planetTypeOf(row)] || [];
     const p0 = row.querySelector('[data-role="p0"]').value;
     const entry = resources.find((r) => r.P0 === p0);
 
-    // У части ресурсов P1 нет — показываем прочерк
-    p1Select.innerHTML = entry && entry.P1
-        ? optionsHtml([entry.P1], entry.P1)
-        : '<option value="">—</option>';
-    p1Select.disabled = !(entry && entry.P1);
+    // P1 — текст: он однозначно следует из планеты и P0. Нет — прочерк
+    p1Value.value = entry && entry.P1 ? entry.P1 : '';
+    p1Text.textContent = p1Value.value || '—';
+    p1Text.classList.toggle('is-empty', !p1Value.value);
 
     // Иконки в ячейках P0 и P1 следуют за выбранными ресурсами
     updateResIcon(row.querySelector('.ct-p0'));
@@ -549,7 +788,7 @@ function rowP2Of(row) {
 // P2. Выводим рецепт текстом — в P1 оба входа рецепта, в P0 сырьё для
 // каждого входа, по строке на вход. Планеты — типы, где добывается
 // сырьё любого из входов, суженные до типов выбранной системы.
-function fillP2Row(row, systemName) {
+function fillP2RowInner(row, systemName) {
     const list = systemName ? planetTypesOf(systemName) : [];
     const planetCell = row.querySelector('[data-role="planet"]');
     const p1Cell = row.querySelector('[data-role="p1-recipe"]');
@@ -565,13 +804,15 @@ function fillP2Row(row, systemName) {
 
     if (!p2) {
         // Строка без товара P2: рецепта нет, планеты — все типы системы
-        p1Cell.innerHTML = empty;
-        p0Cell.innerHTML = empty;
+        if (p1Cell) p1Cell.innerHTML = empty;
+        if (p0Cell) p0Cell.innerHTML = empty;
+        fillOneCells(row, 'p1-one', [], []);
+        fillOneCells(row, 'p0-one', [], []);
 
         planetCell.innerHTML = !systemName
-            ? planetOptions(PLANET_TYPES, current || PLANET_TYPES[0])
+            ? planetOptions(PLANET_TYPES, current)
             : (list.length
-                ? planetOptions(list, list.includes(current) ? current : list[0])
+                ? planetOptions(list, list.includes(current) ? current : '')
                 : '<option value="">Нет данных о планетах</option>');
         syncTitle(planetCell, 'Тип планеты не выбран');
         return;
@@ -587,19 +828,20 @@ function fillP2Row(row, systemName) {
        светлая — левая иконка + верхнее название (первый вход),
        синяя — нижнее название + правая иконка (второй вход).
        Иконки обёрнуты в ячейки сетки, чтобы у них был свой фон. */
-    const recipeCell = (icons, names) =>
-        `<span class="ct-icon-cell ct-icon-a">${iconFor(icons[0])}</span>`
-        + `<span class="ct-recipe-name ct-name-a" lang="en">${escapeHtml(names[0])}</span>`
-        + `<span class="ct-recipe-name ct-name-b" lang="en">${escapeHtml(names[1])}</span>`
-        + `<span class="ct-icon-cell ct-icon-b">${iconFor(icons[1])}</span>`;
-
-    p1Cell.innerHTML = recipeCell(inputs, inputs);
+    const recipeCell = recipeCellHtml;
 
     const raws = inputs.map((name) => p0sOf(name));
-    p0Cell.innerHTML = recipeCell(
-        raws.map((raw) => (raw.length ? raw[0] : '')),
-        raws.map((raw) => (raw.length ? raw.join(' · ') : '—'))
-    );
+    if (p1Cell) {
+        p1Cell.innerHTML = recipeCell(inputs, inputs);
+        p0Cell.innerHTML = recipeCell(
+            raws.map((raw) => (raw.length ? raw[0] : '')),
+            raws.map((raw) => (raw.length ? raw.join(' · ') : '—'))
+        );
+    } else {
+        // «Тест P2»: каждый вход и его сырьё — в своей клетке
+        fillOneCells(row, 'p1-one', inputs, inputs);
+        fillOneCells(row, 'p0-one', raws.map((raw) => raw[0] || ''), raws.map((raw) => raw.join(' · ')));
+    }
 
     // Планеты: где добывается сырьё любого из входов рецепта
     const producing = uniqValues(
@@ -608,12 +850,481 @@ function fillP2Row(row, systemName) {
     const allowed = list.length ? producing.filter((p) => list.includes(p)) : producing;
 
     planetCell.innerHTML = allowed.length
-        ? planetOptions(allowed, allowed.includes(current) ? current : allowed[0])
+        ? planetOptions(allowed, allowed.includes(current) ? current : '')
         : (list.length
             ? '<option value="">Нет подходящих планет</option>'
-            : planetOptions(producing, producing[0]));
+            : planetOptions(producing, ''));
     syncTitle(planetCell, 'Тип планеты не выбран');
 }
+
+/* Входы рецепта P3/P4 — два блока рядом, каждый как ячейка рецепта на
+   карточке P2 («уголки» лесенкой: иконка слева у верхнего названия,
+   нижнее название с иконкой справа). В первом блоке входы 1 и 2, во
+   втором — вход 3. Пустые места остаются фоном: зато строка всегда в
+   две линии и карточки одной высоты. */
+// Пустая (прозрачная) картинка размером с иконку ресурса
+const BLANK_ICON = '<img class="res-icon res-icon-blank" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" width="24" height="24">';
+
+// Возвращает содержимое двух блоков: [входы 1–2, входы 3–4]
+function recipePairHtml(icons, labels) {
+    const half = (i) => {
+        const has = (k) => k < labels.length;
+        // Нет ресурса — прозрачная картинка того же размера и пробел вместо
+        // названия: блок сохраняет форму, как при четырёх входах
+        const icon = (k) => (has(k) ? iconFor(icons[k]) : BLANK_ICON);
+        const name = (k) => (has(k) ? escapeHtml(labels[k]) : '&nbsp;');
+        const empty = (k) => (has(k) ? '' : ' ct-slot-empty');
+        return `<span class="ct-icon-cell ct-icon-a${empty(i)}">${icon(i)}</span>`
+            + `<span class="ct-recipe-name ct-name-a${empty(i)}" lang="en">${name(i)}</span>`
+            + `<span class="ct-recipe-name ct-name-b${empty(i + 1)}" lang="en">${name(i + 1)}</span>`
+            + `<span class="ct-icon-cell ct-icon-b${empty(i + 1)}">${icon(i + 1)}</span>`;
+    };
+    return [half(0), half(2)];
+}
+
+/* ---- Карточки P3 и P4: каскад по рецепту ----
+   Как на карточке P2: по выбранному товару строки выводятся входы его
+   рецепта. Вход P1 в рецепте P4 (Bacteria, Water, Reactive Metals)
+   помечен «(P1)» — он идёт в рецепт напрямую. */
+function rowProdOf(row) {
+    const cell = row.querySelector('[data-role="prod"]');
+    return cell ? cell.value : '';
+}
+
+function fillProdRowInner(row, systemName, level) {
+    const list = systemName ? planetTypesOf(systemName) : [];
+    const planetCell = row.querySelector('[data-role="planet"]');
+    const inCell = row.querySelector('[data-role="in-recipe"]');
+    const inCellB = row.querySelector('[data-role="in-recipe-b"]');
+    const prod = rowProdOf(row);
+    const current = planetTypeOf(row);
+
+    const prodCell = row.querySelector('.ct-p2');
+    if (prodCell) updateResIcon(prodCell);
+
+    const recipe = PI_RECIPE_OF.get(prod);
+    if (level === 'P4') {
+        /* Три клетки P3: по входу в клетке. Вход P1 (Bacteria, Water,
+           Reactive Metals) — с пометкой «(P1)». */
+        const inputs = recipe ? recipe.in.map(([name]) => name) : [];
+        const labels = inputs.map((name) => {
+            const r = PI_RECIPE_OF.get(name);
+            return r && r.outQty === 20 ? `${name} (P1)` : name;
+        });
+        fillOneCells(row, 'p4-in', inputs, labels);
+    } else if (isSplitP3(level)) {
+        // Тестовая: по клетке на ресурс — иконка и название; пустая клетка
+        // держит форму прозрачной картинкой
+        const inputs = recipe ? recipe.in.map(([name]) => name) : [];
+        row.querySelectorAll('[data-role="in-one"]').forEach((cell, k) => {
+            const has = k < inputs.length;
+            cell.classList.toggle('ct-one-empty', !has);
+            cell.innerHTML = `<span class="ct-icon-cell">${has ? iconFor(inputs[k]) : BLANK_ICON}</span>`
+                + `<span class="ct-recipe-name" lang="en">${has ? escapeHtml(inputs[k]) : '&nbsp;'}</span>`;
+        });
+    } else if (!recipe) {
+        const [, blank] = recipePairHtml([], []);
+        inCell.innerHTML = '<span class="ct-recipe-names ct-recipe-empty">—</span>';
+        inCellB.innerHTML = blank;
+    } else {
+        const inputs = recipe.in.map(([name]) => name);
+        // P1 в рецепте P4 берётся напрямую — помечаем уровень
+        const labels = inputs.map((name) => {
+            const r = PI_RECIPE_OF.get(name);
+            return r && r.outQty === 20 ? `${name} (P1)` : name;
+        });
+        const [first, second] = recipePairHtml(inputs, labels);
+        inCell.innerHTML = first;
+        inCellB.innerHTML = second;
+    }
+
+    // Планеты: P3 — любой тип, P4 — только Barren и Temperate
+    const kinds = PROD_PLANETS[level] || PLANET_TYPES;
+    const allowed = list.length ? kinds.filter((p) => list.includes(p)) : kinds;
+
+    planetCell.innerHTML = allowed.length
+        ? planetOptions(allowed, allowed.includes(current) ? current : '')
+        : '<option value="">Нет подходящих планет</option>';
+    syncTitle(planetCell, 'Тип планеты не выбран');
+}
+
+/* ---- Универсальная карточка: строка по своему типу ---- */
+function mixLevelOf(row) {
+    const cell = row.querySelector('[data-role="mix-level"]');
+    return cell ? cell.value : '';
+}
+
+function mixProdOf(row) {
+    const cell = row.querySelector('[data-role="mix-prod"]');
+    return cell ? cell.value : '';
+}
+
+// Варианты товаров с типом в скобках: «Coolant (P2)»
+const mixOptionsHtml = (list, selected, level) => list
+    .map((v) => `<option value="${escapeHtml(v)}"${v === selected ? ' selected' : ''}>${escapeHtml(v)} (${level})</option>`)
+    .join('');
+
+/* Первая ячейка строки. Пустая строка — кнопка «+ Добавить» и скрытое
+   меню типов. Строка с типом — иконка над списком товаров этого типа
+   (как на карточке P2) и крестик, возвращающий строку к пустой. */
+function renderMixHead(row, prod) {
+    const head = row.querySelector('.ct-mix-head');
+    if (!head) return;
+    const level = mixLevelOf(row);
+
+    if (!level) {
+        head.innerHTML = `
+            <button type="button" class="ct-mix-add" data-role="mix-add" aria-haspopup="true"
+                    aria-expanded="false" title="Добавить строку — выберите тип">+ Добавить</button>
+            <div class="ct-mix-menu" role="menu" hidden>
+                ${MIX_LEVELS.map((l) => `<button type="button" role="menuitem" data-mix-type="${l}">${l}</button>`).join('')}
+            </div>`;
+        return;
+    }
+
+    const list = mixListOf(level);
+    const value = list.includes(prod) ? prod : '';
+    head.innerHTML = `
+        <div class="res-stack">
+            <select class="ct-input" data-role="mix-prod" aria-label="Товар ${level}"
+                    title="${escapeHtml(value) || 'Товар не выбран'}"><option value=""${value ? '' : ' selected'}>—</option>${mixOptionsHtml(list, value, level)}</select>
+        </div>
+        <button type="button" class="ct-mix-clear" data-role="mix-clear"
+                title="Очистить строку" aria-label="Очистить строку">&times;</button>`;
+    updateResIcon(head);
+}
+
+// Задаёт строке тип (или пустоту) и перерисовывает её
+function setMixLevel(row, level, prod) {
+    const cell = row.querySelector('[data-role="mix-level"]');
+    if (cell) cell.value = MIX_LEVELS.includes(level) ? level : '';
+    renderMixHead(row, prod);
+}
+
+function fillMixRowInner(row, systemName) {
+    const level = mixLevelOf(row);
+    const prod = mixProdOf(row);
+    const list = systemName ? planetTypesOf(systemName) : [];
+    const planetCell = row.querySelector('[data-role="planet"]');
+    const cellA = row.querySelector('[data-role="in-recipe"]');
+    const cellB = row.querySelector('[data-role="in-recipe-b"]');
+    const current = planetTypeOf(row);
+    const [blankA, blankB] = recipePairHtml([], []);
+
+    cellA.classList.remove('ct-recipe-free');
+
+    // Пустая строка или тип без товара: свободный слот, планеты — все типы (системы)
+    if (!level || !prod) {
+        const kinds = list.length ? list : PLANET_TYPES;
+        planetCell.innerHTML = planetOptions(kinds, kinds.includes(current) ? current : '');
+        syncTitle(planetCell, 'Тип планеты не выбран');
+        cellA.innerHTML = blankA;
+        cellB.innerHTML = blankB;
+        return;
+    }
+
+    // Планеты, подходящие для товара строки
+    let kinds;
+    if (level === 'P1') {
+        kinds = uniqValues((P1_SOURCES.get(prod) || []).map((s) => s.planet));
+    } else if (level === 'P2') {
+        const recipe = PI_P2_RECIPE_OF.get(prod);
+        kinds = recipe ? uniqValues(recipe.in.reduce((acc, [name]) =>
+            acc.concat((P1_SOURCES.get(name) || []).map((s) => s.planet)), [])) : PLANET_TYPES;
+    } else {
+        kinds = PROD_PLANETS[level] || PLANET_TYPES;
+    }
+    const allowed = list.length ? kinds.filter((p) => list.includes(p)) : kinds;
+    const planet = allowed.includes(current) ? current : '';
+    planetCell.innerHTML = allowed.length
+        ? planetOptions(allowed, planet)
+        : '<option value="">Нет подходящих планет</option>';
+    syncTitle(planetCell, 'Тип планеты не выбран');
+
+    const recipe = PI_RECIPE_OF.get(prod);
+
+    if (level === 'P1') {
+        // Как на карточке P1: сырьё P0 — выпадающий список с иконкой.
+        // В нём P0, из которых этот P1 получается на выбранной планете.
+        const prevSel = cellA.querySelector('[data-role="p0"]');
+        const prev = prevSel ? prevSel.value : '';
+        const sources = (P1_SOURCES.get(prod) || []).filter((s) => !planet || s.planet === planet);
+        const p0s = uniqValues((sources.length ? sources : (P1_SOURCES.get(prod) || [])).map((s) => s.p0));
+        const sel = p0s.includes(prev) ? prev : '';
+        cellA.classList.add('ct-recipe-free');
+        cellA.innerHTML = `<div class="res-stack ct-stack-col">
+                <select class="ct-input" data-role="p0" aria-label="Ресурс P0"${planet ? '' : ' disabled title="Сначала выберите планету"'}><option value="">${planet ? '—' : 'Планета???'}</option>${p0s
+                    .map((v) => `<option value="${escapeHtml(v)}"${v === sel ? ' selected' : ''}>${escapeHtml(v)} (P0)</option>`)
+                    .join('')}</select>
+            </div>`;
+        updateResIcon(cellA);
+        cellB.innerHTML = blankB;
+        return;
+    }
+
+    if (level === 'P2' && recipe) {
+        // Как карточка P2: в первом блоке входы P1, во втором их сырьё P0
+        const inputs = recipe.in.map(([name]) => name);
+        const raws = inputs.map((name) => uniqValues((P1_SOURCES.get(name) || []).map((s) => s.p0)));
+        cellA.innerHTML = recipeCellHtml(inputs, inputs.map((n) => `${n} (P1)`));
+        cellB.innerHTML = recipeCellHtml(
+            raws.map((raw) => (raw.length ? raw[0] : '')),
+            raws.map((raw) => (raw.length ? `${raw.join(' · ')} (P0)` : '—'))
+        );
+        return;
+    }
+
+    if (recipe) {
+        // P3 и P4 — как их карточки: входы рецепта в двух блоках
+        const lower = level === 'P3' ? 'P2' : 'P3';
+        const inputs = recipe.in.map(([name]) => name);
+        const labels = inputs.map((name) => {
+            const r = PI_RECIPE_OF.get(name);
+            return `${name} (${r && r.outQty === 20 ? 'P1' : lower})`;
+        });
+        const [first, second] = recipePairHtml(inputs, labels);
+        cellA.innerHTML = first;
+        cellB.innerHTML = second;
+    }
+}
+
+/* Меню типов открыто — Esc закрывает его и возвращает фокус на кнопку */
+document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    document.querySelectorAll('.ct-mix-menu:not([hidden])').forEach((menu) => {
+        menu.hidden = true;
+        const add = menu.parentElement.querySelector('[data-role="mix-add"]');
+        if (add) {
+            add.hidden = false;
+            add.setAttribute('aria-expanded', 'false');
+            add.focus();
+        }
+    });
+});
+
+/* Меню типов открыто — клик мимо него закрывает. Одно на страницу. */
+document.addEventListener('click', (event) => {
+    document.querySelectorAll('.ct-mix-menu:not([hidden])').forEach((menu) => {
+        if (menu.parentElement.contains(event.target)) return;
+        menu.hidden = true;
+        const add = menu.parentElement.querySelector('[data-role="mix-add"]');
+        if (add) {
+            add.hidden = false;
+            add.setAttribute('aria-expanded', 'false');
+        }
+    });
+});
+
+/* ---- Номера планет в списке «Планета» ----
+   Столбца «№» нет: в списке стоит сама планета — «VII Barren». Номера
+   берём из тех же данных, что и карта региона (MAP_REGIONS, js/mapdata.js:
+   буквы типов планет системы по порядку I, II, III…). Значение списка
+   по-прежнему тип планеты, а номер лежит в скрытом поле data-role="number"
+   строки — так прежняя логика, хранилище и карта региона не меняются.
+   Пока система не выбрана (или о ней нет данных), в списке просто типы. */
+let numberedIndex = null;
+function numberedPlanetsOf(systemName) {
+    if (!systemName) return null;
+    if (!numberedIndex) {
+        numberedIndex = new Map();
+        Object.values(typeof MAP_REGIONS !== 'undefined' ? MAP_REGIONS : {}).forEach((d) => {
+            (d.s || []).forEach((r) => { if (r[4]) numberedIndex.set(r[0], r[4]); });
+        });
+    }
+    const letters = numberedIndex.get(systemName);
+    if (!letters) return null;
+    return [...letters].map((code, k) => ({
+        type: PLANET_TYPE_CODES[code] || '',
+        num: ROMAN_NUMBERS[k] || String(k + 1)
+    })).filter((pl) => pl.type);
+}
+
+// Перестраивает список «Планета» строки: каждая планета системы отдельно,
+// с номером. Допустимые типы — те, что уже стоят в списке.
+function numberizePlanets(row, systemName) {
+    const cell = row.querySelector('[data-role="planet"]');
+    const numCell = row.querySelector('[data-role="number"]');
+    if (!cell || !numCell) return;
+
+    // Планету выбирают только после системы карточки, а на карточках с
+    // товаром — ещё и после товара строки. Заблокированная планета пустая.
+    const needsProduct = row.querySelector('[data-role="p2"], [data-role="prod"], [data-role="mix-level"]');
+    const productCell = row.querySelector('[data-role="p2"], [data-role="prod"], [data-role="mix-prod"]');
+    const hasProduct = !needsProduct || Boolean(productCell && productCell.value);
+    cell.disabled = !systemName || !hasProduct;
+    if (cell.disabled) {
+        setLockHint(cell, !systemName ? 'Система' : 'Товар');
+        return;
+    }
+    clearLockHint(cell);
+    const planets = numberedPlanetsOf(systemName);
+    if (!planets) return;
+
+    const options = Array.from(cell.options);
+    const allowed = options.map((o) => o.value).filter(Boolean);
+    const hasEmpty = options.some((o) => o.value === '') && allowed.length > 0;
+    const list = planets.filter((pl) => allowed.includes(pl.type));
+    if (!list.length) return;
+
+    const curType = cell.value;
+    const curNum = numCell.value;
+    let sel = list.find((pl) => pl.type === curType && pl.num === curNum)
+        || list.find((pl) => pl.type === curType)
+        || null;
+    if (!sel && !(hasEmpty && curType === '')) sel = list[0];
+
+    cell.innerHTML = (hasEmpty ? `<option value=""${sel ? '' : ' selected'}>—</option>` : '')
+        + list.map((pl) => `<option value="${escapeHtml(pl.type)}" data-num="${pl.num}"${pl === sel ? ' selected' : ''}>`
+            + `${pl.num} ${escapeHtml(pl.type)}</option>`).join('');
+    if (sel) numCell.value = sel.num;
+    syncTitle(cell, 'Планета не выбрана');
+}
+
+// Выбрали планету в списке — её номер уходит в скрытое поле строки
+function syncNumberFromPlanet(row) {
+    const cell = row.querySelector('[data-role="planet"]');
+    const numCell = row.querySelector('[data-role="number"]');
+    if (!cell || !numCell) return;
+    const option = cell.selectedOptions[0];
+    if (option && option.dataset.num) numCell.value = option.dataset.num;
+}
+
+function fillP2Row(row, systemName) {
+    fillP2RowInner(row, systemName);
+    numberizePlanets(row, systemName);
+}
+
+function fillProdRow(row, systemName, level) {
+    fillProdRowInner(row, systemName, level);
+    numberizePlanets(row, systemName);
+}
+
+function fillMixRow(row, systemName) {
+    fillMixRowInner(row, systemName);
+    numberizePlanets(row, systemName);
+}
+
+/* ---- Тестовая карточка: ширины столбцов P3 и «Планета» ----
+   Столбцы подогнаны по самому длинному значению: товар P3 и планета
+   («VIII Temperate»). Ширина — текст + поля и стрелка списка, но не
+   больше доли карточки, чтобы трём клеткам ресурсов осталось место. */
+const fitMeasure = document.createElement('canvas').getContext('2d');
+function textWidthIn(select, text) {
+    const cs = getComputedStyle(select);
+    fitMeasure.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    return fitMeasure.measureText(text).width;
+}
+
+/* Ширина столбца «Планета» на всех карточках — по самому длинному тексту,
+   который в нём бывает: «VIII Temperate» (номер + самый длинный тип).
+   Шрифт мерим по списку «Корабль» — он всегда активен, а у заблокированной
+   планеты кегль меньше. К тексту — поля списка, стрелка, рамка и поля
+   ячейки. Не больше трети карточки. Столбец товара на карточках P2–P4,
+   «Тест P3» и универсальной подгоняется так же — по самому длинному
+   товару. Пересчёт — при каждом изменении ширины карточки. */
+function fitCardColumns(card) {
+    const cols = card.querySelectorAll('colgroup col');
+    const ref = card.querySelector('[data-role="ship"]');
+    const planetSel = card.querySelector('tbody [data-role="planet"]');
+    if (!cols.length || !ref || !planetSel) return;
+
+    // Номер столбца «Планета» с учётом объединённых заголовков
+    let index = 0;
+    let planetIdx = -1;
+    card.querySelectorAll('thead tr:last-child th').forEach((th) => {
+        if (planetIdx < 0 && th.textContent.trim() === 'Планета') planetIdx = index;
+        index += th.colSpan || 1;
+    });
+    if (planetIdx < 0 || !cols[planetIdx]) return;
+
+    const width = card.getBoundingClientRect().width || 600;
+    const rs = getComputedStyle(ref);
+    const td = getComputedStyle(planetSel.closest('td'));
+    const extra = parseFloat(rs.paddingLeft) + parseFloat(rs.paddingRight)
+        + parseFloat(rs.borderLeftWidth) + parseFloat(rs.borderRightWidth)
+        + parseFloat(td.paddingLeft) + parseFloat(td.paddingRight) + 2;
+
+    const longest = (list) => list.reduce((a, b) => (b.length > a.length ? b : a), '');
+    const planetText = `VIII ${longest(PLANET_TYPES)}`;
+    const planetPx = Math.min(textWidthIn(ref, planetText) + extra, width / 3);
+    cols[planetIdx].style.width = `${Math.round(planetPx)}px`;
+
+    /* Карточки, где первый столбец — товар (P2, P3, P4, «Тест P3»,
+       универсальная): его ширина у всех одна — по самому длинному названию
+       среди всех P2, P3 и P4 («Genetically Enhanced Livestock»). Пока
+       карточка шире 700px, слева от списка стоит иконка товара — её место
+       тоже учитываем. Не больше 40% карточки. */
+    if (PRODUCT_FIRST_LEVELS.includes(card.dataset.level)) {
+        const iconPx = width > 700 ? 36 : 0;
+        const prodPx = Math.min(textWidthIn(ref, LONGEST_PRODUCT) + extra + iconPx, width * 0.4);
+        cols[0].style.width = `${Math.round(prodPx)}px`;
+    }
+}
+
+// Карточки с товаром в первом столбце и самое длинное название товара P2–P4
+const PRODUCT_FIRST_LEVELS = ['P2', 'P3', 'P4', TEST_LEVEL, TEST2_LEVEL, MIX_LEVEL];
+const LONGEST_PRODUCT = [...PI_P2_LIST, ...PROD_LIST.P3, ...PROD_LIST.P4]
+    .reduce((a, b) => (b.length > a.length ? b : a), '');
+
+const cardColumnsObserver = window.ResizeObserver
+    ? new ResizeObserver((entries) => entries.forEach((e) => fitCardColumns(e.target)))
+    : null;
+
+/* ---- Регион для новых карточек ----
+   Список «Регион» вверху вкладки «Планеты». Выбран регион — новая карточка
+   создаётся с ним, систему выбирают уже в карточке. «Все регионы» — и в
+   новой карточке «Все регионы». Выбор хранится в браузере (DEFAULTS_KEY);
+   на уже созданные карточки не влияет. */
+const DEFAULTS_KEY = 'evepi.defaults';
+const defRegion = document.getElementById('def-region');
+
+function initDefaults() {
+    if (!defRegion) return;
+    const saved = store.get(DEFAULTS_KEY, {}) || {};
+
+    if (saved.region) {
+        fillRegions(defRegion);
+        if (Array.from(defRegion.options).some((o) => o.value === saved.region)) {
+            defRegion.value = saved.region;
+        }
+        syncTitle(defRegion, 'Все регионы');
+    }
+
+    // Список наполняется, когда его открывают (как в карточках)
+    const prepare = () => fillRegions(defRegion);
+    defRegion.addEventListener('mousedown', prepare);
+    defRegion.addEventListener('focusin', prepare);
+
+    defRegion.addEventListener('change', () => {
+        syncTitle(defRegion, 'Все регионы');
+        store.set(DEFAULTS_KEY, { region: defRegion.value });
+    });
+}
+
+/* Ширина списка «Регион» — ровно как у поля «Название аккаунта» под ним:
+   поле сжимается вместе со строкой (рядом кнопка и счётчик), а у списка
+   соседей нет, поэтому без подгонки он бы выступал правее. Копируем
+   ширину поля при любом изменении размеров (окно, масштаб, шрифт). */
+function syncRegionWidth() {
+    if (!defRegion || !accountInput) return;
+    const width = accountInput.getBoundingClientRect().width;
+    if (width > 0) {
+        defRegion.style.flex = '0 0 auto';
+        defRegion.style.width = `${width}px`;
+    }
+}
+
+if (defRegion && accountInput && window.ResizeObserver) {
+    new ResizeObserver(syncRegionWidth).observe(accountInput);
+}
+window.addEventListener('load', syncRegionWidth);
+
+// Регион для новой карточки или null, если стоит «Все регионы»
+function defaultsForNewCard() {
+    return defRegion && defRegion.value ? { region: defRegion.value } : null;
+}
+
+initDefaults();
 
 /* ---- Линия аккаунта ----
    Одна линия — один аккаунт. Сверху его имя, под ним выбор персонажа
@@ -676,10 +1387,17 @@ function handleRowChange(event) {
 }
 
 function applyRowChange(event, row) {
+    // Номер планеты — из выбранного пункта списка «Планета»
+    if (event.target.dataset.role === 'planet' && row) syncNumberFromPlanet(row);
+
     // Смена региона пересобирает список систем в той же ячейке
     if (event.target.dataset.role === 'region') {
         const cell = event.target.closest('td');
-        applySystems(cell.querySelector('[data-role="system"]'), event.target.value);
+        const system = cell.querySelector('[data-role="system"]');
+        applySystems(system, event.target.value);
+        // Систему выбирают только после региона: «Все регионы» её блокирует
+        system.disabled = !event.target.value;
+        if (system.disabled) setLockHint(system, 'Регион');
         syncTitle(event.target, 'Регион не выбран');
         // Система сброшена, значит прежние типы в списке больше не нужны
         fillPlanets(event.target.closest('.card'), '');
@@ -703,6 +1421,36 @@ function applyRowChange(event, row) {
         return;
     }
 
+    // Универсальная карточка: товар и планета пересобирают состав строки,
+    // P0 строки P1 меняет только иконку над списком
+    const mixCard = event.target.closest('.card[data-level="MIX"]');
+    if (mixCard && row) {
+        const role = event.target.dataset.role;
+        if (role === 'mix-prod') {
+            syncTitle(event.target, 'Товар не выбран');
+            updateResIcon(row.querySelector('.ct-mix-head'));
+            fillMixRow(row, systemOfCard(mixCard));
+            return;
+        }
+        if (role === 'planet') {
+            syncTitle(event.target, 'Тип планеты не выбран');
+            fillMixRow(row, systemOfCard(mixCard));
+            return;
+        }
+        if (role === 'p0') {
+            updateResIcon(row.querySelector('[data-role="in-recipe"]'));
+            return;
+        }
+    }
+
+    // Смена товара P3/P4 пересобирает только эту строку по рецепту
+    if (event.target.dataset.role === 'prod') {
+        const card = event.target.closest('.card');
+        fillProdRow(event.target.closest('tr'), systemOfCard(card), card.dataset.level);
+        syncTitle(event.target, 'Товар не выбран');
+        return;
+    }
+
     if (event.target.dataset.role === 'planet') {
         fillP0(row);
         syncTitle(event.target, 'Тип планеты не выбран');
@@ -718,6 +1466,36 @@ function applyRowChange(event, row) {
 // Оба действия относятся к той карточке, в которой нажали, поэтому
 // линию аккаунта находим от самой кнопки.
 function handleCardClick(event) {
+    // Универсальная карточка: «+ Добавить», выбор типа, очистка строки
+    const mixAdd = event.target.closest('[data-role="mix-add"]');
+    if (mixAdd) {
+        // Кнопка уступает место меню типов (2×2) прямо в ячейке
+        const menu = mixAdd.parentElement.querySelector('.ct-mix-menu');
+        menu.hidden = false;
+        mixAdd.hidden = true;
+        mixAdd.setAttribute('aria-expanded', 'true');
+        const first = menu.querySelector('button');
+        if (first) first.focus();
+        return;
+    }
+    const mixType = event.target.closest('[data-mix-type]');
+    const mixClear = event.target.closest('[data-role="mix-clear"]');
+    if (mixType || mixClear) {
+        const row = event.target.closest('tr');
+        const card = event.target.closest('.card');
+        setMixLevel(row, mixType ? mixType.dataset.mixType : '');
+        if (mixClear) {
+            // Очищенная строка — свободный слот: планета «—»
+            const planet = row.querySelector('[data-role="planet"]');
+            if (planet) planet.value = '';
+        }
+        fillMixRow(row, systemOfCard(card));
+        saveAccounts();
+        const focus = row.querySelector(mixType ? '[data-role="mix-prod"]' : '[data-role="mix-add"]');
+        if (focus) focus.focus();
+        return;
+    }
+
     const light = event.target.closest('.card-light');
     if (light) {
         // Подсветка намеренно не сохраняется: это временное выделение, а не данные
@@ -843,10 +1621,27 @@ function statsCount() {
     const planets = new Map(PLANET_TYPES.map((t) => [t, 0]));
 
     accounts.querySelectorAll('.card').forEach((card) => {
-        const isP2 = card.dataset.level === 'P2';
+        const isP2 = isP2Level(card.dataset.level);
         card.querySelectorAll('tbody tr').forEach((row) => {
             const planet = planetTypeOf(row);
             if (planets.has(planet)) planets.set(planet, planets.get(planet) + 1);
+
+            // Карточки P3/P4 добычи P1 не дают — считаем только планеты
+            if (isProdLevel(card.dataset.level)) return;
+
+            // Универсальная карточка: строка P1 — как карточка P1, P2 — как P2
+            if (card.dataset.level === MIX_LEVEL) {
+                const level = mixLevelOf(row);
+                const prod = mixProdOf(row);
+                if (level === 'P1' && p1.has(prod)) p1.set(prod, p1.get(prod) + 1);
+                if (level === 'P2') {
+                    const r = PI_P2_RECIPE_OF.get(prod);
+                    if (r) r.in.forEach(([name]) => {
+                        if (p1.has(name) && STATS_P1_PLANETS.get(name).has(planet)) p1.set(name, p1.get(name) + 1);
+                    });
+                }
+                return;
+            }
 
             if (!isP2) {
                 const value = readValue(row, 'p1');
@@ -964,6 +1759,10 @@ function readCard(card) {
         system: readValue(card, 'system'),
         ship: readValue(card, 'ship'),
         p2s: Array.from(card.querySelectorAll('[data-role="p2"]')).map((cell) => cell.value),
+        prods: Array.from(card.querySelectorAll('[data-role="prod"]')).map((cell) => cell.value),
+        mix: card.dataset.level === MIX_LEVEL
+            ? Array.from(card.querySelectorAll('tbody tr')).map((row) => ({ level: mixLevelOf(row), prod: mixProdOf(row) }))
+            : undefined,
         rows: Array.from(card.querySelectorAll('tbody tr')).map((row) => ({
             planet: readValue(row, 'planet'),
             number: readValue(row, 'number'),
@@ -988,6 +1787,12 @@ const RESOURCE_RENAMES = {
 function pickValue(cell, value) {
     if (!cell || !value) return;
 
+    // Скрытое поле (номер планеты): списка вариантов нет — просто значение
+    if (cell.tagName === 'INPUT') {
+        cell.value = value;
+        return;
+    }
+
     const wanted = RESOURCE_RENAMES[value] || value;
     const has = Array.from(cell.options).some((o) => o.value === wanted);
     if (!has) return;
@@ -1005,9 +1810,17 @@ function restoreCard(card, saved) {
     const region = card.querySelector('[data-role="region"]');
     const system = card.querySelector('[data-role="system"]');
 
-    if (saved.region) {
+    /* Раньше систему можно было выбрать при «Все регионы»; теперь она
+       ждёт региона. Для таких карточек регион берём по самой системе. */
+    let regionName = saved.region;
+    if (!regionName && saved.system) {
+        regionName = Object.keys(SYSTEMS_BY_REGION)
+            .find((r) => (SYSTEMS_BY_REGION[r] || []).includes(saved.system)) || '';
+    }
+
+    if (regionName) {
         fillRegions(region);
-        pickValue(region, saved.region);
+        pickValue(region, regionName);
     }
 
     if (saved.system) {
@@ -1019,10 +1832,30 @@ function restoreCard(card, saved) {
        фильтрует планету/P1/P0 своей строки, и только после этого
        восстанавливаются значения самих строк (см. ниже). Строки
        независимы: у каждой свой товар P2. */
-    if (saved.level === 'P2') {
+    if (isP2Level(saved.level)) {
         const p2s = Array.from(card.querySelectorAll('[data-role="p2"]'));
         (Array.isArray(saved.p2s) ? saved.p2s : []).forEach((value, i) => {
             if (p2s[i]) pickValue(p2s[i], value);
+        });
+    }
+
+    // Универсальная: в каждой строке сначала тип и товар, потом остальное
+    if (saved.level === MIX_LEVEL && Array.isArray(saved.mix)) {
+        const mixRows = Array.from(card.querySelectorAll('tbody tr'));
+        const systemName = systemOfCard(card);
+        saved.mix.forEach((m, i) => {
+            const row = mixRows[i];
+            if (!row || !m) return;
+            setMixLevel(row, m.level, m.prod);
+            fillMixRow(row, systemName);
+        });
+    }
+
+    // Карточки P3/P4: так же, товары строк — до значений самих строк
+    if (isProdLevel(saved.level)) {
+        const prods = Array.from(card.querySelectorAll('[data-role="prod"]'));
+        (Array.isArray(saved.prods) ? saved.prods : []).forEach((value, i) => {
+            if (prods[i]) pickValue(prods[i], value);
         });
     }
 
@@ -1040,6 +1873,15 @@ function restoreCard(card, saved) {
             pickValue(planetCell, data.planet);
         }
         pickValue(row.querySelector('[data-role="number"]'), data.number);
+        // В списке «Планета» — пункт с этим номером (планет одного типа бывает несколько)
+        if (planetCell && data.number) {
+            const exact = Array.from(planetCell.options)
+                .find((o) => o.dataset.num === data.number && o.value === planetCell.value);
+            if (exact) {
+                exact.selected = true;
+                syncTitle(planetCell, 'Планета не выбрана');
+            }
+        }
         pickValue(row.querySelector('[data-role="p0"]'), data.p0);
         pickValue(row.querySelector('[data-role="p1"]'), data.p1);
     });
@@ -1057,25 +1899,53 @@ function addCard(line, name, saved, level) {
 
     /* Уровень карточки приходит явно (кнопкой из окна выбора) либо
        из сохранённой копии; у старых карточек его нет — это P1. */
-    const cardLevel = level === 'P2' || (saved && saved.level === 'P2') ? 'P2' : 'P1';
+    // Прежние тестовые карточки — теперь обычные P2 и P3
+    const LEGACY = { T2: 'P2', T3: 'P3' };
+    let wanted = level || (saved && saved.level);
+    wanted = LEGACY[wanted] || wanted;
+    if (saved && LEGACY[saved.level]) saved = Object.assign({}, saved, { level: wanted });
+    const cardLevel = isP2Level(wanted) || isProdLevel(wanted) || wanted === MIX_LEVEL ? wanted : 'P1';
     cards.insertAdjacentHTML('beforeend', buildCard(clean, cardLevel));
     const card = cards.lastElementChild;
 
-    if (saved) restoreCard(card, saved);
+    // Ширина «Планеты» (и товара на «Тест P3») — по самому длинному тексту
+    fitCardColumns(card);
+    if (cardColumnsObserver) cardColumnsObserver.observe(card);
+
+    // Универсальная карточка: строки пустые, с кнопкой «+ Добавить»
+    if (cardLevel === MIX_LEVEL) {
+        card.querySelectorAll('tbody tr').forEach((row) => renderMixHead(row));
+    }
+
+    if (saved) {
+        restoreCard(card, saved);
+    } else {
+        // Новая карточка: регион из списка вверху вкладки, если он выбран
+        const defaults = defaultsForNewCard();
+        if (defaults) restoreCard(card, { level: cardLevel, region: defaults.region });
+    }
 
     // Первичное заполнение каскада, подсказки и фона корабля
     // в строках новой карточки
-    const isP2 = card.dataset.level === 'P2';
+    const isP2 = isP2Level(card.dataset.level);
     const systemName = systemOfCard(card);
     card.querySelectorAll('tbody tr').forEach((row) => {
-        if (isP2) {
+        if (card.dataset.level === MIX_LEVEL) {
+            fillMixRow(row, systemName);
+        } else if (isProdLevel(card.dataset.level)) {
+            fillProdRow(row, systemName, card.dataset.level);
+        } else if (isP2) {
             // На карточке P2 столбцы P1 и P0 — текст рецепта, не списки
             fillP2Row(row, systemName);
         } else {
             fillP0(row);
             fillP1(row);
         }
-        syncTitle(row.querySelector('[data-role="planet"]'), 'Тип планеты не выбран');
+        // Подсказка фоном в заблокированной планете («Система» / «Товар»)
+        numberizePlanets(row, systemName);
+        if (row.querySelector('[data-role="planet"]').disabled === false) {
+            syncTitle(row.querySelector('[data-role="planet"]'), 'Тип планеты не выбран');
+        }
     });
 
     saveAccounts();
@@ -1114,14 +1984,28 @@ function showCardLevelChoice(onPick) {
         levelModal.innerHTML = `
             <div class="ct-modal-box" role="dialog" aria-modal="true" aria-label="Выбор карточки">
                 <h3 class="ct-modal-title">Какая карточка?</h3>
-                <p class="ct-modal-hint">
-                    P1 — прежняя карточка колонии: планеты, добыча P0 и производство P1.
-                    P2 — карточка с товаром P2: шесть независимых строк, у каждой свой
-                    товар, а состав P1 и P0 и планеты подбираются по его рецепту.
-                </p>
+                <!-- Карточки — в один ряд, описание каждой — под её кнопкой -->
                 <div class="ct-modal-actions">
-                    <button type="button" class="btn" data-level="P1">Карточка P1</button>
-                    <button type="button" class="btn" data-level="P2">Карточка P2</button>
+                    <div class="ct-modal-option">
+                        <button type="button" class="btn" data-level="P1">Карточка P1</button>
+                        <p class="ct-modal-hint">Колония: планета, добыча P0 и производство P1.</p>
+                    </div>
+                    <div class="ct-modal-option">
+                        <button type="button" class="btn" data-level="P2">Карточка P2</button>
+                        <p class="ct-modal-hint">Товар P2 в каждой строке; каждый вход P1 и его сырьё P0 — в своей клетке.</p>
+                    </div>
+                    <div class="ct-modal-option">
+                        <button type="button" class="btn" data-level="P3">Карточка P3</button>
+                        <p class="ct-modal-hint">Товар P3 в каждой строке; каждый вход P2 — в своей клетке. Любая планета.</p>
+                    </div>
+                    <div class="ct-modal-option">
+                        <button type="button" class="btn" data-level="P4">Карточка P4</button>
+                        <p class="ct-modal-hint">Товар P4 в каждой строке; каждый вход P3 — в своей клетке. Только Barren и Temperate.</p>
+                    </div>
+                    <div class="ct-modal-option">
+                        <button type="button" class="btn" data-level="MIX">Универсальная</button>
+                        <p class="ct-modal-hint">Строки добавляются кнопкой: в каждой свой тип P1–P4 и товар — под любые случаи.</p>
+                    </div>
                 </div>
                 <button type="button" class="ct-modal-close" aria-label="Закрыть">&times;</button>
             </div>`;

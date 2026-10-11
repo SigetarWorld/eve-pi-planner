@@ -1363,6 +1363,76 @@ form button:focus-visible,
     width: auto;
 }
 
+/* Регион для новых карточек — строка над добавлением аккаунта, в том же
+   оформлении. Подпись той же ширины, что «Аккаунт», а список той же
+   ширины, что поле «Название аккаунта», — они стоят ровно друг под другом. */
+.card-head.defaults-head {
+    margin-top: 0;
+    flex-wrap: nowrap;
+}
+
+.planets-top-main .card-head > .card-pilot-label:first-child {
+    flex: 0 0 4.6rem;
+}
+
+.defaults-head .defaults-select {
+    /* ширину подгоняет js/app.js (syncRegionWidth) под поле аккаунта */
+    flex: 0 1 240px;
+    min-width: 0;
+    max-width: 100%;
+    /* .ct-input задаёт фон сокращённо и стирает стрелку списка —
+       возвращаем её, как у остальных списков страницы */
+    padding-right: 1.9rem;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--text-dim) 50%),
+        linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+    background-position:
+        calc(100% - 15px) calc(50% + 2px),
+        calc(100% - 10px) calc(50% + 2px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
+/* P1 на карточке P1 — текст, а не список: он один на пару «планета + P0» */
+.colony-table .ct-p1-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.32rem 0.22rem;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.colony-table .ct-p1-text.is-empty {
+    color: var(--text-faint);
+    font-weight: 400;
+}
+
+/* Заблокированные зависимые списки (система, планета, P0) — приглушены.
+   Внутри — подсказка, что выбрать сначала («Выберите регион»): стрелка
+   у них не нужна, её место и чуть меньший кегль отданы тексту. */
+.colony-table select.ct-input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    background-image: none;
+    padding-left: 0.15rem;
+    padding-right: 0.15rem;
+    font-size: 0.68rem;
+    font-style: italic;
+    text-overflow: ellipsis;
+}
+
+/* Планета недоступна, пока в карточке не выбраны регион и система */
+.colony-table select[data-role="planet"]:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
 .stats-panel {
     flex: 1 1 0;
     min-width: 0;
@@ -1774,11 +1844,12 @@ form button:focus-visible,
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 38px;
-    height: 38px;
+    /* размер — как у крестика (.account-del), значок уменьшен под круг */
+    width: 26px;
+    height: 26px;
     margin-left: auto;
     padding: 0;
-    font-size: 1.05rem;
+    font-size: 0.78rem;
     line-height: 1;
     color: var(--text-faint);
     background: var(--bg-deep);
@@ -2196,6 +2267,55 @@ form button:focus-visible,
     }
 }
 
+/* Рецепт из трёх входов (карточки P3 и P4): три полосы одна под
+   другой — иконка слева, название по центру. Области чередуют цвет,
+   как «уголки» рецепта из двух входов. */
+.colony-table .ct-recipe:has(> .ct-line) {
+    display: flex;
+    flex-direction: column;
+}
+
+.colony-table .ct-recipe > .ct-line {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+}
+
+.colony-table .ct-recipe > .ct-line + .ct-line {
+    border-top: var(--zone-line);
+}
+
+.colony-table .ct-recipe > .ct-zone-0 { background: var(--zone-a); }
+.colony-table .ct-recipe > .ct-zone-1 { background: var(--zone-b); }
+.colony-table .ct-recipe > .ct-zone-2 { background: rgba(255, 157, 46, 0.12); }
+
+.colony-table .ct-line > .ct-icon-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.1em 0.2em;
+}
+
+.colony-table .ct-line > .ct-recipe-name {
+    padding: 0.15em 0.4em;
+    text-align: center;
+}
+
+/* Входы рецепта карточек P3/P4 — два блока-«уголка» в столбцах под
+   P1 и P0 карточки P2. Пустые места блока (у рецепта 2–3 входа из 4
+   мест) — затемнённый фон без текста. */
+.colony-table .ct-recipe > .ct-slot-empty {
+    background: rgba(0, 0, 0, 0.22);
+}
+
+/* Пустая картинка на месте недостающего ресурса — полностью прозрачная:
+   без тёмной подложки и рамки, которые есть у иконок ресурсов */
+.colony-table .res-icon.res-icon-blank {
+    background: none;
+    box-shadow: none;
+    border: none;
+}
+
 /* Иконка рецепта — постоянного размера, как у P2 (2.58em ≈ 31px):
    при уменьшении окна не сжимается, ужимается только текст. */
 .colony-table .ct-recipe .res-icon {
@@ -2239,6 +2359,168 @@ form button:focus-visible,
     background-image: none;
 }
 
+/* ---------- Универсальная карточка ----------
+   Пустая строка — кнопка «+ Добавить» и меню типов P1…P4 под ней.
+   Строка с типом — иконка над списком товаров (как на карточке P2)
+   и маленький крестик очистки в углу ячейки. */
+.colony-table td.ct-mix {
+    position: relative;
+}
+
+.colony-table .ct-mix-head {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.6em;
+}
+
+.colony-table .ct-mix-head .res-stack {
+    width: 100%;
+}
+
+.colony-table .ct-mix-add {
+    padding: 0.45rem 0.8rem;
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(255, 157, 46, 0.06);
+    border: 1px dashed rgba(255, 157, 46, 0.55);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.colony-table .ct-mix-add:hover,
+.colony-table .ct-mix-add[aria-expanded="true"] {
+    background: rgba(255, 157, 46, 0.14);
+    border-style: solid;
+    box-shadow: 0 0 12px rgba(255, 157, 46, 0.3);
+}
+
+.colony-table .ct-mix-menu {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.25rem;
+    width: 100%;
+}
+
+.colony-table .ct-mix-menu[hidden] {
+    display: none;
+}
+
+.colony-table .ct-mix-menu button {
+    padding: 0.35rem 0.5rem;
+    font-family: var(--font-heading);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.colony-table .ct-mix-menu button:hover,
+.colony-table .ct-mix-menu button:focus-visible {
+    color: #150d04;
+    background: var(--accent);
+    border-color: var(--accent);
+    outline: none;
+}
+
+.colony-table .ct-mix-clear {
+    position: absolute;
+    top: -0.15rem;
+    right: -0.05rem;
+    width: 1.3rem;
+    height: 1.3rem;
+    padding: 0;
+    font-size: 0.85rem;
+    line-height: 1;
+    color: var(--text-faint);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.colony-table .ct-mix-clear:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+}
+
+/* Строка P1: в первом блоке состава — выпадающий список P0 с иконкой,
+   как на карточке P1, а не рамка рецепта */
+.colony-table .ct-recipe.ct-recipe-free {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    overflow: visible;
+}
+
+.colony-table .ct-recipe.ct-recipe-free .res-stack {
+    width: 100%;
+}
+
+/* Иконка над списком, как у товара: списку достаётся вся ширина */
+.colony-table .res-stack.ct-stack-col {
+    flex-direction: column;
+}
+
+.colony-table .res-stack.ct-stack-col select {
+    width: 100%;
+}
+
+/* ---------- Тестовая карточка «Тест P3»: ресурс в своей клетке ----------
+   Без своей рамки — клетку очерчивает сама таблица. Картинка слева,
+   название справа от неё. */
+.colony-table .ct-recipe.ct-recipe-one {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.35em;
+    min-height: 100%;
+    padding: 0.2em 0.25em;
+    background: none;
+    border: none;
+    border-radius: 0;
+}
+
+.colony-table .ct-recipe.ct-recipe-one .ct-icon-cell {
+    flex: 0 0 auto;
+    display: flex;
+    padding: 0;
+}
+
+.colony-table .ct-recipe.ct-recipe-one .ct-recipe-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: left;
+}
+
+/* ---------- Тесная карточка: прячем картинки товаров ----------
+   Когда карточка уже ~700px, названиям в составе и в списках не хватает
+   места: они уходят в три строки, а дальше обрезаются. Первым делом
+   убираем картинки товаров в строках — текст получает их место.
+   Картинки кораблей и кнопки (💡, ×) остаются. */
+@container card (max-width: 700px) {
+    .colony-table tbody .res-icon {
+        display: none;
+    }
+
+    /* Ячейки иконок в рецепте схлопываются вместе с картинкой */
+    .colony-table tbody .ct-icon-cell {
+        padding: 0;
+    }
+}
+
 /* ---------- Модальное окно выбора карточки (P1/P2) ---------- */
 .ct-modal {
     position: fixed;
@@ -2257,7 +2539,7 @@ form button:focus-visible,
 
 .ct-modal-box {
     position: relative;
-    width: min(430px, calc(100vw - 2rem));
+    width: min(940px, calc(100vw - 2rem));
     padding: 1.15rem 1.25rem 1.25rem;
     background: var(--bg-panel);
     border: 1px solid var(--border-lit);
@@ -2279,14 +2561,41 @@ form button:focus-visible,
     color: var(--text-dim);
 }
 
+/* Четыре карточки в один ряд, у каждой описание под кнопкой */
 .ct-modal-actions {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+}
+
+.ct-modal-option {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.45rem;
 }
 
 .ct-modal-actions .btn {
-    flex: 1 1 0;
+    width: 100%;
+}
+
+.ct-modal-option .ct-modal-hint {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+/* Средний экран: по три в ряд, узкий — по две */
+@media (max-width: 860px) {
+    .ct-modal-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .ct-modal-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .ct-modal-actions .btn:hover {

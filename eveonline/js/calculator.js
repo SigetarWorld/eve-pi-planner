@@ -869,7 +869,10 @@
                     if (!row || !row.planet || !row.number) return;
                     if (realPlanetType(c.system, row.number) !== row.planet) return;
                     const key = `${c.system} ${row.number}`;
-                    const product = c.level === 'P2' ? ((c.p2s || [])[ri] || '') : (row.p1 || '');
+                    const product = (c.level === 'P2' || c.level === 'T2') ? ((c.p2s || [])[ri] || '')
+                        : (c.level === 'P3' || c.level === 'P4' || c.level === 'T3') ? ((c.prods || [])[ri] || '')
+                        : c.level === 'MIX' ? (((c.mix || [])[ri] || {}).prod || '')
+                        : (row.p1 || '');
                     if (!byKey.has(key)) byKey.set(key, []);
                     byKey.get(key).push({ pilot: c.name, product, card: { ai, ci, ri } });
                 });
@@ -915,10 +918,36 @@
         if (card.system && card.system !== system) {
             return { ok: false, reason: `в карточке ${card.name} выбрана другая система — ${card.system}` };
         }
-        const p2Card = card.level === 'P2';
+        const p2Card = card.level === 'P2' || card.level === 'T2';
+        // Карточки P3/P4: товар своего уровня; фабрика P4 — только Barren/Temperate
+        const prodCard = card.level === 'P3' || card.level === 'P4' || card.level === 'T3';
+        const mixCard = card.level === 'MIX';
         const tier = product ? tierOf(product) : 0;
+        // Универсальная карточка: любой уровень, но планета должна подходить товару
+        if (product && mixCard) {
+            if (tier === 1 && !(PLANET_RESOURCES[type] || []).some((r) => r.P1 === product)) {
+                return { ok: false, reason: `${product} не добывается на ${type}` };
+            }
+            if (tier === 2) {
+                const r = recipes().get(product);
+                const extracted = new Set((PLANET_RESOURCES[type] || []).map((x) => x.P1));
+                if (!r || !r.in.some(([name]) => extracted.has(name))) {
+                    return { ok: false, reason: `планета ${type} не подходит для ${product}` };
+                }
+            }
+            if (tier === 4 && type !== 'Barren' && type !== 'Temperate') {
+                return { ok: false, reason: `фабрика P4 ставится только на Barren и Temperate, а не на ${type}` };
+            }
+        }
+        if (product && prodCard) {
+            const need = card.level === 'P4' ? 4 : 3;
+            if (tier !== need) return { ok: false, reason: `в карточке ${card.level === 'T3' ? 'Тест P3' : card.level} у ${card.name} можно указать только ресурс P${need}` };
+            if (need === 4 && type !== 'Barren' && type !== 'Temperate') {
+                return { ok: false, reason: `фабрика P4 ставится только на Barren и Temperate, а не на ${type}` };
+            }
+        }
         let p0 = '';
-        if (product && !p2Card) {
+        if (product && !p2Card && !prodCard && !mixCard) {
             if (tier !== 1) return { ok: false, reason: `в карточке P1 у ${card.name} можно указать только ресурс P1` };
             const res = (PLANET_RESOURCES[type] || []).find((r) => r.P1 === product);
             if (!res) return { ok: false, reason: `${product} не добывается на ${type}` };
@@ -943,7 +972,20 @@
         card.region = info.region;
         card.system = system;
         rows[target] = Object.assign({}, rows[target], { planet: type, number: num });
-        if (!p2Card) {
+        if (mixCard) {
+            card.mix = Array.isArray(card.mix) ? card.mix : [];
+            while (card.mix.length < 6) card.mix.push({ level: 'P1', prod: '' });
+            card.mix[target] = { level: tier ? `P${tier}` : ((card.mix[target] || {}).level || 'P1'), prod: product || '' };
+            // Строка P1: сырьё P0 этого P1 на выбранной планете
+            if (tier === 1) {
+                const res = (PLANET_RESOURCES[type] || []).find((r) => r.P1 === product);
+                if (res) rows[target].p0 = res.P0;
+            }
+        } else if (prodCard) {
+            card.prods = Array.isArray(card.prods) ? card.prods : [];
+            while (card.prods.length < 6) card.prods.push('');
+            card.prods[target] = product || '';
+        } else if (!p2Card) {
             rows[target].p0 = p0 || rows[target].p0 || '';
             rows[target].p1 = product || '';
         } else {
@@ -967,7 +1009,9 @@
         const card = accs[ref.ai] && accs[ref.ai].cards[ref.ci];
         if (!card || !Array.isArray(card.rows) || !card.rows[ref.ri]) return;
         card.rows[ref.ri] = Object.assign({}, card.rows[ref.ri], { planet: '', p0: '', p1: '' });
-        if (card.level === 'P2' && Array.isArray(card.p2s)) card.p2s[ref.ri] = '';
+        if ((card.level === 'P2' || card.level === 'T2') && Array.isArray(card.p2s)) card.p2s[ref.ri] = '';
+        if ((card.level === 'P3' || card.level === 'P4' || card.level === 'T3') && Array.isArray(card.prods)) card.prods[ref.ri] = '';
+        if (card.level === 'MIX' && Array.isArray(card.mix) && card.mix[ref.ri]) card.mix[ref.ri] = Object.assign({}, card.mix[ref.ri], { prod: '' });
         try { localStorage.setItem('evepi.accounts', JSON.stringify(accs)); } catch (e) { return; }
         if (typeof window.EVEPI_reloadAccounts === 'function') window.EVEPI_reloadAccounts();
         cardCache = null;

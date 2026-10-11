@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=71">
+    <link rel="stylesheet" href="css/style.css?v=94">
 </head>
 <body>
     <header>
@@ -35,7 +35,17 @@
                  блок «Статистика» той же высоты. -->
             <div class="planets-top">
                 <div class="planets-top-main">
-                    <h2>Выбор планеты</h2>
+                    <!-- Регион для новых карточек: выбран — новая карточка создаётся
+                         с ним (систему выбирают уже в карточке); «Все регионы» —
+                         и в карточке «Все регионы». Логика — js/app.js
+                         (раздел «Регион для новых карточек»). -->
+                    <div class="card-head defaults-head">
+                        <label class="card-pilot-label" for="def-region">Регион</label>
+                        <select id="def-region" class="ct-input defaults-select" aria-label="Регион для новых карточек"
+                                title="Регион, с которым создаются новые карточки">
+                            <option value="">Все регионы</option>
+                        </select>
+                    </div>
 
                     <!-- Выбор аккаунта — аналог выбора персонажа, стоит перед ним.
                          Кнопка «Добавить» создаёт линию аккаунта, в линию кладётся
@@ -138,10 +148,10 @@
     <script src="js/planets.js?v=2"></script>
     <script src="js/eveauth.js?v=2"></script>
     <script src="js/mapdata.js?v=4"></script>
-    <script src="js/calculator.js?v=24"></script>
+    <script src="js/calculator.js?v=29"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=38"></script>
+    <script src="js/app.js?v=66"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
         if (location.protocol === "file:") {
