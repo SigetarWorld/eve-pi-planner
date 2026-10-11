@@ -1,0 +1,2826 @@
+﻿/* ============================================================
+   EVE PI Planner — оформление
+   Структура рассчитана на текущую разметку Index.html
+   Дизайн повторяет визитку из E:\WebSite\Start (стиль
+   scan-stakan.com): Orbitron / Rajdhani / Inter, янтарь +
+   #2F497D, острые углы, сканлайны и свечения.
+   ============================================================ */
+
+/* ---------- Переменные ---------- */
+:root {
+    --bg-deep:      #04060c;
+    --bg-base:      #080d18;
+    --bg-panel:     #0c1424;
+    --bg-panel-2:   #101d36;
+    --bg-hover:     #1a2b4d;
+
+    --border:       #1d3452;
+    --border-lit:   #2c4a75;
+
+    --text:         #d3def0;
+    --text-dim:     #8fa2bd;
+    --text-faint:   #5e6f8c;
+
+    /* Янтарь — главный акцент, как на оригинале */
+    --accent:       #ff9d2e;
+    --accent-soft:  rgba(255, 157, 46, 0.12);
+    --accent-line:  rgba(255, 157, 46, 0.35);
+
+    /* Тёмно-синий — вторичный цвет: рамки, заливки, ховеры */
+    --blue:         #2f497d;
+    --blue-ink:     #3f61a6;
+    --blue-soft:    rgba(47, 73, 125, 0.35);
+
+    /* Бирюза остаётся в подсветке схемы и цене: там она несёт смысл,
+       и с янтарём она читается так же, как на оригинале */
+    --cyan:         #4ec9e0;
+    --cyan-soft:    rgba(78, 201, 224, 0.12);
+
+    --green:        #4fd18b;
+    --red:          #ff6b6b;
+
+    --radius:       6px;
+    --radius-sm:    4px;
+
+    --gap:          1.25rem;
+    --shadow:       0 10px 30px rgba(0, 0, 0, 0.45);
+
+    --glow-amber:   0 0 18px rgba(255, 157, 46, 0.35), 0 0 44px rgba(255, 157, 46, 0.18);
+    --glow-blue:    0 0 18px rgba(47, 73, 125, 0.55), 0 0 44px rgba(47, 73, 125, 0.3);
+
+    /* Типографика как на оригинале: Orbitron — заголовки,
+       Rajdhani — подписи, Inter — основной текст */
+    --font-display: "Orbitron", "Rajdhani", sans-serif;
+    --font-heading: "Rajdhani", sans-serif;
+    --font-body:    "Inter", system-ui, sans-serif;
+
+    /* --font оставлен как синоним основного: его держат многие правила */
+    --font:         var(--font-body);
+
+    --header-h: 64px;
+}
+
+/* ---------- Сброс ---------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text);
+    background-color: var(--bg-deep);
+    background-image:
+        radial-gradient(1100px 520px at 12% -8%, rgba(78, 201, 224, 0.07), transparent 60%),
+        radial-gradient(900px 460px at 88% 0%, rgba(255, 157, 46, 0.06), transparent 62%),
+        radial-gradient(1.4px 1.4px at 18% 26%, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(1.2px 1.2px at 64% 12%, rgba(255, 255, 255, 0.38), transparent),
+        radial-gradient(1.6px 1.6px at 82% 58%, rgba(255, 255, 255, 0.32), transparent),
+        radial-gradient(1.1px 1.1px at 32% 74%, rgba(255, 255, 255, 0.3), transparent),
+        radial-gradient(1.3px 1.3px at 48% 44%, rgba(255, 255, 255, 0.26), transparent);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Сканлайны поверх фона, но под содержимым — как на оригинале.
+   Содержимое (main, header) лежит выше по z-index. */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+        0deg,
+        rgba(47, 73, 125, 0.05) 0px,
+        rgba(47, 73, 125, 0.05) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+}
+
+/* ---------- Шапка ---------- */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: rgba(4, 7, 14, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(29, 52, 82, 0.6);
+}
+
+.container {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.header-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    min-height: var(--header-h);
+}
+
+/* Торговая марка — как на оригинале: имя крупным Orbitron и
+   тег-подпись рядом */
+.brand {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin: 0 auto 0 0;
+    font-size: 0;
+}
+
+.brand-name {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    background: linear-gradient(92deg, var(--accent), #ffd08a 60%, var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 12px rgba(255, 157, 46, 0.35));
+}
+
+.brand-tag {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--blue-ink);
+    text-shadow: 0 0 14px rgba(63, 97, 166, 0.6);
+}
+
+/* ---------- Навигация / вкладки ---------- */
+nav.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+nav.tabs button {
+    position: relative;
+    padding: 8px 14px;
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+nav.tabs button:hover {
+    color: var(--text);
+    background: transparent;
+    border: none;
+}
+
+/* Активная вкладка: состояние секции, как на оригинале. JS ставит
+   класс .active на секцию, а не на кнопку, поэтому состояние
+   определяем через :has(). */
+body:has(#planets.active)    nav button[data-tab="planets"],
+body:has(#chains.active)     nav button[data-tab="chains"],
+body:has(#calculator.active) nav button[data-tab="calculator"],
+body:has(#colonies.active)   nav button[data-tab="colonies"] {
+    color: var(--accent);
+    text-shadow: 0 0 14px rgba(255, 157, 46, 0.55);
+}
+
+body:has(#planets.active)    nav button[data-tab="planets"]::after,
+body:has(#chains.active)     nav button[data-tab="chains"]::after,
+body:has(#calculator.active) nav button[data-tab="calculator"]::after,
+body:has(#colonies.active)   nav button[data-tab="colonies"]::after {
+    content: "";
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 2px;
+    height: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 12px rgba(255, 157, 46, 0.8);
+}
+
+/* Клавиатурный фокус — отдельный, более заметный индикатор */
+nav button:focus-visible {
+    outline: 1px solid var(--blue);
+    outline-offset: -1px;
+}
+
+/* ---------- Основная область ---------- */
+/* Шапка теперь фиксированная, сверху у main — её высота.
+   «Планеты» и «Цепочки производства» — на всю ширину экрана,
+   «Калькулятор» (карта региона) — тоже на всю ширину; «Мои колонии»
+   центрированы (см. #colonies). */
+main {
+    position: relative;
+    z-index: 1;
+    max-width: none;
+    margin: 0 auto;
+    padding: calc(var(--header-h) + 1.25rem) clamp(0.75rem, 2vw, 1.5rem) 4rem;
+}
+
+/* Вкладки, которые не просили растягивать, остаются в аккуратном
+   центрированном окне — как в шапке (.container) */
+#colonies {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.tab-content {
+    position: relative;
+    display: none;
+    padding: clamp(0.9rem, 2vw, 1.4rem);
+    background: linear-gradient(180deg, var(--bg-panel), var(--bg-base));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+/* Угловые скобки панели — фирменный штрих оригинала */
+.tab-content::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    width: 18px;
+    height: 18px;
+    border-top: 1px solid var(--blue);
+    border-left: 1px solid var(--blue);
+    pointer-events: none;
+}
+
+.tab-content::after {
+    content: "";
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 18px;
+    height: 18px;
+    border-right: 1px solid var(--blue);
+    border-bottom: 1px solid var(--blue);
+    pointer-events: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fade-in 0.24s ease both;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.tab-content h2 {
+    margin: 0 0 1.1rem;
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text);
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--border);
+}
+
+/* ---------- Поля ввода ---------- */
+select,
+input[type="number"],
+input[type="text"] {
+    width: 100%;
+    max-width: 340px;
+    padding: 0.6rem 0.8rem;
+    font: inherit;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.16s, box-shadow 0.16s;
+}
+
+select {
+    appearance: none;
+    padding-right: 2.2rem;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--text-dim) 50%),
+        linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+    background-position:
+        calc(100% - 17px) calc(50% + 2px),
+        calc(100% - 12px) calc(50% + 2px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+select:hover,
+input:hover {
+    border-color: var(--border-lit);
+}
+
+select:focus,
+input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+input::placeholder {
+    color: var(--text-faint);
+}
+
+/* Убираем стандартные стрелки у number */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* ---------- Кнопки ---------- */
+button {
+    font: inherit;
+    cursor: pointer;
+}
+
+/* Основная кнопка — как на оригинале: янтарная рамка и свечение,
+   при наведении заливается градиентом */
+.btn,
+form button,
+#add-colony {
+    padding: 0.6rem 1.2rem;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(255, 157, 46, 0.05);
+    border: 1px solid rgba(255, 157, 46, 0.55);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 24px -8px rgba(255, 157, 46, 0.6);
+    transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.08s;
+}
+
+form button:hover,
+#add-colony:hover {
+    color: #150d04;
+    background: linear-gradient(135deg, hsl(36 95% 55%), hsl(28 95% 50%));
+    border-color: var(--accent);
+    box-shadow: var(--glow-amber);
+}
+
+form button:active,
+#add-colony:active {
+    transform: translateY(1px);
+}
+
+form button:focus-visible,
+#add-colony:focus-visible {
+    outline: 1px solid var(--blue);
+    outline-offset: 2px;
+}
+
+/* ---------- Вкладка «Калькулятор»: майнд-карта региона ---------- */
+.mm-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 0.8rem;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.mm-region-label {
+    font-family: var(--font-heading);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+/* .mm-bar впереди — чтобы перебить width: 100% у .ct-input */
+.mm-bar .mm-region-select {
+    flex: 0 1 240px;
+    width: 240px;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.mm-info {
+    font-size: 0.8rem;
+    color: var(--text-faint);
+}
+
+.mm-zoom {
+    display: flex;
+    gap: 0.3rem;
+    margin-left: auto;
+}
+
+.mm-zoom button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border-lit);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.mm-zoom button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Разделитель между масштабом и фильтрами планет */
+.mm-zoom-sep {
+    align-self: stretch;
+    width: 1px;
+    margin: 2px 0.3rem;
+    background: var(--border-lit);
+}
+
+.mm-zoom button svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    margin: auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+}
+
+/* Включённый фильтр */
+.mm-zoom button[aria-pressed="true"] {
+    color: var(--bg-deep);
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+/* Фильтры планет на карте */
+.mm-svg.hide-planets .mm-planet,
+.mm-svg.hide-planets .mm-branch,
+.mm-svg.hide-free-planets .mm-planet:not(.is-colony),
+.mm-svg.hide-free-planets .mm-branch:not(.is-colony) {
+    display: none;
+}
+
+/* Легенда: типы планет региона, по нажатию подсвечиваются системы */
+.mm-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+}
+
+.mm-legend:empty {
+    display: none;
+}
+
+.mm-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem 0.2rem 0.25rem;
+    font: inherit;
+    font-size: 0.78rem;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--mm-color);
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.mm-legend-item img,
+.mm-legend-item .mm-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+.mm-legend-item b {
+    color: var(--text-faint);
+    font-weight: 600;
+}
+
+.mm-legend-item.is-active {
+    border-color: var(--mm-color);
+    box-shadow: 0 0 0 1px var(--mm-color), 0 0 12px color-mix(in srgb, var(--mm-color) 45%, transparent);
+}
+
+/* Окно карты: тянется на высоту экрана, внутри — SVG с масштабом */
+.mm-view {
+    position: relative;
+    height: calc(100vh - var(--header-h) - 15rem);
+    min-height: 420px;
+    margin-top: 0.6rem;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(78, 140, 220, 0.08), transparent 60%),
+        var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.mm-view.is-dragging {
+    cursor: grabbing;
+}
+
+.mm-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.mm-empty {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-faint);
+}
+
+.mm-view.is-empty .mm-empty {
+    display: flex;
+}
+
+.mm-view.is-empty .mm-svg {
+    display: none;
+}
+
+/* Элементы карты */
+/* Звёздные врата: внутри региона — сплошные, в соседний регион — пунктир */
+.mm-jump {
+    stroke: rgba(150, 185, 230, 0.55);
+    stroke-width: 2;
+}
+
+.mm-jump-ext {
+    stroke: rgba(255, 157, 46, 0.55);
+    stroke-width: 1.5;
+    stroke-dasharray: 5 4;
+}
+
+/* Система соседнего региона — как в игре: точка и подпись, приглушённо */
+.mm-ext-dot {
+    fill: #1a1a12;
+    stroke: rgba(255, 157, 46, 0.7);
+    stroke-width: 1.5;
+}
+
+.mm-ext-name {
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--accent);
+}
+
+.mm-ext-region {
+    font-size: 9.5px;
+    fill: var(--text-faint);
+}
+
+/* Отросток к соседнему региону нажимается — переход в тот регион */
+.mm-ext {
+    cursor: pointer;
+}
+
+.mm-ext:hover .mm-jump-ext,
+.mm-ext:focus-visible .mm-jump-ext {
+    stroke: var(--accent);
+    stroke-width: 2.5;
+}
+
+.mm-ext:hover .mm-ext-dot,
+.mm-ext:focus-visible .mm-ext-dot {
+    fill: var(--accent);
+}
+
+.mm-ext:hover .mm-ext-region,
+.mm-ext:focus-visible .mm-ext-region {
+    fill: var(--accent);
+}
+
+.mm-ext:focus {
+    outline: none;
+}
+
+/* Планеты нажимаются — меню колонии */
+.mm-planet {
+    cursor: pointer;
+}
+
+.mm-planet:hover > circle:first-of-type {
+    stroke-width: 3;
+}
+
+/* Планета с колонией: оранжевая обводка и значок ресурса */
+.mm-planet.is-colony > circle:first-of-type {
+    stroke: var(--accent);
+    stroke-width: 3;
+}
+
+/* Строка колонии справа от планеты: плашка «ресурс — персонаж» */
+.mm-colony-plate {
+    stroke: var(--accent);
+    stroke-width: 1;
+}
+
+.mm-colony-label {
+    fill: var(--accent);
+}
+
+/* Планету можно перетащить */
+.mm-planet {
+    touch-action: none;
+}
+
+.mm-planet.is-dragging {
+    cursor: grabbing;
+    opacity: 0.85;
+}
+
+/* Линии от планеты к ресурсам, когда персонажей несколько */
+.mm-colony-link {
+    stroke: var(--accent);
+    stroke-width: 0.6;
+    stroke-opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Имя персонажа — заголовок над плашкой колонии */
+.mm-colony-pilot {
+    font-size: 9px;
+    font-weight: 700;
+    fill: var(--text);
+    paint-order: stroke;
+    stroke: #0b1220;
+    stroke-width: 2.5px;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+/* P0 в скобках у P1 в меню планеты */
+.mm-pop-p0 {
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+
+.mm-pop-item .mm-pop-p0 img {
+    width: 14px;
+    height: 14px;
+    margin: 0 3px 0 0;
+    vertical-align: -3px;
+    border-radius: 2px;
+    background: none;
+}
+
+/* Сообщение о связи с карточками: куда записалась колония */
+.mm-pop-sync {
+    margin: 0.35rem 0 0;
+    font-size: 0.72rem;
+    color: #5fd38d;
+}
+
+.mm-pop-sync:empty {
+    display: none;
+}
+
+.mm-pop-reset {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.3rem;
+    font: inherit;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px dashed var(--border-lit);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.mm-pop-reset:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.mm-pop-reset[hidden] {
+    display: none;
+}
+
+.mm-colony-badge circle {
+    fill: #0b1220;
+    stroke: var(--accent);
+    stroke-width: 1.2;
+}
+
+.mm-colony-badge .mm-colony-tier {
+    font-size: 7px;
+    font-weight: 700;
+    fill: var(--accent);
+}
+
+/* Меню планеты поверх карты */
+.mm-pop {
+    position: absolute;
+    z-index: 5;
+    width: 300px;
+    max-height: calc(100% - 16px);
+    overflow-y: auto;
+    padding: 0.7rem 0.8rem 0.8rem;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border-lit);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+    cursor: default;
+}
+
+.mm-pop[hidden] {
+    display: none;
+}
+
+.mm-pop-head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+}
+
+.mm-pop-title {
+    font-size: 0.85rem;
+    color: var(--accent);
+}
+
+.mm-pop-close {
+    margin-left: auto;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--text-faint);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.mm-pop-close:hover {
+    color: var(--red);
+    border-color: var(--red);
+}
+
+.mm-pop-label {
+    display: block;
+    margin: 0.45rem 0 0.2rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+
+.mm-pop .mm-pop-input {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Кнопки P1–P4 */
+.mm-pop-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.3rem;
+}
+
+.mm-pop-tabs button {
+    position: relative;
+    padding: 0.3rem 0;
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.mm-pop-tabs button:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.mm-pop-tabs button[aria-selected="true"] {
+    color: var(--bg-deep);
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+/* точка — в этой группе лежит выбранный ресурс */
+.mm-pop-tabs button.has-pick::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #5fd38d;
+}
+
+/* Список ресурсов с картинками */
+.mm-pop-list {
+    max-height: 230px;
+    margin-top: 0.4rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+}
+
+.mm-pop-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    padding: 0.2rem 0.35rem;
+    font: inherit;
+    font-size: 0.8rem;
+    text-align: left;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.mm-pop-item img,
+.mm-pop-item .mm-pop-noimg {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 3px;
+    background: radial-gradient(circle at 30% 25%, #2a3648, #131b28);
+}
+
+.mm-pop-item span {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mm-pop-item:hover {
+    background: rgba(78, 140, 220, 0.14);
+}
+
+.mm-pop-item.is-picked {
+    border-color: var(--accent);
+    background: rgba(255, 157, 46, 0.14);
+}
+
+.mm-pop-own {
+    font-style: normal;
+    color: #5fd38d;
+}
+
+.mm-pop-empty {
+    margin: 0;
+    padding: 0.7rem 0.5rem;
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    text-align: center;
+}
+
+.mm-pop-note {
+    margin: 0.4rem 0 0;
+    font-size: 0.72rem;
+    color: var(--text-faint);
+}
+
+.mm-pop-actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+}
+
+.mm-pop-actions .btn {
+    flex: 1;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Колонии на планете — по строке на персонажа */
+.mm-pop-colonies:empty {
+    display: none;
+}
+
+.mm-pop-colony {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.3rem;
+    margin-top: 2px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+}
+
+.mm-pop-colony.is-editing {
+    border-color: var(--accent);
+}
+
+.mm-pop-colony img,
+.mm-pop-colony .mm-pop-noimg {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    border-radius: 3px;
+    background: radial-gradient(circle at 30% 25%, #2a3648, #131b28);
+}
+
+.mm-pop-colony-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.mm-pop-colony-text b {
+    font-size: 0.8rem;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mm-pop-colony-text small {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mm-pop-colony-edit,
+.mm-pop-colony-del {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    font-size: 0.8rem;
+    line-height: 1;
+    color: var(--text-faint);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.mm-pop-colony-edit:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.mm-pop-colony-del:hover {
+    color: var(--red);
+    border-color: var(--red);
+}
+
+/* Заголовок формы: «Добавить персонажа» / «Изменить: …» */
+.mm-pop-formhead {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.mm-pop-colonies:empty + .mm-pop-formhead {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.mm-pop-formtitle {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.mm-pop-cancel {
+    margin-left: auto;
+    padding: 0;
+    font: inherit;
+    font-size: 0.7rem;
+    color: var(--text-faint);
+    background: none;
+    border: none;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.mm-pop-cancel[hidden] {
+    display: none;
+}
+
+/* Система, в которую пришли из соседнего региона */
+.mm-system.is-focus .mm-system-pill {
+    stroke: var(--accent) !important;
+    stroke-width: 3;
+}
+
+.mm-system-sec {
+    font-weight: 700;
+}
+
+.mm-branch {
+    stroke-width: 1.5;
+    opacity: 0.55;
+}
+
+.mm-svg.has-filter .mm-jump,
+.mm-svg.has-filter .mm-jump-ext,
+.mm-svg.has-filter .mm-ext {
+    opacity: 0.25;
+}
+
+.mm-region-pill {
+    fill: #10233f;
+    stroke: var(--accent);
+    stroke-width: 2;
+}
+
+.mm-region-name {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    fill: var(--accent);
+}
+
+.mm-system-pill {
+    fill: #132640;
+    stroke: rgba(150, 185, 230, 0.6);
+    stroke-width: 1;
+}
+
+.mm-system-name {
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--text);
+}
+
+/* Название планеты «номер тип» — под картинкой, в овальной плашке,
+   как у названия системы */
+.mm-planet-plate {
+    fill: #132640;
+    stroke: rgba(150, 185, 230, 0.5);
+    stroke-width: 0.8;
+}
+
+.mm-planet-label {
+    font-size: 8.5px;
+    font-weight: 600;
+    fill: var(--text);
+    pointer-events: none;
+}
+
+.mm-planet:hover .mm-planet-plate {
+    stroke: var(--accent);
+}
+
+.mm-planet.is-colony .mm-planet-plate {
+    stroke: var(--accent);
+    stroke-width: 1.2;
+}
+
+.mm-planet.is-colony .mm-planet-label {
+    fill: var(--accent);
+}
+
+.mm-planet-letter {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #0b1220;
+}
+
+.mm-system:hover .mm-system-pill {
+    stroke: var(--accent);
+    stroke-width: 2;
+}
+
+/* Подсветка по типу из легенды: остальное приглушается */
+.mm-svg.has-filter .mm-system,
+.mm-svg.has-filter .mm-branch {
+    opacity: 0.18;
+}
+
+.mm-svg.has-filter .mm-system.is-match {
+    opacity: 1;
+}
+
+.mm-svg.has-filter .mm-system.is-match .mm-planet {
+    opacity: 0.35;
+}
+
+.mm-svg.has-filter .mm-system.is-match .mm-planet.is-match,
+.mm-svg.has-filter .mm-branch.is-match {
+    opacity: 1;
+}
+
+.mm-svg.has-filter .mm-system.is-match .mm-system-pill {
+    stroke: var(--accent);
+    stroke-width: 2;
+}
+
+/* Иконка ресурса. Используется и в ячейках P0/P1 карточки,
+   поэтому размер и подложку задаёт блок карточки ниже. */
+.res-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 0.6rem;
+    vertical-align: -6px;
+    border-radius: 3px;
+    /* тёмная подложка, чтобы светлые иконки не сливались с фоном строки */
+    background: radial-gradient(circle at 30% 25%, #2a3648, #131b28);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    object-fit: contain;
+}
+
+/* ---------- Пустые состояния ---------- */
+#chain-builder:empty::after,
+#colonies-list:empty::after {
+    display: block;
+    padding: 2rem 1rem;
+    font-size: 0.88rem;
+    color: var(--text-faint);
+    text-align: center;
+    background: var(--bg-deep);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+}
+
+/* Пустое состояние вкладки «Цепочки» теперь означает не «ещё не
+   построено», а «js/chains.js не отработал». */
+#chain-builder:empty::after {
+    content: "Цепочки не загрузились: не отработал js/chains.js";
+}
+
+#colonies-list:empty::after {
+    content: "Пока нет ни одной колонии";
+}
+
+#calc-result:empty::after {
+    content: "Здесь появится расчёт ISK в час";
+}
+
+#add-colony {
+    margin-bottom: var(--gap);
+}
+
+/* ---------- Скроллбар ---------- */
+::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border: 2px solid var(--bg-deep);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--border-lit);
+}
+
+/* ---------- Шапка карточки: выбор персонажа ---------- */
+.card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.4rem;
+    padding: 0.7rem 0.8rem;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.card-pilot-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    white-space: nowrap;
+}
+
+.card-new   { min-width: 160px; flex: 1 1 160px; }
+
+/* Строка добавления аккаунта — по ширине своего содержимого, а не на
+   всю страницу: подпись, поле, кнопка и счётчик идут подряд. */
+.card-head.account-head {
+    width: fit-content;
+    max-width: 100%;
+    /* всё в одну строку: счётчик аккаунтов не переносится вниз,
+       в тесноте ужимается поле названия */
+    flex-wrap: nowrap;
+}
+
+.account-head .card-new {
+    flex: 0 1 240px;
+    min-width: 0;
+}
+
+.account-head .card-counter {
+    margin-left: 0.6rem;
+}
+
+.card-add {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.84rem;
+}
+
+.card-add:hover { filter: brightness(1.1); }
+.card-add:active { transform: translateY(1px); }
+.card-add:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+/* ---------- Карточки: ряд, не больше трёх ---------- */
+/* Ширина карточки постоянная — ровно треть ряда, --card-gap делится на
+   три части, потому что между тремя карточками два зазора.
+   Отсюда и нужное соотношение: 1 карточка занимает 33 % ширины,
+   2 карточки — 66 %, 3 карточки — все 100 %. Расти карточкам нельзя
+   (flex-grow: 0), иначе две карточки растянулись бы на весь ряд.
+   Сжиматься можно (flex-shrink: 1) — на копеечные доли пикселя, чтобы
+   ряд не уезжал за край. min-width: 0 обязателен: без него поле с длинным
+   названием системы распирает карточку. Три карточки — предел,
+   заданный CARDS_LIMIT в app.js. */
+.cards-row {
+    --card-gap: 0.7rem;
+    display: flex;
+    /* все карточки линии одной высоты — по самой высокой (обычно P2) */
+    align-items: stretch;
+    gap: var(--card-gap);
+    margin-top: 0.8rem;
+}
+
+.card {
+    flex: 0 1 calc(33.3333% - var(--card-gap) * 2 / 3);
+    min-width: 0;
+    max-width: 100%;
+    /* по ширине карточки строка системы решает, где ставить подписи */
+    container: card / inline-size;
+    /* таблица тянется на всю высоту карточки: если соседняя карточка
+       (P2) выше, лишняя высота делится между строками этой */
+    display: flex;
+    flex-direction: column;
+}
+
+.card > .colony-table {
+    flex: 1 1 auto;
+}
+
+/* Пустое состояние: карточек ещё нет */
+/* ---------- Верх вкладки «Выбор планеты» ----------
+   Слева заголовок со строкой добавления аккаунта: колонка шириной по
+   этой строке, поэтому и полоска под заголовком — той же ширины.
+   Справа «Статистика» — на всю оставшуюся ширину и ровно по высоте
+   левой колонки (от заголовка до низа строки добавления). */
+.planets-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+}
+
+.planets-top-main {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.planets-top-main .account-head {
+    width: auto;
+}
+
+.stats-panel {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0.7rem 0.9rem;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.stats-title {
+    margin: 0 0 0.6rem;
+    padding-bottom: 0.45rem;
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+}
+
+/* Заголовок «Статистика» — кнопка: сворачивает и разворачивает таблицу */
+.stats-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.stats-toggle::after {
+    content: "▾";
+    font-size: 0.9em;
+    transition: transform 0.16s;
+}
+
+.stats-toggle[aria-expanded="false"]::after {
+    transform: rotate(-90deg);
+}
+
+.stats-panel:has(.stats-toggle[aria-expanded="false"]) .stats-title {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.stats-body[hidden] {
+    display: none;
+}
+
+/* Таблица подсчёта P1 — по образцу из Excel пользователя */
+.st-scroll {
+    overflow-x: auto;
+}
+
+.stats-p1 {
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    line-height: 1.2;
+}
+
+.stats-p1 th,
+.stats-p1 td {
+    padding: 0.18rem 0.4rem;
+    border: 1px solid var(--border);
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.stats-p1 thead th {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Буквы типов планет и счётчики под ними */
+.stats-p1 .st-planet {
+    min-width: 1.6rem;
+}
+
+.stats-p1 .st-planet-count {
+    color: var(--text);
+}
+
+/* Название P1 — с иконкой, по левому краю */
+.stats-p1 .st-name {
+    text-align: left;
+    font-weight: 500;
+    color: var(--text);
+}
+
+/* Иконка и название — блоком по центру ячейки по вертикали, чтобы
+   название стояло на одной линии с числами строки */
+.stats-p1 .st-name-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 18px;
+}
+
+.stats-p1 .st-name .res-icon {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    vertical-align: middle;
+}
+
+/* «+» — P1 добывается на этом типе планет; клетка подкрашена */
+.stats-p1 .st-mark.is-on {
+    font-weight: 700;
+    color: var(--text);
+    background: rgba(78, 140, 220, 0.22);
+}
+
+.stats-p1 .st-count {
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* Разница: «+» — нужно ещё, «-» — больше, чем введено */
+.stats-p1 .st-diff {
+    min-width: 2rem;
+    font-weight: 700;
+}
+
+.stats-p1 .st-diff.is-more {
+    color: #5fd38d;
+}
+
+.stats-p1 .st-diff.is-less {
+    color: var(--red);
+}
+
+/* Поле ручного ввода */
+.stats-p1 .st-manual-cell {
+    padding: 0.1rem 0.2rem;
+}
+
+.stats-p1 .st-manual {
+    width: 4.2rem;
+    padding: 0.15rem 0.3rem;
+    font: inherit;
+    text-align: right;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+}
+
+.stats-p1 .st-manual:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* Итоговая строка: суммы Кол-во и Ввод */
+.stats-p1 tfoot td {
+    font-weight: 700;
+    color: var(--accent);
+    border-top: 2px solid var(--border-lit);
+}
+
+.stats-p1 tfoot .st-manual-cell {
+    text-align: right;
+    padding-right: 0.55rem;
+}
+
+/* Узкий экран: статистика уходит под строку добавления */
+@media (max-width: 800px) {
+    .planets-top {
+        flex-wrap: wrap;
+    }
+
+    .stats-panel {
+        flex-basis: 100%;
+    }
+}
+
+.card-hint {
+    margin-top: 0.8rem;
+    padding: 1.1rem;
+    font-size: 0.86rem;
+    text-align: center;
+    color: var(--text-faint);
+    background: var(--bg-panel);
+    border: 1px dashed var(--border-lit);
+    border-radius: var(--radius-sm);
+}
+
+/* Панель «Персонаж / Добавить» и заголовок линии с именем аккаунта
+   скрыты, когда в линии уже три персонажа (см. refreshLine в app.js) */
+.account-line > .account-bar[hidden],
+.card-head[hidden],
+.card-hint[hidden] {
+    display: none;
+}
+
+.card-counter {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--text-faint);
+    white-space: nowrap;
+}
+
+.card-add:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.card-add:disabled:hover,
+.card-add:disabled:active {
+    filter: none;
+    transform: none;
+}
+
+/* ---------- Вход в EVE через SSO ---------- */
+.eve-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.8rem;
+}
+
+.eve-bar[hidden] {
+    display: none;
+}
+
+.eve-who {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.82rem;
+    color: var(--text);
+    background: var(--bg-panel);
+    border: 1px solid var(--border-lit);
+    border-radius: var(--radius-sm);
+}
+
+.eve-who[hidden] {
+    display: none;
+}
+
+.eve-hint {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+}
+
+.eve-hint:empty {
+    display: none;
+}
+
+/* ---------- Аккаунты: одна линия — один аккаунт ----------
+   Линия занимает всю ширину, а её карточки уже раскладываются рядом
+   по той же формуле, что и раньше (треть ряда, не больше трёх).
+   Предел CARDS_LIMIT в app.js считается теперь для каждой линии
+   отдельно, а не на всю страницу сразу. */
+/* Линии аккаунтов идут друг под другом с тем же зазором, что и
+   между карточками (0.7rem), без разделительной линии. */
+.account-line {
+    margin-top: 0.7rem;
+}
+
+/* В заполненной линии (три персонажа) имя аккаунта и панель
+   добавления скрыты — карточки начинаются сразу, без отступа сверху */
+.account-line.is-full > .cards-row {
+    margin-top: 0;
+}
+
+.account-line:first-child {
+    margin-top: 1.1rem;
+    padding-top: 0;
+    border-top: none;
+}
+
+/* Полоса с именем аккаунта. Имя — заголовок линии, а не поле:
+   назвать аккаунт можно один раз в общем блоке наверху страницы. */
+.account-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.account-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    /* Длинное имя переносится по словам, а не растягивает полосу */
+    overflow-wrap: anywhere;
+}
+
+/* Поле персонажа стоит сразу под именем аккаунта, а не через
+   полутораремный отступ, как блок выбора аккаунта наверху страницы. */
+.account-bar + .card-head {
+    margin-top: 0.6rem;
+}
+
+/* Крестик линии — у правого края полосы, у карточки свой */
+.account-del {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    margin-left: auto;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--text-faint);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    transition: color 0.16s, border-color 0.16s, background 0.16s;
+}
+
+.account-del:hover {
+    color: var(--red);
+    border-color: var(--red);
+    background: rgba(255, 107, 107, 0.12);
+}
+
+.account-del:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+/* Поле имени персонажа: подсветка, если имя не введено */
+.ct-invalid {
+    border-color: var(--red);
+    box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.22);
+}
+
+/* ---------- Таблица карточки 7×7 ---------- */
+.colony-table {
+    width: 100%;
+    /* Ширины колонок задаёт <colgroup> в app.js — таблица ужимается
+       до ширины карточки и не вылезает за её пределы. */
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.86rem;
+}
+
+.colony-table th,
+.colony-table td {
+    padding: 0.4rem 0.35rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    vertical-align: middle;
+    /* Содержимое не должно раздувать узкую колонку */
+    overflow: hidden;
+}
+
+.colony-table th:last-child,
+.colony-table td:last-child {
+    border-right: none;
+}
+
+/* Фон под выпадающими спинками — один на всю таблицу.
+   Раньше он был разным: «Планета», «№», «P0» и «P1» стояли прямо
+   на цвете самой таблицы (светлее, чем у объединённых ячеек
+   «Система», «Статус» и «Корабль»), и под списками получались
+   два разных фона. Теперь под каждым списком один и тот же. */
+.colony-table td {
+    background: var(--bg-panel-2);
+}
+
+.colony-table thead th {
+    text-align: center;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--bg-panel-2);
+    /* Заголовок переносится, иначе он распирает колонку */
+    white-space: normal;
+    /* Длинное слово («КОРАБЛЬ») переносится по буквам, а не обрезается */
+    overflow-wrap: anywhere;
+}
+
+/* Шапка карточки с именем персонажа использует те же классы, что и
+   линия аккаунта (.account-bar/.account-name/.account-del) — вид тот же.
+   Здесь только отступ между шапкой и таблицей. */
+.card > .account-bar {
+    margin-bottom: 0.5rem;
+}
+
+/* Кнопка подсветки — справа в строке системы.
+   Нажатие красит карточку в бирюзовый, повторное — возвращает обычный вид. */
+.card-light {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    margin-left: auto;
+    padding: 0;
+    font-size: 1.05rem;
+    line-height: 1;
+    color: var(--text-faint);
+    background: var(--bg-deep);
+    border: 1px solid var(--border-lit);
+    border-radius: 50%;
+    transition: color 0.16s, border-color 0.16s, background 0.16s, box-shadow 0.16s;
+}
+
+.card-light:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+}
+
+.card-light:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+/* Карточка подсвечена: красим таблицу целиком.
+   Подложка таблицы и ячеек своя у каждой, поэтому переопределяем их все. */
+.card.is-lit .colony-table {
+    background: rgba(78, 201, 224, 0.10);
+    border-color: rgba(78, 201, 224, 0.38);
+}
+
+/* Фон ячеек у всех колонок одинаковый, поэтому перечисляем их здесь
+   все: иначе подсветка красила бы только объединённые ячейки, а
+   «Планета», «№», «P0», «P1» и «P2» остались бы серыми.
+   Ячейку «Корабль» здесь не называем — у неё своё правило ниже. */
+.card.is-lit .colony-table thead th,
+.card.is-lit .colony-table td.ct-system,
+.card.is-lit .colony-table td.ct-planet,
+.card.is-lit .colony-table td.ct-number,
+.card.is-lit .colony-table td.ct-p0,
+.card.is-lit .colony-table td.ct-p1,
+.card.is-lit .colony-table td.ct-p2 {
+    background: rgba(78, 201, 224, 0.15);
+}
+
+/* Ячейку корабля красим отдельно и через background-color: картинка
+   корабля лежит в background-image, а сокращение background обнуляет
+   его — с ним подсветка гасила бы картинку. */
+.card.is-lit .colony-table td.ct-ship {
+    background-color: rgba(78, 201, 224, 0.15);
+}
+
+/* Шапка карточки в подсвеченном состоянии подкрашивается вместе с таблицей */
+.card.is-lit .account-name {
+    color: var(--cyan);
+}
+
+.card.is-lit .account-del {
+    color: var(--cyan);
+    border-color: rgba(78, 201, 224, 0.45);
+}
+
+/* Подсвеченная кнопка — состояние «включено» */
+.card.is-lit .card-light {
+    color: var(--bg-deep);
+    background: var(--cyan);
+    border-color: var(--cyan);
+    box-shadow: 0 0 12px rgba(78, 201, 224, 0.55);
+}
+
+/* Крестик карточки — это тот же .account-del: круглый, у правого края
+   шапки, с красным при наведении. Отдельных правил не нужно. */
+
+/* Объединённая по вертикали ячейка «Корабль»: фоном выделяем,
+   содержимое центрируем по горизонтали и вертикали. Отступ по бокам
+   меньше, чем сверху и снизу: колонка узкая, а списку нужна ширина. */
+.colony-table td.ct-ship {
+    background: var(--bg-panel-2);
+    vertical-align: middle;
+    text-align: center;
+    padding: 0.6rem 0.35rem;
+}
+
+.ct-input {
+    width: 100%;
+    min-width: 92px;
+    padding: 0.4rem 0.5rem;
+    font: inherit;
+    font-size: 0.84rem;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+}
+
+.ct-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.ct-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Строка системы — над заголовками, объединена на всю ширину карточки.
+   Две подписи («Регион:», «Система:») и два списка стоят в ряд и на
+   узкой карточке переносятся, а не ужимаются принудительно. */
+.colony-table tr.ct-system-row td.ct-system {
+    padding: 0.4rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+/* Подписи и списки в ряд; на узкой карточке переносимся */
+.ct-system-inner {
+    display: grid;
+    /* имя | подпись | список ×3 | 💡 | × — списки делят место поровну (1fr) */
+    grid-template-columns: auto auto 1fr auto 1fr auto 1fr auto auto;
+    align-items: center;
+    column-gap: 0.4rem;
+}
+
+/* Имя персонажа в начале строки системы. Длинное имя обрезается
+   многоточием (полностью — в подсказке), чтобы не отнимать место у
+   списков. */
+.ct-pilot-name {
+    margin: 0 0.2rem 0 0;
+    max-width: 8.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.card.is-lit .ct-pilot-name {
+    color: var(--cyan);
+}
+
+/* Крестик карточки в строке системы — не прижимается вправо сам:
+   место ему даёт сетка */
+.ct-system-inner .account-del {
+    margin-left: 0;
+}
+
+/* Средняя ширина: подписи стоят над списками. Имя, 💡 и × выравниваем
+   не по центру строки, а по линии списков — тогда имя стоит вровень
+   со списками, а не посередине между подписью и списком.
+   1.65rem — высота списка в карточке. */
+@container card (min-width: 451px) and (max-width: 760px) {
+    .colony-table .ct-pilot-name {
+        align-self: end;
+        display: flex;
+        align-items: center;
+        height: 1.65rem;
+    }
+
+    .colony-table .ct-system-inner > .card-light,
+    .colony-table .ct-system-inner > .account-del {
+        align-self: end;
+        /* центр кнопки — на средней линии списка */
+        margin-bottom: calc((1.65rem - 100%) / 2);
+    }
+}
+
+/* Совсем узкая карточка (окно ~1280 и меньше): рядом с именем спискам
+   не хватает места, поэтому имя встаёт первой строкой над ними,
+   а 💡 и × остаются справа во всю высоту. */
+@container card (max-width: 450px) {
+    /* .colony-table впереди — чтобы перебить правило для 760px ниже */
+    .colony-table .ct-system-inner {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) auto auto;
+        row-gap: 0.3rem;
+    }
+
+    .ct-pilot-name {
+        grid-column: 1 / 4;
+        grid-row: 1;
+        max-width: none;
+    }
+
+    .ct-system-inner > .ct-field {
+        grid-row: 2;
+    }
+
+    .ct-system-inner > .card-light,
+    .ct-system-inner > .account-del {
+        grid-row: 1 / 3;
+    }
+}
+
+.ct-system-label {
+    font-family: var(--font-heading);
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    white-space: nowrap;
+}
+
+/* Региону хватает фиксированной ширины, система тянется на остаток.
+   Флекс-база у системы нарочно маленькая: флекс переносит строку по
+   базовым размерам до сжатия, а у <select> база не бывает уже его
+   содержимого — на узкой карточке система ушла бы на вторую строку.
+   Малой базой удерживаем всё в одну строку; свободное место уходит
+   системе (grow), а в тесноте она ужимается до минимума по тексту. */
+/* Регион, Система, Корабль: в широкой карточке поле «растворяется»
+   в сетке строки — подпись и список становятся её ячейками, и все три
+   списка получают одинаковую долю (1fr), независимо от длины подписи. */
+.ct-field {
+    display: contents;
+}
+
+.colony-table tr.ct-system-row .ct-field select {
+    min-width: 0;
+    width: 100%;
+}
+
+/* Узкая карточка: подписи встают над списками, три поля — равные
+   колонки сетки. Так всё остаётся в одну строку и не сжимается. */
+@container card (max-width: 760px) {
+    .ct-system-inner {
+        grid-template-columns: auto 1fr 1fr 1fr auto auto;
+    }
+
+    .ct-field {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.2rem;
+        min-width: 0;
+    }
+}
+
+/* Ячейка «Корабль»: список прижат к верхней кромке, а картинка корабля
+   растянута фоном на всю высоту объединённой ячейки (6 строк).
+   Фон задаёт JS из SHIP_IMAGES, здесь — только его укладка. */
+.colony-table td.ct-ship {
+    vertical-align: top;
+    padding-top: 0.4rem;
+    background-repeat: no-repeat;
+    background-position: center 58%;
+    background-size: 76% auto;
+}
+
+/* Ячейка P0/P1: иконка ресурса слева от выпадающего списка */
+.res-stack {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    /* тот же кегль, что у полей карточки: иконка ниже мерится в em
+       и потому остаётся равной списку и на узком экране */
+    font-size: 0.74rem;
+}
+
+/* Иконка в размер списка: 2.58em — это высота .ct-input внутри карточки
+   (0.74rem кегль, 0.32rem отступы сверху и снизу, рамка в 1px). */
+.colony-table .res-stack .res-icon {
+    flex: 0 0 auto;
+    width: 2.58em;
+    height: 2.58em;
+    margin-right: 0;
+    vertical-align: baseline;
+}
+
+/* У P0 и P1 горизонтальные отступы ячейки урезаны: иконка и длинное
+   слово съедают ширину, а по краям поле почти не нужно. */
+.colony-table td.ct-p0,
+.colony-table td.ct-p1 {
+    padding-left: 0.15rem;
+    padding-right: 0.15rem;
+}
+
+/* Ячейка P2 карточки P2: список — по центру ячейки (как у корабля),
+   отступы по бокам урезаны (как у P0/P1). */
+.colony-table td.ct-p2 {
+    vertical-align: middle;
+    text-align: center;
+    padding-left: 0.15rem;
+    padding-right: 0.15rem;
+}
+
+/* На карточке P2 столбцы P1 и P0 — не списки, а текст рецепта: в P1 оба
+   входа, в P0 их сырьё, по строке на вход. Строки-ячейки выравниваем
+   сверху, чтобы две линии не растягивали строку таблицы. */
+.colony-table td.ct-p1,
+.colony-table td.ct-p0 {
+    vertical-align: middle;
+}
+
+/* Ячейка рецепта на карточке P2 — по макету пользователя: две
+   области-«уголка», сцепленные лесенкой.
+   ┌────────┬───────────────────┐────────┐
+   │        │   Название 1      │        │   светлая область:
+   │ икон 1 └───────┬───────────┘ икон 2 │   левая иконка + верх
+   │        │       Название 2           │   синяя область:
+   └────────┴────────────────────────────┘   низ + правая иконка
+   Граница между областями — ступенькой, снаружи общая рамка,
+   названия по центру средней колонки. */
+.colony-table td.ct-split {
+    padding: 0.2rem;
+}
+
+.colony-table .ct-recipe {
+    --zone-a: rgba(255, 255, 255, 0.08);
+    --zone-b: rgba(78, 140, 220, 0.24);
+    --zone-line: 1.5px solid rgba(150, 185, 230, 0.6);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    font-size: 0.74rem;
+    line-height: 1.2;
+    color: var(--text);
+    border: var(--zone-line);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Ячейки иконок — во всю высоту, со своим фоном области */
+.colony-table .ct-recipe > .ct-icon-cell {
+    grid-row: 1 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.2em;
+}
+
+.colony-table .ct-recipe > .ct-icon-a {
+    grid-column: 1;
+    background: var(--zone-a);
+}
+
+.colony-table .ct-recipe > .ct-icon-b {
+    grid-column: 3;
+    background: var(--zone-b);
+}
+
+/* Названия — по центру средней колонки */
+.colony-table .ct-recipe > .ct-name-a,
+.colony-table .ct-recipe > .ct-name-b {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.7em;
+    padding: 0.15em 0.4em;
+    text-align: center;
+}
+
+/* Верхнее название — продолжение светлой области; справа от него
+   ступенька границы */
+.colony-table .ct-recipe > .ct-name-a {
+    grid-row: 1;
+    background: var(--zone-a);
+    border-right: var(--zone-line);
+}
+
+/* Нижнее название — продолжение синей области; граница сверху и слева */
+.colony-table .ct-recipe > .ct-name-b {
+    grid-row: 2;
+    background: var(--zone-b);
+    border-top: var(--zone-line);
+    border-left: var(--zone-line);
+}
+
+/* Прочерк пустой строки — по центру всей ячейки */
+.colony-table .ct-recipe > .ct-recipe-empty {
+    grid-column: 1 / -1;
+    grid-row: 1 / 3;
+    justify-self: center;
+}
+
+/* Длинное название переносится по слогам (названия английские, у
+   элемента lang="en"); если не делится — переносится, но не обрезается. */
+.colony-table .ct-recipe-name {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+}
+
+/* Узкая карточка: список P2 встаёт под иконку, чтобы ему хватило
+   ширины. Иконки везде остаются одного размера. */
+@container card (max-width: 560px) {
+    /* Узко: средней колонке между двумя иконками не хватает места,
+       поэтому области становятся просто строками — светлая сверху
+       (иконка 1 + название 1), синяя снизу (название 2 + иконка 2).
+       Названиям достаётся почти вся ширина. */
+    .colony-table .ct-recipe > .ct-icon-a {
+        grid-row: 1;
+    }
+
+    .colony-table .ct-recipe > .ct-icon-b {
+        grid-row: 2;
+        border-top: var(--zone-line);
+    }
+
+    .colony-table .ct-recipe > .ct-name-a {
+        grid-column: 2 / 4;
+        border-right: none;
+    }
+
+    .colony-table .ct-recipe > .ct-name-b {
+        grid-column: 1 / 3;
+        border-left: none;
+    }
+
+    .colony-table td.ct-p2 .res-stack {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .colony-table td.ct-p2 select {
+        width: 100%;
+    }
+}
+
+/* Иконка рецепта — постоянного размера, как у P2 (2.58em ≈ 31px):
+   при уменьшении окна не сжимается, ужимается только текст. */
+.colony-table .ct-recipe .res-icon {
+    flex: 0 0 auto;
+    width: 2.58em;
+    height: 2.58em;
+    margin-right: 0;
+}
+
+.colony-table .ct-recipe-empty {
+    color: var(--text-faint);
+}
+
+/* Внутри карточки ширину полей задаёт колонка таблицы, а не само поле:
+   без min-width: 0 растянутый select вытолкнул бы карточку за край. */
+.colony-table .ct-input,
+.colony-table .ct-system {
+    min-width: 0;
+    padding: 0.32rem 0.22rem;
+    font-size: 0.74rem;
+}
+
+/* Системная стрелка браузера отнимает у списка около 19px, а в колонке
+   шириной 60px это треть места. Рисуем свою: шеврон из двух половинок
+   квадрата, направленных градиентами. */
+.colony-table select.ct-input {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-left: 0.3rem;
+    padding-right: 0.75rem;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--text-faint) 50%),
+        linear-gradient(135deg, var(--text-faint) 50%, transparent 50%);
+    background-position: right 0.36rem center, right 0.19rem center;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+}
+
+/* У заблокированного списка стрелки нет — там прочерк */
+.colony-table select.ct-input:disabled {
+    background-image: none;
+}
+
+/* ---------- Модальное окно выбора карточки (P1/P2) ---------- */
+.ct-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(4, 9, 20, 0.66);
+    backdrop-filter: blur(2px);
+}
+
+.ct-modal[hidden] {
+    display: none;
+}
+
+.ct-modal-box {
+    position: relative;
+    width: min(430px, calc(100vw - 2rem));
+    padding: 1.15rem 1.25rem 1.25rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-lit);
+    border-radius: 10px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+}
+
+.ct-modal-title {
+    margin: 0 0 0.45rem;
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    letter-spacing: 0.06em;
+}
+
+.ct-modal-hint {
+    margin: 0 0 1rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--text-dim);
+}
+
+.ct-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.ct-modal-actions .btn {
+    flex: 1 1 0;
+}
+
+.ct-modal-actions .btn:hover {
+    color: #150d04;
+    background: linear-gradient(135deg, hsl(36 95% 55%), hsl(28 95% 50%));
+    border-color: var(--accent);
+    box-shadow: var(--glow-amber);
+}
+
+/* Крестик закрытия — в углу окна */
+.ct-modal-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.6rem;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: var(--text-faint);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.ct-modal-close:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+}
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 640px) {
+    body {
+        font-size: 14px;
+    }
+
+    /* Фиксированная шапка на мобильном ниже: главное — навигация */
+    :root {
+        --header-h: 56px;
+    }
+
+    .header-inner {
+        justify-content: center;
+    }
+
+    .brand {
+        margin-right: 0;
+    }
+
+    nav.tabs {
+        gap: 0.3rem;
+    }
+
+    nav button {
+        flex: 1 1 auto;
+        padding: 0.55rem 0.7rem;
+        font-size: 0.82rem;
+        text-align: center;
+    }
+
+    #calc-form {
+        grid-template-columns: 1fr;
+    }
+
+    #calc-form button {
+        width: 100%;
+    }
+
+    select,
+    input[type="number"] {
+        max-width: none;
+    }
+
+    /* Три карточки в ряд на телефоне нечитаемы — ставим их друг под другом.
+       flex-basis карточки задан в процентах от ширины ряда, а в колонке
+       процент считается от высоты, поэтому здесь ширину возвращаем
+       карточке явно: иначе карточки схлопнутся в узкие полоски. */
+    .cards-row {
+        flex-direction: column;
+    }
+
+    .card {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+}
+
+/* ---------- Уважение к настройкам движения ---------- */
+/* ---------- Схема производства (вкладка «Цепочки») ---------- */
+/* Схема занимает всю ширину окна, но растягивают её не колонки, а
+   промежутки между ними: колонка по ширине самой длинной подписи
+   (ширину ставит js/chains.js), остаток уходит в space-between.
+   Иначе колонки растянутся, а промежуток между ними останется
+   прежним — и линии связи превратятся в короткие обрубки.
+   Колонки не сжимаются (flex: 0 0 auto), поэтому на узком экране
+   карта целиком прокручивается вбок внутри .chain-scroll. */
+/* Панель над схемой: выбор торгового хаба. Список один на вкладку,
+   поэтому ширина по содержимому, а не на всю строку — как у селектов
+   он ведёт себя и на узком экране, где панель переносится целиком. */
+.chain-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.7rem;
+    margin-bottom: 0.9rem;
+}
+
+.chain-bar-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-dim);
+}
+
+/* Глобальный select задаёт width: 100% и max-width: 340px — здесь
+   это мешает: меню должно быть столько, сколько занимает самое
+   длинное имя хаба. */
+.chain-bar-hub {
+    width: auto;
+    max-width: none;
+    padding: 0.45rem 2.2rem 0.45rem 0.7rem;
+    font-size: 0.85rem;
+}
+
+.chain-bar-hub:disabled {
+    color: var(--text-faint);
+    cursor: not-allowed;
+}
+
+.chain-bar-hint {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+}
+
+.chain-scroll {
+    overflow: auto;
+    padding-bottom: 0.4rem;
+}
+
+.chain-map {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+/* Линии рисует js/chains.js по координатам карточек. Им нельзя
+   перехватывать щелчки, иначе схема перестанет отзываться. */
+.chain-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.chain-line {
+    fill: none;
+    stroke: var(--text-faint);
+    stroke-width: 1;
+    opacity: 0.28;
+}
+
+/* Колонка держит ширину, которую отмерил fitColumns, и не сжимается:
+   иначе на узком окне подпись переносится на вторую строку и строки
+   P0/P1 съезжают по высоте. Не поместилось — карта прокручивается
+   вбок внутри .chain-scroll. */
+.chain-col {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+/* Планет восемь, а товаров в колонках правее — до 24, поэтому без
+   отдельного правила такие колонки висели бы пустым блоком у верха.
+   Растягиваем их на всю высоту схемы; блок центрирует по вертикали
+   контейнер .chain-col-stretch-list. P2 (24 товара) уже занимает
+   всю высоту и растяжку не получает. */
+.chain-col-stretch {
+    align-self: stretch;
+}
+
+/* Контейнер с плитками заполняет оставшуюся высоту колонки, и блок
+   встаёт ровно по середине схемы. Промежуток между плитками — как
+   в остальных колонках (0.3rem). */
+.chain-col-stretch-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.chain-col > h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.chain-col-note {
+    margin: 0 0 0.35rem;
+    min-height: 2.5em;
+    font-size: 0.66rem;
+    line-height: 1.25;
+    text-align: center;
+    color: var(--text-faint);
+}
+
+/* Считаемый объём колонки — второй строкой под подписью уровня.
+   Блок лежит внутри .chain-col-note, а у того min-height: 2.5em — это
+   ровно две строки (line-height 1.25). Пока обе подписи не переносятся,
+   высота шапки бывает прежней, строки P0/P1 остаются напротив, а
+   запас на перенос уходит на длинное число. Цвет ярче подписи: это
+   результат расчёта, а не подпись уровня. */
+.chain-col-volume {
+    display: block;
+    color: var(--text-dim);
+}
+
+/* Строка товара: плитка, а справа от неё поле ввода (у P1..P4).
+   Посчитанный итог живёт внутри плитки, у правого края. Ширину
+   колонки под них отводит fitColumns. */
+.chain-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.chain-item > .chain-chip {
+    flex: 1 1 auto;
+    width: auto;
+}
+
+/* Поле ввода. Селектор с input — иначе его перебивает общее правило
+   input[type="number"] (у него специфичность выше).
+   Ширина — под шесть знаков: 6ch на цифры, плюс отступы и рамка
+   (у всех элементов box-sizing: border-box, поэтому отступы и рамка
+   уже внутри ширины). */
+input.chain-amount {
+    flex: 0 0 calc(6ch + 0.6rem + 2px);
+    width: calc(6ch + 0.6rem + 2px);
+    min-width: 0;
+    max-width: none;
+    padding: 0.1rem 0.3rem;
+    font: inherit;
+    font-size: 0.72rem;
+    line-height: 1.3;
+    text-align: right;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.16s, box-shadow 0.16s;
+}
+
+input.chain-amount::placeholder {
+    color: var(--text-faint);
+    opacity: 0.55;
+}
+
+input.chain-amount:hover {
+    border-color: var(--border-lit);
+}
+
+input.chain-amount:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/* Посчитанный итог — внутри плитки, у самого правого края, по центру
+   плитки: в потоке он сидел на первой строке, и после того как иконка
+   встала по центру (см. .chain-chip img), он повис над ней.
+   Место под итог зарезервировано отступом справа у .chain-chip
+   (:has(.chain-total)) — иначе плитка потеряла бы его ширину.
+   Само место фиксировано (width, а не min-width): сколько бы цифр
+   в числе ни было, плитка и колонки остаются прежней ширины, и при
+   расчёте схема не ёрхает. Число длиннее отведённого места ужимает
+   шрифт js/chains.js (piFitTotals).
+   Ширина в rem, а не в ch: ch зависит от кегля самого элемента, и
+   ужимание шрифта уменьшало бы ещё и само место под число. */
+.chain-chip > .chain-total {
+    position: absolute;
+    right: var(--chip-pad);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2.9rem;
+    font-size: 0.74rem;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    color: var(--cyan);
+}
+
+/* Справа у плитки с итогом — место под него, иначе плитка стала бы
+   уже на всю ширину блока. У типа планеты итога нет, и отступа
+   справа у него тоже нет. */
+.chain-chip:has(.chain-total) {
+    padding-right: calc(var(--chip-pad) + 2.9rem + var(--chip-gap));
+}
+
+.chain-total:not(.is-set) {
+    color: var(--text-faint);
+}
+
+/* Отступы плитки заданы переменными, а не числами в разных правилах:
+   отступ под названием у .chain-price и положение иконки считаются от
+   них же, иначе цена съезжала бы вслед за любым изменением. */
+.chain-chip {
+    --chip-pad: 0.2rem;         /* внутренний отступ плитки */
+    --chip-icon: 26px;          /* размер иконки, задан в makeItem, js/chains.js */
+    --chip-gap: 0.3rem;         /* разрядка названия и итога */
+    --chip-price-line: 1.05em;  /* высота строки цены */
+
+    display: flex;
+    align-items: center;
+    gap: var(--chip-gap);
+    /* Плитка двухстрочная: иконка, название и итог сверху, цена под
+       названием. Высота второй строки зарезервирована отступом снизу,
+       а сама цена стоит абсолютно — см. .chain-price. */
+    position: relative;
+    width: 100%;
+    padding: var(--chip-pad);
+    /* Слева заранее зарезервировано место под иконку: она стоит по центру
+       плитки, вне потока, иначе первая строка была бы длиннее второй. */
+    padding-left: calc(var(--chip-pad) + var(--chip-icon) + var(--chip-gap));
+    /* Плитки без цены (тип планеты) в потоке иконки ничего не имеют,
+       а высоты им нужно ровно на неё. */
+    min-height: calc(var(--chip-icon) + 2 * var(--chip-pad));
+    /* Клик по плитке копирует её в буфер — см. piCopyCell в js/chains.js.
+       Курсор обещает это действие, а title (там же) объясняет. Поле ввода
+       лежит рядом с плиткой, а не внутри, поэтому отсюда оно не
+       наследуется. */
+    cursor: copy;
+    font: inherit;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    text-align: left;
+    color: var(--text);
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: opacity 0.16s, border-color 0.16s, background-color 0.16s, box-shadow 0.16s;
+}
+
+/* Место под цену резервируем только там, где она есть. У типа планеты
+   такой строки нет, а пустое место снизу было видно как лишний отступ. */
+.chain-chip:has(.chain-price) {
+    padding-bottom: calc(var(--chip-pad) + var(--chip-price-line));
+}
+
+/* Цена из заявок ESI — второй строкой плитки, под названием.
+
+   Строка заведена у всех товаров P0..P4 сразу, иначе высота колонок
+   разъехалась бы. Значения приходят один раз за заход страницы и сами
+   не меняются (js/prices.js).
+
+   Внутри строки живут два куска: сама цена
+   (.chain-price-value, пишет js/prices.js) и то, во сколько обойдётся
+   расчётное количество товара — « · 287 856 000 ISK»
+   (.chain-price-sum, рисует js/chains.js). Каждый пишет только свой:
+   если бы цена писалась в узел целиком, она стирала бы суммы при
+   каждом обновлении. Дочерние элементы наследуют цвет, кегль и запрет
+   на перенос, поэтому правила для них отдельные не нужны — а вот
+   ужимание строки, когда обе половины вместе не влезли, делает
+   piFitPrice в js/chains.js: обрезанные деньги читались бы как другие.
+
+   Позиция — абсолютная, и это не украшение: в потоке элемент вошёл бы
+   в замер ширины, который fitColumns делает по .chain-item, и колонка
+   меняла бы ширину в зависимости от того, какие цены уже пришли
+   (проверено: P0 гуляла между 261 и 290). Место под строку забрано
+   отступом снизу у .chain-chip, поэтому высота плитки заранее
+   известна. Слева — под названием, то есть за иконку (26px, размер
+   задан в makeItem, js/chains.js) и её разрядку. Справа — до края
+   блока итога: тот теперь стоит по центру плитки, и без этой границы
+   длинная цена заезжала бы под него. Текст не переносим и обрезаем
+   многоточием: длинная цена не должна ломать плитку. */
+.chain-price {
+    position: absolute;
+    left: calc(var(--chip-pad) + var(--chip-icon) + var(--chip-gap));
+    right: calc(var(--chip-pad) + 2.9rem + var(--chip-gap));
+    bottom: var(--chip-pad);
+    font-size: 0.66rem;
+    line-height: 1.2;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-faint);
+}
+
+.chain-price.is-set {
+    color: var(--cyan);
+}
+
+/* Нет заявок или ESI не ответил: это не цена, поэтому приглушаем и
+   не даём цифрам выглядеть настоящей ценой. */
+.chain-price.is-error {
+    font-style: italic;
+}
+
+/* Иконка — по центру плитки, а не первой строки. Плитка двухстрочная,
+   и прижатая к верху картинка отставала от середины на 7 px; в потоке
+   ей места нет, поэтому высоту задаёт min-height у .chain-chip. */
+.chain-chip img {
+    position: absolute;
+    left: var(--chip-pad);
+    top: 50%;
+    transform: translateY(-50%);
+    object-fit: contain;
+}
+
+.chain-chip:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-lit);
+}
+
+.chain-chip:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 1px;
+}
+
+/* Когда выбран товар, остальные гаснут — иначе подсветка цепочки
+   не читается: свечение обрачивает полсотни плиток. */
+.chain-map.has-focus .chain-chip {
+    opacity: 0.26;
+}
+
+.chain-map.has-focus .chain-chip.is-lit,
+.chain-map.has-focus .chain-chip.is-focus {
+    opacity: 1;
+}
+
+.chain-chip.is-lit {
+    color: var(--text);
+    background: var(--cyan-soft);
+    border-color: var(--cyan);
+}
+
+.chain-chip.is-focus {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-line);
+}
+
+/* Ячейка ушла в буфер: короткая вспышка вокруг плитки. Классы вешает
+   js/chains.js, там же живёт и красный вариант — браузер может
+   отказать в доступе к буферу, и это надо показать, а не проглотить.
+
+   Анимируем только тень, не рамку: в момент клика рамка занята
+   подсветкой цепочки (.is-lit, .is-focus), и перебивать её цветом
+   значило бы, что подсветка вдруг пропала. */
+.chain-chip.is-copied {
+    animation: chainCopied 0.9s ease-out;
+}
+
+.chain-chip.is-copy-failed {
+    animation: chainCopyFailed 1.2s ease-out;
+}
+
+@keyframes chainCopied {
+    0%, 50% { box-shadow: 0 0 0 2px var(--cyan); }
+    100%    { box-shadow: 0 0 0 0 transparent; }
+}
+
+@keyframes chainCopyFailed {
+    0%, 50% { box-shadow: 0 0 0 2px var(--red); }
+    100%    { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* Гасим линии при подсветке, но подсвеченные оставляем яркими.
+   Селектор с .has-focus нужен и здесь: без него правило гашения
+   перебивало бы .is-lit по специфичности. */
+.chain-map.has-focus .chain-line {
+    opacity: 0.06;
+}
+
+.chain-line.is-lit,
+.chain-map.has-focus .chain-line.is-lit {
+    stroke: var(--cyan);
+    stroke-width: 1.8;
+    opacity: 0.9;
+}
+
+/* Промежуток в .chain-map задан как минимум: space-between и так
+   разносит колонки по всей ширине. На телефоне мельче только подписи
+   в плитках. */
+@media (max-width: 640px) {
+    .chain-chip {
+        font-size: 0.74rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ---------- Ссылка «← Sigetar.ru» в шапке (возврат на главную) ---------- */
+.home-link {
+    padding: 6px 12px;
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--text-dim);
+    border: 1px solid rgba(29, 52, 82, 0.8);
+    transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.home-link:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 14px rgba(255, 157, 46, 0.35);
+}
+
+.home-link:focus-visible {
+    outline: 1px solid var(--blue);
+    outline-offset: 2px;
+}

@@ -1,121 +1,476 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>EVE PI Planner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigetar.ru — визитная карточка</title>
+    <meta name="description" content="Визитная карточка: frontend-разработчик, навыки, контакты.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=53">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
+    <header class="site-header">
         <div class="container header-inner">
-            <h1 class="brand">
-                <span class="brand-name">EVE PI Planner</span>
-                <span class="brand-tag">[ Planetary Industry ]</span>
-            </h1>
+            <a class="brand" href="#about">
+                <span class="brand-name">Sigetar</span>
+                <span class="brand-tag">[ Sigetar ]</span>
+            </a>
             <nav class="tabs">
-                <button data-tab="planets">Планеты</button>
-                <button data-tab="chains">Цепочки производства</button>
-                <button data-tab="calculator">Калькулятор</button>
-                <button data-tab="colonies">Мои колонии</button>
+                <button type="button" data-tab="about">Обо мне</button>
+                <!-- Переходы на другие разделы сайта. На сервере — /eveonline/ и /clashroyale/,
+                     при открытии файла с диска js/app.js подставляет data-local -->
+                <a class="nav-link" href="/eveonline/" data-local="../EVE/index.html">EVE Online</a>
+                <a class="nav-link" href="/clashroyale/" data-local="../ClashRoyale/index.html">Clash Royale</a>
+                <!-- Скрыто: «Навыки». Чтобы вернуть, уберите hidden -->
+                <button type="button" data-tab="skills" hidden>Навыки</button>
             </nav>
         </div>
     </header>
 
     <main>
-        <!-- Вкладка: выбор типа планеты -->
-        <section id="planets" class="tab-content active">
-            <!-- Верх вкладки: слева заголовок и строка добавления аккаунта
-                 (полоска заголовка — ровно по ширине этой строки), справа
-                 блок «Статистика» той же высоты. -->
-            <div class="planets-top">
-                <div class="planets-top-main">
-                    <h2>Выбор планеты</h2>
-
-                    <!-- Выбор аккаунта — аналог выбора персонажа, стоит перед ним.
-                         Кнопка «Добавить» создаёт линию аккаунта, в линию кладётся
-                         до трёх карточек-персонажей. -->
-                    <div class="card-head account-head">
-                        <label class="card-pilot-label" for="account-new">Аккаунт</label>
-                        <input type="text" id="account-new" class="ct-input card-new"
-                               placeholder="Название аккаунта" maxlength="32" autocomplete="off">
-                        <button type="button" id="account-add" class="btn card-add">Добавить</button>
-                        <span id="account-counter" class="card-counter" aria-live="polite">Аккаунтов: 0</span>
+        <!-- Раздел: обо мне -->
+        <section id="about" class="page-section">
+            <div class="hero">
+                <div>
+                    <span class="hero-kicker">EVE Online · SCUM · Valheim · Eco</span>
+                    <h1 class="hero-title">
+                        <span class="t-small"> </span>
+                        <span class="t-shimmer">Sigetar</span>
+                    </h1>
+                    <p class="hero-role">Играю в онлайн и кооперативные игры</p>
+                    <p class="hero-text">
+                        Всегда рад новым знакомствам для совместного времяприпровождения в играх.
+                    </p>
+                    <span class="hero-status">Открыт для предложений</span>
+                    <div class="actions">
+                        <button type="button" class="btn" data-goto="contact-card">Связаться</button>
+                        <button type="button" class="btn btn--teal" data-goto="skills" hidden>Навыки</button>
                     </div>
                 </div>
 
-                <!-- Таблицу подсчёта P1 строит и заполняет app.js (updateStats) -->
-                <aside class="stats-panel" aria-labelledby="stats-title">
-                    <h3 class="stats-title">
-                        <button type="button" id="stats-title" class="stats-toggle" aria-expanded="true"
-                                aria-controls="stats-body">Статистика</button>
-                    </h3>
-                    <div id="stats-body" class="stats-body"></div>
-                </aside>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-value">40+</span>
+                        <span class="stat-label">Возраст</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">40+</span>
+                        <span class="stat-label">Игр</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">PRM</span>
+                        <span class="stat-label">Пермь</span>
+                    </div>
+                </div>
             </div>
 
-            <div id="cards-hint" class="card-hint">
-                Введите название аккаунта и нажмите «Добавить» — появится линия для трёх персонажей
+            <hr class="rule">
+
+            <p class="eyebrow">// 01 — EVE Online</p>
+            <h2 class="section-title">EVE Online</h2>
+            <p class="section-lead">
+                EVE Online - это массовая многопользовательская онлайн-игра (ММО) с научно-фантастическим сеттингом, 
+					где игроки выступают в роли пилотов космических кораблей. Действие разворачивается в огромной галактике 
+					под названием Новый Эдем (New Eden).
+            </p>
+
+            <!-- Одна общая картинка на все карточки ряда (см. .grid--shared-bg в style.css) -->
+            <div class="grid grid--shared-bg">
+                <div class="panel panel--shared">
+                      <h3 class="h-split">Top Ships <span>kills</span></h3>
+                    <ul class="ships">
+                        <li>
+                            <a class="ship" href="https://zkillboard.com/character/92703517/shipTypeID/638/" target="_blank" rel="noopener">
+                                <img class="ship-img" src="https://images.evetech.net/types/638/icon?size=64" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Raven</span>
+                                <span class="ship-kills">220</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://zkillboard.com/character/92703517/shipTypeID/17736/" target="_blank" rel="noopener">
+                                <img class="ship-img" src="https://images.evetech.net/types/17736/icon?size=64" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Nightmare</span>
+                                <span class="ship-kills">181</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://zkillboard.com/character/92703517/shipTypeID/17726/" target="_blank" rel="noopener">
+                                <img class="ship-img" src="https://images.evetech.net/types/17726/icon?size=64" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Apocalypse Navy Issue</span>
+                                <span class="ship-kills">85</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://zkillboard.com/character/92703517/shipTypeID/12015/" target="_blank" rel="noopener">
+                                <img class="ship-img" src="https://images.evetech.net/types/12015/icon?size=64" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Muninn</span>
+                                <span class="ship-kills">76</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://zkillboard.com/character/92703517/shipTypeID/29340/" target="_blank" rel="noopener">
+                                <img class="ship-img" src="https://images.evetech.net/types/29340/icon?size=64" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Osprey Navy Issue</span>
+                                <span class="ship-kills">57</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="panel panel--shared">
+                    <h3 class="h-split">Факты <span>zkillboard</span></h3>
+                    <!-- Данные с zkillboard.com на 11.10.2026 (персонаж Sigetar, ID 92703517) -->
+                    <ul class="ships">
+                        <li>
+                            <a class="ship" href="https://zkillboard.com/character/92703517/" target="_blank" rel="noopener">
+                                <img class="ship-img" src="https://images.evetech.net/characters/92703517/portrait?size=64" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Пилот</span>
+                                <span class="ship-val">Sigetar</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://zkillboard.com/alliance/99012122/" target="_blank" rel="noopener">
+                                <img class="ship-img" src="https://images.evetech.net/alliances/99012122/logo?size=64" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Альянс</span>
+                                <span class="ship-val">HOLD MY PROBS <span class="ticker">&lt;PROB&gt;</span></span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://zkillboard.com/corporation/205689894/" target="_blank" rel="noopener">
+                                <img class="ship-img" src="https://images.evetech.net/corporations/205689894/logo?size=64" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Корпорация</span>
+                                <span class="ship-val">Absolute Guardians <span class="ticker">[-AGS-]</span></span>
+                            </a>
+                        </li>
+                        <li>
+                            <div class="ship ship--static">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M7.5 14h3v3h-3z" fill="currentColor" stroke="none"/></svg></span>
+                                <span class="ship-name">В игре:</span>
+                                <span class="ship-val">08:12:2012</span>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://www.eveonline.com/ru/signup?invc=23294c52-223e-4f1e-8898-8d2f5864eb53" target="_blank" rel="noopener">
+                                <img class="ship-img" src="https://images.evetech.net/types/40520/icon?size=64" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">1 000 000 SP</span>
+                                <span class="ship-val">ЗАБРАТЬ</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="panel panel--shared" id="contact-card">
+                    <h3 class="h-split">КОНТАКТЫ <span>contact</span></h3>
+
+                    <!-- Ссылки: замените адреса на свои -->
+                    <ul class="ships">
+                        <li>
+                            <a class="ship" href="https://t.me/username" target="_blank" rel="noopener">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><path d="M21 3.5 2.8 10.6l6.4 2.4L21 3.5z"/><path d="M21 3.5 17.4 20.5l-8.2-7.5"/><path d="M9.2 13v6.2l3.1-3.4"/></svg></span>
+                                <span class="ship-name">Telegram</span>
+                                <span class="ship-val">@username</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://discord.gg/invite" target="_blank" rel="noopener">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M4 14h3.5v6H4zM16.5 14H20v6h-3.5z"/><path d="M20 20c0 1-1.5 1.5-4 1.5h-2"/></svg></span>
+                                <span class="ship-name">Discord</span>
+                                <span class="ship-val">discord.gg/invite</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://telemost.yandex.ru/j/00000000000000" target="_blank" rel="noopener">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><rect x="2.5" y="6" width="13" height="12"/><path d="M15.5 10.5 21.5 7v10l-6-3.5"/><path d="M7.5 9.8v4.4l3.6-2.2z" fill="currentColor" stroke="none"/></svg></span>
+                                <span class="ship-name">Яндекс Телемост</span>
+                                <span class="ship-val">telemost.yandex.ru</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://vk.com/group" target="_blank" rel="noopener">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 20v-1.5a6 6 0 0 1 12 0V20"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.8 14.2A4.6 4.6 0 0 1 21.5 18.5V20"/></svg></span>
+                                <span class="ship-name">Группа ВКонтакте</span>
+                                <span class="ship-val">vk.com/group</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://steamcommunity.com/chat/invite/DdvHdx0y" target="_blank" rel="noopener">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><path d="M3.5 4.5h17v11h-9l-5 4v-4h-3z"/><path d="M8 10h.01M12 10h.01M16 10h.01" stroke-width="2.4"/></svg></span>
+                                <span class="ship-name">Группа Steam</span>
+                                <span class="ship-val">steamcommunity.com</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+			
+			 <hr class="rule">
+
+            <p class="eyebrow">// 02 — Clash Royale</p>
+            <h2 class="section-title">Clash Royale</h2>
+            <p class="section-lead">
+                Clash Royale - игра в жанре стратегии с элементами коллекционных карточных игр (ККИ).
+            </p>
+
+            <!-- Одна общая картинка на все карточки ряда (см. .grid--shared-bg--cr в style.css) -->
+            <!-- Данные с royaleapi.com на 11.10.2026 (игрок Sigetar, тег #80CUYR90) -->
+            <div class="grid grid--shared-bg grid--shared-bg--cr">
+                <div class="panel panel--shared">
+                    <h3 class="h-split">Колода <span>elixir</span></h3>
+                    <ul class="ships">
+                        <li>
+                            <a class="ship" href="https://royaleapi.com/player/80CUYR90/decks" target="_blank" rel="noopener">
+                                <img class="ship-img ship-img--card" src="https://cdns3.royaleapi.com/cdn-cgi/image/w=150,h=180,format=auto/static/img/cards/v11-a8e42334/valkyrie-ev1.png" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Valkyrie <span class="evo">EVO</span></span>
+                                <span class="ship-kills">4</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://royaleapi.com/player/80CUYR90/decks" target="_blank" rel="noopener">
+                                <img class="ship-img ship-img--card" src="https://cdns3.royaleapi.com/cdn-cgi/image/w=150,h=180,format=auto/static/img/cards/v11-a8e42334/baby-dragon-ev1.png" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Baby Dragon <span class="evo">EVO</span></span>
+                                <span class="ship-kills">4</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://royaleapi.com/player/80CUYR90/decks" target="_blank" rel="noopener">
+                                <img class="ship-img ship-img--card" src="https://cdns3.royaleapi.com/cdn-cgi/image/w=150,h=180,format=auto/static/img/cards/v11-a8e42334/electro-wizard.png" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Electro Wizard</span>
+                                <span class="ship-kills">4</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://royaleapi.com/player/80CUYR90/decks" target="_blank" rel="noopener">
+                                <img class="ship-img ship-img--card" src="https://cdns3.royaleapi.com/cdn-cgi/image/w=150,h=180,format=auto/static/img/cards/v11-a8e42334/inferno-dragon.png" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Inferno Dragon</span>
+                                <span class="ship-kills">4</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://royaleapi.com/player/80CUYR90/decks" target="_blank" rel="noopener">
+                                <img class="ship-img ship-img--card" src="https://cdns3.royaleapi.com/cdn-cgi/image/w=150,h=180,format=auto/static/img/cards/v11-a8e42334/balloon-hero.png" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Hero Balloon</span>
+                                <span class="ship-kills">5</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://royaleapi.com/player/80CUYR90/decks" target="_blank" rel="noopener">
+                                <img class="ship-img ship-img--card" src="https://cdns3.royaleapi.com/cdn-cgi/image/w=150,h=180,format=auto/static/img/cards/v11-a8e42334/lumberjack.png" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Lumberjack</span>
+                                <span class="ship-kills">4</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://royaleapi.com/player/80CUYR90/decks" target="_blank" rel="noopener">
+                                <img class="ship-img ship-img--card" src="https://cdns3.royaleapi.com/cdn-cgi/image/w=150,h=180,format=auto/static/img/cards/v11-a8e42334/mini-pekka.png" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Mini P.E.K.K.A</span>
+                                <span class="ship-kills">4</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://royaleapi.com/player/80CUYR90/decks" target="_blank" rel="noopener">
+                                <img class="ship-img ship-img--card" src="https://cdns3.royaleapi.com/cdn-cgi/image/w=150,h=180,format=auto/static/img/cards/v11-a8e42334/arrows.png" alt="" width="32" height="32" loading="lazy">
+                                <span class="ship-name">Arrows</span>
+                                <span class="ship-kills">3</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="panel panel--shared">
+                    <h3 class="h-split">Факты <span>royaleapi</span></h3>
+                    <ul class="ships">
+                        <li>
+                            <a class="ship" href="https://royaleapi.com/player/80CUYR90" target="_blank" rel="noopener">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5v-1.5a7.5 7.5 0 0 1 15 0v1.5"/></svg></span>
+                                <span class="ship-name">Игрок</span>
+                                <span class="ship-val">Sigetar</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://royaleapi.com/clan/9QY9U88J" target="_blank" rel="noopener">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6z"/><path d="m9 12 2 2 4-4"/></svg></span>
+                                <span class="ship-name">Клан</span>
+                                <span class="ship-val"><span class="ticker">#9QY9U88J</span><span class="sep" aria-hidden="true">|</span>CitadelClubPerm</span>
+                            </a>
+                        </li>
+                        <li>
+                            <div class="ship ship--static">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><path d="M7.5 4h9v5.5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 6H4v1.5A3.5 3.5 0 0 0 7.6 11M16.5 6H20v1.5a3.5 3.5 0 0 1-3.6 3.5"/><path d="M12 14v3.5M8 20.5h8M9.5 17.5h5v3h-5z"/></svg></span>
+                                <span class="ship-name">Трофеи</span>
+                                <span class="ship-val">14 000</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="ship ship--static">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8L3.5 9.7l5.9-.8z"/></svg></span>
+                                <span class="ship-name">Уровень</span>
+                                <span class="ship-val">80</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="ship ship--static">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><path d="M4 4h4l8.5 8.5M20 4h-4L7.5 12.5"/><path d="m13.5 15.5 3 3M10.5 15.5l-3 3M15 20.5l5.5-5.5M9 20.5 3.5 15"/></svg></span>
+                                <span class="ship-name">Победы</span>
+                                <span class="ship-val">10 829</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="ship ship--static">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><path d="M3.5 8 7.5 12 12 5l4.5 7 4-4-1.5 10h-14z"/><path d="M5 20.5h14"/></svg></span>
+                                <span class="ship-name">Три короны</span>
+                                <span class="ship-val">4 852</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="ship ship--static">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M7.5 14h3v3h-3z" fill="currentColor" stroke="none"/></svg></span>
+                                <span class="ship-name">В игре:</span>
+                                <span class="ship-val">10 лет</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="panel panel--shared">
+                    <h3 class="h-split">КОНТАКТЫ <span>contact</span></h3>
+
+                    <!-- Ссылки: замените адреса на свои -->
+                    <ul class="ships">
+                        <li>
+                            <a class="ship" href="https://t.me/username" target="_blank" rel="noopener">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><path d="M21 3.5 2.8 10.6l6.4 2.4L21 3.5z"/><path d="M21 3.5 17.4 20.5l-8.2-7.5"/><path d="M9.2 13v6.2l3.1-3.4"/></svg></span>
+                                <span class="ship-name">Telegram</span>
+                                <span class="ship-val">@username</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://discord.gg/invite" target="_blank" rel="noopener">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M4 14h3.5v6H4zM16.5 14H20v6h-3.5z"/><path d="M20 20c0 1-1.5 1.5-4 1.5h-2"/></svg></span>
+                                <span class="ship-name">Discord</span>
+                                <span class="ship-val">discord.gg/invite</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://telemost.yandex.ru/j/00000000000000" target="_blank" rel="noopener">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><rect x="2.5" y="6" width="13" height="12"/><path d="M15.5 10.5 21.5 7v10l-6-3.5"/><path d="M7.5 9.8v4.4l3.6-2.2z" fill="currentColor" stroke="none"/></svg></span>
+                                <span class="ship-name">Яндекс Телемост</span>
+                                <span class="ship-val">telemost.yandex.ru</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://vk.com/group" target="_blank" rel="noopener">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 20v-1.5a6 6 0 0 1 12 0V20"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.8 14.2A4.6 4.6 0 0 1 21.5 18.5V20"/></svg></span>
+                                <span class="ship-name">Группа ВКонтакте</span>
+                                <span class="ship-val">vk.com/group</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="https://steamcommunity.com/chat/invite/DdvHdx0y" target="_blank" rel="noopener">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><path d="M3.5 4.5h17v11h-9l-5 4v-4h-3z"/><path d="M8 10h.01M12 10h.01M16 10h.01" stroke-width="2.4"/></svg></span>
+                                <span class="ship-name">Группа Steam</span>
+                                <span class="ship-val">steamcommunity.com</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
-            <!-- Вход в EVE Online через SSO. Кнопка появляется, когда в
-                 js/eveauth.js вписан client_id приложения с
-                 developers.eveonline.com; без него подсказка объясняет,
-                 что делать. Сам код входа — в js/eveauth.js. -->
-            <div id="eve-bar" class="eve-bar" hidden>
-                <button type="button" id="eve-login" class="btn card-add" hidden>Войти в EVE Online</button>
-                <span id="eve-who" class="eve-who" hidden></span>
-                <button type="button" id="eve-logout" class="btn card-add" hidden>Отключить</button>
-                <span id="eve-hint" class="eve-hint"></span>
+        </section>
+
+        <!-- Раздел «Навыки» временно скрыт. Чтобы вернуть, уберите hidden у <hr> и <section> ниже,
+             у кнопки «Навыки» в меню и у кнопки «Навыки» в начале страницы -->
+        <hr class="rule rule--section" hidden>
+
+        <!-- Раздел: навыки -->
+        <section id="skills" class="page-section" hidden>
+            <p class="eyebrow">// 02 — НАВЫКИ</p>
+            <h2 class="section-title">Чем владею</h2>
+            <p class="section-lead">
+                Уровни приблизительные, но честные: что не умею — не пишу.
+            </p>
+
+            <div class="grid">
+                <div class="panel">
+                    <h3>Уровень</h3>
+
+                    <div class="skill">
+                        <div class="skill-head">
+                            <span class="skill-name">HTML / CSS</span>
+                            <span class="skill-val">95%</span>
+                        </div>
+                        <div class="skill-bar"><div class="skill-fill" style="width:95%"></div></div>
+                    </div>
+
+                    <div class="skill">
+                        <div class="skill-head">
+                            <span class="skill-name">JavaScript</span>
+                            <span class="skill-val">85%</span>
+                        </div>
+                        <div class="skill-bar"><div class="skill-fill" style="width:85%"></div></div>
+                    </div>
+
+                    <div class="skill">
+                        <div class="skill-head">
+                            <span class="skill-name">Адаптивная вёрстка</span>
+                            <span class="skill-val">90%</span>
+                        </div>
+                        <div class="skill-bar"><div class="skill-fill" style="width:90%"></div></div>
+                    </div>
+
+                    <div class="skill">
+                        <div class="skill-head">
+                            <span class="skill-name">Figma</span>
+                            <span class="skill-val">75%</span>
+                        </div>
+                        <div class="skill-bar"><div class="skill-fill" style="width:75%"></div></div>
+                    </div>
+
+                    <div class="skill">
+                        <div class="skill-head">
+                            <span class="skill-name">Оптимизация</span>
+                            <span class="skill-val">70%</span>
+                        </div>
+                        <div class="skill-bar"><div class="skill-fill" style="width:70%"></div></div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Технологии</h3>
+                    <div class="tags">
+                        <span class="tag">HTML5</span>
+                        <span class="tag">CSS3</span>
+                        <span class="tag">Flexbox</span>
+                        <span class="tag">Grid</span>
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">ES6</span>
+                        <span class="tag">Git</span>
+                        <span class="tag">Figma</span>
+                        <span class="tag">VS Code</span>
+                        <span class="tag">Lighthouse</span>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Принципы</h3>
+                    <p>Сначала структура, потом украшения.</p>
+                    <p>Никакой магии в CSS — только понятные правила.</p>
+                    <p>Страница должна работать и на слабом телефоне.</p>
+                </div>
             </div>
 
-            <!-- Линии аккаунтов создаёт app.js. В каждой линии:
-                 заголовок с именем аккаунта, выбор персонажа и ряд карточек.
-                 Внутри карточки шапка с именем персонажа и крестиком
-                 (те же классы, что у линии аккаунта), затем таблица:
-                 строка системы с кнопкой подсветки справа, под ней
-                 заголовки и 6 строк данных.
-                 «Корабль» объединён на 6 строк (rowspan). -->
-            <div id="accounts">
-                <!-- линии аккаунтов создаются в app.js -->
+            <div class="actions">
+                <button type="button" class="btn" data-goto="contact-card">Связаться</button>
             </div>
         </section>
 
-        <!-- Вкладка: цепочки P0->P4. Схему целиком рисует js/chains.js:
-             рецепты из planetSchematics.yaml, уровни из ESI. -->
-        <section id="chains" class="tab-content">
-            <div id="chain-builder"></div>
-        </section>
-
-        <!-- Вкладка: калькулятор экстракторов/фабрик -->
-        <section id="calculator" class="tab-content">
-            <h2>Калькулятор ISK/час</h2>
-            <form id="calc-form">
-                <label>Кол-во экстракторов: <input type="number" id="extractors" value="1"></label>
-                <label>Цикл (часы): <input type="number" id="cycle-time" value="24"></label>
-                <button type="submit">Рассчитать</button>
-            </form>
-            <div id="calc-result"></div>
-        </section>
-
-        <!-- Вкладка: сохранённые колонии -->
-        <section id="colonies" class="tab-content">
-            <h2>Мои колонии</h2>
-            <button id="add-colony">+ Добавить колонию</button>
-            <div id="colonies-list"></div>
-        </section>
     </main>
 
-    <script src="js/data.js?v=2"></script>
-    <script src="js/systems.js?v=2"></script>
-    <script src="js/planets.js?v=2"></script>
-    <script src="js/eveauth.js?v=2"></script>
-    <script src="js/calculator.js?v=2"></script>
-    <script src="js/prices.js?v=7"></script>
-    <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=37"></script>
+    <footer>
+        © 2026 Sigetar · [ Sigetar ]
+    </footer>
+
+    <script src="js/app.js"></script>
 </body>
 </html>
