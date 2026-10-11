@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log — Sigetar.ru</title>
+    <meta name="description" content="Список доработок и изменений на всех страницах sigetar.ru.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="/" data-local="../index.html">
+                <span class="brand-name">Sigetar</span>
+                <span class="brand-tag">[ Sigetar ]</span>
+            </a>
+            <nav class="tabs">
+                <a class="nav-link" href="/" data-local="../index.html">Обо мне</a>
+                <a class="nav-link" href="/eveonline/" data-local="../../EVE/index.html">EVE Online</a>
+                <a class="nav-link" href="/clashroyale/" data-local="../../ClashRoyale/index.html">Clash Royale</a>
+                <a class="nav-link is-current" href="/log/" data-local="index.html" aria-current="page">Log</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <p class="eyebrow">// Log</p>
+        <h2 class="section-title">Журнал изменений</h2>
+        <p class="section-lead">
+            Доработки и изменения на всех страницах sigetar.ru — новые сверху.
+        </p>
+
+        <!-- Фильтр по разделам. Чтобы добавить запись, скопируйте <li class="log-item">
+             в нужный день (или новый <section class="log-day"> сверху) и укажите
+             data-area: main | eve | cr | site -->
+        <div class="log-filter" role="group" aria-label="Фильтр по разделам">
+            <button type="button" class="log-chip is-on" data-filter="all">Все</button>
+            <button type="button" class="log-chip" data-filter="main">Главная</button>
+            <button type="button" class="log-chip" data-filter="eve">EVE Planner</button>
+            <button type="button" class="log-chip" data-filter="cr">Clash Royale</button>
+            <button type="button" class="log-chip" data-filter="site">Сайт</button>
+        </div>
+
+        <div class="log">
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-10-11">11:10:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="site"><span class="log-tag">Сайт</span>Страницы объединены в один сайт: главная — sigetar.ru, EVE Planner — /eveonline/, Clash Royale — /clashroyale/. Новый publish.bat собирает и публикует все разделы сразу.</li>
+                    <li class="log-item" data-area="site"><span class="log-tag">Сайт</span>Добавлена эта страница — Log.</li>
+                    <li class="log-item" data-area="main"><span class="log-tag">Главная</span>В меню добавлены переходы на EVE Online и Clash Royale. Логотип Sigetar получил янтарный градиент со свечением.</li>
+                    <li class="log-item" data-area="main"><span class="log-tag">Главная</span>Блок Clash Royale: колода из 8 карт, факты игрока и клан с RoyaleAPI, контакты; общая фоновая картинка на весь ряд карточек.</li>
+                    <li class="log-item" data-area="main"><span class="log-tag">Главная</span>Блок EVE Online: Top Ships и данные пилота с zKillboard, ссылки на альянс и корпорацию, реферальная ссылка «1 000 000 SP», контакты (Telegram, Discord, Телемост, ВКонтакте, Steam).</li>
+                    <li class="log-item" data-area="main"><span class="log-tag">Главная</span>Вкладки «Обо мне», «Навыки» и «Контакты» объединены в одну страницу; раздел «Как связаться» убран, «Навыки» временно скрыты.</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Переименован из EVE PI Planner в EVE Planner. В шапке появилась кнопка «← Sigetar.ru».</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Вкладка «Карта региона»: системы региона по карте EVE, звёздные врата и типы планет.</li>
+                    <li class="log-item" data-area="cr"><span class="log-tag">Clash Royale</span>Создана страница раздела — пока «Скоро».</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-10-10">10:10:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Обновление планировщика (2 публикации).</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-10-09">09:10:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Обновление планировщика (2 публикации).</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-10-08">08:10:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Вкладка «Цепочки производства» P0 → P4 и цены материалов.</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-10-07">07:10:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="main"><span class="log-tag">Главная</span>Первая версия визитной карточки: «Обо мне», «Навыки», «Контакты».</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-10-02">02:10:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="site"><span class="log-tag">Сайт</span>Домен sigetar.ru переподключён для выпуска HTTPS-сертификата.</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-09-30">30:09:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="site"><span class="log-tag">Сайт</span>Сайт опубликован на GitHub Pages, подключён домен sigetar.ru.</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Первая публикация EVE PI Planner.</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-09-29">29:09:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Данные планет и материалов, картинки типов планет, заготовка входа через EVE SSO.</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-09-28">28:09:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Начало разработки: справочник систем, иконки материалов и кораблей.</li>
+                </ul>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        © 2026 Sigetar · [ Sigetar ]
+    </footer>
+
+    <script>
+        /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
+        if (location.protocol === "file:") {
+            document.querySelectorAll("a[data-local]").forEach(function (a) {
+                a.href = a.getAttribute("data-local");
+            });
+        }
+
+        /* Фильтр по разделам: прячем записи и пустые дни */
+        (function () {
+            var chips = document.querySelectorAll(".log-chip");
+            var items = document.querySelectorAll(".log-item");
+            var days = document.querySelectorAll(".log-day");
+
+            function apply(f) {
+                items.forEach(function (li) {
+                    li.hidden = !(f === "all" || li.dataset.area === f);
+                });
+                days.forEach(function (day) {
+                    day.hidden = !day.querySelector(".log-item:not([hidden])");
+                });
+                chips.forEach(function (c) {
+                    var on = c.dataset.filter === f;
+                    c.classList.toggle("is-on", on);
+                    c.setAttribute("aria-pressed", on ? "true" : "false");
+                });
+            }
+
+            chips.forEach(function (c) {
+                c.addEventListener("click", function () {
+                    apply(c.dataset.filter);
+                });
+            });
+            apply("all");
+        })();
+    </script>
+</body>
+</html>

@@ -154,6 +154,12 @@ body::after {
     font-size: 0.95rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+    /* янтарный градиент со свечением — как у EVE Planner */
+    background: linear-gradient(92deg, hsl(var(--primary)), #ffd08a 60%, hsl(var(--primary)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 12px rgba(255, 157, 46, 0.35));
 }
 
 .brand-tag {
@@ -1083,6 +1089,137 @@ button {
     margin: 2.5rem 0;
     background: linear-gradient(90deg, hsl(var(--secondary) / .6), transparent);
     border: none;
+}
+
+/* ---------- Log (страница /log/) ---------- */
+nav.tabs a.nav-link.is-current {
+    position: relative;
+    color: hsl(var(--primary));
+    text-shadow: 0 0 14px hsl(var(--primary) / .55);
+}
+
+nav.tabs a.nav-link.is-current::after {
+    content: "";
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 2px;
+    height: 2px;
+    background: hsl(var(--primary));
+    box-shadow: 0 0 12px hsl(var(--primary) / .8);
+}
+
+.log-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 2rem;
+}
+
+.log-chip {
+    padding: 6px 14px;
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+    background: hsl(var(--space-mid) / .6);
+    border: 1px solid hsl(var(--border) / .7);
+    transition: color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.log-chip:hover {
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--secondary));
+}
+
+.log-chip.is-on {
+    color: hsl(var(--primary));
+    border-color: hsl(var(--primary) / .6);
+    box-shadow: 0 0 14px hsl(var(--primary) / .25);
+}
+
+.log-chip:focus-visible {
+    outline: 1px solid hsl(var(--secondary));
+    outline-offset: 2px;
+}
+
+.log {
+    max-width: 960px;
+}
+
+.log-day {
+    position: relative;
+    padding: 0 0 1.75rem 1.5rem;
+    border-left: 1px solid hsl(var(--border) / .8);
+}
+
+.log-day::before {
+    content: "";
+    position: absolute;
+    top: 0.45rem;
+    left: -5px;
+    width: 9px;
+    height: 9px;
+    background: hsl(var(--primary));
+    box-shadow: 0 0 10px hsl(var(--primary) / .7);
+}
+
+.log-date {
+    margin: 0 0 0.75rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    color: hsl(var(--primary));
+    font-variant-numeric: tabular-nums;
+}
+
+.log-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.log-item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 10px 14px;
+    color: hsl(var(--foreground));
+    background: hsl(var(--card) / .7);
+    border: 1px solid hsl(var(--border) / .7);
+}
+
+.log-item + .log-item {
+    margin-top: 6px;
+}
+
+.log-tag {
+    flex: 0 0 auto;
+    min-width: 7.5rem;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: hsl(220 60% 72%);
+}
+
+.log-item[data-area="eve"] .log-tag  { color: hsl(195 70% 62%); }
+.log-item[data-area="cr"] .log-tag   { color: hsl(285 70% 74%); }
+.log-item[data-area="site"] .log-tag { color: hsl(var(--primary)); }
+
+@media (max-width: 640px) {
+    .log-item {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .log-day {
+        padding-left: 1rem;
+    }
 }
 
 /* ---------- Подвал ---------- */
