@@ -1708,9 +1708,67 @@ async function analyzeColonies(characterId) {
             .filter(Boolean));
         const products = (await Promise.all(ids.map(esiSchematicName))).filter(Boolean);
         const tier = Math.max(0, ...products.map(piTierOf));
-        return { system: col.solar_system_id, tier: tier || 1, products };
+        // Что добывают экстракторы (P0) — по id товара
+        const p0s = uniqValues(pins
+            .map((pin) => pin.extractor_details && PI_NAME_BY_ID.get(pin.extractor_details.product_type_id))
+            .filter(Boolean));
+        // Главный товар колонии — товар её уровня; колония только с
+        // добычей — P1 из добываемого P0
+        let product = products.filter((n) => piTierOf(n) === tier).sort()[0] || '';
+        if (!product && p0s.length) {
+            const r = PI_RECIPES.find((x) => x.outQty === 20 && x.in[0][0] === p0s[0]);
+            product = r ? r.out : '';
+        }
+        return {
+            planetId: col.planet_id,
+            planetType: PLANET_TYPE_OF_ESI[col.planet_type] || '',
+            system: col.solar_system_id,
+            tier: tier || 1,
+            products,
+            product,
+            p0s
+        };
     }));
     return result;
+}
+
+// id товара PI → название (для экстракторов)
+const PI_NAME_BY_ID = new Map(Object.entries(PI_COMMODITIES).map(([name, [id]]) => [id, name]));
+// Тип планеты в ESI — строчными: «barren» → «Barren»
+const PLANET_TYPE_OF_ESI = {
+    barren: 'Barren', gas: 'Gas', ice: 'Ice', lava: 'Lava', oceanic: 'Oceanic',
+    plasma: 'Plasma', storm: 'Storm', temperate: 'Temperate'
+};
+
+/* Сохранённая карточка (как в хранилище) по колониям одной системы:
+   строки — планета (тип и номер) и товар строки по уровню карточки. */
+async function cardFromColonies(level, colonies, systemName) {
+    // Номер планеты — из её названия в ESI: «Afrah VII» → «VII»
+    const named = await Promise.all(colonies.map(async (c) => {
+        let number = '';
+        try {
+            const pl = await esiPublicJson(`/universe/planets/${c.planetId}/`);
+            number = String(pl.name || '').split(' ').pop();
+        } catch (e) {
+            // без номера — подставится первая планета этого типа
+        }
+        return Object.assign({}, c, { number });
+    }));
+    const order = (n) => ROMAN_NUMBERS.indexOf(n);
+    named.sort((a, b) => order(a.number) - order(b.number));
+    const list = named.slice(0, COLONY_ROWS);
+
+    const saved = { level, system: systemName };
+    saved.rows = list.map((c) => ({
+        planet: c.planetType,
+        number: c.number,
+        p0: c.tier === 1 ? (c.p0s[0] || '') : '',
+        p1: ''
+    }));
+    if (isP2Level(level)) saved.p2s = list.map((c) => c.product);
+    else if (isProdLevel(level)) saved.prods = list.map((c) => c.product);
+    else if (isMixLevel(level)) saved.mix = list.map((c) => ({ level: `P${c.tier}`, prod: c.product }));
+    return saved;
 }
 
 async function pickCardForCharacter(char) {
@@ -1724,22 +1782,33 @@ async function pickCardForCharacter(char) {
         }
         const tiers = uniqValues(colonies.map((c) => c.tier)).sort();
         const level = tiers.length === 1 ? `P${tiers[0]}` : MIX_LEVEL;
+
+        /* У карточки одна система: берём ту, где больше всего колоний,
+           и заполняем строки её колониями */
+        const bySystem = new Map();
+        colonies.forEach((c) => bySystem.set(c.system, (bySystem.get(c.system) || []).concat(c)));
+        const [mainId, mainCols] = Array.from(bySystem.entries()).sort((a, b) => b[1].length - a[1].length)[0];
         let saved = null;
-        const systems = uniqValues(colonies.map((c) => c.system));
-        if (systems.length === 1) {
-            try {
-                const sys = await esiPublicJson(`/universe/systems/${systems[0]}/`);
-                if (sys.name) saved = { level, system: sys.name };
-            } catch (e) {
-                // без системы — не беда, выберут вручную
+        let filled = 0;
+        try {
+            const sys = await esiPublicJson(`/universe/systems/${mainId}/`);
+            if (sys.name) {
+                saved = await cardFromColonies(level, mainCols, sys.name);
+                filled = saved.rows.length;
             }
+        } catch (e) {
+            // без системы — строки не заполняем, выберут вручную
         }
+
         const n = colonies.length;
-        const what = tiers.length === 1 ? `все ${tiers[0] === 1 ? 'P1' : `P${tiers[0]}`}` : `уровни ${tiers.map((t) => `P${t}`).join(', ')}`;
+        const what = tiers.length === 1 ? `все P${tiers[0]}` : `уровни ${tiers.map((t) => `P${t}`).join(', ')}`;
+        const rest = n - mainCols.length;
         return {
             level,
             saved,
             note: `Колоний: ${n} (${what}) → карточка ${level === MIX_LEVEL ? 'универсальная' : level}`
+                + (filled ? `, заполнено строк: ${filled}` : '')
+                + (rest > 0 ? `; ещё ${rest} — в других системах` : '')
         };
     } catch (e) {
         return { level: MIX_LEVEL, saved: null, note: `Не удалось прочитать колонии (${e.message}) — универсальная карточка` };
