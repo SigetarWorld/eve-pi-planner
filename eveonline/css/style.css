@@ -1430,14 +1430,95 @@ form button:focus-visible,
    Справа «Статистика» — на всю оставшуюся ширину и ровно по высоте
    левой колонки (от заголовка до низа строки добавления). */
 .planets-top {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.7rem;
+    /* Сетка 2×2: слева «Регион» и «Аккаунт», справа «Персонажи» и
+       «Статистика» — строки сетки общие, поэтому «Персонажи» стоят
+       вровень с «Регионом», а «Статистика» — с «Аккаунтом» */
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 0.7rem;
+    align-items: start;
 }
 
+/* Левая колонка — сами строки «Регион» и «Аккаунт» в сетке */
 .planets-top-main {
-    flex: 0 1 auto;
+    display: contents;
+}
+
+.planets-top-main .defaults-head {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.planets-top-main .account-head {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.planets-top > .eve-roster {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: stretch;
+    margin-top: 0;
+}
+
+.planets-top > .stats-panel {
+    grid-column: 2;
+    grid-row: 2;
+    /* тот же отступ сверху, что у строки «Аккаунт» */
+    margin-top: 1.4rem;
+    align-self: stretch;
+}
+
+/* «Статистика» — строка как «Аккаунт»: та же подпись (кегль, ширина)
+   и кнопка «Открыть» как «Добавить»; таблица — в окне */
+.card-head.stats-panel {
+    flex: none;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    padding: 0.7rem 0.8rem;
+}
+
+.card-head.stats-panel > .card-pilot-label {
+    flex: 0 0 auto;
+    margin-right: 0.6rem;
+}
+
+/* Окно «Статистика»: по ширине таблицы, длинное — прокручивается */
+.ct-modal-box.stats-modal-box {
+    width: auto;
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 2rem);
+    overflow: auto;
+    padding-right: 3rem;
+}
+
+/* Подключённые персонажи: портрет и имя в ряд */
+.eve-roster {
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+}
+
+.eve-roster > .card-pilot-label {
+    flex: 0 0 auto;
+    margin-right: 0.3rem;
+}
+
+.eve-roster-char {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     min-width: 0;
+}
+
+.eve-roster-name {
+    font-size: 0.82rem;
+    white-space: nowrap;
+    color: var(--text);
+}
+
+.eve-roster-empty {
+    font-size: 0.78rem;
+    color: var(--text-faint);
 }
 
 .planets-top-main .account-head {
@@ -1573,6 +1654,7 @@ form button:focus-visible,
 /* Свёрнутая «Статистика» — по высоте до низа строки «Аккаунт»
    (как и левая колонка), заголовок по центру */
 .stats-panel:has(.stats-toggle[aria-expanded="false"]) {
+    /* по высоте строки «Аккаунт», заголовок по центру */
     align-self: stretch;
     justify-content: center;
 }
@@ -1702,11 +1784,19 @@ form button:focus-visible,
 /* Узкий экран: статистика уходит под строку добавления */
 @media (max-width: 800px) {
     .planets-top {
-        flex-wrap: wrap;
+        grid-template-columns: minmax(0, 1fr);
     }
 
-    .stats-panel {
-        flex-basis: 100%;
+    .planets-top-main .defaults-head,
+    .planets-top-main .account-head,
+    .planets-top > .eve-roster,
+    .planets-top > .stats-panel {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .planets-top > .eve-roster {
+        margin-top: 1.4rem;
     }
 }
 

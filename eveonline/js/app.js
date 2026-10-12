@@ -1804,17 +1804,28 @@ if (statsBody) {
         updateStats();
     });
 
-    // Заголовок «Статистика» сворачивает и разворачивает таблицу
-    const statsToggle = document.getElementById('stats-title');
-    const applyStatsOpen = (open) => {
-        statsBody.hidden = !open;
-        statsToggle.setAttribute('aria-expanded', String(open));
+    // Кнопка «Открыть» показывает таблицу окном — как выбор карточки.
+    // Закрывается крестиком, щелчком мимо окна и клавишей Esc.
+    const statsOpenBtn = document.getElementById('stats-open');
+    const statsModal = document.getElementById('stats-modal');
+    // Окно — прямо в body, как окно выбора карточки: иначе «fixed»
+    // считается от вкладки и окно уезжает
+    document.body.appendChild(statsModal);
+    const closeStats = () => {
+        statsModal.hidden = true;
+        statsOpenBtn.focus();
     };
-    applyStatsOpen(store.get(STATS_OPEN_KEY, true) !== false);
-    statsToggle.addEventListener('click', () => {
-        const open = statsBody.hidden;
-        applyStatsOpen(open);
-        store.set(STATS_OPEN_KEY, open);
+    statsOpenBtn.addEventListener('click', () => {
+        updateStats();
+        statsModal.hidden = false;
+        statsModal.querySelector('.ct-modal-close').focus();
+    });
+    statsModal.querySelector('.ct-modal-close').addEventListener('click', closeStats);
+    statsModal.addEventListener('click', (event) => {
+        if (event.target === statsModal) closeStats();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !statsModal.hidden) closeStats();
     });
 }
 
@@ -2285,6 +2296,21 @@ function renderEveAuth(message) {
         + `<p class="eve-chars-note">Ещё персонаж — снова «LOG IN with EVE Online». Персонаж с другого
            аккаунта: на странице EVE смените аккаунт перед выбором персонажа.</p>`;
     eveHint.textContent = message || '';
+    renderEveRoster(list);
+}
+
+/* Строка над «Статистикой»: все подключённые персонажи с портретами */
+const eveRoster = document.getElementById('eve-roster');
+function renderEveRoster(list) {
+    if (!eveRoster) return;
+    eveRoster.innerHTML = `<span class="card-pilot-label">Персонажи</span>`
+        + (list.length
+            ? list.map((c) => `
+                <span class="eve-roster-char" title="${escapeHtml(c.characterName || 'Персонаж')}">
+                    ${c.characterId ? `<img class="eve-char-img" src="${evePortrait(c.characterId)}" alt="" width="24" height="24">` : ''}
+                    <span class="eve-roster-name">${escapeHtml(c.characterName || 'Персонаж')}</span>
+                </span>`).join('')
+            : '<span class="eve-roster-empty">не подключены — «LOG IN with EVE Online» вверху</span>');
 }
 
 function closeEveChars() {
@@ -2307,6 +2333,7 @@ async function initEveAuth() {
         eveLoginBtn.addEventListener('click', () => {
             eveHint.textContent = 'Вход через EVE Online пока не настроен';
         });
+        renderEveRoster([]);
         return;
     }
 

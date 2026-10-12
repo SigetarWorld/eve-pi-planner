@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=115">
+    <link rel="stylesheet" href="css/style.css?v=117">
 </head>
 <body>
     <header>
@@ -77,14 +77,27 @@
                     </div>
                 </div>
 
+                <!-- Подключённые персонажи EVE — над «Статистикой», на уровне
+                     строки «Регион». Заполняет app.js (renderEveAuth). -->
+                <div id="eve-roster" class="card-head eve-roster" aria-label="Подключённые персонажи"></div>
+
                 <!-- Таблицу подсчёта P1 строит и заполняет app.js (updateStats) -->
-                <aside class="stats-panel" aria-labelledby="stats-title">
-                    <h3 class="stats-title">
-                        <button type="button" id="stats-title" class="stats-toggle" aria-expanded="true"
-                                aria-controls="stats-body">Статистика</button>
-                    </h3>
+                <div class="card-head stats-panel">
+                    <span class="card-pilot-label">Статистика</span>
+                    <button type="button" id="stats-open" class="btn card-add" aria-haspopup="dialog"
+                            aria-controls="stats-modal">Открыть</button>
+                </div>
+            </div>
+
+            <!-- Окно «Статистика» — как окно выбора карточки. Таблицу подсчёта
+                 P1 строит и заполняет app.js (updateStats) -->
+            <div id="stats-modal" class="ct-modal" role="dialog" aria-modal="true"
+                 aria-labelledby="stats-modal-title" hidden>
+                <div class="ct-modal-box stats-modal-box">
+                    <h3 id="stats-modal-title" class="ct-modal-title">Статистика</h3>
                     <div id="stats-body" class="stats-body"></div>
-                </aside>
+                    <button type="button" class="ct-modal-close" aria-label="Закрыть">&times;</button>
+                </div>
             </div>
 
             <div id="cards-hint" class="card-hint">
@@ -158,7 +171,7 @@
     <script src="js/calculator.js?v=34"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=79"></script>
+    <script src="js/app.js?v=81"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
         if (location.protocol === "file:") {
