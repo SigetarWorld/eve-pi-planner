@@ -1906,6 +1906,8 @@ async function loadEveTest(char) {
        входы рецепта (сначала из своего буфера, потом со складов, откуда
        к ней идут маршруты) и через цикл отдаёт товар по своему маршруту.
        Нет всех входов — цикл не начинается, ждёт следующего.
+   Буфер фабрики: в момент старта цикла маршрут тут же подвозит со
+   склада следующую партию (до одной партии на вход) — так в игре.
    События идут по времени, поэтому склад, который пополняет одна
    фабрика и опустошает другая (P1 → P2 → P3…), считается честно.
 
@@ -2077,6 +2079,21 @@ function simulateColony(layout, schematics, startTime, endTime, opts = {}) {
                             left -= take;
                         });
                     });
+                    /* Как в игре: как только фабрика забрала партию в работу,
+                       маршрут сразу подвозит в её буфер следующую партию со
+                       склада. Поэтому склад теряет партию в начале цикла, даже
+                       если в работу ушла партия, уже лежавшая в буфере. */
+                    plan.forEach(({ name, need, sources }) => {
+                        let room = need - (bag(p.pin_id).get(name) || 0);
+                        sources.slice(1).forEach((id) => {
+                            const take = Math.min(room, bag(id).get(name) || 0);
+                            if (take > 0) {
+                                bag(id).set(name, bag(id).get(name) - take);
+                                add(p.pin_id, name, take);
+                                room -= take;
+                            }
+                        });
+                    });
                 } });
             }
         }
@@ -2145,7 +2162,22 @@ function colonyFlows(layout, schematics) {
             f.perHourIn += recipe.outQty * perHour;
         }
     });
-    return { get: (pin, name) => flows.get(key(pin, name)) || null };
+    // Готовая продукция: товар делают, но ни одна фабрика его не берёт —
+    // обычно его вывозят руками, и убыль на складе — это вывоз
+    const consumed = new Set();
+    routes.forEach((r) => {
+        const dest = pins.find((p) => p.pin_id === r.destination_pin_id);
+        if (dest && ((dest.factory_details && dest.factory_details.schematic_id) || dest.schematic_id)) {
+            consumed.add(esiTypeName(r.content_type_id));
+        }
+    });
+    const finals = new Set();
+    pins.forEach((p) => {
+        const sid = (p.factory_details && p.factory_details.schematic_id) || p.schematic_id;
+        const recipe = sid && PI_RECIPE_OF.get(schematics[sid]);
+        if (recipe && !consumed.has(recipe.out)) finals.add(recipe.out);
+    });
+    return { get: (pin, name) => flows.get(key(pin, name)) || null, finals };
 }
 
 // Расхождение кратно партии фабрик этого склада и не больше пары циклов
@@ -2274,10 +2306,13 @@ function eveTestColonyHtml(detail) {
 
     // Журнал: сверки срезов с расчётом, новые сверху
     const logHtml = esiLog.concat(sim.log).sort((a, b) => new Date(b.t) - new Date(a.t)).map((e) => {
-        const shifts = e.diffs.filter(({ name, d }) => isBatchShift(flows.get(e.pin, name), d));
-        const manual = e.diffs.filter((x) => !shifts.includes(x));
-        const what = (manual.length || shifts.length)
-            ? manual.map(({ name, d }) => (d > 0
+        const taken = e.diffs.filter(({ name, d }) => d < 0 && flows.finals.has(name));
+        const shifts = e.diffs.filter((x) => !taken.includes(x) && isBatchShift(flows.get(e.pin, x.name), x.d));
+        const manual = e.diffs.filter((x) => !shifts.includes(x) && !taken.includes(x));
+        const what = (manual.length || shifts.length || taken.length)
+            ? taken.map(({ name, d }) => `<li>${resChip(name)} <span class="evt-bad">${fmtN(d)}</span>
+                    — готовая продукция: <b>вывезено</b></li>`).join('')
+              + manual.map(({ name, d }) => (d > 0
                 ? `<li>${resChip(name)} <span class="evt-ok">+${fmtN(d)}</span> — сверх расчёта: <b>завезено вручную</b></li>`
                 : `<li>${resChip(name)} <span class="evt-bad">${fmtN(d)}</span> — меньше расчёта: <b>забрано вручную</b></li>`)).join('')
               + shifts.map(({ name, d }) => `<li>${resChip(name)} <span class="evt-dim">${d > 0 ? '+' : ''}${fmtN(d)}</span>
