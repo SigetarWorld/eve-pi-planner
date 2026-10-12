@@ -4156,3 +4156,51 @@ input.chain-amount:focus {
 .evt-grid ul.evt-sub {
     margin: 0 0 0.3rem 0.6rem;
 }
+
+.evt-slice-btn {
+    margin-left: 0.4rem;
+    padding: 0.05rem 0.45rem;
+    font: inherit;
+    font-size: 0.68rem;
+    color: var(--accent);
+    background: transparent;
+    border: 1px dashed rgba(255, 157, 46, 0.55);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.evt-slice-btn:hover {
+    border-style: solid;
+}
+
+.evt-slice-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin: 0.3rem 0 0.5rem;
+}
+
+.evt-slice-form textarea {
+    width: 100%;
+    font: inherit;
+    font-size: 0.74rem;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.35rem;
+}
+
+.evt-slice-form input {
+    font: inherit;
+    font-size: 0.74rem;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1rem 0.3rem;
+}
+
+.evt-slice-form .btn {
+    align-self: flex-start;
+}
