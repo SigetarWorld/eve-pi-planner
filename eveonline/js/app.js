@@ -1446,14 +1446,15 @@ function buildAccountLine(name) {
 
             <div class="card-head">
                 <label class="card-pilot-label" for="${pilotId}">Персонаж</label>
-                <input type="text" id="${pilotId}" class="ct-input card-new" data-role="pilot"
-                       placeholder="Имя персонажа" maxlength="32" autocomplete="off">
+                <!-- Персонаж — из подключённых через EVE Online; кто уже с
+                     карточкой, в списке не показывается (refreshPilotSelects) -->
+                <select id="${pilotId}" class="ct-input card-new pilot-select" data-role="pilot"></select>
                 <button type="button" class="btn card-add" data-role="pilot-add">Добавить</button>
                 <span class="card-counter" data-role="line-counter" aria-live="polite">0 из ${CARDS_LIMIT}</span>
             </div>
 
             <div class="card-hint" data-role="line-hint">
-                Введите имя персонажа и нажмите «Добавить» — появится карточка
+                Выберите персонажа и нажмите «Добавить» — появится карточка
             </div>
 
             <div class="cards-row" data-role="cards">
@@ -1612,6 +1613,7 @@ function refreshLine(line) {
     line.querySelector('[data-role="line-counter"]').textContent = `${count} из ${CARDS_LIMIT}`;
     line.querySelector('[data-role="pilot"]').disabled = full;
     line.querySelector('[data-role="pilot-add"]').disabled = full;
+    refreshPilotSelects();
     line.querySelector('[data-role="line-hint"]').hidden = count > 0;
 
     // Три персонажа добавлены — панель добавления больше не нужна.
@@ -1625,6 +1627,95 @@ function refreshLine(line) {
 }
 
 // Счётчик аккаунтов и общая подсказка, пока линий нет
+/* ---- Выбор персонажа в линиях аккаунтов ----
+   Персонажи — только подключённые через «LOG IN with EVE Online».
+   У персонажа одна карточка на всю страницу: у кого карточка уже есть
+   (в любой линии), в списках не показывается; удалили карточку —
+   персонаж снова доступен. */
+function cardNamesTaken() {
+    return new Set(Array.from(document.querySelectorAll('#accounts .card'))
+        .map((card) => (card.dataset.name || '').trim().toLowerCase()));
+}
+
+function refreshPilotSelects() {
+    const chars = typeof eveChars === 'function' && eveConfigured() ? eveChars() : [];
+    const taken = cardNamesTaken();
+    const free = chars
+        .map((c) => c.characterName || '')
+        .filter((n) => n && !taken.has(n.toLowerCase()))
+        .sort((a, b) => a.localeCompare(b));
+    const empty = !chars.length
+        ? 'Подключите персонажа'
+        : (free.length ? 'Выберите персонажа' : 'Все персонажи уже с карточками');
+    // Почему выбрать некого — для всплывающей подсказки (showPilotPop)
+    const reason = !chars.length ? 'none' : (free.length ? '' : 'used');
+
+    document.querySelectorAll('#accounts [data-role="pilot"]').forEach((select) => {
+        const line = select.closest('.account-line');
+        const full = line && line.classList.contains('is-full');
+        const keep = free.includes(select.value) ? select.value : '';
+        select.innerHTML = `<option value="">${escapeHtml(empty)}</option>`
+            + free.map((n) => `<option value="${escapeHtml(n)}"${n === keep ? ' selected' : ''}>${escapeHtml(n)}</option>`).join('');
+        select.disabled = full || !free.length;
+        if (reason && !full) select.dataset.empty = reason;
+        else delete select.dataset.empty;
+        const add = line && line.querySelector('[data-role="pilot-add"]');
+        if (add) add.disabled = full || !free.length;
+    });
+}
+
+/* Выбрать некого — нажатие на список (или «Добавить») открывает
+   всплывающую подсказку под списком: подключить персонажей можно
+   кнопкой «LOG IN with EVE Online» в шапке, а прямо отсюда — кнопкой
+   «Войти». Закрывается щелчком мимо, Esc или через 6 секунд. */
+let pilotPop = null;
+let pilotPopTimer = 0;
+
+function hidePilotPop() {
+    clearTimeout(pilotPopTimer);
+    if (pilotPop) pilotPop.remove();
+    pilotPop = null;
+}
+
+function showPilotPop(select) {
+    hidePilotPop();
+    const head = select.closest('.card-head');
+    const why = select.dataset.empty;
+    pilotPop = document.createElement('div');
+    pilotPop.className = 'pilot-pop';
+    pilotPop.setAttribute('role', 'status');
+    pilotPop.innerHTML = `
+        <p>${why === 'used'
+            ? 'У всех подключённых персонажей уже есть карточки. Подключите ещё персонажей через «LOG IN with EVE Online» вверху страницы.'
+            : 'Подключите персонажей через «LOG IN with EVE Online» вверху страницы — они появятся в этом списке.'}</p>
+        <button type="button" class="btn card-add pilot-pop-login">Войти через EVE</button>`;
+    head.appendChild(pilotPop);
+    pilotPop.style.left = `${select.offsetLeft}px`;
+    pilotPop.querySelector('.pilot-pop-login').addEventListener('click', () => {
+        hidePilotPop();
+        if (eveLoginBtn) eveLoginBtn.click();
+    });
+    pilotPopTimer = setTimeout(hidePilotPop, 6000);
+}
+
+document.addEventListener('click', (event) => {
+    if (event.target.closest('.pilot-pop')) return;
+    const head = event.target.closest('.account-line > .card-head');
+    const select = head && head.querySelector('[data-role="pilot"]');
+    // Список и «Добавить» выключены — щелчок проходит к строке целиком
+    if (select && select.dataset.empty && (event.target === select
+        || event.target.closest('[data-role="pilot-add"]') || event.target === head
+        || event.target.closest('.card-pilot-label'))) {
+        showPilotPop(select);
+        return;
+    }
+    hidePilotPop();
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') hidePilotPop();
+});
+
 function refreshAccounts() {
     const count = accounts.children.length;
     accountCounter.textContent = `Аккаунтов: ${count}`;
@@ -2143,32 +2234,26 @@ function initLine(line) {
     const pilot = line.querySelector('[data-role="pilot"]');
 
     const tryAdd = () => {
-        if (!pilot.value.trim()) {
-            // Пустое имя — подсвечиваем поле, карточка не создаётся
+        const name = pilot.value.trim();
+        // Персонаж не выбран или уже с карточкой — подсвечиваем список
+        if (!name || cardNamesTaken().has(name.toLowerCase())) {
             pilot.classList.add('ct-invalid');
             pilot.focus();
+            refreshPilotSelects();
             return;
         }
 
-        // Имя есть — спрашиваем, какую карточку создавать: P1 или P2
+        // Персонаж есть — спрашиваем, какую карточку создавать
         showCardLevelChoice((level) => {
-            if (addCard(line, pilot.value, null, level)) {
-                pilot.value = '';
+            if (addCard(line, name, null, level)) {
+                refreshPilotSelects();
                 pilot.focus();
             }
         });
     };
 
     line.querySelector('[data-role="pilot-add"]').addEventListener('click', tryAdd);
-    pilot.addEventListener('input', () => pilot.classList.remove('ct-invalid'));
-
-    // Enter в поле ввода добавляет карточку так же, как кнопка
-    pilot.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            tryAdd();
-        }
-    });
+    pilot.addEventListener('change', () => pilot.classList.remove('ct-invalid'));
 
     // Крестик убирает линию вместе со всеми её карточками
     line.querySelector('[data-role="account-del"]')
@@ -2176,6 +2261,7 @@ function initLine(line) {
             line.remove();
             saveAccounts();
             refreshAccounts();
+            refreshPilotSelects();
         });
 
     cards.addEventListener('change', handleRowChange);
@@ -2297,6 +2383,7 @@ function renderEveAuth(message) {
            аккаунта: на странице EVE смените аккаунт перед выбором персонажа.</p>`;
     eveHint.textContent = message || '';
     renderEveRoster(list);
+    refreshPilotSelects();
 }
 
 /* Строка над «Статистикой»: все подключённые персонажи с портретами */
