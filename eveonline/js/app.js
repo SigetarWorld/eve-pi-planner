@@ -705,6 +705,7 @@ function buildCard(name, level) {
                                     <select class="ct-input" data-role="ship" aria-label="Корабль">${optionsHtml(SHIP_OPTIONS, SHIP_OPTIONS[0])}</select>
                                 </span>
                                 <button type="button" class="card-light" aria-pressed="false" title="Подсветить карточку" aria-label="Подсветить карточку">💡</button>
+                                ${mix ? '<button type="button" class="card-save" data-role="card-save" title="Сохранить и показать карточку">Сохранить</button>' : ''}
                                 <button type="button" class="account-del" data-role="card-del"
                                         title="Удалить карточку"
                                         aria-label="Удалить карточку ${safe}">&times;</button>
@@ -1561,6 +1562,7 @@ function applyRowChange(event, row) {
 // Оба действия относятся к той карточке, в которой нажали, поэтому
 // линию аккаунта находим от самой кнопки.
 function handleCardClick(event) {
+    if (handleViewClick(event)) return;
     // Универсальная карточка: «+ Добавить», выбор типа, очистка строки
     const mixAdd = event.target.closest('[data-role="mix-add"]');
     if (mixAdd) {
@@ -1865,116 +1867,12 @@ async function pickCardForCharacter(char) {
        длина цикла, когда закончится), фабрики (рецепт → товар, их
        число), склады (что и сколько лежит), маршруты, связи;
      и «сырые» ответы ESI целиком — для сверки. */
-/* ---- Единая карточка (тест) ----
-   Новый вид карточки, с которого потом перейдут все остальные.
-   Каждая колония — две строки:
-     слева  1) система · планета
-            2) продукт колонии: у добывающей — «P0 ×экстракторов – P1»,
-               у фабричной — её топовый товар (привозное не показываем);
-     справа (на обе строки, без разделителя) — что нужно для продукта:
-            входы его рецепта
-            в две строки через «|» (у P1 из добычи пока пусто —
-            сырьё P0 разберём отдельно).
-   Колонии могут быть в разных системах — система у каждой своя. */
-function uniColonyData(detail) {
-    const { col, layout, planet, system, schematics } = detail;
-    const pins = layout.pins || [];
-    const products = uniqValues(pins
-        .map((p) => piCanonicalName(schematics[(p.factory_details && p.factory_details.schematic_id) || p.schematic_id] || ''))
-        .filter(Boolean));
-    const tier = Math.max(0, ...products.map(piTierOf));
-    const tops = products.filter((n) => piTierOf(n) === tier).sort();
-    const subs = tier > 1 ? products.filter((n) => piTierOf(n) === tier - 1).sort() : [];
-    // Добыча: P0 и сколько экстракторов его добывают
-    const extract = new Map();
-    pins.forEach((p) => {
-        const name = p.extractor_details && PI_NAME_BY_ID.get(p.extractor_details.product_type_id);
-        if (name) extract.set(name, (extract.get(name) || 0) + 1);
-    });
-    const name = planet.name || '';
-    const sysName = system.name || '';
-    return {
-        system: sysName,
-        planet: name.startsWith(sysName + ' ') ? name.slice(sysName.length + 1) : name,
-        type: PLANET_TYPE_OF_ESI[col.planet_type] || col.planet_type || '',
-        tops,
-        subs,
-        // Что нужно для топового продукта: входы рецепта, шт за цикл
-        needs: tier > 1 ? tops.flatMap((n) => (PI_RECIPE_OF.get(n) || { in: [] }).in
-            .map(([inName, qty]) => ({ name: inName, qty }))) : [],
-        extract: Array.from(extract.entries()).map(([n, k]) => ({
-            name: n,
-            count: k,
-            p1: products.find((x) => piTierOf(x) === 1 && (PI_RECIPE_OF.get(x) || { in: [[]] }).in[0][0] === n) || ''
-        })),
-    };
-}
-
-function uniResHtml(name, opts = {}) {
-    const tier = PI_COMMODITIES[name] ? `P${piTierOf(name)}` : '';
-    return `<span class="uni-res${opts.compact ? ' is-compact' : ''}" title="${escapeHtml(name)}${tier ? ` (${tier})` : ''}">`
-        + (tier ? tierBadgeHtml(tier) : '')
-        + `<span class="uni-icon">${iconFor(name) || BLANK_ICON}</span>`
-        + (opts.compact ? '' : `<span class="uni-name" lang="en">${escapeHtml(name)}</span>`)
-        + (opts.count > 1 ? `<span class="uni-count">×${opts.count}</span>` : '')
-        + (opts.qty ? `<span class="uni-count">${opts.qty}</span>` : '')
-        + '</span>';
-}
-
-// Длинный список: один значок уровня, за ним только иконки (название — в подсказке)
-function uniGroupHtml(names) {
-    if (names.length <= 2) return names.map((n) => uniResHtml(n)).join('');
-    const byTier = new Map();
-    names.forEach((n) => {
-        const t = `P${piTierOf(n)}`;
-        byTier.set(t, (byTier.get(t) || []).concat(n));
-    });
-    return Array.from(byTier.entries()).map(([t, list]) => `<span class="uni-group">${tierBadgeHtml(t)}`
-        + list.map((n) => `<span class="uni-icon" title="${escapeHtml(n)} (${t})">${iconFor(n) || BLANK_ICON}</span>`).join('')
-        + '</span>').join('');
-}
-
-function uniCardHtml(title, details) {
-    const cols = details.map(uniColonyData)
-        .sort((a, b) => a.system.localeCompare(b.system)
-            || ROMAN_NUMBERS.indexOf(a.planet) - ROMAN_NUMBERS.indexOf(b.planet));
-    const rows = cols.map((c) => {
-        /* Добыча: «P0 ×N – P1, который из него делают здесь же».
-           Фабричная планета: её топовый продукт. */
-        const from = c.extract.length
-            ? c.extract.map((x) => `<span class="uni-pair">${uniResHtml(x.name, { count: x.count })}`
-                + (x.p1 ? `<span class="uni-sep">–</span>${uniResHtml(x.p1)}` : '') + '</span>').join('')
-            : c.tops.map((n) => uniResHtml(n)).join('');
-        // Входы рецепта — в две строки, внутри строки через «|»
-        const half = Math.ceil(c.needs.length / 2);
-        const line = (list) => list.map((x) => uniResHtml(x.name)).join('<span class="uni-bar">|</span>');
-        const needs = c.needs.length
-            ? `<div class="uni-need-line">${line(c.needs.slice(0, half))}</div>`
-                + (c.needs.length > 1 ? `<div class="uni-need-line">${line(c.needs.slice(half))}</div>` : '')
-            : '';
-        return `
-            <div class="uni-colony">
-                <div class="uni-where"><span class="uni-sys">${escapeHtml(c.system)}</span>
-                    <span class="uni-planet">${escapeHtml(c.planet)} · ${escapeHtml(c.type)}</span></div>
-                <div class="uni-from">${from || '<span class="uni-dim">—</span>'}</div>
-                <div class="uni-out">${needs ? `<div class="uni-needs">${needs}</div>` : ''}</div>
-            </div>`;
-    }).join('');
-    return `
-        <article class="uni-card">
-            <div class="uni-head"><b>${escapeHtml(title)}</b>
-                <span class="uni-dim">Единая карточка (тест) · колоний ${cols.length}</span></div>
-            <div class="uni-cols"><span>Система · планета / продукт колонии</span><span>Что для этого нужно</span></div>
-            ${rows || '<p class="uni-dim">Колоний нет</p>'}
-        </article>`;
-}
-
 const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 01:30';
+const APP_BUILD = '13.10.2026 02:30';
 function appVersionText() {
     const v = (sel, attr) => {
         const el = document.querySelector(sel);
@@ -2721,7 +2619,6 @@ async function renderEveTest() {
                     <span class="evt-dim">id ${char.characterId} · колоний ${data.colonies.length} · экстракторов ${extractors}
                         · права: ${escapeHtml([].concat(char.scopes || []).join(', ') || '—')}</span>
                 </div>
-                ${uniCardHtml(char.characterName, data.details)}
                 ${data.details.map(eveTestColonyHtml).join('') || '<p class="evt-dim">Колоний нет</p>'}
                 <details class="evt-raw"><summary>Сырые ответы ESI</summary>
                     <pre>${escapeHtml(JSON.stringify(data.details.map((d) => ({ colony: d.col, layout: d.layout })), null, 1))}</pre>
@@ -3040,6 +2937,8 @@ function readCard(card) {
     return {
         name: card.dataset.name,
         level: card.dataset.level || 'P1',
+        view: card.dataset.view === '1' || undefined,
+        hideTiers: card.dataset.hideTiers ? card.dataset.hideTiers.split(',') : undefined,
         region: readValue(card, 'region'),
         system: readValue(card, 'system'),
         ship: readValue(card, 'ship'),
@@ -3186,6 +3085,196 @@ function restoreCard(card, saved) {
 /* Создаёт карточку в указанной линии, справа от уже созданных в ней.
    Параметр saved — сохранённые значения, если карточка восстанавливается.
    Возвращает false, если имя пустое или предел CARDS_LIMIT в линии взят. */
+/* ---- Карточка в режиме просмотра ----
+   Универсальная карточка — форма: в ней выбирают планеты и товары.
+   Кнопка «Сохранить» прячет форму и показывает карточку для чтения:
+   по каждой колонии — система и планета, ниже дерево товара:
+     P4 → входы его рецепта (P3) → их входы (P2) → P1 – P0,
+   у каждого товара — сколько его сейчас на складах колонии (расчёт от
+   последнего открытия колонии в игре, как в окне «Тест»).
+   Ветки раскрываются и сворачиваются стрелкой ▸. Кнопки P0…P4 в шапке
+   сворачивают дерево целыми уровнями: выключенный уровень прячется
+   вместе со всем, что под ним (главный товар колонии виден всегда;
+   P0 — сырьё в строке «P1 – P0»). Круглая кнопка ✎ возвращает форму. */
+const VIEW_TIERS = ['P0', 'P1', 'P2', 'P3', 'P4'];
+const VIEW_STOCK_TTL = 10 * 60 * 1000;
+const viewStockCache = new Map();        // characterId -> { at, promise }
+
+/* Склады колоний персонажа на «сейчас»: Map(«DFTK-D II» -> { stock, from }).
+   stock — Map(товар -> штук) по складам, launchpad и командному центру
+   (буферы фабрик не считаем). Персонаж не подключён — null. */
+function viewStockOf(name) {
+    const char = (typeof eveChars === 'function' && eveConfigured() ? eveChars() : [])
+        .find((c) => (c.characterName || '').toLowerCase() === String(name || '').toLowerCase());
+    if (!char) return Promise.resolve(null);
+    const hit = viewStockCache.get(char.characterId);
+    if (hit && Date.now() - hit.at < VIEW_STOCK_TTL) return hit.promise;
+    const promise = loadEveTest(char).then((data) => {
+        const out = new Map();
+        data.details.forEach(({ col, layout, planet, schematics }) => {
+            const snaps = saveEsiSnapshot(col, layout);
+            const esiT = new Date(col.last_update).getTime();
+            const slices = snaps.manual.filter((x) => new Date(x.t).getTime() > esiT);
+            let byPin;
+            try {
+                byPin = simulateColony(layout, schematics, col.last_update, Date.now(), { slices }).stock;
+            } catch (e) {
+                byPin = new Map(Object.entries(pinsContentsOf(layout))
+                    .map(([id, items]) => [Number(id), new Map(Object.entries(items))]));
+            }
+            const factories = new Set((layout.pins || []).filter(pinIsFactory).map((p) => p.pin_id));
+            const stock = new Map();
+            byPin.forEach((items, pinId) => {
+                if (factories.has(pinId)) return;
+                items.forEach((n, item) => stock.set(item, (stock.get(item) || 0) + n));
+            });
+            out.set(planet.name || String(col.planet_id), { stock, from: col.last_update });
+        });
+        return out;
+    }).catch(() => {
+        viewStockCache.delete(char.characterId);
+        return null;
+    });
+    viewStockCache.set(char.characterId, { at: Date.now(), promise });
+    return promise;
+}
+
+const viewQtyHtml = (name) => `<span class="uv-qty" data-qty="${escapeHtml(name)}">…</span>`;
+
+function viewResHtml(name) {
+    const tier = `P${piTierOf(name)}`;
+    return tierBadgeHtml(tier)
+        + `<span class="uv-icon">${iconFor(name) || BLANK_ICON}</span>`
+        + `<span class="uv-name" lang="en" title="${escapeHtml(name)} (${tier})">${escapeHtml(name)}</span>`;
+}
+
+// Узел дерева: строка товара и (для P2–P4) ветки входов рецепта
+function viewNodeHtml(name, depth, p0Hint) {
+    const tier = piTierOf(name);
+    const recipe = PI_RECIPE_OF.get(name);
+    let line = viewResHtml(name);
+    let kids = [];
+    if (tier === 1) {
+        const p0 = p0Hint || (recipe && recipe.in[0] ? recipe.in[0][0] : '');
+        if (p0) line += `<span class="uv-p0"><span class="uv-sep">–</span>${viewResHtml(p0)}</span>`;
+    } else if (tier >= 2 && recipe) {
+        kids = recipe.in.map(([n]) => n);
+    }
+    const open = depth === 0;
+    const toggle = kids.length
+        ? `<button type="button" class="uv-toggle" data-role="uv-toggle" aria-expanded="${open}" title="Показать, из чего делается">▸</button>`
+        : '<span class="uv-toggle-gap"></span>';
+    return `
+        <div class="uv-node" data-tier="P${tier}">
+            <div class="uv-line">${toggle}${line}<span class="uv-sep">–</span>${viewQtyHtml(name)}</div>
+            ${kids.length ? `<div class="uv-kids"${open ? '' : ' hidden'}>${kids.map((k) => viewNodeHtml(k, depth + 1)).join('')}</div>` : ''}
+        </div>`;
+}
+
+function cardViewHtml(card) {
+    const name = card.dataset.name || '';
+    const system = systemOfCard(card) || '';
+    const hidden = (card.dataset.hideTiers || '').split(',').filter(Boolean);
+    const colonies = Array.from(card.querySelectorAll('tbody tr')).map((row) => ({
+        prod: mixProdOf(row),
+        planet: readValue(row, 'planet'),
+        number: readValue(row, 'number'),
+        p0: readValue(row, 'p0')
+    })).filter((c) => c.prod);
+    const body = colonies.map((c) => {
+        const key = [system, c.number].filter(Boolean).join(' ');
+        return `
+            <div class="uv-colony" data-planet="${escapeHtml(key)}">
+                <div class="uv-where">${c.planet ? `<span class="uv-icon uv-planet-icon"><img src="img/planets/${escapeHtml(c.planet.toLowerCase())}.png" alt="" width="24" height="24" loading="lazy" onerror="this.remove()"></span>` : ''}<span class="uv-sys">${escapeHtml([system || 'Система не выбрана', c.number].filter(Boolean).join(' '))}</span>
+                    ${escapeHtml(c.planet ? `· ${c.planet}` : '· планета не выбрана')}</div>
+                ${viewNodeHtml(c.prod, 0, c.p0)}
+            </div>`;
+    }).join('') || '<p class="uv-empty">Колоний нет — нажмите «Редактировать» и добавьте их</p>';
+    const safe = escapeHtml(name);
+    return `
+        <div class="uv${hidden.map((t) => ` hide-${t.toLowerCase()}`).join('')}">
+            <div class="uv-head">
+                <h3 class="ct-pilot-name" title="${safe}">${safe}</h3>
+                <span class="uv-tiers" role="group" aria-label="Показывать уровни">
+                    ${VIEW_TIERS.map((t) => `<button type="button" class="ct-tier ct-tier-${t.toLowerCase()} uv-tier" data-role="uv-tier" data-tier="${t}" aria-pressed="${!hidden.includes(t)}" title="Показать или свернуть ${t}">${t}</button>`).join('')}
+                </span>
+                <button type="button" class="uv-edit" data-role="card-edit" title="Редактировать карточку" aria-label="Редактировать карточку">✎</button>
+                <button type="button" class="account-del" data-role="card-del"
+                        title="Удалить карточку" aria-label="Удалить карточку ${safe}">&times;</button>
+            </div>
+            <div class="uv-body">${body}</div>
+        </div>`;
+}
+
+function renderCardView(card) {
+    let view = card.querySelector(':scope > .uv');
+    const html = cardViewHtml(card);
+    if (view) view.outerHTML = html;
+    else card.insertAdjacentHTML('beforeend', html);
+    view = card.querySelector(':scope > .uv');
+    viewStockOf(card.dataset.name).then((stocks) => {
+        if (!view.isConnected) return;
+        view.querySelectorAll('.uv-colony').forEach((col) => {
+            const data = stocks && stocks.get(col.dataset.planet);
+            col.querySelectorAll('[data-qty]').forEach((el) => {
+                const n = data ? Math.floor(data.stock.get(el.dataset.qty) || 0) : null;
+                el.textContent = n === null ? '—' : n.toLocaleString('ru-RU');
+                el.classList.toggle('is-zero', n === 0);
+                el.title = data
+                    ? `На складах колонии сейчас (расчёт от открытия в игре ${fmtDate(data.from)})`
+                    : (stocks ? 'Колония не найдена в EVE у этого персонажа' : 'Персонаж не подключён к EVE');
+            });
+        });
+    });
+}
+
+function setCardView(card, on) {
+    card.dataset.view = on ? '1' : '';
+    card.classList.toggle('is-view', on);
+    if (on) renderCardView(card);
+    else {
+        const view = card.querySelector(':scope > .uv');
+        if (view) view.remove();
+    }
+}
+
+// Клики режима просмотра; true — клик обработан
+function handleViewClick(event) {
+    const card = event.target.closest('.card');
+    if (!card) return false;
+    if (event.target.closest('[data-role="card-save"]')) {
+        setCardView(card, true);
+        saveAccounts();
+        return true;
+    }
+    if (event.target.closest('[data-role="card-edit"]')) {
+        setCardView(card, false);
+        saveAccounts();
+        return true;
+    }
+    const tierBtn = event.target.closest('[data-role="uv-tier"]');
+    if (tierBtn) {
+        const tier = tierBtn.dataset.tier;
+        const hidden = new Set((card.dataset.hideTiers || '').split(',').filter(Boolean));
+        if (hidden.has(tier)) hidden.delete(tier);
+        else hidden.add(tier);
+        card.dataset.hideTiers = Array.from(hidden).join(',');
+        tierBtn.setAttribute('aria-pressed', String(!hidden.has(tier)));
+        card.querySelector('.uv').classList.toggle(`hide-${tier.toLowerCase()}`, hidden.has(tier));
+        saveAccounts();
+        return true;
+    }
+    const toggle = event.target.closest('[data-role="uv-toggle"]');
+    if (toggle) {
+        const kids = toggle.closest('.uv-node').querySelector(':scope > .uv-kids');
+        const open = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', String(open));
+        if (kids) kids.hidden = !open;
+        return true;
+    }
+    return false;
+}
+
 function addCard(line, name, saved, level) {
     const clean = name.trim();
     const cards = line.querySelector('[data-role="cards"]');
@@ -3241,6 +3330,12 @@ function addCard(line, name, saved, level) {
             syncTitle(row.querySelector('[data-role="planet"]'), 'Тип планеты не выбран');
         }
     });
+
+    // Сохранённая в режиме просмотра — так и показываем
+    if (isMixLevel(card.dataset.level) && saved) {
+        card.dataset.hideTiers = Array.isArray(saved.hideTiers) ? saved.hideTiers.join(',') : '';
+        if (saved.view) setCardView(card, true);
+    }
 
     saveAccounts();
     refreshLine(line);
