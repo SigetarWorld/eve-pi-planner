@@ -1896,6 +1896,98 @@ async function loadEveTest(char) {
     return { colonies, details };
 }
 
+/* ---- Расчёт складов на «сейчас» ----
+   EVE отдаёт состояние колонии на момент, когда её открывали в игре
+   (last_update). Дальше колония работает сама, и это можно досчитать:
+     экстрактор — каждые cycle_time сек кладёт qty_per_cycle своего P0
+       по своему маршруту (до expiry_time); выход за цикл считаем
+       постоянным — в игре он слегка плавает, так что это оценка;
+     фабрика — раз в цикл рецепта (P1 — 30 мин, P2–P4 — час) забирает
+       входы рецепта (сначала из своего буфера, потом со складов, откуда
+       к ней идут маршруты) и через цикл отдаёт товар по своему маршруту.
+       Нет всех входов — цикл не начинается, ждёт следующего.
+   События идут по времени, поэтому склад, который пополняет одна
+   фабрика и опустошает другая, считается честно. Ввоз и вывоз руками
+   (через launchpad) расчёт не знает. */
+function simulateColony(layout, schematics, lastUpdate, now) {
+    const pins = layout.pins || [];
+    const routes = layout.routes || [];
+    const stock = new Map();             // pin_id -> Map(название -> количество)
+    const bag = (id) => {
+        if (!stock.has(id)) stock.set(id, new Map());
+        return stock.get(id);
+    };
+    const add = (id, name, qty) => bag(id).set(name, (bag(id).get(name) || 0) + qty);
+    pins.forEach((p) => (p.contents || []).forEach((c) => add(p.pin_id, esiTypeName(c.type_id), c.amount)));
+    const before = new Map(Array.from(stock.entries()).map(([id, m]) => [id, new Map(m)]));
+
+    const t0 = new Date(lastUpdate).getTime();
+    const t1 = now;
+    const outRoute = (pinId, name) => routes.find((r) => r.source_pin_id === pinId && esiTypeName(r.content_type_id) === name);
+    const events = [];
+    const stats = { factoryCycles: 0, factoryIdle: 0, extractorCycles: 0 };
+
+    pins.forEach((p) => {
+        const d = p.extractor_details;
+        if (d && d.cycle_time && p.install_time) {
+            const name = esiTypeName(d.product_type_id);
+            const ms = d.cycle_time * 1000;
+            const start = new Date(p.install_time).getTime();
+            const end = Math.min(t1, p.expiry_time ? new Date(p.expiry_time).getTime() : t1);
+            let k = Math.max(1, Math.floor((t0 - start) / ms) + 1);
+            for (let t = start + k * ms; t <= end; k += 1, t = start + k * ms) {
+                events.push({ t, run: () => {
+                    const r = outRoute(p.pin_id, name);
+                    add(r ? r.destination_pin_id : p.pin_id, name, d.qty_per_cycle || 0);
+                    stats.extractorCycles += 1;
+                } });
+            }
+        }
+        const sid = (p.factory_details && p.factory_details.schematic_id) || p.schematic_id;
+        const recipe = sid && PI_RECIPE_OF.get(schematics[sid]);
+        if (recipe) {
+            const ms = recipe.cycle * 1000;
+            const phase = p.last_cycle_start ? new Date(p.last_cycle_start).getTime() : t0;
+            // на момент снимка фабрика уже в работе, если цикл начался меньше цикла назад
+            const state = { running: Boolean(p.last_cycle_start) && t0 - phase < ms };
+            let k = Math.max(1, Math.floor((t0 - phase) / ms) + 1);
+            for (let t = phase + k * ms; t <= t1; k += 1, t = phase + k * ms) {
+                events.push({ t, run: () => {
+                    if (state.running) {
+                        const r = outRoute(p.pin_id, recipe.out);
+                        add(r ? r.destination_pin_id : p.pin_id, recipe.out, recipe.outQty);
+                        stats.factoryCycles += 1;
+                    }
+                    // новый цикл: все входы рецепта — из буфера фабрики и со складов
+                    const plan = recipe.in.map(([name, need]) => {
+                        const sources = [p.pin_id].concat(routes
+                            .filter((r) => r.destination_pin_id === p.pin_id && esiTypeName(r.content_type_id) === name)
+                            .map((r) => r.source_pin_id));
+                        const have = sources.reduce((n, id) => n + (bag(id).get(name) || 0), 0);
+                        return { name, need, sources, ok: have >= need };
+                    });
+                    state.running = plan.every((x) => x.ok);
+                    if (!state.running) {
+                        stats.factoryIdle += 1;
+                        return;
+                    }
+                    plan.forEach(({ name, need, sources }) => {
+                        let left = need;
+                        sources.forEach((id) => {
+                            const take = Math.min(left, bag(id).get(name) || 0);
+                            if (take) bag(id).set(name, bag(id).get(name) - take);
+                            left -= take;
+                        });
+                    });
+                } });
+            }
+        }
+    });
+
+    events.sort((a, b) => a.t - b.t).forEach((e) => e.run());
+    return { stock, before, stats, hours: Math.max(0, (t1 - t0) / 3600000) };
+}
+
 function eveTestColonyHtml({ col, layout, planet, system, schematics }) {
     const pins = layout.pins || [];
     const pinName = new Map(pins.map((p) => [p.pin_id, esiTypeName(p.type_id)]));
@@ -1924,6 +2016,29 @@ function eveTestColonyHtml({ col, layout, planet, system, schematics }) {
     const rts = routes.map((r) => `<li>${resChip(esiTypeName(r.content_type_id))} ${r.quantity.toLocaleString('ru-RU')}:
         ${escapeHtml(pinName.get(r.source_pin_id) || r.source_pin_id)} → ${escapeHtml(pinName.get(r.destination_pin_id) || r.destination_pin_id)}</li>`).join('');
 
+    // Склады на «сейчас» — расчётом от момента открытия колонии в игре
+    const sim = simulateColony(layout, schematics, col.last_update, Date.now());
+    const isFactory = (p) => (p.factory_details && p.factory_details.schematic_id) || p.schematic_id || p.extractor_details;
+    const fmtN = (n) => Math.round(n).toLocaleString('ru-RU');
+    const nowStores = pins.filter((p) => !isFactory(p) && sim.stock.has(p.pin_id)).map((p) => {
+        const was = sim.before.get(p.pin_id) || new Map();
+        const items = Array.from(sim.stock.get(p.pin_id).entries())
+            .filter(([name, n]) => n > 0 || was.get(name))
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([name, n]) => {
+                const delta = n - (was.get(name) || 0);
+                const sign = delta > 0 ? `<span class="evt-ok">+${fmtN(delta)}</span>`
+                    : (delta < 0 ? `<span class="evt-bad">${fmtN(delta)}</span>` : '');
+                return `<li>${resChip(name)} ${fmtN(n)} ${sign}</li>`;
+            }).join('');
+        return items ? `<li><b>${escapeHtml(esiTypeName(p.type_id))}</b><ul class="evt-sub">${items}</ul></li>` : '';
+    }).join('');
+    const h = Math.floor(sim.hours);
+    const m = Math.round((sim.hours - h) * 60);
+    const simNote = `через ${h ? `${h} ч ` : ''}${m} мин после открытия · циклов фабрик ${sim.stats.factoryCycles}`
+        + (sim.stats.factoryIdle ? ` · простоев ${sim.stats.factoryIdle}` : '')
+        + ` · циклов добычи ${sim.stats.extractorCycles}`;
+
     const title = planet.name || `Планета ${col.planet_id}`;
     return `
         <section class="evt-colony">
@@ -1932,8 +2047,10 @@ function eveTestColonyHtml({ col, layout, planet, system, schematics }) {
                 · CC ${col.upgrade_level} · построек ${col.num_pins} · открыта в игре ${fmtDate(col.last_update)}</span></h5>
             <div class="evt-grid">
                 <div><h6>Добыча</h6><ul>${ext || '<li class="evt-dim">нет</li>'}</ul></div>
+                <div><h6>Склады сейчас (расчёт)</h6><p class="evt-dim evt-note">${simNote}</p>
+                    <ul>${nowStores || '<li class="evt-dim">пусто</li>'}</ul></div>
                 <div><h6>Фабрики</h6><ul>${fac || '<li class="evt-dim">нет</li>'}</ul></div>
-                <div><h6>Склады</h6><ul>${sto || '<li class="evt-dim">пусто</li>'}</ul></div>
+                <div><h6>Склады на момент открытия</h6><ul>${sto || '<li class="evt-dim">пусто</li>'}</ul></div>
                 <div><h6>Маршруты (${routes.length}) · связей ${links.length}</h6><ul>${rts || '<li class="evt-dim">нет</li>'}</ul></div>
             </div>
         </section>`;
