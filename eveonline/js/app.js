@@ -1686,11 +1686,23 @@ async function esiPublicJson(path) {
     return res.json();
 }
 
+/* Название рецепта в EVE не всегда совпадает с названием товара:
+   рецепт «Transcranial Microcontroller» выпускает «Transcranial
+   Microcontrollers». Приводим к названию из справочника PI_COMMODITIES. */
+function piCanonicalName(name) {
+    if (!name || PI_COMMODITIES[name]) return name;
+    const lower = name.toLowerCase();
+    return Object.keys(PI_COMMODITIES).find((n) => {
+        const l = n.toLowerCase();
+        return l === lower || l === lower + 's' || l + 's' === lower;
+    }) || name;
+}
+
 // Название рецепта = название выпускаемого товара («Coolant»)
 async function esiSchematicName(id) {
     if (!esiSchematicNames.has(id)) {
         esiSchematicNames.set(id, esiPublicJson(`/universe/schematics/${id}/`)
-            .then((d) => d.schematic_name || '')
+            .then((d) => piCanonicalName(d.schematic_name || ''))
             .catch(() => ''));
     }
     return esiSchematicNames.get(id);
@@ -1853,12 +1865,116 @@ async function pickCardForCharacter(char) {
        длина цикла, когда закончится), фабрики (рецепт → товар, их
        число), склады (что и сколько лежит), маршруты, связи;
      и «сырые» ответы ESI целиком — для сверки. */
+/* ---- Единая карточка (тест) ----
+   Новый вид карточки, с которого потом перейдут все остальные.
+   Каждая колония — две строки:
+     слева  1) система · планета
+            2) продукт колонии: у добывающей — «P0 ×экстракторов – P1»,
+               у фабричной — её топовый товар (привозное не показываем);
+     справа (на обе строки, без разделителя) — что нужно для продукта:
+            входы его рецепта
+            в две строки через «|» (у P1 из добычи пока пусто —
+            сырьё P0 разберём отдельно).
+   Колонии могут быть в разных системах — система у каждой своя. */
+function uniColonyData(detail) {
+    const { col, layout, planet, system, schematics } = detail;
+    const pins = layout.pins || [];
+    const products = uniqValues(pins
+        .map((p) => piCanonicalName(schematics[(p.factory_details && p.factory_details.schematic_id) || p.schematic_id] || ''))
+        .filter(Boolean));
+    const tier = Math.max(0, ...products.map(piTierOf));
+    const tops = products.filter((n) => piTierOf(n) === tier).sort();
+    const subs = tier > 1 ? products.filter((n) => piTierOf(n) === tier - 1).sort() : [];
+    // Добыча: P0 и сколько экстракторов его добывают
+    const extract = new Map();
+    pins.forEach((p) => {
+        const name = p.extractor_details && PI_NAME_BY_ID.get(p.extractor_details.product_type_id);
+        if (name) extract.set(name, (extract.get(name) || 0) + 1);
+    });
+    const name = planet.name || '';
+    const sysName = system.name || '';
+    return {
+        system: sysName,
+        planet: name.startsWith(sysName + ' ') ? name.slice(sysName.length + 1) : name,
+        type: PLANET_TYPE_OF_ESI[col.planet_type] || col.planet_type || '',
+        tops,
+        subs,
+        // Что нужно для топового продукта: входы рецепта, шт за цикл
+        needs: tier > 1 ? tops.flatMap((n) => (PI_RECIPE_OF.get(n) || { in: [] }).in
+            .map(([inName, qty]) => ({ name: inName, qty }))) : [],
+        extract: Array.from(extract.entries()).map(([n, k]) => ({
+            name: n,
+            count: k,
+            p1: products.find((x) => piTierOf(x) === 1 && (PI_RECIPE_OF.get(x) || { in: [[]] }).in[0][0] === n) || ''
+        })),
+    };
+}
+
+function uniResHtml(name, opts = {}) {
+    const tier = PI_COMMODITIES[name] ? `P${piTierOf(name)}` : '';
+    return `<span class="uni-res${opts.compact ? ' is-compact' : ''}" title="${escapeHtml(name)}${tier ? ` (${tier})` : ''}">`
+        + (tier ? tierBadgeHtml(tier) : '')
+        + `<span class="uni-icon">${iconFor(name) || BLANK_ICON}</span>`
+        + (opts.compact ? '' : `<span class="uni-name" lang="en">${escapeHtml(name)}</span>`)
+        + (opts.count > 1 ? `<span class="uni-count">×${opts.count}</span>` : '')
+        + (opts.qty ? `<span class="uni-count">${opts.qty}</span>` : '')
+        + '</span>';
+}
+
+// Длинный список: один значок уровня, за ним только иконки (название — в подсказке)
+function uniGroupHtml(names) {
+    if (names.length <= 2) return names.map((n) => uniResHtml(n)).join('');
+    const byTier = new Map();
+    names.forEach((n) => {
+        const t = `P${piTierOf(n)}`;
+        byTier.set(t, (byTier.get(t) || []).concat(n));
+    });
+    return Array.from(byTier.entries()).map(([t, list]) => `<span class="uni-group">${tierBadgeHtml(t)}`
+        + list.map((n) => `<span class="uni-icon" title="${escapeHtml(n)} (${t})">${iconFor(n) || BLANK_ICON}</span>`).join('')
+        + '</span>').join('');
+}
+
+function uniCardHtml(title, details) {
+    const cols = details.map(uniColonyData)
+        .sort((a, b) => a.system.localeCompare(b.system)
+            || ROMAN_NUMBERS.indexOf(a.planet) - ROMAN_NUMBERS.indexOf(b.planet));
+    const rows = cols.map((c) => {
+        /* Добыча: «P0 ×N – P1, который из него делают здесь же».
+           Фабричная планета: её топовый продукт. */
+        const from = c.extract.length
+            ? c.extract.map((x) => `<span class="uni-pair">${uniResHtml(x.name, { count: x.count })}`
+                + (x.p1 ? `<span class="uni-sep">–</span>${uniResHtml(x.p1)}` : '') + '</span>').join('')
+            : c.tops.map((n) => uniResHtml(n)).join('');
+        // Входы рецепта — в две строки, внутри строки через «|»
+        const half = Math.ceil(c.needs.length / 2);
+        const line = (list) => list.map((x) => uniResHtml(x.name)).join('<span class="uni-bar">|</span>');
+        const needs = c.needs.length
+            ? `<div class="uni-need-line">${line(c.needs.slice(0, half))}</div>`
+                + (c.needs.length > 1 ? `<div class="uni-need-line">${line(c.needs.slice(half))}</div>` : '')
+            : '';
+        return `
+            <div class="uni-colony">
+                <div class="uni-where"><span class="uni-sys">${escapeHtml(c.system)}</span>
+                    <span class="uni-planet">${escapeHtml(c.planet)} · ${escapeHtml(c.type)}</span></div>
+                <div class="uni-from">${from || '<span class="uni-dim">—</span>'}</div>
+                <div class="uni-out">${needs ? `<div class="uni-needs">${needs}</div>` : ''}</div>
+            </div>`;
+    }).join('');
+    return `
+        <article class="uni-card">
+            <div class="uni-head"><b>${escapeHtml(title)}</b>
+                <span class="uni-dim">Единая карточка (тест) · колоний ${cols.length}</span></div>
+            <div class="uni-cols"><span>Система · планета / продукт колонии</span><span>Что для этого нужно</span></div>
+            ${rows || '<p class="uni-dim">Колоний нет</p>'}
+        </article>`;
+}
+
 const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 00:40';
+const APP_BUILD = '13.10.2026 01:30';
 function appVersionText() {
     const v = (sel, attr) => {
         const el = document.querySelector(sel);
@@ -2605,6 +2721,7 @@ async function renderEveTest() {
                     <span class="evt-dim">id ${char.characterId} · колоний ${data.colonies.length} · экстракторов ${extractors}
                         · права: ${escapeHtml([].concat(char.scopes || []).join(', ') || '—')}</span>
                 </div>
+                ${uniCardHtml(char.characterName, data.details)}
                 ${data.details.map(eveTestColonyHtml).join('') || '<p class="evt-dim">Колоний нет</p>'}
                 <details class="evt-raw"><summary>Сырые ответы ESI</summary>
                     <pre>${escapeHtml(JSON.stringify(data.details.map((d) => ({ colony: d.col, layout: d.layout })), null, 1))}</pre>
