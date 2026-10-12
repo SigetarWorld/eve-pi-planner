@@ -379,6 +379,16 @@
        (для P2–P4 — просто название товара). Нижний блок стоит плашкой
        на уровне центра планеты, остальные выше, чтобы не задевать
        плашку с названием под планетой. */
+    /* Колония — строка из «квадратиков», как состав на карточках:
+       [P0][картинка] сырьё – [P1][картинка] товар (для P2–P4 — один
+       товар). Квадраты, а не кружки, — чтобы не путать с планетами.
+       Колонии одного персонажа на планете объединены: имя один раз,
+       под ним его строки. */
+    const SQ = 14;           // сторона квадратика (уровень, картинка)
+    const RES_CHAR = 4.3;    // ширина символа названия ресурса (7.4px), примерно
+    const SQ_GAP = 2;        // зазор между квадратиками и текстом
+    const ITEM_H = 18;       // шаг строк одного персонажа
+    const GROUP_GAP = 24;    // зазор между блоками персонажей
     const ROW_H = 33;        // высота блока колонии: заголовок + плашка
     const HEAD_DY = 15;      // заголовок выше плашки на столько
     const HEAD_CHAR = 5.6;
@@ -389,6 +399,48 @@
         return res ? res.P0 : '';
     };
     const colonyPilot = (c) => c.pilot || 'без имени';
+    // Части строки колонии: [{ tier, icon, name }], сырьё P0 и товар
+    function colonyParts(c, type) {
+        if (!c.product) return [{ tier: '?', icon: '', name: 'ресурс не выбран' }];
+        const tier = tierOf(c.product);
+        const parts = [];
+        const p0 = tier === 1 ? (c.p0 || p0Of(c.product, type)) : '';
+        if (p0) parts.push({ tier: 'P0', icon: p0, name: p0 });
+        parts.push({ tier: `P${tier}`, icon: c.product, name: c.product });
+        return parts;
+    }
+    const DASH_W = 10;       // «–» между сырьём и товаром
+    const partW = (pt) => 2 * (SQ + SQ_GAP) + pt.name.length * RES_CHAR;
+    const partsWidth = (parts) => parts.reduce((a, pt) => a + partW(pt), 0) + (parts.length - 1) * DASH_W + 8;
+    // Колонии планеты по персонажам, в порядке первого появления
+    function groupByPilot(list) {
+        const groups = [];
+        list.forEach((c) => {
+            const pilot = colonyPilot(c);
+            let g = groups.find((x) => x.pilot === pilot);
+            if (!g) groups.push((g = { pilot, items: [] }));
+            g.items.push(c);
+        });
+        return groups;
+    }
+    /* Раскладка по высоте снизу вверх: нижняя строка — на уровне центра
+       планеты (y = 0). Возвращает группы с y строк и заголовка и top —
+       верх самого высокого заголовка. */
+    function pilotLayout(list) {
+        const groups = groupByPilot(list);
+        let y = 0;
+        for (let gi = groups.length - 1; gi >= 0; gi--) {
+            const g = groups[gi];
+            g.ys = [];
+            for (let k = g.items.length - 1; k >= 0; k--) {
+                g.ys[k] = y;
+                y -= ITEM_H;
+            }
+            g.headY = g.ys[0] - HEAD_DY;
+            y = g.headY - GROUP_GAP;
+        }
+        return { groups, top: groups.length ? groups[0].headY : 0 };
+    }
     function colonyRowText(c, type) {
         if (!c.product) return 'ресурс не выбран';
         const p0 = tierOf(c.product) === 1 ? (c.p0 || p0Of(c.product, type)) : '';
@@ -404,13 +456,13 @@
         if (!list.length) return null;
         const type = typeOfKey(key);
         const w = Math.max(...list.map((c) => {
-            const plate = colonyRowText(c, type).length * LABEL_CHAR + 12;
-            const head = colonyPilot(c).length * HEAD_CHAR;
-            // имя по центру над плашкой; длинное — не левее значка
-            return 19 + Math.max(plate, plate / 2 + head / 2, head - 19);
+            const plate = partsWidth(colonyParts(c, type));
+            const head = colonyPilot(c).length * HEAD_CHAR + 8;
+            return Math.max(plate, head) + 4;
         }));
+        const { groups, top } = pilotLayout(list);
         // несколько персонажей — блоки отодвинуты под линии от планеты
-        return { n: list.length, w: w + (list.length > 1 ? LINK_GAP : 0) };
+        return { n: list.length, top, w: w + (groups.length > 1 ? LINK_GAP : 0) };
     }
 
     /* Раскладка планет вокруг системы. Каждая планета — картинка, а под
@@ -470,7 +522,7 @@
             const box = { x1: bx - half - 2, y1: by - R - 2, x2: bx + half + 2, y2: by + R + PLATE_GAP + PLATE_H + 2 };
             if (rows) {
                 box.x2 = Math.max(box.x2, bx + R + 4 + rows.w + 2);
-                box.y1 = Math.min(box.y1, by - (rows.n - 1) * ROW_H - HEAD_DY - 7);
+                box.y1 = Math.min(box.y1, by + rows.top - 11);
             }
             return box;
         };
@@ -871,7 +923,7 @@
                     const key = `${c.system} ${row.number}`;
                     const product = (c.level === 'P2' || c.level === 'T2') ? ((c.p2s || [])[ri] || '')
                         : (c.level === 'P3' || c.level === 'P4' || c.level === 'T3') ? ((c.prods || [])[ri] || '')
-                        : c.level === 'MIX' ? (((c.mix || [])[ri] || {}).prod || '')
+                        : (c.level === 'MIX' || c.level === 'TMIX') ? (((c.mix || [])[ri] || {}).prod || '')
                         : (row.p1 || '');
                     if (!byKey.has(key)) byKey.set(key, []);
                     byKey.get(key).push({ pilot: c.name, product, card: { ai, ci, ri } });
@@ -921,7 +973,7 @@
         const p2Card = card.level === 'P2' || card.level === 'T2';
         // Карточки P3/P4: товар своего уровня; фабрика P4 — только Barren/Temperate
         const prodCard = card.level === 'P3' || card.level === 'P4' || card.level === 'T3';
-        const mixCard = card.level === 'MIX';
+        const mixCard = (card.level === 'MIX' || card.level === 'TMIX');
         const tier = product ? tierOf(product) : 0;
         // Универсальная карточка: любой уровень, но планета должна подходить товару
         if (product && mixCard) {
@@ -1011,7 +1063,7 @@
         card.rows[ref.ri] = Object.assign({}, card.rows[ref.ri], { planet: '', p0: '', p1: '' });
         if ((card.level === 'P2' || card.level === 'T2') && Array.isArray(card.p2s)) card.p2s[ref.ri] = '';
         if ((card.level === 'P3' || card.level === 'P4' || card.level === 'T3') && Array.isArray(card.prods)) card.prods[ref.ri] = '';
-        if (card.level === 'MIX' && Array.isArray(card.mix) && card.mix[ref.ri]) card.mix[ref.ri] = Object.assign({}, card.mix[ref.ri], { prod: '' });
+        if ((card.level === 'MIX' || card.level === 'TMIX') && Array.isArray(card.mix) && card.mix[ref.ri]) card.mix[ref.ri] = Object.assign({}, card.mix[ref.ri], { prod: '' });
         try { localStorage.setItem('evepi.accounts', JSON.stringify(accs)); } catch (e) { return; }
         if (typeof window.EVEPI_reloadAccounts === 'function') window.EVEPI_reloadAccounts();
         cardCache = null;
@@ -1152,15 +1204,15 @@
            уровне центра планеты, остальные выше, чтобы не задеть плашку
            с названием под планетой */
         const R = LAYOUT.planetR;
-        const multi = list.length > 1;
+        const { groups } = pilotLayout(list);
+        const multi = groups.length > 1;
         const x0 = R + 4 + (multi ? LINK_GAP : 0);
-        /* несколько персонажей — от края планеты к значку каждого ресурса
-           идёт линия; рисуем их первыми, чтобы значки легли поверх */
+        /* несколько персонажей — от края планеты к первой строке каждого
+           идёт линия; рисуем их первыми, чтобы квадратики легли поверх */
         if (multi) {
-            list.forEach((c, k) => {
-                const y = -(list.length - 1 - k) * ROW_H;
-                // в центр значка ресурса (значок кладётся поверх конца линии)
-                const cx = x0 + 8;
+            groups.forEach((g) => {
+                const y = g.ys[0];
+                const cx = x0;
                 const a = Math.atan2(y, cx);
                 el('line', {
                     class: 'mm-colony-badge mm-colony-link',
@@ -1168,29 +1220,53 @@
                 }, planet);
             });
         }
-        list.forEach((c, k) => {
-            const y = -(list.length - 1 - k) * ROW_H;
-            const g = el('g', { class: 'mm-colony-badge', transform: `translate(${x0 + 8} ${y})` }, planet);
-            el('circle', { r: 8 }, g);
-            const src = c.product && typeof RESOURCE_ICONS !== 'undefined' ? RESOURCE_ICONS[c.product] : '';
-            if (src) el('image', { href: src, x: -7, y: -7, width: 14, height: 14 }, g);
-            else {
-                const t = el('text', { class: 'mm-colony-tier', 'text-anchor': 'middle', dy: '0.35em' }, g);
-                t.textContent = c.product ? `P${tierOf(c.product)}` : '?';
+        const type = planet.dataset.type;
+        // квадратик: уровень (P0–P4) или картинка ресурса
+        const square = (parent, x, cls, icon, text) => {
+            el('rect', { class: `mm-sq ${cls}`, x, y: -SQ / 2, width: SQ, height: SQ, rx: 2 }, parent);
+            const src = icon && typeof RESOURCE_ICONS !== 'undefined' ? RESOURCE_ICONS[icon] : '';
+            if (src) el('image', { href: src, x: x + 1, y: -SQ / 2 + 1, width: SQ - 2, height: SQ - 2 }, parent);
+            else if (text) {
+                const t = el('text', { class: 'mm-sq-text', x: x + SQ / 2, 'text-anchor': 'middle', dy: '0.35em' }, parent);
+                t.textContent = text;
             }
-            const text = colonyRowText(c, planet.dataset.type);
-            const w = text.length * LABEL_CHAR + 12;
-            // имя персонажа — по центру над плашкой (длинное не заходит на планету)
-            const pilot = colonyPilot(c);
-            const hx = Math.max(11 + w / 2, -8 + (pilot.length * HEAD_CHAR) / 2);
-            const head = el('text', { class: 'mm-colony-pilot', x: hx, y: -HEAD_DY, 'text-anchor': 'middle', dy: '0.35em' }, g);
-            head.textContent = pilot;
+        };
+        /* Персонаж — один общий блок: рамка, сверху имя, под ним все его
+           строки (без отдельных подложек у строк) */
+        groups.forEach((g) => {
+            const block = el('g', { class: 'mm-colony-badge', transform: `translate(${x0} 0)` }, planet);
+            const rows = g.items.map((c) => colonyParts(c, type));
+            const w = Math.max(...rows.map(partsWidth), g.pilot.length * HEAD_CHAR + 8) + 4;
+            const top = g.headY - 8;
+            const bottom = g.ys[g.ys.length - 1] + PLATE_H / 2 + 2;
             el('rect', {
-                class: 'mm-planet-plate mm-colony-plate', x: 11, y: -PLATE_H / 2,
-                width: w, height: PLATE_H, rx: PLATE_H / 2
-            }, g);
-            const t = el('text', { class: 'mm-planet-label mm-colony-label', x: 11 + w / 2, 'text-anchor': 'middle', dy: '0.35em' }, g);
-            t.textContent = text;
+                class: 'mm-planet-plate mm-colony-plate mm-colony-block', x: -2, y: top,
+                width: w, height: bottom - top, rx: 4
+            }, block);
+            // имя персонажа — один раз, вверху блока
+            const head = el('text', { class: 'mm-colony-pilot', x: 3, y: g.headY, dy: '0.35em' }, block);
+            head.textContent = g.pilot;
+            // тонкая линия под именем
+            el('line', { class: 'mm-colony-sep', x1: 0, x2: w - 4, y1: g.headY + 7, y2: g.headY + 7 }, block);
+            rows.forEach((parts, k) => {
+                const row = el('g', { transform: `translate(0 ${g.ys[k]})` }, block);
+                let x = 2;
+                parts.forEach((pt, i) => {
+                    if (i) {
+                        const d = el('text', { class: 'mm-colony-dash', x: x + DASH_W / 2 - 2, 'text-anchor': 'middle', dy: '0.35em' }, row);
+                        d.textContent = '–';
+                        x += DASH_W;
+                    }
+                    const tierKey = pt.tier === '?' ? 'x' : pt.tier.slice(1);
+                    square(row, x, `mm-tier mm-tier-p${tierKey}`, '', pt.tier);
+                    x += SQ + SQ_GAP;
+                    square(row, x, 'mm-sq-icon', pt.icon, pt.icon ? '' : '?');
+                    x += SQ + SQ_GAP;
+                    const t = el('text', { class: 'mm-planet-label mm-colony-label', x, dy: '0.35em' }, row);
+                    t.textContent = pt.name;
+                    x += pt.name.length * RES_CHAR;
+                });
+            });
         });
     }
 

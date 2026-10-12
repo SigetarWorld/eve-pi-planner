@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=94">
+    <link rel="stylesheet" href="css/style.css?v=114">
 </head>
 <body>
     <header>
@@ -18,6 +18,21 @@
                 <span class="brand-name">EVE Planner</span>
                 <span class="brand-tag">[ Planetary Industry ]</span>
             </h1>
+            <!-- Вход в EVE Online через SSO — в шапке, слева от вкладок.
+                 Кнопка видна всегда; пока в js/eveauth.js не вписан
+                 client_id приложения с developers.eveonline.com, нажатие
+                 только объясняет, что вход не настроен. Код входа —
+                 в js/eveauth.js. Официальная кнопка CCP «LOG IN with
+                 EVE Online» (https://docs.esi.evetech.net/docs/sso/). -->
+            <div id="eve-bar" class="eve-bar eve-bar-head" hidden>
+                <button type="button" id="eve-login" class="eve-login" hidden title="Войти через EVE Online">
+                    <img src="https://web.ccpgamescdn.com/eveonlineassets/developers/eve-sso-login-black-small.png"
+                         alt="LOG IN with EVE Online" width="195" height="30">
+                </button>
+                <span id="eve-who" class="eve-who" hidden></span>
+                <button type="button" id="eve-logout" class="btn card-add" hidden>Отключить</button>
+                <span id="eve-hint" class="eve-hint"></span>
+            </div>
             <nav class="tabs">
                 <button data-tab="planets">Планеты</button>
                 <button data-tab="chains">Цепочки производства</button>
@@ -71,17 +86,6 @@
 
             <div id="cards-hint" class="card-hint">
                 Введите название аккаунта и нажмите «Добавить» — появится линия для трёх персонажей
-            </div>
-
-            <!-- Вход в EVE Online через SSO. Кнопка появляется, когда в
-                 js/eveauth.js вписан client_id приложения с
-                 developers.eveonline.com; без него подсказка объясняет,
-                 что делать. Сам код входа — в js/eveauth.js. -->
-            <div id="eve-bar" class="eve-bar" hidden>
-                <button type="button" id="eve-login" class="btn card-add" hidden>Войти в EVE Online</button>
-                <span id="eve-who" class="eve-who" hidden></span>
-                <button type="button" id="eve-logout" class="btn card-add" hidden>Отключить</button>
-                <span id="eve-hint" class="eve-hint"></span>
             </div>
 
             <!-- Линии аккаунтов создаёт app.js. В каждой линии:
@@ -146,12 +150,12 @@
     <script src="js/data.js?v=2"></script>
     <script src="js/systems.js?v=2"></script>
     <script src="js/planets.js?v=2"></script>
-    <script src="js/eveauth.js?v=2"></script>
+    <script src="js/eveauth.js?v=3"></script>
     <script src="js/mapdata.js?v=4"></script>
-    <script src="js/calculator.js?v=29"></script>
+    <script src="js/calculator.js?v=34"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=66"></script>
+    <script src="js/app.js?v=77"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
         if (location.protocol === "file:") {

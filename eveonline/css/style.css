@@ -677,6 +677,16 @@ form button:focus-visible,
     fill: var(--accent);
 }
 
+/* Названия ресурсов в блоке персонажа — как на карточках: обычный
+   шрифт, цвет основного текста; кегль в той же пропорции к квадратику
+   картинки, что и на карточках (0.74rem к картинке 1.4rem) */
+.mm-planet .mm-colony-badge .mm-colony-label,
+.mm-planet.is-colony .mm-colony-badge .mm-colony-label {
+    font-size: 7.4px;
+    font-weight: 400;
+    fill: var(--text);
+}
+
 /* Планету можно перетащить */
 .mm-planet {
     touch-action: none;
@@ -761,6 +771,77 @@ form button:focus-visible,
     fill: #0b1220;
     stroke: var(--accent);
     stroke-width: 1.2;
+}
+
+/* Квадратики колоний на карте: уровень P0–P4 и картинка ресурса.
+   Квадраты — чтобы не путать с круглыми планетами; цвета уровней как
+   у значков на карточках */
+.mm-colony-badge .mm-sq {
+    fill: #0b1220;
+    stroke: rgba(150, 185, 230, 0.55);
+    stroke-width: 0.8;
+}
+
+.mm-colony-badge .mm-sq-text {
+    font-size: 6.4px;
+    font-weight: 700;
+    fill: var(--accent);
+    pointer-events: none;
+}
+
+.mm-colony-badge .mm-tier {
+    fill: rgba(255, 157, 46, 0.14);
+    stroke: rgba(255, 157, 46, 0.8);
+}
+
+.mm-colony-badge .mm-tier-p0,
+.mm-colony-badge .mm-tier-px {
+    fill: rgba(255, 255, 255, 0.07);
+    stroke: rgba(150, 185, 230, 0.55);
+}
+
+.mm-colony-badge .mm-tier-p0 + .mm-sq-text,
+.mm-colony-badge .mm-tier-px + .mm-sq-text {
+    fill: var(--text-dim);
+}
+
+.mm-colony-badge .mm-tier-p2,
+.mm-colony-badge .mm-tier-p3 {
+    fill: color-mix(in srgb, var(--cyan) 14%, #0b1220);
+    stroke: color-mix(in srgb, var(--cyan) 80%, transparent);
+}
+
+.mm-colony-badge .mm-tier-p2 + .mm-sq-text,
+.mm-colony-badge .mm-tier-p3 + .mm-sq-text {
+    fill: var(--cyan);
+}
+
+.mm-colony-badge .mm-tier-p4 {
+    fill: rgba(201, 167, 255, 0.14);
+    stroke: rgba(201, 167, 255, 0.8);
+}
+
+.mm-colony-badge .mm-tier-p4 + .mm-sq-text {
+    fill: #c9a7ff;
+}
+
+/* Общий блок персонажа на карте: имя и под линией его строки */
+.mm-colony-block {
+    fill: #0f1f36;
+}
+
+.mm-colony-sep {
+    stroke: rgba(255, 157, 46, 0.35);
+    stroke-width: 0.6;
+    pointer-events: none;
+}
+
+/* Тире между сырьём P0 и товаром P1 в строке колонии */
+.mm-colony-dash {
+    font-size: 9px;
+    font-weight: 700;
+    fill: var(--text-dim);
+    pointer-events: none;
 }
 
 .mm-colony-badge .mm-colony-tier {
@@ -1489,6 +1570,13 @@ form button:focus-visible,
     border-bottom: none;
 }
 
+/* Свёрнутая «Статистика» — по высоте до низа строки «Аккаунт»
+   (как и левая колонка), заголовок по центру */
+.stats-panel:has(.stats-toggle[aria-expanded="false"]) {
+    align-self: stretch;
+    justify-content: center;
+}
+
 .stats-body[hidden] {
     display: none;
 }
@@ -1669,6 +1757,84 @@ form button:focus-visible,
 }
 
 .eve-bar[hidden] {
+    display: none;
+}
+
+/* В шапке: без отступа сверху, прямо перед вкладками */
+.eve-bar.eve-bar-head {
+    margin-top: 0;
+    gap: 0.5rem;
+}
+
+.eve-bar-head {
+    position: relative;
+}
+
+/* Подсказка — всплывает под кнопкой и не раздвигает шапку */
+.eve-bar-head .eve-hint {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 5;
+    padding: 0.3rem 0.6rem;
+    white-space: nowrap;
+    line-height: 1.25;
+    color: var(--text-dim);
+    background: var(--bg-panel);
+    border: 1px solid var(--border-lit);
+    border-radius: var(--radius-sm);
+}
+
+/* Кнопка в шапке чуть ниже оригинала (195×30 → высота 26px) */
+.eve-bar-head .eve-login img {
+    width: auto;
+    height: 26px;
+}
+
+/* Шапке тесно: подпись «[ Planetary Industry ]» убираем, чтобы
+   кнопка входа и вкладки остались в одну строку */
+@media (max-width: 1500px) {
+    .brand-tag {
+        display: none;
+    }
+}
+
+.eve-bar-head .btn {
+    padding: 0.35rem 0.8rem;
+}
+
+/* Официальная кнопка CCP «LOG IN with EVE Online» — картинка без рамок */
+.eve-login {
+    display: inline-flex;
+    padding: 0;
+    line-height: 0;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: filter 0.15s, box-shadow 0.15s;
+}
+
+.eve-login img {
+    display: block;
+    width: 195px;
+    max-width: 100%;
+    height: auto;
+}
+
+.eve-login:hover,
+.eve-login:focus-visible {
+    filter: brightness(1.2);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+    outline: none;
+}
+
+.eve-login:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.eve-login[hidden] {
     display: none;
 }
 
@@ -2404,8 +2570,8 @@ form button:focus-visible,
 
 .colony-table .ct-mix-menu {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.25rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.2rem;
     width: 100%;
 }
 
@@ -2414,9 +2580,12 @@ form button:focus-visible,
 }
 
 .colony-table .ct-mix-menu button {
-    padding: 0.35rem 0.5rem;
+    /* Компактные: меню в одну линию, строка не растёт */
+    min-width: 0;
+    padding: 0.15rem 0;
     font-family: var(--font-heading);
-    font-size: 0.82rem;
+    font-size: 0.72rem;
+    line-height: 1.2;
     font-weight: 700;
     color: var(--text);
     background: rgba(255, 255, 255, 0.05);
@@ -2539,7 +2708,7 @@ form button:focus-visible,
 
 .ct-modal-box {
     position: relative;
-    width: min(940px, calc(100vw - 2rem));
+    width: min(1100px, calc(100vw - 2rem));
     padding: 1.15rem 1.25rem 1.25rem;
     background: var(--bg-panel);
     border: 1px solid var(--border-lit);
@@ -3132,4 +3301,392 @@ input.chain-amount:focus {
 .home-link:focus-visible {
     outline: 1px solid var(--blue);
     outline-offset: 2px;
+}
+
+/* ---------- Карточки в две линии (все типы) ----------
+   Каждая строка — в две линии. Сверху, прижато влево: значок уровня
+   товара (P1–P4), картинка и список товара (ширина --prod-w — как
+   была у столбца товара), на универсальной — «+ Добавить» и крестик;
+   дальше «Планета» и её список (--planet-w). Под ними состав: клетки
+   по четверти ширины, в каждой значок уровня, картинка и название.
+   Строка таблицы одна: клетки раскладывает flex с переносом, а
+   невидимый ::before (order 1) переносит состав на вторую линию.
+   Заголовки столбцов скрыты — подписи стоят прямо в строке.
+
+   Выравнивание: все размеры в rem, все зазоры одинаковые (--gap),
+   у названий в составе слева тот же отступ, что у текста в списке
+   (--sel-pad + рамка). Поэтому значки, картинки и текст верхней и
+   нижней линий стоят друг под другом при любом масштабе, и когда
+   на узкой карточке картинки скрыты. */
+.card.ct-two-line {
+    --gap: 0.25rem;
+    /* отступ текста от картинки: и в списках, и у названий в составе —
+       одинаковый, поэтому текст верхней и нижней линии на одной оси */
+    --sel-pad: 0.12rem;
+    --icon: 1.4rem;
+    --line: 2.1rem;
+}
+
+.card.ct-two-line .colony-table,
+.card.ct-two-line .colony-table thead,
+.card.ct-two-line .colony-table tbody {
+    display: block;
+    width: 100%;
+}
+
+.card.ct-two-line .colony-table colgroup {
+    display: none;
+}
+
+.card.ct-two-line .colony-table thead tr {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+/* Строка заголовков столбцов скрыта: подписи — в самих строках */
+.card.ct-two-line .colony-table thead tr:last-child {
+    display: none;
+}
+
+.card.ct-two-line .colony-table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    background: var(--bg-panel-2);
+    /* линия под строкой — на всю ширину, даже если клеток состава меньше четырёх */
+    border-bottom: 1px solid var(--border);
+}
+
+.card.ct-two-line .colony-table tbody td {
+    border-bottom: none;
+}
+
+.card.ct-two-line .colony-table tbody tr::before {
+    content: "";
+    order: 1;
+    flex: 0 0 100%;
+    height: 0;
+}
+
+.card.ct-two-line .colony-table tbody td {
+    display: flex;
+    align-items: center;
+    gap: var(--gap);
+    min-width: 0;
+    height: var(--line);
+    padding: 0.15rem 0.35rem;
+    text-align: left;
+}
+
+.card.ct-two-line .colony-table tbody td[hidden] {
+    display: none;
+}
+
+/* Первая линия: товар (ct-head) и планета; снизу — линия-разделитель */
+.card.ct-two-line .colony-table tbody td.ct-head {
+    order: -1;
+    flex: 0 0 auto;
+    /* одной ширины на всех строках и карточках: значок, список, крестик —
+       поэтому «Планета» везде стоит в одном месте */
+    width: calc(var(--icon) + var(--prod-w, 16rem) + 1.3rem + 3 * var(--gap) + 0.7rem);
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+}
+
+.card.ct-two-line .colony-table tbody td.ct-planet {
+    order: 0;
+    flex: 1 1 auto;
+    gap: 0.4rem;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Вторая линия: состав — по четверти ширины на клетку */
+/* Вторая линия: состав одной строкой, без столбцов. Клетки — по
+   содержимому; между ними разделитель из data-sep (см. updateSeps):
+   «–» — связка P1 и его P0, «|» — перечисление. Пустые клетки скрыты. */
+.card.ct-two-line .colony-table tbody td.ct-split {
+    order: 2;
+    /* в одну строку всегда: от нуля растут до своей ширины, а если
+       места мало — ужимаются поровну (названия уходят в две строки) */
+    flex: 1 1 0;
+    max-width: max-content;
+    padding-right: 0;
+    border-right: none;
+}
+
+/* Вторая линия есть всегда, даже когда состав пуст: этот невидимый
+   элемент держит её высоту, и все строки остаются одной высоты */
+.card.ct-two-line .colony-table tbody tr::after {
+    content: "";
+    order: 2;
+    flex: 0 0 0;
+    height: var(--line);
+}
+
+.card.ct-two-line .colony-table tbody td.ct-split.ct-cell-empty {
+    display: none;
+}
+
+.card.ct-two-line .colony-table tbody td.ct-split[data-sep]::before {
+    flex: 0 0 auto;
+    margin: 0 0.15rem 0 -0.1rem;
+    font-size: 0.85rem;
+    line-height: 1;
+    color: var(--text-faint);
+}
+
+.card.ct-two-line .colony-table tbody td.ct-split[data-sep="dash"]::before {
+    content: "–";
+}
+
+.card.ct-two-line .colony-table tbody td.ct-split[data-sep="bar"]::before {
+    content: "|";
+    color: var(--border);
+    font-size: 1.05rem;
+}
+
+/* Список в составе (P0 на карточке P1 и в строке P1 универсальной) —
+   той же ширины, что список товара над ним */
+.card.ct-two-line .colony-table tbody td.ct-split .res-stack {
+    flex: 0 1 var(--prod-w, 16rem);
+}
+
+.card.ct-two-line .colony-table tbody td.ct-split-wide,
+.card.ct-two-line .colony-table tbody td.ct-split[colspan="2"] {
+    flex: 0 0 auto;
+    max-width: none;
+}
+
+.card.ct-two-line .colony-table tbody td:last-child {
+    border-right: none;
+}
+
+/* Списки — низкие, одного кегля; отступ текста — --sel-pad */
+.card.ct-two-line .colony-table tbody select {
+    height: 1.65rem;
+    min-width: 0;
+    padding: 0 1.2rem 0 var(--sel-pad);
+    font-size: 0.76rem;
+    line-height: 1;
+}
+
+.card.ct-two-line .colony-table tbody .res-stack {
+    flex: 0 1 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--gap);
+    width: auto;
+    min-width: 0;
+}
+
+/* Список товара — ширина как у столбца товара (--prod-w) */
+.card.ct-two-line .colony-table tbody td.ct-head .res-stack {
+    flex: 0 0 var(--prod-w, 16rem);
+}
+
+.card.ct-two-line .colony-table tbody td.ct-head select,
+.card.ct-two-line .colony-table tbody td.ct-split select {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+}
+
+.card.ct-two-line .colony-table tbody [data-role="planet"] {
+    flex: 0 0 auto;
+    width: var(--planet-w, 8rem);
+}
+
+.card.ct-two-line .colony-table tbody .res-icon {
+    flex: 0 0 auto;
+    width: var(--icon);
+    height: var(--icon);
+    margin: 0;
+}
+
+/* P1 на карточке P1 — текст: отступ как у текста в списке */
+.card.ct-two-line .colony-table tbody .ct-p1-text {
+    padding-left: calc(var(--sel-pad) + 1px);
+    font-size: 0.76rem;
+    text-align: left;
+}
+
+/* Подписи в строке («Планета»): шрифт как у списков, высота строки
+   равна высоте списка — текст ровно по центру соседнего меню */
+.card.ct-two-line .colony-table .ct-mix-label {
+    flex: 0 0 auto;
+    align-self: center;
+    height: 1.65rem;
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.65rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+/* Значки уровня — квадратные, ровно с картинку ресурса */
+.card.ct-two-line .colony-table .ct-tier {
+    box-sizing: border-box;
+    width: var(--icon);
+    min-width: var(--icon);
+    height: var(--icon);
+    padding: 0;
+    font-size: 0.64rem;
+    border-radius: 3px;
+}
+
+/* Клетки состава: значок | картинка | название, зазоры --gap */
+.card.ct-two-line .colony-table .ct-recipe {
+    width: 100%;
+    min-width: 0;
+}
+
+.card.ct-two-line .colony-table .ct-recipe.ct-recipe-one {
+    gap: var(--gap);
+    padding: 0;
+    font-size: 0.74rem;
+    line-height: 1.2;
+}
+
+.card.ct-two-line .colony-table .ct-recipe.ct-recipe-one .ct-icon-cell {
+    padding: 0;
+}
+
+.card.ct-two-line .colony-table .ct-recipe.ct-recipe-one .ct-recipe-name {
+    flex: 0 1 auto;
+    padding-right: 0.1rem;
+    /* узкая клетка: длинное слово переносится по слогам, а не посреди */
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    padding-left: calc(var(--sel-pad) + 1px);
+}
+
+.card.ct-two-line .colony-table .ct-recipe.ct-recipe-free {
+    display: flex;
+    align-items: center;
+    gap: var(--gap);
+    justify-content: flex-start;
+}
+
+.card.ct-two-line .colony-table .ct-recipe.ct-recipe-free .res-stack {
+    flex: 1 1 auto;
+}
+
+/* ---- Универсальная: «+ Добавить», меню P1–P4, крестик ---- */
+.card.ct-two-line .colony-table tbody td.ct-mix .ct-mix-head {
+    flex: 1 1 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--gap);
+    min-width: 0;
+    min-height: 0;
+    height: 1.7rem;
+}
+
+.card.ct-two-line .colony-table .ct-mix-type {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+/* Тип ещё не выбран — «Планету» и её список не показываем
+   (место остаётся, чтобы высота строки не прыгала) */
+.card.ct-two-line .colony-table tbody tr.ct-mix-empty td.ct-planet > * {
+    visibility: hidden;
+}
+
+.card.ct-two-line .colony-table .ct-mix-add {
+    padding: 0 0.8rem;
+    height: 1.55rem;
+    font-size: 0.7rem;
+    line-height: 1;
+}
+
+.card.ct-two-line .colony-table .ct-mix-add[hidden] {
+    display: none;
+}
+
+.card.ct-two-line .colony-table .ct-mix-menu {
+    grid-template-columns: repeat(4, auto);
+    gap: 0.35rem;
+    width: auto;
+}
+
+.card.ct-two-line .colony-table .ct-mix-menu button {
+    display: flex;
+    align-items: center;
+    height: auto;
+    padding: 0;
+    background: none;
+    border: none;
+}
+
+.card.ct-two-line .colony-table .ct-mix-menu button:hover .ct-tier,
+.card.ct-two-line .colony-table .ct-mix-menu button:focus-visible .ct-tier {
+    filter: brightness(1.35);
+    box-shadow: 0 0 8px currentColor;
+}
+
+.card.ct-two-line .colony-table .ct-mix-clear {
+    position: static;
+    flex: 0 0 auto;
+    width: 1.3rem;
+    height: 1.3rem;
+    font-size: 0.9rem;
+}
+
+/* Значок уровня ресурса (P0–P4) перед иконкой в составе
+   «Тест универсальной» — вместо «(P1)» после названия */
+.colony-table .ct-tier {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.45rem;
+    height: 1.05rem;
+    padding: 0 0.2rem;
+    font-size: 0.6rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+    border: 1px solid rgba(255, 157, 46, 0.55);
+    border-radius: 3px;
+    background: rgba(255, 157, 46, 0.08);
+}
+
+.colony-table .ct-tier-p0 {
+    color: var(--text-dim);
+    border-color: var(--border);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.colony-table .ct-tier-p4 {
+    color: #c9a7ff;
+    border-color: rgba(201, 167, 255, 0.55);
+    background: rgba(201, 167, 255, 0.08);
+}
+
+.colony-table .ct-tier-p2,
+.colony-table .ct-tier-p3 {
+    color: var(--cyan);
+    border-color: color-mix(in srgb, var(--cyan) 55%, transparent);
+    background: color-mix(in srgb, var(--cyan) 8%, transparent);
+}
+
+
+/* Узкая карточка: картинки скрыты (см. «Тесная карточка» выше) —
+   вместе с ними убираем и пустые ячейки картинок, чтобы зазор между
+   значком и текстом был один и тот же сверху и снизу */
+@container card (max-width: 700px) {
+    .card.ct-two-line .colony-table tbody .ct-icon-cell {
+        display: none;
+    }
 }

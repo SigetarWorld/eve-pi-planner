@@ -45,9 +45,10 @@ const EVE_AUTH = {
 const eveConfigured = () => Boolean(EVE_AUTH.clientId);
 
 /* Адрес возврата должен совпасть с тем, что вписан в приложении,
-   вплоть до слеша и регистра. В статичной папке это путь к Index.html:
-   его и надо отдать при регистрации приложения. */
-const eveRedirectUri = () => location.origin + location.pathname;
+   вплоть до слеша и регистра. На сайте это https://sigetar.ru/eveonline/ —
+   «index.html» в конце отбрасываем, чтобы страница, открытая как
+   /eveonline/index.html, возвращалась на тот же адрес. */
+const eveRedirectUri = () => location.origin + location.pathname.replace(/index\.html$/i, '');
 
 /* ---- Хранилище ----
    Токен лежит в localStorage, чтобы переживать перезагрузку страницы.
@@ -133,6 +134,8 @@ async function eveLogin() {
    вешаем на ошибку: по нему видно, отказал ли сервер или не дозвонились. */
 async function eveTokenRequest(params) {
     const body = new URLSearchParams(params);
+    // PKCE: без секрета EVE узнаёт приложение по client_id в теле запроса
+    body.set('client_id', EVE_AUTH.clientId);
     if (EVE_AUTH.clientSecret) body.set('client_secret', EVE_AUTH.clientSecret);
 
     const res = await fetch(EVE_AUTH.tokenUrl, {
@@ -294,7 +297,11 @@ async function eveLogout() {
             const res = await fetch(EVE_AUTH.revokeUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ token: state.refreshToken })
+                body: new URLSearchParams({
+                    token: state.refreshToken,
+                    token_type_hint: 'refresh_token',
+                    client_id: EVE_AUTH.clientId
+                })
             });
             revoked = res.ok;
         } catch (e) {
