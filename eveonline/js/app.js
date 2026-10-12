@@ -2035,8 +2035,11 @@ function simulateColony(layout, schematics, startTime, endTime, opts = {}) {
             // цикл, начатый позже начала расчёта, — сдвигаем фазу назад
             if (phase > t0) phase -= Math.ceil((phase - t0) / ms) * ms;
             // на момент снимка фабрика в работе, если цикл начался меньше цикла назад
-            const state = { running: Boolean(p.last_cycle_start) && t0 - phase < ms };
-            const info = { product: recipe.out, cycles: 0, idle: 0, missing: new Set(), sources: new Set() };
+            const state = { running: Boolean(p.last_cycle_start) && t0 - phase < ms, since: phase };
+            const info = {
+                product: recipe.out, cycles: 0, idle: 0, missing: new Set(), sources: new Set(),
+                cycleMs: ms, wasRunning: state.running, lastStart: p.last_cycle_start || '', state
+            };
             perFactory.set(p.pin_id, info);
             let k = Math.max(1, Math.floor((t0 - phase) / ms) + 1);
             for (let t = phase + k * ms; t <= t1; k += 1, t = phase + k * ms) {
@@ -2058,6 +2061,8 @@ function simulateColony(layout, schematics, startTime, endTime, opts = {}) {
                         return { name, need, sources, ok: have >= need };
                     });
                     state.running = plan.every((x) => x.ok);
+                    state.since = t;
+                    state.lack = plan.filter((x) => !x.ok).map((x) => x.name);
                     if (!state.running) {
                         stats.factoryIdle += 1;
                         info.idle += 1;
@@ -2100,6 +2105,56 @@ function simulateColony(layout, schematics, startTime, endTime, opts = {}) {
 
 const evtData = new Map();              // planet_id -> данные колонии для перерисовки
 
+/* Потоки колонии по складам: какие фабрики берут товар с этого склада
+   (сколько за цикл) и какие кладут на него. Отсюда:
+     • кратность партии — расхождение среза с расчётом, кратное партии
+       (40/80 P1, 10 P2…), почти наверняка сдвиг цикла: партия уже
+       забрана фабрикой или ещё в работе. Руками обычно берут больше
+       или некруглое количество;
+     • расход в час и на сколько хватит запаса. */
+function colonyFlows(layout, schematics) {
+    const pins = layout.pins || [];
+    const routes = layout.routes || [];
+    const flows = new Map();            // `${pin}|${товар}` -> { units:Set, users, makers, perHourOut, perHourIn, outputs:[{name, pin}] }
+    const key = (pin, name) => `${pin}|${name}`;
+    const get = (pin, name) => {
+        const k = key(pin, name);
+        if (!flows.has(k)) flows.set(k, { units: new Set(), users: 0, makers: 0, perHourOut: 0, perHourIn: 0, outputs: [] });
+        return flows.get(k);
+    };
+    pins.forEach((p) => {
+        const sid = (p.factory_details && p.factory_details.schematic_id) || p.schematic_id;
+        const recipe = sid && PI_RECIPE_OF.get(schematics[sid]);
+        if (!recipe) return;
+        const perHour = 3600 / recipe.cycle;
+        const outR = routes.find((r) => r.source_pin_id === p.pin_id && esiTypeName(r.content_type_id) === recipe.out);
+        recipe.in.forEach(([name, need]) => {
+            routes.filter((r) => r.destination_pin_id === p.pin_id && esiTypeName(r.content_type_id) === name)
+                .forEach((r) => {
+                    const f = get(r.source_pin_id, name);
+                    f.units.add(need);
+                    f.users += 1;
+                    f.perHourOut += need * perHour;
+                    if (outR) f.outputs.push({ name: recipe.out, pin: outR.destination_pin_id });
+                });
+        });
+        if (outR) {
+            const f = get(outR.destination_pin_id, recipe.out);
+            f.units.add(recipe.outQty);
+            f.makers += 1;
+            f.perHourIn += recipe.outQty * perHour;
+        }
+    });
+    return { get: (pin, name) => flows.get(key(pin, name)) || null };
+}
+
+// Расхождение кратно партии фабрик этого склада и не больше пары циклов
+function isBatchShift(flow, d) {
+    if (!flow) return false;
+    const n = Math.abs(d);
+    return Array.from(flow.units).some((u) => u > 0 && n % u === 0 && n / u <= Math.max(1, flow.users + flow.makers) * 2);
+}
+
 function eveTestColonyHtml(detail) {
     const { col, layout, planet, system, schematics } = detail;
     evtData.set(String(col.planet_id), detail);
@@ -2137,6 +2192,8 @@ function eveTestColonyHtml(detail) {
         esiLog = back.log;
     }
 
+    const flows = colonyFlows(layout, schematics);
+
     const ext = extractors.map((p) => {
         const d = p.extractor_details;
         return `<li>${resChip(esiTypeName(d.product_type_id))}
@@ -2148,17 +2205,24 @@ function eveTestColonyHtml(detail) {
     // простои и чего не хватало — чтобы было видно, почему склад не убывает
     const byProduct = new Map();
     sim.perFactory.forEach((f) => {
-        const g = byProduct.get(f.product) || { n: 0, cycles: 0, idle: 0, missing: new Set(), sources: new Set() };
+        const g = byProduct.get(f.product) || { n: 0, cycles: 0, idle: 0, missing: new Set(), sources: new Set(), was: 0, busy: 0, ends: [], lack: new Set() };
         g.n += 1;
         g.cycles += f.cycles;
         g.idle += f.idle;
+        if (f.wasRunning) g.was += 1;
+        if (f.state.running) {
+            g.busy += 1;
+            g.ends.push(f.state.since + f.cycleMs);
+        } else (f.state.lack || []).forEach((x) => g.lack.add(x));
         f.missing.forEach((x) => g.missing.add(x));
         f.sources.forEach((x) => g.sources.add(x));
         byProduct.set(f.product, g);
     });
     const fac = Array.from(byProduct.entries()).sort((a, b) => piTierOf(a[0]) - piTierOf(b[0]) || a[0].localeCompare(b[0]))
         .map(([name, g]) => `<li>${resChip(name)} × ${g.n}
-            <span class="evt-dim">· циклов ${g.cycles}${g.idle ? ` · <span class="evt-bad">простоев ${g.idle}</span>` : ''}
+            <span class="evt-dim">· при открытии работали ${g.was} из ${g.n}
+            · сейчас ${g.busy ? `<span class="evt-ok">в работе ${g.busy}</span> до ${fmtDate(new Date(Math.min(...g.ends)).toISOString()).slice(-5)}` : ''}${g.busy && g.busy < g.n ? ', ' : ''}${g.busy < g.n ? `<span class="evt-bad">стоят ${g.n - g.busy}</span>${g.lack.size ? ` (нет: ${escapeHtml(Array.from(g.lack).join(', '))})` : ''}` : ''}
+            · циклов в расчёте ${g.cycles}${g.idle ? ` · <span class="evt-bad">простоев ${g.idle}</span>` : ''}
             ${g.missing.size ? ` · не хватало: ${escapeHtml(Array.from(g.missing).join(', '))}` : ''}
             ${g.sources.size ? ` · входы из: ${Array.from(g.sources).map(pinLabel).join(', ')}` : ' · <span class="evt-bad">нет маршрутов на вход</span>'}</span></li>`).join('');
 
@@ -2179,7 +2243,21 @@ function eveTestColonyHtml(detail) {
                 const delta = n - (was.get(name) || 0);
                 const sign = delta > 0 ? `<span class="evt-ok">+${fmtN(delta)}</span>`
                     : (delta < 0 ? `<span class="evt-bad">${fmtN(delta)}</span>` : '');
-                return `<li>${resChip(name)} ${fmtN(n)} ${sign}</li>`;
+                // На сколько хватит: чистый расход в час этого склада
+                const f = flows.get(p.pin_id, name);
+                let fc = '';
+                if (f) {
+                    const net = f.perHourIn - f.perHourOut;
+                    if (net < 0 && n > 0) {
+                        const hrs = n / -net;
+                        const until = fmtDate(new Date(now + hrs * 3600000).toISOString());
+                        const outs = uniqValues(f.outputs.map((o) => `${escapeHtml(o.name)} → ${pinLabel(o.pin)}`));
+                        fc = `<span class="evt-dim"> · −${fmtN(-net)}/ч, хватит на ${hrs >= 48 ? `${Math.round(hrs / 24)} сут` : `${Math.floor(hrs)} ч`} (до ${until})${outs.length ? `; уходит в ${outs.join(', ')}` : ''}</span>`;
+                    } else if (net > 0) {
+                        fc = `<span class="evt-dim"> · +${fmtN(net)}/ч</span>`;
+                    }
+                }
+                return `<li>${resChip(name)} ${fmtN(n)} ${sign}${fc}</li>`;
             }).join('');
         return `<li><b>${pinLabel(p.pin_id)}</b>
             <button type="button" class="evt-slice-btn" data-planet="${col.planet_id}" data-pin="${p.pin_id}">Вставить срез из игры</button>
@@ -2196,10 +2274,14 @@ function eveTestColonyHtml(detail) {
 
     // Журнал: сверки срезов с расчётом, новые сверху
     const logHtml = esiLog.concat(sim.log).sort((a, b) => new Date(b.t) - new Date(a.t)).map((e) => {
-        const what = e.diffs.length
-            ? e.diffs.map(({ name, d }) => (d > 0
+        const shifts = e.diffs.filter(({ name, d }) => isBatchShift(flows.get(e.pin, name), d));
+        const manual = e.diffs.filter((x) => !shifts.includes(x));
+        const what = (manual.length || shifts.length)
+            ? manual.map(({ name, d }) => (d > 0
                 ? `<li>${resChip(name)} <span class="evt-ok">+${fmtN(d)}</span> — сверх расчёта: <b>завезено вручную</b></li>`
-                : `<li>${resChip(name)} <span class="evt-bad">${fmtN(d)}</span> — меньше расчёта: <b>забрано вручную</b> (или ушло не по маршруту)</li>`)).join('')
+                : `<li>${resChip(name)} <span class="evt-bad">${fmtN(d)}</span> — меньше расчёта: <b>забрано вручную</b></li>`)).join('')
+              + shifts.map(({ name, d }) => `<li>${resChip(name)} <span class="evt-dim">${d > 0 ? '+' : ''}${fmtN(d)}</span>
+                    — кратно партии фабрик: <b>сдвиг цикла</b> (${d < 0 ? 'партия уже в работе' : 'партия ещё не забрана или уже выдана'})</li>`).join('')
             : '<li class="evt-ok">совпало с расчётом</li>';
         return `<li><b>${fmtDate(e.t)}</b> · ${pinLabel(e.pin)} <span class="evt-dim">(${e.source === 'esi' ? 'открытие в игре' : 'срез из игры'})</span>
             <ul class="evt-sub">${what}</ul></li>`;
