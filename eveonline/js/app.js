@@ -2306,6 +2306,13 @@ async function initEveAuth() {
         eveLogoutBtn.disabled = false;
     });
 
+    // Перешли сюда кнопкой входа с другого адреса — продолжаем вход
+    if (location.hash === '#eve-login' && eveOnRedirectPage() && !eveState()) {
+        history.replaceState(null, '', location.pathname + location.search);
+        eveLoginBtn.click();
+        return;
+    }
+
     // Возврат из EVE
     try {
         const signedIn = await eveHandleCallback();

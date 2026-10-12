@@ -35,6 +35,11 @@ const EVE_AUTH = {
     clientId: 'f1a8cb49044c49a19c669946494214a4',
     /* Нужен только конфиденциальному приложению. */
     clientSecret: '',
+    /* Адрес возврата — ровно тот, что вписан в приложении на
+       developers.eveonline.com. Один на всё: открыта ли страница с диска,
+       с зеркала Netlify, по http или как /eveonline/index.html — EVE
+       вернёт только сюда. */
+    redirectUri: 'https://sigetar.ru/eveonline/',
     authorizeUrl: 'https://login.eveonline.com/v2/oauth/authorize',
     tokenUrl: 'https://login.eveonline.com/v2/oauth/token',
     revokeUrl: 'https://login.eveonline.com/oauth/revoke',
@@ -47,10 +52,14 @@ const EVE_AUTH = {
 const eveConfigured = () => Boolean(EVE_AUTH.clientId);
 
 /* Адрес возврата должен совпасть с тем, что вписан в приложении,
-   вплоть до слеша и регистра. На сайте это https://sigetar.ru/eveonline/ —
-   «index.html» в конце отбрасываем, чтобы страница, открытая как
-   /eveonline/index.html, возвращалась на тот же адрес. */
-const eveRedirectUri = () => location.origin + location.pathname.replace(/index\.html$/i, '');
+   вплоть до слеша и регистра, поэтому он задан постоянным. */
+const eveRedirectUri = () => EVE_AUTH.redirectUri;
+
+/* Открыта ли страница по адресу возврата. Вход начинать можно только
+   отсюда: код проверки PKCE живёт в sessionStorage этой вкладки и этого
+   адреса, а EVE вернёт именно на адрес возврата. */
+const eveOnRedirectPage = () =>
+    location.origin + location.pathname.replace(/index\.html$/i, '') === EVE_AUTH.redirectUri;
 
 /* ---- Хранилище ----
    Токен лежит в localStorage, чтобы переживать перезагрузку страницы.
@@ -122,6 +131,13 @@ function eveAuthorizeUrl(state, challenge) {
 /* Перенаправляет на страницу входа EVE. state защищает от подделки
    адреса возврата, code_verifier — сам код подтверждения. */
 async function eveLogin() {
+    // Не на sigetar.ru/eveonline/ (диск, зеркало, http…) — сперва туда;
+    // метка #eve-login в адресе сама начнёт вход после перехода
+    if (!eveOnRedirectPage()) {
+        location.assign(EVE_AUTH.redirectUri + '#eve-login');
+        return;
+    }
+
     const state = b64url(eveBytes(16));
     const verifier = b64url(eveBytes(48));
 
