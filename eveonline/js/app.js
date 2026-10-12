@@ -2013,7 +2013,16 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 03:40';
+const APP_BUILD = '13.10.2026 04:10';
+// Версия — и под кнопкой «← Sigetar.ru» в шапке
+(function showHeaderVersion() {
+    const el = document.getElementById('app-version');
+    if (!el) return;
+    const m = (document.querySelector('script[src*="js/app.js"]') || {}).getAttribute
+        ? (document.querySelector('script[src*="js/app.js"]').getAttribute('src') || '').match(/[?&]v=(\d+)/) : null;
+    el.textContent = `v${m ? m[1] : '?'} · ${APP_BUILD}`;
+    el.title = 'Версия сайта: если после обновления она не сменилась — Ctrl+F5';
+}());
 function appVersionText() {
     const v = (sel, attr) => {
         const el = document.querySelector(sel);
@@ -3081,7 +3090,7 @@ function readCard(card) {
         name: card.dataset.name,
         level: card.dataset.level || 'P1',
         view: card.dataset.view === '1' || undefined,
-        hideTiers: card.dataset.hideTiers ? card.dataset.hideTiers.split(',') : undefined,
+        showTiers: card.dataset.showTiers ? card.dataset.showTiers.split(',') : undefined,
         region: readValue(card, 'region'),
         // универсальная: система карточки — первая из строк (для карты и старых версий)
         system: isMixLevel(card.dataset.level)
@@ -3249,22 +3258,28 @@ function restoreCard(card, saved) {
    Возвращает false, если имя пустое или предел CARDS_LIMIT в линии взят. */
 /* ---- Карточка в режиме просмотра ----
    Универсальная карточка — форма: в ней выбирают планеты и товары.
-   Кнопка «Сохранить» прячет форму и показывает карточку для чтения:
-   по каждой колонии — система и планета, ниже дерево товара:
-     P4 → входы его рецепта (P3) → их входы (P2) → P1 – P0,
-   у каждого товара — сколько его сейчас на складах колонии (расчёт от
-   последнего открытия колонии в игре, как в окне «Тест»).
-   Ветки раскрываются и сворачиваются стрелкой ▸. Кнопки P0…P4 в шапке
-   сворачивают дерево целыми уровнями: выключенный уровень прячется
-   вместе со всем, что под ним (главный товар колонии виден всегда;
-   P0 — сырьё в строке «P1 – P0»). Круглая кнопка ✎ возвращает форму. */
-const VIEW_TIERS = ['P0', 'P1', 'P2', 'P3', 'P4'];
+   «Сохранить» прячет форму и показывает карточку для чтения: по каждой
+   колонии — система и планета, ниже дерево товара:
+     P4 → входы рецепта (P3) → их входы (P2) → P1 → P0.
+   У каждого товара — сколько его сейчас на складах колонии (расчёт от
+   последнего открытия колонии в игре, как в окне «Тест») и иконки
+   складов, где он лежит. Товар, которого нет, — в дереве с нулём.
+   Видимость:
+     сразу после сборки видны только главные товары колоний (TOP);
+     кнопки P1…P4 в шапке показывают все товары своего уровня во всех
+       колониях (уровни выше могут быть скрыты — тогда ветка встаёт
+       ближе к главному товару);
+     стрелка ▸ раскрывает ветки одного товара (так же видно и P0 под P1);
+     кнопка TOP возвращает «только главные товары».
+   Круглая кнопка ✎ открывает форму в окне редактирования. */
+const VIEW_TIERS = ['P1', 'P2', 'P3', 'P4'];
 const VIEW_STOCK_TTL = 10 * 60 * 1000;
 const viewStockCache = new Map();        // characterId -> { at, promise }
 
-/* Склады колоний персонажа на «сейчас»: Map(«DFTK-D II» -> { stock, from }).
+/* Склады колоний персонажа на «сейчас»: Map(«DFTK-D II» -> { stock, where, from }).
    stock — Map(товар -> штук) по складам, launchpad и командному центру
-   (буферы фабрик не считаем). Персонаж не подключён — null. */
+   (буферы фабрик не считаем); where — Map(товар -> Map(type_id склада -> штук)).
+   Персонаж не подключён — null. */
 function viewStockOf(name) {
     const char = (typeof eveChars === 'function' && eveConfigured() ? eveChars() : [])
         .find((c) => (c.characterName || '').toLowerCase() === String(name || '').toLowerCase());
@@ -3284,13 +3299,22 @@ function viewStockOf(name) {
                 byPin = new Map(Object.entries(pinsContentsOf(layout))
                     .map(([id, items]) => [Number(id), new Map(Object.entries(items))]));
             }
-            const factories = new Set((layout.pins || []).filter(pinIsFactory).map((p) => p.pin_id));
+            const pins = layout.pins || [];
+            const factories = new Set(pins.filter(pinIsFactory).map((p) => p.pin_id));
+            const typeOfPin = new Map(pins.map((p) => [p.pin_id, p.type_id]));
             const stock = new Map();
+            const where = new Map();
             byPin.forEach((items, pinId) => {
                 if (factories.has(pinId)) return;
-                items.forEach((n, item) => stock.set(item, (stock.get(item) || 0) + n));
+                items.forEach((n, item) => {
+                    if (!(n > 0)) return;
+                    stock.set(item, (stock.get(item) || 0) + n);
+                    if (!where.has(item)) where.set(item, new Map());
+                    const t = typeOfPin.get(pinId);
+                    where.get(item).set(t, (where.get(item).get(t) || 0) + n);
+                });
             });
-            out.set(planet.name || String(col.planet_id), { stock, from: col.last_update });
+            out.set(planet.name || String(col.planet_id), { stock, where, from: col.last_update });
         });
         return out;
     }).catch(() => {
@@ -3310,32 +3334,66 @@ function viewResHtml(name) {
         + `<span class="uv-name" lang="en" title="${escapeHtml(name)} (${tier})">${escapeHtml(name)}</span>`;
 }
 
-// Узел дерева: строка товара и (для P2–P4) ветки входов рецепта
-function viewNodeHtml(name, depth, p0Hint) {
+// Узел дерева: строка товара и ветки — входы рецепта (у P1 — его P0)
+function viewNodeHtml(name, p0Hint) {
     const tier = piTierOf(name);
     const recipe = PI_RECIPE_OF.get(name);
-    let line = viewResHtml(name);
     let kids = [];
     if (tier === 1) {
         const p0 = p0Hint || (recipe && recipe.in[0] ? recipe.in[0][0] : '');
-        if (p0) line += `<span class="uv-p0"><span class="uv-sep">–</span>${viewResHtml(p0)}</span>`;
+        if (p0) kids = [p0];
     } else if (tier >= 2 && recipe) {
         kids = recipe.in.map(([n]) => n);
     }
-    const open = depth === 0;
     const toggle = kids.length
-        ? `<button type="button" class="uv-toggle" data-role="uv-toggle" aria-expanded="${open}" title="Показать, из чего делается">▸</button>`
+        ? '<button type="button" class="uv-toggle" data-role="uv-toggle" aria-expanded="false" title="Из чего делается">▸</button>'
         : '<span class="uv-toggle-gap"></span>';
     return `
         <div class="uv-node" data-tier="P${tier}">
-            <div class="uv-line">${toggle}${line}<span class="uv-sep">–</span>${viewQtyHtml(name)}</div>
-            ${kids.length ? `<div class="uv-kids"${open ? '' : ' hidden'}>${kids.map((k) => viewNodeHtml(k, depth + 1)).join('')}</div>` : ''}
+            <div class="uv-line">${toggle}${viewResHtml(name)}<span class="uv-sep">–</span>${viewQtyHtml(name)}</div>
+            ${kids.length ? `<div class="uv-kids">${kids.map((k) => viewNodeHtml(k)).join('')}</div>` : ''}
         </div>`;
+}
+
+function viewShownOf(card) {
+    return new Set((card.dataset.showTiers || '').split(',').filter((t) => VIEW_TIERS.includes(t)));
+}
+
+/* Что видно в дереве: главный товар — всегда; товар уровня, включённого
+   кнопкой, — везде; остальное — если раскрыт его родитель (▸). Отступ —
+   по числу видимых строк над товаром. */
+function applyViewVisibility(card) {
+    const view = card.querySelector(':scope > .uv');
+    if (!view) return;
+    const shown = viewShownOf(card);
+    let opened = false;
+    const walk = (node, visible, depth) => {
+        const line = node.querySelector(':scope > .uv-line');
+        line.hidden = !visible;
+        line.style.paddingLeft = `${depth * 1.1}rem`;
+        const kidsWrap = node.querySelector(':scope > .uv-kids');
+        if (!kidsWrap) return;
+        const open = node.dataset.open === '1';
+        if (open) opened = true;
+        let allKids = true;
+        Array.from(kidsWrap.children).forEach((kid) => {
+            const kv = shown.has(kid.dataset.tier) || (visible && open);
+            if (!kv) allKids = false;
+            walk(kid, kv, depth + (visible ? 1 : 0));
+        });
+        const toggle = line.querySelector('[data-role="uv-toggle"]');
+        if (toggle) toggle.setAttribute('aria-expanded', String(open || allKids));
+    };
+    view.querySelectorAll('.uv-colony > .uv-node').forEach((top) => walk(top, true, 0));
+    view.querySelectorAll('[data-role="uv-tier"]').forEach((b) => {
+        b.setAttribute('aria-pressed', String(shown.has(b.dataset.tier)));
+    });
+    const top = view.querySelector('[data-role="uv-top"]');
+    if (top) top.setAttribute('aria-pressed', String(!shown.size && !opened));
 }
 
 function cardViewHtml(card) {
     const name = card.dataset.name || '';
-    const hidden = (card.dataset.hideTiers || '').split(',').filter(Boolean);
     const colonies = Array.from(card.querySelectorAll('tbody tr')).map((row) => ({
         system: systemOfRow(row),
         prod: mixProdOf(row),
@@ -3350,16 +3408,17 @@ function cardViewHtml(card) {
             <div class="uv-colony" data-planet="${escapeHtml(key)}">
                 <div class="uv-where">${c.planet ? `<span class="uv-icon uv-planet-icon"><img src="img/planets/${escapeHtml(c.planet.toLowerCase())}.png" alt="" width="24" height="24" loading="lazy" onerror="this.remove()"></span>` : ''}<span class="uv-sys">${escapeHtml([system || 'Система не выбрана', c.planet ? c.number : ''].filter(Boolean).join(' '))}</span>
                     ${escapeHtml(c.planet ? `· ${c.planet}` : '· планета не выбрана')}</div>
-                ${viewNodeHtml(c.prod, 0, c.p0)}
+                ${viewNodeHtml(c.prod, c.p0)}
             </div>`;
-    }).join('') || '<p class="uv-empty">Колоний нет — нажмите «Редактировать» и добавьте их</p>';
+    }).join('') || '<p class="uv-empty">Колоний нет — нажмите ✎ и добавьте их</p>';
     const safe = escapeHtml(name);
     return `
-        <div class="uv${hidden.map((t) => ` hide-${t.toLowerCase()}`).join('')}">
+        <div class="uv">
             <div class="uv-head">
                 <h3 class="ct-pilot-name" title="${safe}">${safe}</h3>
                 <span class="uv-tiers" role="group" aria-label="Показывать уровни">
-                    ${VIEW_TIERS.map((t) => `<button type="button" class="ct-tier ct-tier-${t.toLowerCase()} uv-tier" data-role="uv-tier" data-tier="${t}" aria-pressed="${!hidden.includes(t)}" title="Показать или свернуть ${t}">${t}</button>`).join('')}
+                    <button type="button" class="uv-top" data-role="uv-top" aria-pressed="true" title="Только главные товары колоний">TOP</button>
+                    ${VIEW_TIERS.map((t) => `<button type="button" class="ct-tier ct-tier-${t.toLowerCase()} uv-tier" data-role="uv-tier" data-tier="${t}" aria-pressed="false" title="Показать все ${t}">${t}</button>`).join('')}
                 </span>
                 <button type="button" class="card-light" aria-pressed="${card.classList.contains('is-lit')}" title="Подсветить карточку" aria-label="Подсветить карточку">💡</button>
                 <button type="button" class="uv-edit" data-role="card-edit" title="Редактировать карточку" aria-label="Редактировать карточку">✎</button>
@@ -3370,19 +3429,27 @@ function cardViewHtml(card) {
         </div>`;
 }
 
+const storeIconHtml = (typeId, title) => `<img class="uv-store" src="https://images.evetech.net/types/${Number(typeId)}/icon?size=32" alt="" width="16" height="16" loading="lazy" title="${escapeHtml(title)}" onerror="this.remove()">`;
+
 function renderCardView(card) {
     let view = card.querySelector(':scope > .uv');
     const html = cardViewHtml(card);
     if (view) view.outerHTML = html;
     else card.insertAdjacentHTML('beforeend', html);
     view = card.querySelector(':scope > .uv');
+    applyViewVisibility(card);
     viewStockOf(card.dataset.name).then((stocks) => {
         if (!view.isConnected) return;
         view.querySelectorAll('.uv-colony').forEach((col) => {
             const data = stocks && stocks.get(col.dataset.planet);
             col.querySelectorAll('[data-qty]').forEach((el) => {
-                const n = data ? Math.floor(data.stock.get(el.dataset.qty) || 0) : null;
-                el.textContent = n === null ? '—' : n.toLocaleString('ru-RU');
+                const item = el.dataset.qty;
+                const n = data ? Math.floor(data.stock.get(item) || 0) : null;
+                const stores = data && data.where.get(item);
+                const icons = stores
+                    ? Array.from(stores.entries()).map(([t, q]) => storeIconHtml(t, `${esiTypeName(t)}: ${Math.floor(q).toLocaleString('ru-RU')}`)).join('')
+                    : '';
+                el.innerHTML = icons + (n === null ? '—' : n.toLocaleString('ru-RU'));
                 el.classList.toggle('is-zero', n === 0);
                 el.title = data
                     ? `На складах колонии сейчас (расчёт от открытия в игре ${fmtDate(data.from)})`
@@ -3420,22 +3487,30 @@ function handleViewClick(event) {
     }
     const tierBtn = event.target.closest('[data-role="uv-tier"]');
     if (tierBtn) {
+        const shown = viewShownOf(card);
         const tier = tierBtn.dataset.tier;
-        const hidden = new Set((card.dataset.hideTiers || '').split(',').filter(Boolean));
-        if (hidden.has(tier)) hidden.delete(tier);
-        else hidden.add(tier);
-        card.dataset.hideTiers = Array.from(hidden).join(',');
-        tierBtn.setAttribute('aria-pressed', String(!hidden.has(tier)));
-        card.querySelector('.uv').classList.toggle(`hide-${tier.toLowerCase()}`, hidden.has(tier));
+        if (shown.has(tier)) shown.delete(tier);
+        else shown.add(tier);
+        card.dataset.showTiers = Array.from(shown).join(',');
+        applyViewVisibility(card);
+        saveAccounts();
+        return true;
+    }
+    if (event.target.closest('[data-role="uv-top"]')) {
+        card.dataset.showTiers = '';
+        card.querySelectorAll('.uv-node[data-open]').forEach((n) => { delete n.dataset.open; });
+        applyViewVisibility(card);
         saveAccounts();
         return true;
     }
     const toggle = event.target.closest('[data-role="uv-toggle"]');
     if (toggle) {
-        const kids = toggle.closest('.uv-node').querySelector(':scope > .uv-kids');
-        const open = toggle.getAttribute('aria-expanded') !== 'true';
-        toggle.setAttribute('aria-expanded', String(open));
-        if (kids) kids.hidden = !open;
+        const node = toggle.closest('.uv-node');
+        if (toggle.getAttribute('aria-expanded') === 'true') delete node.dataset.open;
+        else node.dataset.open = '1';
+        // закрываем — закрываем и ветки под ним
+        if (!node.dataset.open) node.querySelectorAll('.uv-node[data-open]').forEach((n) => { delete n.dataset.open; });
+        applyViewVisibility(card);
         return true;
     }
     return false;
@@ -3666,7 +3741,7 @@ function addCard(line, name, saved, level) {
 
     // Сохранённая в режиме просмотра — так и показываем
     if (isMixLevel(card.dataset.level) && saved) {
-        card.dataset.hideTiers = Array.isArray(saved.hideTiers) ? saved.hideTiers.join(',') : '';
+        card.dataset.showTiers = Array.isArray(saved.showTiers) ? saved.showTiers.join(',') : '';
         if (saved.view) setCardView(card, true);
     }
 
