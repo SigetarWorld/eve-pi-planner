@@ -1372,6 +1372,21 @@ form button:focus-visible,
     min-width: 0;
 }
 
+/* Итог подбора карточки по колониям персонажа — справа в строке */
+.line-status {
+    margin-left: auto;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+}
+
+.line-status:empty {
+    display: none;
+}
+
+.line-status:not(:empty) + .card-counter {
+    margin-left: 0.8rem;
+}
+
 .account-head .card-counter {
     margin-left: 0.6rem;
 }

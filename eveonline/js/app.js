@@ -1450,6 +1450,7 @@ function buildAccountLine(name) {
                      карточкой, в списке не показывается (refreshPilotSelects) -->
                 <select id="${pilotId}" class="ct-input card-new pilot-select" data-role="pilot"></select>
                 <button type="button" class="btn card-add" data-role="pilot-add">Добавить</button>
+                <span class="line-status" data-role="line-status" aria-live="polite"></span>
                 <span class="card-counter" data-role="line-counter" aria-live="polite">0 из ${CARDS_LIMIT}</span>
             </div>
 
@@ -1662,6 +1663,87 @@ function refreshPilotSelects() {
         const add = line && line.querySelector('[data-role="pilot-add"]');
         if (add) add.disabled = full || !free.length;
     });
+}
+
+/* ---- Подбор карточки по колониям персонажа ----
+   Через ESI (право esi-planets.manage_planets.v1) читаем колонии
+   персонажа и схему каждой: фабрики с рецептом (schematic) показывают,
+   что колония производит. Уровень колонии — самый высокий уровень
+   выпускаемого товара; колония только с добычей считается P1.
+     все колонии одного уровня P1…P4 — карточка этого уровня;
+     уровни разные или колоний нет      — универсальная карточка.
+   Если все колонии в одной системе — карточка сразу с этой системой.
+   Ответы ESI кэшируются на сервере (до ~10 минут) и обновляются,
+   когда колонию открывают в игре. */
+const ESI_BASE = 'https://esi.evetech.net/latest';
+const esiSchematicNames = new Map();
+
+async function esiPublicJson(path) {
+    const res = await fetch(`${ESI_BASE}${path}${path.includes('?') ? '&' : '?'}datasource=tranquility`);
+    if (!res.ok) throw new Error(`ESI ${res.status}`);
+    return res.json();
+}
+
+// Название рецепта = название выпускаемого товара («Coolant»)
+async function esiSchematicName(id) {
+    if (!esiSchematicNames.has(id)) {
+        esiSchematicNames.set(id, esiPublicJson(`/universe/schematics/${id}/`)
+            .then((d) => d.schematic_name || '')
+            .catch(() => ''));
+    }
+    return esiSchematicNames.get(id);
+}
+
+const piTierOf = (name) => (PI_COMMODITIES[name] ? PI_COMMODITIES[name][1] : 0);
+
+async function analyzeColonies(characterId) {
+    const path = `/characters/${characterId}/planets/`;
+    const colonies = await eveFetchJson(`${ESI_BASE}${path}?datasource=tranquility`, {}, characterId);
+    const result = await Promise.all(colonies.map(async (col) => {
+        const layout = await eveFetchJson(
+            `${ESI_BASE}${path}${col.planet_id}/?datasource=tranquility`, {}, characterId);
+        const pins = layout.pins || [];
+        const ids = uniqValues(pins
+            .map((pin) => (pin.factory_details && pin.factory_details.schematic_id) || pin.schematic_id)
+            .filter(Boolean));
+        const products = (await Promise.all(ids.map(esiSchematicName))).filter(Boolean);
+        const tier = Math.max(0, ...products.map(piTierOf));
+        return { system: col.solar_system_id, tier: tier || 1, products };
+    }));
+    return result;
+}
+
+async function pickCardForCharacter(char) {
+    if (!char || !char.characterId) {
+        return { level: MIX_LEVEL, saved: null, note: 'Персонаж не подключён к EVE — универсальная карточка' };
+    }
+    try {
+        const colonies = await analyzeColonies(char.characterId);
+        if (!colonies.length) {
+            return { level: MIX_LEVEL, saved: null, note: 'Колоний в EVE нет — универсальная карточка' };
+        }
+        const tiers = uniqValues(colonies.map((c) => c.tier)).sort();
+        const level = tiers.length === 1 ? `P${tiers[0]}` : MIX_LEVEL;
+        let saved = null;
+        const systems = uniqValues(colonies.map((c) => c.system));
+        if (systems.length === 1) {
+            try {
+                const sys = await esiPublicJson(`/universe/systems/${systems[0]}/`);
+                if (sys.name) saved = { level, system: sys.name };
+            } catch (e) {
+                // без системы — не беда, выберут вручную
+            }
+        }
+        const n = colonies.length;
+        const what = tiers.length === 1 ? `все ${tiers[0] === 1 ? 'P1' : `P${tiers[0]}`}` : `уровни ${tiers.map((t) => `P${t}`).join(', ')}`;
+        return {
+            level,
+            saved,
+            note: `Колоний: ${n} (${what}) → карточка ${level === MIX_LEVEL ? 'универсальная' : level}`
+        };
+    } catch (e) {
+        return { level: MIX_LEVEL, saved: null, note: `Не удалось прочитать колонии (${e.message}) — универсальная карточка` };
+    }
 }
 
 /* Выбрать некого — нажатие на список (или «Добавить») открывает
@@ -2243,12 +2325,21 @@ function initLine(line) {
             return;
         }
 
-        // Персонаж есть — спрашиваем, какую карточку создавать
-        showCardLevelChoice((level) => {
-            if (addCard(line, name, null, level)) {
-                refreshPilotSelects();
-                pilot.focus();
-            }
+        /* Персонаж есть — тип карточки подбирается по его колониям в EVE
+           (pickCardForCharacter). Окно выбора типа (showCardLevelChoice)
+           пока скрыто. */
+        const add = line.querySelector('[data-role="pilot-add"]');
+        const status = line.querySelector('[data-role="line-status"]');
+        const char = (typeof eveChars === 'function' ? eveChars() : [])
+            .find((c) => (c.characterName || '').toLowerCase() === name.toLowerCase());
+        add.disabled = true;
+        pilot.disabled = true;
+        status.textContent = 'Смотрю колонии в EVE…';
+        pickCardForCharacter(char).then(({ level, saved, note }) => {
+            status.textContent = note;
+            if (addCard(line, name, saved, level)) refreshPilotSelects();
+            refreshLine(line);
+            pilot.focus();
         });
     };
 
