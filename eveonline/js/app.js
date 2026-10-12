@@ -2013,7 +2013,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 04:10';
+const APP_BUILD = '13.10.2026 04:40';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3429,7 +3429,25 @@ function cardViewHtml(card) {
         </div>`;
 }
 
-const storeIconHtml = (typeId, title) => `<img class="uv-store" src="https://images.evetech.net/types/${Number(typeId)}/icon?size=32" alt="" width="16" height="16" loading="lazy" title="${escapeHtml(title)}" onerror="this.remove()">`;
+/* Значки складов — как постройки на карте планеты в игре: Launchpad —
+   ракета, Storage Facility — куб, Command Center — кольцо с точкой.
+   Квадрат с рамкой, как значок уровня; цвет — свой у вида склада. Вид
+   берём из названия типа («Barren Launchpad», «Lava Storage Facility»). */
+const STORE_SVG = {
+    lp: '<path d="M8 .4 9.8 4.7H6.2Z"/><path fill-rule="evenodd" d="M6.2 5.4h3.6v9.9H6.2ZM7.4 10.6h1.2v4.7H7.4Z"/><path d="M5.4 9.4 2.4 15.3h3ZM10.6 9.4l3 5.9h-3Z"/>',
+    sf: '<path d="M8 1.8 13.6 5v6.2L8 14.4 2.4 11.2V5Z M2.4 5 8 8.2 13.6 5 M8 8.2v6.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>',
+    cc: '<circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2.3"/>'
+};
+function storeKindOf(typeId) {
+    const name = String(esiTypeName(typeId) || '').toLowerCase();
+    if (name.includes('launchpad')) return 'lp';
+    if (name.includes('command')) return 'cc';
+    return 'sf';
+}
+const storeIconHtml = (typeId, title) => {
+    const kind = storeKindOf(typeId);
+    return `<span class="uv-store uv-store-${kind}" title="${escapeHtml(title)}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${STORE_SVG[kind]}</svg></span>`;
+};
 
 function renderCardView(card) {
     let view = card.querySelector(':scope > .uv');
