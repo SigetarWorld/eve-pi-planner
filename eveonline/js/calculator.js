@@ -916,11 +916,12 @@
                 if (!c || typeof c !== 'object' || !c.name) return;
                 const lower = c.name.toLowerCase();
                 if (!pilots.has(lower)) pilots.set(lower, { ai, ci });
-                if (!c.system) return;
                 (c.rows || []).forEach((row, ri) => {
-                    if (!row || !row.planet || !row.number) return;
-                    if (realPlanetType(c.system, row.number) !== row.planet) return;
-                    const key = `${c.system} ${row.number}`;
+                    // у универсальной карточки система своя у каждой строки
+                    const sys = (row && row.system) || c.system;
+                    if (!sys || !row || !row.planet || !row.number) return;
+                    if (realPlanetType(sys, row.number) !== row.planet) return;
+                    const key = `${sys} ${row.number}`;
                     const product = (c.level === 'P2' || c.level === 'T2') ? ((c.p2s || [])[ri] || '')
                         : (c.level === 'P3' || c.level === 'P4' || c.level === 'T3') ? ((c.prods || [])[ri] || '')
                         : (c.level === 'MIX' || c.level === 'TMIX') ? (((c.mix || [])[ri] || {}).prod || '')
@@ -967,13 +968,14 @@
         const info = systemInfo(system);
         const type = realPlanetType(system, num);
         if (!info || !type) return { ok: false, reason: 'нет данных о планете' };
-        if (card.system && card.system !== system) {
+        const mixCard = (card.level === 'MIX' || card.level === 'TMIX');
+        // универсальная: строки в разных системах — можно
+        if (!mixCard && card.system && card.system !== system) {
             return { ok: false, reason: `в карточке ${card.name} выбрана другая система — ${card.system}` };
         }
         const p2Card = card.level === 'P2' || card.level === 'T2';
         // Карточки P3/P4: товар своего уровня; фабрика P4 — только Barren/Temperate
         const prodCard = card.level === 'P3' || card.level === 'P4' || card.level === 'T3';
-        const mixCard = (card.level === 'MIX' || card.level === 'TMIX');
         const tier = product ? tierOf(product) : 0;
         // Универсальная карточка: любой уровень, но планета должна подходить товару
         if (product && mixCard) {
@@ -1015,19 +1017,20 @@
         }
         const rows = Array.isArray(card.rows) ? card.rows : [];
         while (rows.length < 6) rows.push({});
-        const confirmed = (row) => card.system && row && row.planet && row.number
-            && realPlanetType(card.system, row.number) === row.planet;
-        let target = rows.findIndex((row) => confirmed(row) && row.number === num);
+        const rowSys = (row) => (row && row.system) || card.system;
+        const confirmed = (row) => rowSys(row) && row && row.planet && row.number
+            && realPlanetType(rowSys(row), row.number) === row.planet;
+        let target = rows.findIndex((row) => confirmed(row) && row.number === num && rowSys(row) === system);
         if (target < 0) target = rows.findIndex((row) => !confirmed(row));
         if (target < 0) return { ok: false, reason: `у ${card.name} уже заняты все 6 строк карточки` };
 
-        card.region = info.region;
-        card.system = system;
-        rows[target] = Object.assign({}, rows[target], { planet: type, number: num });
+        if (!mixCard || !card.region) card.region = info.region;
+        if (!mixCard || !card.system) card.system = system;
+        rows[target] = Object.assign({}, rows[target], { planet: type, number: num }, mixCard ? { system } : {});
         if (mixCard) {
             card.mix = Array.isArray(card.mix) ? card.mix : [];
             while (card.mix.length < 6) card.mix.push({ level: 'P1', prod: '' });
-            card.mix[target] = { level: tier ? `P${tier}` : ((card.mix[target] || {}).level || 'P1'), prod: product || '' };
+            card.mix[target] = { level: tier ? `P${tier}` : ((card.mix[target] || {}).level || 'P1'), prod: product || '', system };
             // Строка P1: сырьё P0 этого P1 на выбранной планете
             if (tier === 1) {
                 const res = (PLANET_RESOURCES[type] || []).find((r) => r.P1 === product);

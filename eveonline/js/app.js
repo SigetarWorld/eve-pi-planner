@@ -406,6 +406,19 @@ function prepareCardList(event) {
 
     const system = event.target.closest('[data-role="system"]');
     if (system) fillSystems(system);
+
+    const rowSystem = event.target.closest('[data-role="row-system"]');
+    if (rowSystem && !rowSystem.dataset.filled) {
+        const card = rowSystem.closest('.card');
+        const regionSel = card && card.querySelector('[data-role="region"]');
+        const current = rowSystem.value;
+        rowSystem.innerHTML = systemsHtml(regionSel ? regionSel.value : '');
+        if (current && !Array.from(rowSystem.options).some((o) => o.value === current)) {
+            rowSystem.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(current)}">${escapeHtml(current)}</option>`);
+        }
+        rowSystem.value = current;
+        rowSystem.dataset.filled = '1';
+    }
 }
 
 /* ---- Типы планет системы ----
@@ -454,7 +467,10 @@ function fillPlanets(card, systemName) {
     // Универсальная карточка: у каждой строки свой уровень (см. fillMixRow)
     if (isMixLevel(card.dataset.level)) {
         card.querySelectorAll('tbody tr').forEach((row) => {
-            fillMixRow(row, systemName);
+            // смена региона: списки систем строк собираются заново
+            const rs = row.querySelector('[data-role="row-system"]');
+            if (rs) delete rs.dataset.filled;
+            fillMixRow(row, systemOfRow(row));
         });
         return;
     }
@@ -640,6 +656,11 @@ function buildProdColonyRow(index, level) {
 function buildMixColonyRow(index, level) {
     return `
         <tr data-row="${index}">
+            <td class="ct-sys">
+                <span class="ct-mix-label">Система</span>
+                <select class="ct-input" data-role="row-system" aria-label="Система колонии" title="Система не выбрана"><option value="">—</option></select>
+                <span class="ct-sys-link" title="Та же система, что в строке выше" aria-hidden="true">↳</span>
+            </td>
             <td class="ct-p2 ct-mix ct-head">
                 <input type="hidden" data-role="mix-level" value="">
                 <div class="ct-mix-head"></div>
@@ -696,7 +717,7 @@ function buildCard(name, level) {
                                     <span class="ct-system-label">Регион:</span>
                                     <select class="ct-input" data-role="region" aria-label="Регион" title="Регион не выбран">${REGION_PLACEHOLDER}</select>
                                 </span>
-                                <span class="ct-field">
+                                <span class="ct-field"${mix ? ' hidden' : ''}>
                                     <span class="ct-system-label">Система:</span>
                                     <select class="ct-input" data-role="system" aria-label="Система" title="Сначала выберите регион" data-empty-text="Система" disabled><option value="">Регион???</option></select>
                                 </span>
@@ -704,7 +725,7 @@ function buildCard(name, level) {
                                     <span class="ct-system-label">Корабль:</span>
                                     <select class="ct-input" data-role="ship" aria-label="Корабль">${optionsHtml(SHIP_OPTIONS, SHIP_OPTIONS[0])}</select>
                                 </span>
-                                <button type="button" class="card-light" aria-pressed="false" title="Подсветить карточку" aria-label="Подсветить карточку">💡</button>
+                                ${mix ? '' : '<button type="button" class="card-light" aria-pressed="false" title="Подсветить карточку" aria-label="Подсветить карточку">💡</button>'}
                                 ${mix ? '<button type="button" class="card-save" data-role="card-save" title="Сохранить и показать карточку">Сохранить</button>' : ''}
                                 <button type="button" class="account-del" data-role="card-del"
                                         title="Удалить карточку"
@@ -804,6 +825,48 @@ function fillShip(row) {
 function systemOfCard(card) {
     const cell = card ? card.querySelector('[data-role="system"]') : null;
     return cell ? cell.value : '';
+}
+
+/* ---- Система строки (универсальная карточка) ----
+   У каждой строки своя система: колонии персонажа бывают в разных
+   системах. Подстрока («+» в строке) — та же система, что у строки
+   над ней (tr.dataset.link = '1'): списка системы в ней нет, только ↳,
+   а планета и товар свои. */
+function systemOfRow(row) {
+    const card = row ? row.closest('.card') : null;
+    if (!card || !isMixLevel(card.dataset.level)) return systemOfCard(card);
+    let r = row;
+    while (r && r.dataset.link === '1') r = r.previousElementSibling;
+    const sel = r ? r.querySelector('[data-role="row-system"]') : null;
+    return sel ? sel.value : '';
+}
+
+// Ставит систему строки. Полный список систем — при открытии (prepareCardList)
+function setRowSystem(row, name) {
+    const sel = row.querySelector('[data-role="row-system"]');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">—</option>'
+        + (name ? `<option value="${escapeHtml(name)}" selected>${escapeHtml(name)}</option>` : '');
+    delete sel.dataset.filled;
+    sel.value = name || '';
+    syncTitle(sel, 'Система не выбрана');
+}
+
+function setRowLink(row, on) {
+    if (on) row.dataset.link = '1';
+    else delete row.dataset.link;
+    row.classList.toggle('ct-row-link', Boolean(on));
+}
+
+// Эта строка и её подстроки ниже
+function rowGroupOf(row) {
+    const out = [row];
+    let r = row.nextElementSibling;
+    while (r && r.dataset.link === '1') {
+        out.push(r);
+        r = r.nextElementSibling;
+    }
+    return out;
 }
 
 // Товар P2, выбранный в конкретной строке карточки P2
@@ -1005,6 +1068,7 @@ function renderMixHead(row, prod) {
     const tierBadge = tierBadgeHtml;
 
     if (!level) {
+        row.classList.remove('ct-row-p1');
         head.innerHTML = `
             <button type="button" class="ct-mix-add" data-role="mix-add" aria-haspopup="true"
                     aria-expanded="false" title="Добавить строку — выберите тип">+ Добавить</button>
@@ -1019,7 +1083,9 @@ function renderMixHead(row, prod) {
     const options = plain
         ? list.map((v) => `<option value="${escapeHtml(v)}"${v === value ? ' selected' : ''}>${escapeHtml(v)}</option>`).join('')
         : mixOptionsHtml(list, value, level);
-    head.innerHTML = `${plain ? `<span class="ct-mix-type">${tierBadge(level)}</span>` : ''}
+    row.classList.toggle('ct-row-p1', level === 'P1');
+    head.innerHTML = `<button type="button" class="ct-row-plus" data-role="row-plus" title="Ещё колония в этой же системе" aria-label="Ещё колония в этой же системе">+</button>
+        ${plain ? `<span class="ct-mix-type">${tierBadge(level)}</span>` : ''}
         <div class="res-stack">
             <select class="ct-input" data-role="mix-prod" aria-label="Товар ${level}"
                     title="${escapeHtml(value) || 'Товар не выбран'}"><option value=""${value ? '' : ' selected'}>—</option>${options}</select>
@@ -1265,6 +1331,32 @@ function fillMixRow(row, systemName) {
     fillMixRowInner(row, systemName);
     numberizePlanets(row, systemName);
     updateSeps(row);
+}
+
+/* «+» в строке: ниже встаёт подстрока — колония в той же системе
+   (своя планета, тот же уровень и товар — их можно сменить). Свободных
+   строк нет — подсказка на кнопке. */
+function addExtractionRow(row) {
+    const card = row.closest('.card');
+    const rows = Array.from(card.querySelectorAll('tbody tr'));
+    const plus = row.querySelector('[data-role="row-plus"]');
+    const free = rows.find((r) => r !== row && !mixLevelOf(r));
+    if (!free) {
+        if (plus) plus.title = 'Свободных строк нет — все 6 заняты';
+        return;
+    }
+    const group = rowGroupOf(row);
+    group[group.length - 1].after(free);
+    setRowLink(free, true);
+    setRowSystem(free, '');
+    delete free.dataset.colonyPlanet;
+    setMixLevel(free, mixLevelOf(row), mixProdOf(row));
+    const planet = free.querySelector('[data-role="planet"]');
+    if (planet) planet.value = '';
+    fillMixRow(free, systemOfRow(free));
+    saveAccounts();
+    const focus = free.querySelector('[data-role="planet"]:not(:disabled)') || free.querySelector('[data-role="mix-prod"]');
+    if (focus) focus.focus();
 }
 
 /* Состав строки — без столбцов, одной строкой. Пустые клетки прячем,
@@ -1522,15 +1614,20 @@ function applyRowChange(event, row) {
     const mixCard = event.target.closest('.card[data-level="MIX"], .card[data-level="TMIX"]');
     if (mixCard && row) {
         const role = event.target.dataset.role;
+        if (role === 'row-system') {
+            syncTitle(event.target, 'Система не выбрана');
+            rowGroupOf(row).forEach((r) => fillMixRow(r, event.target.value));
+            return;
+        }
         if (role === 'mix-prod') {
             syncTitle(event.target, 'Товар не выбран');
             updateResIcon(row.querySelector('.ct-mix-head'));
-            fillMixRow(row, systemOfCard(mixCard));
+            fillMixRow(row, systemOfRow(row));
             return;
         }
         if (role === 'planet') {
             syncTitle(event.target, 'Тип планеты не выбран');
-            fillMixRow(row, systemOfCard(mixCard));
+            fillMixRow(row, systemOfRow(row));
             return;
         }
         if (role === 'p0') {
@@ -1563,6 +1660,11 @@ function applyRowChange(event, row) {
 // линию аккаунта находим от самой кнопки.
 function handleCardClick(event) {
     if (handleViewClick(event)) return;
+    const rowPlus = event.target.closest('[data-role="row-plus"]');
+    if (rowPlus) {
+        addExtractionRow(rowPlus.closest('tr'));
+        return;
+    }
     // Универсальная карточка: «+ Добавить», выбор типа, очистка строки
     const mixAdd = event.target.closest('[data-role="mix-add"]');
     if (mixAdd) {
@@ -1579,14 +1681,24 @@ function handleCardClick(event) {
     const mixClear = event.target.closest('[data-role="mix-clear"]');
     if (mixType || mixClear) {
         const row = event.target.closest('tr');
-        const card = event.target.closest('.card');
+        if (mixClear) {
+            // Подстроки очищаемой строки получают её систему
+            const next = row.nextElementSibling;
+            if (row.dataset.link !== '1' && next && next.dataset.link === '1') {
+                const sys = systemOfRow(row);
+                setRowLink(next, false);
+                setRowSystem(next, sys);
+            }
+            setRowLink(row, false);
+            setRowSystem(row, '');
+        }
         setMixLevel(row, mixType ? mixType.dataset.mixType : '');
         if (mixClear) {
             // Очищенная строка — свободный слот: планета «—»
             const planet = row.querySelector('[data-role="planet"]');
             if (planet) planet.value = '';
         }
-        fillMixRow(row, systemOfCard(card));
+        fillMixRow(row, systemOfRow(row));
         saveAccounts();
         const focus = row.querySelector(mixType ? '[data-role="mix-prod"]' : '[data-role="mix-add"]');
         if (focus) focus.focus();
@@ -1781,6 +1893,7 @@ const PLANET_TYPE_OF_ESI = {
 /* Сохранённая карточка (как в хранилище) по колониям одной системы:
    строки — планета (тип и номер) и товар строки по уровню карточки. */
 async function cardFromColonies(level, colonies, systemName) {
+    // У колонии может быть своя система (c.systemName); иначе — общая
     // Номер планеты — из её названия в ESI: «Afrah VII» → «VII»
     const named = await Promise.all(colonies.map(async (c) => {
         let number = '';
@@ -1793,14 +1906,16 @@ async function cardFromColonies(level, colonies, systemName) {
         return Object.assign({}, c, { number });
     }));
     const order = (n) => ROMAN_NUMBERS.indexOf(n);
-    named.sort((a, b) => order(a.number) - order(b.number));
+    const sysOf = (c) => c.systemName || systemName || '';
+    const sysOrder = uniqValues(named.map(sysOf));
+    named.sort((a, b) => sysOrder.indexOf(sysOf(a)) - sysOrder.indexOf(sysOf(b)) || order(a.number) - order(b.number));
     // Колония P1 с несколькими парами «P0 → P1» — по строке на пару
     const rowsOf = named.flatMap((c) => (c.tier === 1 && c.pairs && c.pairs.length
         ? c.pairs.map((pr) => Object.assign({}, c, { product: pr.p1, p0: pr.p0 }))
         : [Object.assign({}, c, { p0: '' })]));
     const list = rowsOf.slice(0, COLONY_ROWS);
 
-    const saved = { level, system: systemName };
+    const saved = { level, system: list.length ? sysOf(list[0]) : systemName };
     saved.rows = list.map((c) => ({
         planet: c.planetType,
         number: c.number,
@@ -1809,7 +1924,27 @@ async function cardFromColonies(level, colonies, systemName) {
     }));
     if (isP2Level(level)) saved.p2s = list.map((c) => c.product);
     else if (isProdLevel(level)) saved.prods = list.map((c) => c.product);
-    else if (isMixLevel(level)) saved.mix = list.map((c) => ({ level: `P${c.tier}`, prod: c.product, planet: c.planetType }));
+    else if (isMixLevel(level)) {
+        // первая колония системы — строка со своей системой, остальные — подстроки
+        saved.mix = list.map((c, i) => Object.assign(
+            { level: `P${c.tier}`, prod: c.product, planet: c.planetType },
+            i > 0 && sysOf(list[i - 1]) === sysOf(c) ? { link: true } : { system: sysOf(c) }
+        ));
+        saved.rows.forEach((r, i) => { r.system = sysOf(list[i]); });
+    }
+    // Вопросы по строкам: что система не смогла понять сама
+    saved.issues = [];
+    list.forEach((c, i) => {
+        if (!c.product) {
+            saved.issues.push({
+                row: i,
+                text: c.products.length ? `продукт не распознан (${c.products.join(', ')})`
+                    : (c.p0s.length ? `добыча ${c.p0s.join(', ')} без фабрик — нет P1` : 'на планете нет ни фабрик, ни экстракторов')
+            });
+        }
+        if (!c.number) saved.issues.push({ row: i, text: 'номер планеты не найден' });
+        if (!c.planetType) saved.issues.push({ row: i, text: 'тип планеты не распознан' });
+    });
     return saved;
 }
 
@@ -1823,24 +1958,29 @@ async function pickCardForCharacter(char) {
             return { level: MIX_LEVEL, saved: null, note: 'Колоний в EVE нет — универсальная карточка' };
         }
         const tiers = uniqValues(colonies.map((c) => c.tier)).sort();
-        const level = tiers.length === 1 ? `P${tiers[0]}` : MIX_LEVEL;
+        // Новый вид — универсальная карточка для любых колоний
+        const level = MIX_LEVEL;
+        const issues = [];
 
-        /* У карточки одна система: берём ту, где больше всего колоний,
-           и заполняем строки её колониями */
-        const bySystem = new Map();
-        colonies.forEach((c) => bySystem.set(c.system, (bySystem.get(c.system) || []).concat(c)));
-        const [mainId, mainCols] = Array.from(bySystem.entries()).sort((a, b) => b[1].length - a[1].length)[0];
-        let saved = null;
-        let filled = 0;
-        try {
-            const sys = await esiPublicJson(`/universe/systems/${mainId}/`);
-            if (sys.name) {
-                saved = await cardFromColonies(level, mainCols, sys.name);
-                filled = saved.rows.length;
+        /* Колонии всех систем: у каждой строки своя система */
+        const ids = uniqValues(colonies.map((c) => c.system));
+        const names = new Map();
+        await Promise.all(ids.map(async (id) => {
+            const sys = await esiPublicJson(`/universe/systems/${id}/`).catch(() => ({}));
+            names.set(id, sys.name || '');
+        }));
+        ids.forEach((id) => {
+            const name = names.get(id);
+            if (!name) issues.push({ text: `не удалось узнать систему ${id} — выберите её в строке` });
+            else if (typeof SOLAR_SYSTEMS !== 'undefined' && !SOLAR_SYSTEMS.includes(name)) {
+                issues.push({ text: `системы ${name} нет в справочнике сайта — выберите систему в строке` });
             }
-        } catch (e) {
-            // без системы — строки не заполняем, выберут вручную
-        }
+        });
+        const saved = await cardFromColonies(level,
+            colonies.map((c) => Object.assign({}, c, { systemName: names.get(c.system) || '' })), '');
+        const filled = saved.rows.length;
+        issues.push(...saved.issues);
+        const mainCols = colonies;
 
         const n = colonies.length;
         const what = tiers.length === 1 ? `все P${tiers[0]}` : `уровни ${tiers.map((t) => `P${t}`).join(', ')}`;
@@ -1848,6 +1988,7 @@ async function pickCardForCharacter(char) {
         return {
             level,
             saved,
+            issues,
             note: `Колоний: ${n} (${what}) → карточка ${level === MIX_LEVEL ? 'универсальная' : level}`
                 + (filled ? `, заполнено строк: ${filled}` : '')
                 + (rest > 0 ? `; ещё ${rest} — в других системах` : '')
@@ -1872,7 +2013,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 02:30';
+const APP_BUILD = '13.10.2026 03:40';
 function appVersionText() {
     const v = (sel, attr) => {
         const el = document.querySelector(sel);
@@ -2916,6 +3057,8 @@ if (statsBody) {
    Подсветка карточки (кнопка 💡) намеренно не сохраняется: это
    временное выделение, а не данные. */
 function saveAccounts() {
+    // Карточка в окне редактирования — сохраним, когда окно закроется
+    if (cardEditor) return;
     store.set(ACCOUNTS_KEY, Array.from(accounts.children).map((line) => ({
         name: line.dataset.account,
         cards: Array.from(line.querySelector('[data-role="cards"]').children).map(readCard)
@@ -2940,19 +3083,25 @@ function readCard(card) {
         view: card.dataset.view === '1' || undefined,
         hideTiers: card.dataset.hideTiers ? card.dataset.hideTiers.split(',') : undefined,
         region: readValue(card, 'region'),
-        system: readValue(card, 'system'),
+        // универсальная: система карточки — первая из строк (для карты и старых версий)
+        system: isMixLevel(card.dataset.level)
+            ? (Array.from(card.querySelectorAll('tbody tr')).map(systemOfRow).find(Boolean) || '')
+            : readValue(card, 'system'),
         ship: readValue(card, 'ship'),
         p2s: Array.from(card.querySelectorAll('[data-role="p2"]')).map((cell) => cell.value),
         prods: Array.from(card.querySelectorAll('[data-role="prod"]')).map((cell) => cell.value),
         mix: isMixLevel(card.dataset.level)
             ? Array.from(card.querySelectorAll('tbody tr')).map((row) => {
                 const m = { level: mixLevelOf(row), prod: mixProdOf(row) };
+                if (row.dataset.link === '1') m.link = true;
+                else if (readValue(row, 'row-system')) m.system = readValue(row, 'row-system');
                 const [prod, planet] = (row.dataset.colonyPlanet || '').split('|');
                 if (planet && prod === m.prod) m.planet = planet;
                 return m;
             })
             : undefined,
         rows: Array.from(card.querySelectorAll('tbody tr')).map((row) => ({
+            system: isMixLevel(card.dataset.level) ? (systemOfRow(row) || undefined) : undefined,
             planet: readValue(row, 'planet'),
             number: readValue(row, 'number'),
             p0: readValue(row, 'p0'),
@@ -3031,7 +3180,20 @@ function restoreCard(card, saved) {
     // Универсальная: в каждой строке сначала тип и товар, потом остальное
     if (isMixLevel(saved.level) && Array.isArray(saved.mix)) {
         const mixRows = Array.from(card.querySelectorAll('tbody tr'));
-        const systemName = systemOfCard(card);
+        /* Системы строк. Старые карточки (одна система на всю) — первая
+           заполненная строка с системой карточки, остальные — подстроки. */
+        const perRow = saved.mix.some((m) => m && m.system);
+        let haveMain = false;
+        saved.mix.forEach((m, i) => {
+            const row = mixRows[i];
+            if (!row || !m) return;
+            const filledRow = Boolean(m.level);
+            let link = Boolean(m.link) || (!perRow && filledRow && haveMain);
+            if (link && !haveMain) link = false;
+            setRowLink(row, link);
+            if (!link) setRowSystem(row, m.system || (filledRow && !perRow ? saved.system : '') || '');
+            if (filledRow) haveMain = true;
+        });
         saved.mix.forEach((m, i) => {
             const row = mixRows[i];
             if (!row || !m) return;
@@ -3040,7 +3202,7 @@ function restoreCard(card, saved) {
             if (m.planet && m.prod) row.dataset.colonyPlanet = `${m.prod}|${m.planet}`;
             else delete row.dataset.colonyPlanet;
             setMixLevel(row, m.level, m.prod);
-            fillMixRow(row, systemName);
+            fillMixRow(row, systemOfRow(row));
         });
     }
 
@@ -3173,19 +3335,20 @@ function viewNodeHtml(name, depth, p0Hint) {
 
 function cardViewHtml(card) {
     const name = card.dataset.name || '';
-    const system = systemOfCard(card) || '';
     const hidden = (card.dataset.hideTiers || '').split(',').filter(Boolean);
     const colonies = Array.from(card.querySelectorAll('tbody tr')).map((row) => ({
+        system: systemOfRow(row),
         prod: mixProdOf(row),
         planet: readValue(row, 'planet'),
         number: readValue(row, 'number'),
         p0: readValue(row, 'p0')
     })).filter((c) => c.prod);
     const body = colonies.map((c) => {
+        const system = c.system || '';
         const key = [system, c.number].filter(Boolean).join(' ');
         return `
             <div class="uv-colony" data-planet="${escapeHtml(key)}">
-                <div class="uv-where">${c.planet ? `<span class="uv-icon uv-planet-icon"><img src="img/planets/${escapeHtml(c.planet.toLowerCase())}.png" alt="" width="24" height="24" loading="lazy" onerror="this.remove()"></span>` : ''}<span class="uv-sys">${escapeHtml([system || 'Система не выбрана', c.number].filter(Boolean).join(' '))}</span>
+                <div class="uv-where">${c.planet ? `<span class="uv-icon uv-planet-icon"><img src="img/planets/${escapeHtml(c.planet.toLowerCase())}.png" alt="" width="24" height="24" loading="lazy" onerror="this.remove()"></span>` : ''}<span class="uv-sys">${escapeHtml([system || 'Система не выбрана', c.planet ? c.number : ''].filter(Boolean).join(' '))}</span>
                     ${escapeHtml(c.planet ? `· ${c.planet}` : '· планета не выбрана')}</div>
                 ${viewNodeHtml(c.prod, 0, c.p0)}
             </div>`;
@@ -3198,6 +3361,7 @@ function cardViewHtml(card) {
                 <span class="uv-tiers" role="group" aria-label="Показывать уровни">
                     ${VIEW_TIERS.map((t) => `<button type="button" class="ct-tier ct-tier-${t.toLowerCase()} uv-tier" data-role="uv-tier" data-tier="${t}" aria-pressed="${!hidden.includes(t)}" title="Показать или свернуть ${t}">${t}</button>`).join('')}
                 </span>
+                <button type="button" class="card-light" aria-pressed="${card.classList.contains('is-lit')}" title="Подсветить карточку" aria-label="Подсветить карточку">💡</button>
                 <button type="button" class="uv-edit" data-role="card-edit" title="Редактировать карточку" aria-label="Редактировать карточку">✎</button>
                 <button type="button" class="account-del" data-role="card-del"
                         title="Удалить карточку" aria-label="Удалить карточку ${safe}">&times;</button>
@@ -3243,13 +3407,15 @@ function handleViewClick(event) {
     const card = event.target.closest('.card');
     if (!card) return false;
     if (event.target.closest('[data-role="card-save"]')) {
-        setCardView(card, true);
-        saveAccounts();
+        if (cardEditor && cardEditor.card === card) closeCardEditor(true);
+        else {
+            setCardView(card, true);
+            saveAccounts();
+        }
         return true;
     }
     if (event.target.closest('[data-role="card-edit"]')) {
-        setCardView(card, false);
-        saveAccounts();
+        openCardEditor(card);
         return true;
     }
     const tierBtn = event.target.closest('[data-role="uv-tier"]');
@@ -3273,6 +3439,173 @@ function handleViewClick(event) {
         return true;
     }
     return false;
+}
+
+/* ---- Окно редактирования карточки ----
+   Форма (универсальная карточка с выпадающими списками) открывается во
+   всплывающем окне, а на месте карточки в линии остаётся её вид — так
+   ряд карточек не прыгает. «Сохранить» возвращает карточку на место в
+   режиме просмотра, «Отмена» / × / Esc — без изменений (новая карточка,
+   открытая сразу после «Добавить», при отмене не добавляется).
+   Вопросы системы (issues) подсвечены: строка — красной рамкой с
+   подсказкой, общие — списком над формой. Частично заполненную карточку
+   сохранить можно, если она не противоречит правилам; противоречие
+   (одна планета в двух строках) сохранить не даёт.
+   Колоний у персонажа не больше 6 — по числу строк карточки, это не
+   проверяем. */
+let cardEditor = null;   // { card, slot, line, snapshot, isNew }
+let cardEditorModal = null;
+
+function ensureCardEditorModal() {
+    if (cardEditorModal) return cardEditorModal;
+    document.body.insertAdjacentHTML('beforeend', `
+        <div id="card-edit-modal" class="ct-modal" role="dialog" aria-modal="true" aria-labelledby="card-edit-title" hidden>
+            <div class="ct-modal-box ce-box">
+                <h3 id="card-edit-title" class="ct-modal-title">Редактирование</h3>
+                <ul class="ce-issues" hidden></ul>
+                <div class="ce-host"></div>
+                <div class="ce-actions">
+                    <span class="ce-error" role="alert"></span>
+                    <button type="button" class="btn ce-cancel">Отмена</button>
+                    <button type="button" class="btn card-add ce-save">Сохранить</button>
+                </div>
+                <button type="button" class="ct-modal-close" aria-label="Закрыть без сохранения">&times;</button>
+            </div>
+        </div>`);
+    cardEditorModal = document.getElementById('card-edit-modal');
+    const host = cardEditorModal.querySelector('.ce-host');
+    // Те же обработчики, что у линии аккаунта: карточка живёт здесь
+    host.addEventListener('change', (event) => {
+        const row = event.target.closest('tbody tr');
+        if (row) row.classList.remove('ce-bad');
+        handleRowChange(event);
+    });
+    host.addEventListener('click', handleCardClick);
+    host.addEventListener('mousedown', prepareCardList);
+    host.addEventListener('focusin', prepareCardList);
+    cardEditorModal.querySelector('.ce-save').addEventListener('click', () => closeCardEditor(true));
+    cardEditorModal.querySelector('.ce-cancel').addEventListener('click', () => closeCardEditor(false));
+    cardEditorModal.querySelector('.ct-modal-close').addEventListener('click', () => closeCardEditor(false));
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && cardEditor && !cardEditorModal.hidden) closeCardEditor(false);
+    });
+    return cardEditorModal;
+}
+
+// issues: [{ row: номер строки или undefined, text }]
+function openCardEditor(card, issues = [], opts = {}) {
+    if (cardEditor) closeCardEditor(false);
+    const modal = ensureCardEditorModal();
+    const line = card.closest('.account-line');
+    const snapshot = readCard(card);
+    const view = card.querySelector(':scope > .uv');
+    const slot = document.createElement('div');
+    slot.className = 'card-slot';
+    slot.innerHTML = view ? view.outerHTML : `<div class="card-slot-note">${escapeHtml(card.dataset.name || '')} — редактируется…</div>`;
+    card.replaceWith(slot);
+    cardEditor = { card, slot, line, snapshot, isNew: Boolean(opts.isNew) };
+    setCardView(card, false);
+    modal.querySelector('.ce-host').appendChild(card);
+    modal.querySelector('#card-edit-title').textContent = `Редактирование: ${card.dataset.name || ''}`;
+    modal.querySelector('.ce-error').textContent = '';
+
+    const rows = Array.from(card.querySelectorAll('tbody tr'));
+    rows.forEach((row) => { row.classList.remove('ce-bad'); row.removeAttribute('data-issue'); });
+    const general = [];
+    issues.forEach((it) => {
+        const row = Number.isInteger(it.row) ? rows[it.row] : null;
+        if (row) {
+            row.classList.add('ce-bad');
+            row.dataset.issue = row.dataset.issue ? `${row.dataset.issue}; ${it.text}` : it.text;
+            row.title = row.dataset.issue;
+            general.push(`Строка ${it.row + 1}: ${it.text}`);
+        } else {
+            general.push(it.text);
+        }
+    });
+    const list = modal.querySelector('.ce-issues');
+    list.innerHTML = general.map((t) => `<li>${escapeHtml(t)}</li>`).join('');
+    list.hidden = !general.length;
+    modal.hidden = false;
+    fitCardColumns(card);
+    const first = modal.querySelector('.ce-bad select:not(:disabled), .ce-bad button') || modal.querySelector('.ce-save');
+    if (first) first.focus();
+}
+
+/* Противоречия правилам — с ними не сохраняем. Одна планета в двух
+   строках — нормально (два экстрактора: Water и Reactive Metals), а вот
+   один и тот же товар на одной планете дважды — повтор. */
+function cardContradictions(card) {
+    const out = [];
+    const seen = new Map();
+    Array.from(card.querySelectorAll('tbody tr')).forEach((row, i) => {
+        const planet = readValue(row, 'planet');
+        const prod = mixProdOf(row);
+        if (!planet || !prod) return;
+        const key = `${systemOfRow(row)}|${planet}|${readValue(row, 'number')}|${prod}|${readValue(row, 'p0')}`;
+        if (seen.has(key)) out.push({ row: i, text: `повтор строки ${seen.get(key) + 1}: та же планета и тот же товар` });
+        else seen.set(key, i);
+    });
+    return out;
+}
+
+function closeCardEditor(save) {
+    if (!cardEditor) return;
+    const modal = cardEditorModal;
+    const { card, slot, line, snapshot, isNew } = cardEditor;
+    if (save) {
+        const bad = cardContradictions(card);
+        if (bad.length) {
+            const rows = Array.from(card.querySelectorAll('tbody tr'));
+            bad.forEach((b) => {
+                rows[b.row].classList.add('ce-bad');
+                rows[b.row].title = b.text;
+            });
+            modal.querySelector('.ce-error').textContent = bad.map((b) => `Строка ${b.row + 1}: ${b.text}`).join('; ');
+            return;
+        }
+    }
+    modal.hidden = true;
+    cardEditor = null;
+    card.querySelectorAll('tbody tr').forEach((row) => {
+        row.classList.remove('ce-bad');
+        row.removeAttribute('data-issue');
+        row.removeAttribute('title');
+    });
+    if (save) {
+        slot.replaceWith(card);
+        setCardView(card, true);
+    } else if (isNew) {
+        card.remove();
+        slot.remove();
+    } else {
+        // Отмена: карточка заново из снимка на том же месте
+        card.remove();
+        const cards = line.querySelector('[data-role="cards"]');
+        const next = slot.nextSibling;
+        slot.remove();
+        if (addCard(line, snapshot.name, snapshot)) cards.insertBefore(cards.lastElementChild, next);
+    }
+    saveAccounts();
+    refreshLine(line);
+    refreshPilotSelects();
+}
+
+/* Что карточка не смогла подставить: товар или планета строки не встали
+   в списки (например, товар не подходит ни одной планете системы) */
+function cardFillIssues(card, saved) {
+    const out = [];
+    if (!saved || !Array.isArray(saved.mix)) return out;
+    const rows = Array.from(card.querySelectorAll('tbody tr'));
+    saved.mix.forEach((m, i) => {
+        const row = rows[i];
+        if (!row || !m || !m.prod) return;
+        if (mixProdOf(row) !== m.prod) out.push({ row: i, text: `товар ${m.prod} не подставился` });
+        else if (saved.rows && saved.rows[i] && saved.rows[i].planet && !readValue(row, 'planet')) {
+            out.push({ row: i, text: `планета ${saved.rows[i].planet} ${saved.rows[i].number || ''} не подставилась` });
+        }
+    });
+    return out;
 }
 
 function addCard(line, name, saved, level) {
@@ -3314,7 +3647,7 @@ function addCard(line, name, saved, level) {
     const systemName = systemOfCard(card);
     card.querySelectorAll('tbody tr').forEach((row) => {
         if (isMixLevel(card.dataset.level)) {
-            fillMixRow(row, systemName);
+            fillMixRow(row, systemOfRow(row));
         } else if (isProdLevel(card.dataset.level)) {
             fillProdRow(row, systemName, card.dataset.level);
         } else if (isP2) {
@@ -3325,7 +3658,7 @@ function addCard(line, name, saved, level) {
             fillP1(row);
         }
         // Подсказка фоном в заблокированной планете («Система» / «Товар»)
-        numberizePlanets(row, systemName);
+        numberizePlanets(row, isMixLevel(card.dataset.level) ? systemOfRow(row) : systemName);
         if (row.querySelector('[data-role="planet"]').disabled === false) {
             syncTitle(row.querySelector('[data-role="planet"]'), 'Тип планеты не выбран');
         }
@@ -3449,11 +3782,24 @@ function initLine(line) {
         add.disabled = true;
         pilot.disabled = true;
         status.textContent = 'Смотрю колонии в EVE…';
-        pickCardForCharacter(char).then(({ level, saved, note }) => {
+        pickCardForCharacter(char).then(({ level, saved, note, issues }) => {
             status.textContent = note;
-            if (addCard(line, name, saved, level)) refreshPilotSelects();
+            if (addCard(line, name, saved, level)) {
+                refreshPilotSelects();
+                /* Всё понятно — карточка сразу готовая (просмотр).
+                   Есть вопросы — окно редактирования с подсветкой. */
+                const card = line.querySelector('[data-role="cards"]').lastElementChild;
+                const all = (issues || (saved ? [] : [{ text: note }])).concat(cardFillIssues(card, saved));
+                if (isMixLevel(card.dataset.level)) {
+                    if (all.length) openCardEditor(card, all, { isNew: true });
+                    else {
+                        setCardView(card, true);
+                        saveAccounts();
+                    }
+                }
+            }
             refreshLine(line);
-            pilot.focus();
+            if (!cardEditor) pilot.focus();
         });
     };
 
