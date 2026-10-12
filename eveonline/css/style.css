@@ -4033,7 +4033,10 @@ input.chain-amount:focus {
 
 /* ---------- Окно «Тест»: данные EVE по планетарке ---------- */
 .ct-modal-box.evetest-box {
-    width: min(1300px, calc(100vw - 2rem));
+    /* на всю ширину и высоту экрана, с небольшим отступом по краям */
+    width: calc(100vw - 2rem);
+    max-width: none;
+    height: calc(100vh - 2rem);
     max-height: calc(100vh - 2rem);
     overflow: auto;
 }
