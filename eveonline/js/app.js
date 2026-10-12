@@ -1715,9 +1715,30 @@ async function analyzeColonies(characterId) {
         // Главный товар колонии — товар её уровня; колония только с
         // добычей — P1 из добываемого P0
         let product = products.filter((n) => piTierOf(n) === tier).sort()[0] || '';
-        if (!product && p0s.length) {
-            const r = PI_RECIPES.find((x) => x.outQty === 20 && x.in[0][0] === p0s[0]);
-            product = r ? r.out : '';
+        /* Колония P1: пары «P0 → P1». Каждая пара сверяется по рецепту,
+           чтобы сырьё строки точно давало её P1 (на планете бывает два
+           экстрактора и две базовые фабрики — Water и Reactive Metals). */
+        const p0Of = (p1) => {
+            const r = PI_RECIPE_OF.get(p1);
+            return r && r.outQty === 20 ? r.in[0][0] : '';
+        };
+        const p1Of = (p0) => {
+            const r = PI_RECIPES.find((x) => x.outQty === 20 && x.in[0][0] === p0);
+            return r ? r.out : '';
+        };
+        let pairs = [];
+        if ((tier || 1) === 1) {
+            const p1s = products.filter((n) => piTierOf(n) === 1);
+            // сначала то, что добывают здесь же, потом то, что делают из привозного
+            p0s.forEach((p0) => {
+                const p1 = p1Of(p0);
+                if (p1) pairs.push({ p0, p1 });
+            });
+            p1s.forEach((p1) => {
+                if (!pairs.some((x) => x.p1 === p1)) pairs.push({ p0: p0Of(p1), p1 });
+            });
+            pairs = pairs.filter((x) => x.p1);
+            if (pairs.length) product = pairs[0].p1;
         }
         return {
             planetId: col.planet_id,
@@ -1726,7 +1747,8 @@ async function analyzeColonies(characterId) {
             tier: tier || 1,
             products,
             product,
-            p0s
+            p0s,
+            pairs
         };
     }));
     return result;
@@ -1756,13 +1778,17 @@ async function cardFromColonies(level, colonies, systemName) {
     }));
     const order = (n) => ROMAN_NUMBERS.indexOf(n);
     named.sort((a, b) => order(a.number) - order(b.number));
-    const list = named.slice(0, COLONY_ROWS);
+    // Колония P1 с несколькими парами «P0 → P1» — по строке на пару
+    const rowsOf = named.flatMap((c) => (c.tier === 1 && c.pairs && c.pairs.length
+        ? c.pairs.map((pr) => Object.assign({}, c, { product: pr.p1, p0: pr.p0 }))
+        : [Object.assign({}, c, { p0: '' })]));
+    const list = rowsOf.slice(0, COLONY_ROWS);
 
     const saved = { level, system: systemName };
     saved.rows = list.map((c) => ({
         planet: c.planetType,
         number: c.number,
-        p0: c.tier === 1 ? (c.p0s[0] || '') : '',
+        p0: c.tier === 1 ? (c.p0 || '') : '',
         p1: ''
     }));
     if (isP2Level(level)) saved.p2s = list.map((c) => c.product);
@@ -1826,6 +1852,21 @@ async function pickCardForCharacter(char) {
        число), склады (что и сколько лежит), маршруты, связи;
      и «сырые» ответы ESI целиком — для сверки. */
 const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
+
+/* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
+   обновление сайта до браузера. APP_BUILD меняется при каждой правке
+   app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
+const APP_BUILD = '12.10.2026 23:27';
+function appVersionText() {
+    const v = (sel, attr) => {
+        const el = document.querySelector(sel);
+        const m = el && (el.getAttribute(attr) || '').match(/[?&]v=(\d+)/);
+        return m ? m[1] : '?';
+    };
+    return `сборка ${APP_BUILD} · app.js v${v('script[src*="js/app.js"]', 'src')}`
+        + ` · style.css v${v('link[href*="css/style.css"]', 'href')}`
+        + ` · eveauth.js v${v('script[src*="js/eveauth.js"]', 'src')}`;
+}
 const esiTypeNames = new Map();
 
 // Названия типов (постройки, товары) одним запросом /universe/names/
@@ -2388,6 +2429,8 @@ document.addEventListener('click', (event) => {
 
 async function renderEveTest() {
     const body = document.getElementById('evetest-body');
+    const ver = document.getElementById('evetest-version');
+    if (ver) ver.textContent = appVersionText();
     const chars = typeof eveChars === 'function' ? eveChars() : [];
     body.innerHTML = EVE_TEST_PILOTS.map((name, i) => `
         <article class="evt-card" data-i="${i}">

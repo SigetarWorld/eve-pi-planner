@@ -4204,3 +4204,7 @@ input.chain-amount:focus {
 .evt-slice-form .btn {
     align-self: flex-start;
 }
+
+.evt-version {
+    margin: -0.3rem 0 0.7rem;
+}
