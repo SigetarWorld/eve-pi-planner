@@ -2248,8 +2248,9 @@ window.EVEPI_reloadAccounts = function reloadAccountsFromStore() {
 };
 
 /* ---- Вход в EVE Online ----
-   Кнопка появляется, только когда в js/eveauth.js вписан client_id:
-   без него вход невозможен, и показывать кнопку было бы враньём.
+   Кнопка видна всегда; без client_id в js/eveauth.js она лишь
+   объясняет, что вход не настроен. Персонажей можно подключить
+   несколько — каждый вход добавляет одного.
    При возврате из EVE адрес приходит с кодом (?code=...&state=...),
    код обменивается на токен, а токен проверяется через /oauth/verify.
 
@@ -2257,18 +2258,38 @@ window.EVEPI_reloadAccounts = function reloadAccountsFromStore() {
    на странице CCP, нам приходит только код. */
 const eveBar = document.getElementById('eve-bar');
 const eveLoginBtn = document.getElementById('eve-login');
-const eveWho = document.getElementById('eve-who');
-const eveLogoutBtn = document.getElementById('eve-logout');
+const eveCharsBtn = document.getElementById('eve-chars-btn');
+const eveCharsBox = document.getElementById('eve-chars');
 const eveHint = document.getElementById('eve-hint');
 
-function renderEveAuth(state, message) {
-    const connected = Boolean(state && state.accessToken);
+/* Персонажи под кнопкой «Персонажи: N»: портрет, имя и крестик
+   отключения. Кнопка входа остаётся видна всегда — каждый вход
+   добавляет ещё одного персонажа. */
+const evePortrait = (id) => `https://images.evetech.net/characters/${encodeURIComponent(id)}/portrait?size=32`;
 
-    eveLoginBtn.hidden = connected;
-    eveLogoutBtn.hidden = !connected;
-    eveWho.hidden = !connected;
-    eveWho.textContent = connected ? (state.characterName || 'Персонаж') : '';
+function renderEveAuth(message) {
+    const list = eveChars();
+    eveLoginBtn.hidden = false;
+    eveLoginBtn.title = list.length ? 'Добавить ещё персонажа' : 'Войти через EVE Online';
+    eveCharsBtn.hidden = !list.length;
+    eveCharsBtn.innerHTML = `<span class="eve-chars-label">Персонажи: </span>${list.length}`;
+    eveCharsBtn.setAttribute('aria-label', `Персонажи: ${list.length}`);
+    if (!list.length) closeEveChars();
+    eveCharsBox.innerHTML = list.map((c) => `
+        <div class="eve-char">
+            ${c.characterId ? `<img class="eve-char-img" src="${evePortrait(c.characterId)}" alt="" width="24" height="24">` : ''}
+            <span class="eve-char-name">${escapeHtml(c.characterName || 'Персонаж')}</span>
+            <button type="button" class="eve-char-drop" data-eve-drop="${escapeHtml(String(c.characterId))}"
+                    title="Отключить персонажа" aria-label="Отключить ${escapeHtml(c.characterName || 'персонажа')}">&times;</button>
+        </div>`).join('')
+        + `<p class="eve-chars-note">Ещё персонаж — снова «LOG IN with EVE Online». Персонаж с другого
+           аккаунта: на странице EVE смените аккаунт перед выбором персонажа.</p>`;
     eveHint.textContent = message || '';
+}
+
+function closeEveChars() {
+    eveCharsBox.hidden = true;
+    eveCharsBtn.setAttribute('aria-expanded', 'false');
 }
 
 /* Повторный вызов не должен навешивать слушатели заново: в тестах
@@ -2293,53 +2314,75 @@ async function initEveAuth() {
         eveLoginBtn.disabled = true;
         eveLogin().catch((e) => {
             eveLoginBtn.disabled = false;
-            renderEveAuth(null, 'Не удалось начать вход: ' + e.message);
+            renderEveAuth('Не удалось начать вход: ' + e.message);
         });
     });
 
-    eveLogoutBtn.addEventListener('click', async () => {
-        eveLogoutBtn.disabled = true;
-        const revoked = await eveLogout();
-        renderEveAuth(null, revoked
-            ? 'Токен отозван, вход завершён'
-            : 'Выход выполнен, но EVE не подтвердил отзыв токена');
-        eveLogoutBtn.disabled = false;
+    eveCharsBtn.addEventListener('click', () => {
+        const open = eveCharsBox.hidden;
+        eveCharsBox.hidden = !open;
+        if (open) eveHint.textContent = '';
+        eveCharsBtn.setAttribute('aria-expanded', String(open));
+    });
+    document.addEventListener('click', (event) => {
+        if (!eveCharsBox.hidden && !event.target.closest('#eve-chars, #eve-chars-btn')) closeEveChars();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !eveCharsBox.hidden) {
+            closeEveChars();
+            eveCharsBtn.focus();
+        }
+    });
+
+    // Отключение одного персонажа: токен отзывается на стороне EVE
+    eveCharsBox.addEventListener('click', async (event) => {
+        const drop = event.target.closest('[data-eve-drop]');
+        if (!drop) return;
+        drop.disabled = true;
+        const id = eveChars().find((c) => String(c.characterId) === drop.dataset.eveDrop);
+        const name = id ? id.characterName : 'Персонаж';
+        const revoked = await eveLogout(id ? id.characterId : undefined);
+        renderEveAuth(revoked
+            ? `${name} отключён`
+            : `${name} отключён, но EVE не подтвердил отзыв токена`);
+        if (eveChars().length) {
+            eveCharsBox.hidden = false;
+            eveCharsBtn.setAttribute('aria-expanded', 'true');
+        }
     });
 
     // Перешли сюда кнопкой входа с другого адреса — продолжаем вход
-    if (location.hash === '#eve-login' && eveOnRedirectPage() && !eveState()) {
+    if (location.hash === '#eve-login' && eveOnRedirectPage()) {
         history.replaceState(null, '', location.pathname + location.search);
+        renderEveAuth();
         eveLoginBtn.click();
         return;
     }
 
-    // Возврат из EVE
+    // Возврат из EVE: персонаж добавляется в список
     try {
         const signedIn = await eveHandleCallback();
         if (signedIn) {
-            renderEveAuth(signedIn);
+            renderEveAuth(`${signedIn.characterName || 'Персонаж'} подключён`);
             return;
         }
     } catch (e) {
-        renderEveAuth(null, 'Вход не состоялся: ' + e.message);
+        renderEveAuth('Вход не состоялся: ' + e.message);
         return;
     }
 
-    // Обычная загрузка: токен мог остаться с прошлого раза.
-    // Запоминаем, был ли он, до попытки обновить: обновление само
-    // убирает токен, если EVE его отверг, и потерять эту подсказку
-    // нельзя — иначе непонятно, входил ли пользователь вообще.
-    const hadToken = Boolean(eveState());
-    const state = await eveAccess();
-
-    if (!state) {
-        renderEveAuth(null, hadToken
-            ? 'Сессия EVE истекла — войдите заново'
-            : 'Войдите, чтобы читать данные персонажа из ESI');
-        return;
+    // Обычная загрузка: персонажи могли остаться с прошлого раза.
+    // Токены обновляем по очереди; кого EVE отверг — уйдёт из списка.
+    const before = eveChars();
+    for (const c of before) {
+        // eslint-disable-next-line no-await-in-loop
+        await eveAccess(c.characterId);
     }
+    const lost = before.length - eveChars().length;
 
-    renderEveAuth(state);
+    renderEveAuth(lost
+        ? `Сессия EVE истекла у ${lost} персонаж${lost === 1 ? 'а' : 'ей'} — войдите заново`
+        : '');
 }
 
 initEveAuth();

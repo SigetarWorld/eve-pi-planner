@@ -1785,6 +1785,114 @@ form button:focus-visible,
     border-radius: var(--radius-sm);
 }
 
+/* Подключённые персонажи: кнопка «Персонажи: N» и список под ней */
+.eve-chars-btn {
+    height: 26px;
+    padding: 0 0.7rem;
+    font-family: var(--font-heading);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--text);
+    background: var(--bg-panel);
+    border: 1px solid var(--border-lit);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.eve-chars-btn::after {
+    content: " ▾";
+    color: var(--text-dim);
+}
+
+.eve-chars-btn:hover,
+.eve-chars-btn[aria-expanded="true"] {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.eve-chars-btn[hidden],
+.eve-chars[hidden] {
+    display: none;
+}
+
+.eve-chars {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 16rem;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-lit);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.eve-char {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.2rem 0.3rem;
+    border-radius: 4px;
+}
+
+.eve-char:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.eve-char-img {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    border-radius: 3px;
+}
+
+.eve-char-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text);
+}
+
+.eve-char-drop {
+    flex: 0 0 auto;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    font-size: 0.95rem;
+    line-height: 1;
+    color: var(--text-faint);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.eve-char-drop:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.eve-chars-note {
+    margin: 0.3rem 0.3rem 0;
+    padding-top: 0.4rem;
+    font-size: 0.7rem;
+    line-height: 1.35;
+    color: var(--text-faint);
+    border-top: 1px solid var(--border);
+}
+
 /* Кнопка в шапке чуть ниже оригинала (195×30 → высота 26px) */
 .eve-bar-head .eve-login img {
     width: auto;
@@ -1796,6 +1904,23 @@ form button:focus-visible,
 @media (max-width: 1500px) {
     .brand-tag {
         display: none;
+    }
+}
+
+/* Ещё теснее: у кнопки персонажей остаётся только число (с иконкой),
+   вкладки чуть плотнее — шапка остаётся в одну строку */
+@media (max-width: 1400px) {
+    .eve-chars-label {
+        display: none;
+    }
+
+    .eve-chars-btn::before {
+        content: "👤 ";
+    }
+
+    nav.tabs button {
+        padding: 8px 9px;
+        letter-spacing: 0.1em;
     }
 }
 

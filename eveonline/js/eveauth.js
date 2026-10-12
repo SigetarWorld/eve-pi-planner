@@ -91,7 +91,41 @@ function eveJsonDrop(storage, key) {
     }
 }
 
-const eveState = () => eveJsonGet(localStorage, EVE_AUTH.storageKey);
+/* ---- Несколько персонажей ----
+   EVE выдаёт токен на одного персонажа за вход. Каждый вход добавляет
+   персонажа в список (повторный — обновляет его токен), так что можно
+   подключить всех своих персонажей по очереди. В хранилище:
+   { chars: [ {characterId, characterName, accessToken, ...}, ... ] }.
+   Старая запись с одним персонажем читается как список из одного. */
+function eveChars() {
+    const raw = eveJsonGet(localStorage, EVE_AUTH.storageKey);
+    if (!raw) return [];
+    if (Array.isArray(raw.chars)) return raw.chars.filter((c) => c && c.accessToken);
+    return raw.accessToken ? [raw] : [];
+}
+
+function eveSaveChars(list) {
+    if (list.length) eveJsonSet(localStorage, EVE_AUTH.storageKey, { chars: list });
+    else eveJsonDrop(localStorage, EVE_AUTH.storageKey);
+}
+
+// Добавляет персонажа или обновляет его запись (по characterId)
+function eveSaveChar(state) {
+    const list = eveChars();
+    const i = list.findIndex((c) => c.characterId && c.characterId === state.characterId);
+    if (i >= 0) list[i] = state;
+    else list.push(state);
+    eveSaveChars(list);
+}
+
+function eveDropChar(characterId) {
+    eveSaveChars(eveChars().filter((c) => c.characterId !== characterId));
+}
+
+const eveCharById = (id) => eveChars().find((c) => c.characterId === id) || null;
+
+// Есть ли хоть один подключённый персонаж (первый — для совместимости)
+const eveState = () => eveChars()[0] || null;
 
 /* ---- PKCE ----
    code_challenge — это base64url от SHA-256(code_verifier).
@@ -196,7 +230,7 @@ async function eveIdentify(state) {
         expiresOn: eveField(data, 'ExpiresOn', 'expires_on')
     };
 
-    eveJsonSet(localStorage, EVE_AUTH.storageKey, next);
+    eveSaveChar(next);
     return next;
 }
 
@@ -230,8 +264,7 @@ async function eveHandleCallback() {
         refreshToken: token.refresh_token || null,
         expiresAt: Date.now() + (token.expires_in || 1199) * 1000
     };
-    eveJsonSet(localStorage, EVE_AUTH.storageKey, state);
-
+    // В список персонаж попадёт после проверки: только тогда известен его id
     return eveIdentify(state);
 }
 
@@ -256,23 +289,25 @@ async function eveRefreshToken(state, force) {
         };
         if (token.refresh_token) next.refreshToken = token.refresh_token;
 
-        eveJsonSet(localStorage, EVE_AUTH.storageKey, next);
+        eveSaveChar(next);
         return next;
     } catch (e) {
         // Отказ сервера — токен больше не рабочий, его незачем хранить.
         // Обрыв сети или сбой EVE — токен в порядке, просто не дозвонились:
         // тогда оставляем его, и следующая попытка может удастся.
         if (e.status && e.status < 500) {
-            eveJsonDrop(localStorage, EVE_AUTH.storageKey);
+            eveDropChar(state.characterId);
         }
 
         return null;
     }
 }
 
-/* Действующий токен, подновлённый при подходе срока. */
-async function eveAccess() {
-    return eveRefreshToken(eveState(), false);
+/* Действующий токен персонажа (по умолчанию — первого в списке),
+   подновлённый при подходе срока. */
+async function eveAccess(characterId) {
+    const state = characterId ? eveCharById(characterId) : eveState();
+    return eveRefreshToken(state, false);
 }
 
 const eveRequest = (url, options, state) => fetch(url, {
@@ -282,13 +317,13 @@ const eveRequest = (url, options, state) => fetch(url, {
 
 /* Запрос к ESI от имени персонажа. На 401 токен обновляется один раз:
    если и после этого отказ, вход надо повторить руками. */
-async function eveFetchJson(url, options = {}) {
+async function eveFetchJson(url, options = {}, characterId) {
     // Различаем два случая: входа не было вовсе и вход был, но сессия
     // протухла. Во втором случае токен мог остаться в хранилище, но
     // обновить его не вышло — сказать «нет входа» тут неверно.
-    if (!eveState()) throw new Error('Нет входа в EVE');
+    if (!(characterId ? eveCharById(characterId) : eveState())) throw new Error('Нет входа в EVE');
 
-    let state = await eveAccess();
+    const state = await eveAccess(characterId);
     if (!state) throw new Error('Сессия EVE истекла — войдите заново');
 
     let res = await eveRequest(url, options, state);
@@ -305,10 +340,12 @@ async function eveFetchJson(url, options = {}) {
 /* Отключение: токен отзываем на стороне EVE, иначе он останется
    действующим до конца срока. Отзыв не удался — всё равно чистим
    у себя, чтобы вход не считался активным. Возвращает, подтвердил
-   ли EVE отзыв: по нему выбирают, что написать пользователю. */
-async function eveLogout() {
+   ли EVE отзыв: по нему выбирают, что написать пользователю.
+   Отключается один персонаж (по умолчанию — первый), остальные
+   остаются подключёнными. */
+async function eveLogout(characterId) {
     let revoked = false;
-    const state = eveState();
+    const state = characterId ? eveCharById(characterId) : eveState();
 
     if (state && state.refreshToken) {
         try {
@@ -328,7 +365,7 @@ async function eveLogout() {
         }
     }
 
-    eveJsonDrop(localStorage, EVE_AUTH.storageKey);
+    if (state) eveDropChar(state.characterId);
     return revoked;
 }
 
