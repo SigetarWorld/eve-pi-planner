@@ -1090,6 +1090,8 @@ function fillMixRowInner(row, systemName) {
     } else {
         kinds = PROD_PLANETS[level] || PLANET_TYPES;
     }
+    const [hintProd, hintPlanet] = (row.dataset.colonyPlanet || '').split('|');
+    if (hintPlanet && hintProd === prod && !kinds.includes(hintPlanet)) kinds = kinds.concat(hintPlanet);
     const allowed = list.length ? kinds.filter((p) => list.includes(p)) : kinds;
     const planet = allowed.includes(current) ? current : '';
     planetCell.innerHTML = allowed.length
@@ -1793,7 +1795,7 @@ async function cardFromColonies(level, colonies, systemName) {
     }));
     if (isP2Level(level)) saved.p2s = list.map((c) => c.product);
     else if (isProdLevel(level)) saved.prods = list.map((c) => c.product);
-    else if (isMixLevel(level)) saved.mix = list.map((c) => ({ level: `P${c.tier}`, prod: c.product }));
+    else if (isMixLevel(level)) saved.mix = list.map((c) => ({ level: `P${c.tier}`, prod: c.product, planet: c.planetType }));
     return saved;
 }
 
@@ -1856,7 +1858,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 00:30';
+const APP_BUILD = '13.10.2026 00:40';
 function appVersionText() {
     const v = (sel, attr) => {
         const el = document.querySelector(sel);
@@ -2927,7 +2929,12 @@ function readCard(card) {
         p2s: Array.from(card.querySelectorAll('[data-role="p2"]')).map((cell) => cell.value),
         prods: Array.from(card.querySelectorAll('[data-role="prod"]')).map((cell) => cell.value),
         mix: isMixLevel(card.dataset.level)
-            ? Array.from(card.querySelectorAll('tbody tr')).map((row) => ({ level: mixLevelOf(row), prod: mixProdOf(row) }))
+            ? Array.from(card.querySelectorAll('tbody tr')).map((row) => {
+                const m = { level: mixLevelOf(row), prod: mixProdOf(row) };
+                const [prod, planet] = (row.dataset.colonyPlanet || '').split('|');
+                if (planet && prod === m.prod) m.planet = planet;
+                return m;
+            })
             : undefined,
         rows: Array.from(card.querySelectorAll('tbody tr')).map((row) => ({
             planet: readValue(row, 'planet'),
@@ -3012,6 +3019,10 @@ function restoreCard(card, saved) {
         saved.mix.forEach((m, i) => {
             const row = mixRows[i];
             if (!row || !m) return;
+            // Колония из EVE: её планета разрешена для товара строки, даже
+            // если сырьё там не добывается (завозят — фабричная планета)
+            if (m.planet && m.prod) row.dataset.colonyPlanet = `${m.prod}|${m.planet}`;
+            else delete row.dataset.colonyPlanet;
             setMixLevel(row, m.level, m.prod);
             fillMixRow(row, systemName);
         });
