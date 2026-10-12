@@ -3978,7 +3978,8 @@ input.chain-amount:focus {
 
 /* Значок уровня ресурса (P0–P4) перед иконкой в составе
    «Тест универсальной» — вместо «(P1)» после названия */
-.colony-table .ct-tier {
+.colony-table .ct-tier,
+.evetest-body .ct-tier {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
@@ -3996,20 +3997,24 @@ input.chain-amount:focus {
     background: rgba(255, 157, 46, 0.08);
 }
 
-.colony-table .ct-tier-p0 {
+.colony-table .ct-tier-p0,
+.evetest-body .ct-tier-p0 {
     color: var(--text-dim);
     border-color: var(--border);
     background: rgba(255, 255, 255, 0.04);
 }
 
-.colony-table .ct-tier-p4 {
+.colony-table .ct-tier-p4,
+.evetest-body .ct-tier-p4 {
     color: #c9a7ff;
     border-color: rgba(201, 167, 255, 0.55);
     background: rgba(201, 167, 255, 0.08);
 }
 
 .colony-table .ct-tier-p2,
-.colony-table .ct-tier-p3 {
+.colony-table .ct-tier-p3,
+.evetest-body .ct-tier-p2,
+.evetest-body .ct-tier-p3 {
     color: var(--cyan);
     border-color: color-mix(in srgb, var(--cyan) 55%, transparent);
     background: color-mix(in srgb, var(--cyan) 8%, transparent);
@@ -4023,4 +4028,120 @@ input.chain-amount:focus {
     .card.ct-two-line .colony-table tbody .ct-icon-cell {
         display: none;
     }
+}
+
+
+/* ---------- Окно «Тест»: данные EVE по планетарке ---------- */
+.ct-modal-box.evetest-box {
+    width: min(1300px, calc(100vw - 2rem));
+    max-height: calc(100vh - 2rem);
+    overflow: auto;
+}
+
+.evetest-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.evt-card {
+    padding: 0.8rem 0.9rem;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.evt-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.95rem;
+}
+
+.evt-dim {
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--text-dim);
+}
+
+.evt-bad {
+    font-size: 0.78rem;
+    color: #ff7a6b;
+}
+
+.evt-ok {
+    font-size: 0.78rem;
+    color: #5fd38d;
+}
+
+.evt-colony {
+    margin-top: 0.7rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--border);
+}
+
+.evt-colony h5 {
+    margin: 0 0 0.4rem;
+    font-size: 0.9rem;
+    color: var(--accent);
+}
+
+.evt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 0.4rem 1rem;
+}
+
+.evt-grid h6 {
+    margin: 0 0 0.25rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+
+.evt-grid ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.78rem;
+    line-height: 1.6;
+}
+
+.evt-res {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    vertical-align: middle;
+}
+
+.evt-res .ct-tier {
+    width: 1.1rem;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    padding: 0;
+    font-size: 0.52rem;
+}
+
+.evt-res .res-icon {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.evt-raw {
+    margin-top: 0.7rem;
+    font-size: 0.75rem;
+}
+
+.evt-raw pre {
+    max-height: 320px;
+    overflow: auto;
+    padding: 0.5rem;
+    font-size: 0.7rem;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 4px;
 }

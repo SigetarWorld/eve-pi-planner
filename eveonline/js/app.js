@@ -1815,6 +1815,190 @@ async function pickCardForCharacter(char) {
     }
 }
 
+/* ---- Тест EVE ----
+   Кнопка «Тест» рядом со «Статистикой» открывает окно с тестовыми
+   карточками персонажей Sigetar и CrazyJam: всё, что ESI отдаёт по
+   их планетарке (право esi-planets.manage_planets.v1):
+     колонии — система, планета, тип, уровень Command Center, число
+       построек, когда колонию последний раз открывали в игре;
+     по каждой колонии — экстракторы (P0, головки, выход за цикл,
+       длина цикла, когда закончится), фабрики (рецепт → товар, их
+       число), склады (что и сколько лежит), маршруты, связи;
+     и «сырые» ответы ESI целиком — для сверки. */
+const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
+const esiTypeNames = new Map();
+
+// Названия типов (постройки, товары) одним запросом /universe/names/
+async function esiNamesOf(ids) {
+    const need = uniqValues(ids.filter((id) => id && !esiTypeNames.has(id)));
+    for (let i = 0; i < need.length; i += 900) {
+        const part = need.slice(i, i + 900);
+        try {
+            const res = await fetch(`${ESI_BASE}/universe/names/?datasource=tranquility`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(part)
+            });
+            const list = res.ok ? await res.json() : [];
+            list.forEach((x) => esiTypeNames.set(x.id, x.name));
+        } catch (e) {
+            // без названия — покажем id
+        }
+    }
+}
+const esiTypeName = (id) => PI_NAME_BY_ID.get(id) || esiTypeNames.get(id) || `#${id}`;
+
+const fmtDate = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    const p2 = (n) => String(n).padStart(2, '0');
+    return `${p2(d.getDate())}.${p2(d.getMonth() + 1)}.${d.getFullYear()} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+};
+const fmtLeft = (iso) => {
+    if (!iso) return '';
+    const ms = new Date(iso) - Date.now();
+    if (ms <= 0) return '<span class="evt-bad">остановлен</span>';
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    return `<span class="evt-ok">осталось ${h ? `${h} ч ` : ''}${m} мин</span>`;
+};
+const fmtCycle = (sec) => (sec >= 3600 && sec % 3600 === 0 ? `${sec / 3600} ч` : `${Math.round(sec / 60)} мин`);
+const resChip = (name) => {
+    const tier = PI_COMMODITIES[name] ? `P${PI_COMMODITIES[name][1]}` : '';
+    return `<span class="evt-res">${tier ? tierBadgeHtml(tier) : ''}${iconFor(name)}${escapeHtml(name)}</span>`;
+};
+
+async function loadEveTest(char) {
+    const path = `/characters/${char.characterId}/planets/`;
+    const colonies = await eveFetchJson(`${ESI_BASE}${path}?datasource=tranquility`, {}, char.characterId);
+    const details = await Promise.all(colonies.map(async (col) => {
+        const [layout, planet, system] = await Promise.all([
+            eveFetchJson(`${ESI_BASE}${path}${col.planet_id}/?datasource=tranquility`, {}, char.characterId),
+            esiPublicJson(`/universe/planets/${col.planet_id}/`).catch(() => ({})),
+            esiPublicJson(`/universe/systems/${col.solar_system_id}/`).catch(() => ({}))
+        ]);
+        const pins = layout.pins || [];
+        const sids = uniqValues(pins.map((p) => (p.factory_details && p.factory_details.schematic_id) || p.schematic_id).filter(Boolean));
+        const schematics = {};
+        await Promise.all(sids.map(async (id) => { schematics[id] = await esiSchematicName(id); }));
+        return { col, layout, planet, system, schematics };
+    }));
+    // Названия всех типов: постройки, товары в складах и маршрутах
+    const ids = [];
+    details.forEach(({ layout }) => {
+        (layout.pins || []).forEach((p) => {
+            ids.push(p.type_id);
+            (p.contents || []).forEach((c) => ids.push(c.type_id));
+        });
+        (layout.routes || []).forEach((r) => ids.push(r.content_type_id));
+    });
+    await esiNamesOf(ids.filter((id) => !PI_NAME_BY_ID.has(id)));
+    return { colonies, details };
+}
+
+function eveTestColonyHtml({ col, layout, planet, system, schematics }) {
+    const pins = layout.pins || [];
+    const pinName = new Map(pins.map((p) => [p.pin_id, esiTypeName(p.type_id)]));
+    const extractors = pins.filter((p) => p.extractor_details);
+    const factories = pins.filter((p) => (p.factory_details && p.factory_details.schematic_id) || p.schematic_id);
+    const stores = pins.filter((p) => (p.contents || []).length);
+    const routes = layout.routes || [];
+    const links = layout.links || [];
+
+    const byProduct = new Map();
+    factories.forEach((p) => {
+        const name = schematics[(p.factory_details && p.factory_details.schematic_id) || p.schematic_id] || '?';
+        byProduct.set(name, (byProduct.get(name) || 0) + 1);
+    });
+
+    const ext = extractors.map((p) => {
+        const d = p.extractor_details;
+        return `<li>${resChip(esiTypeName(d.product_type_id))}
+            головок: ${(d.heads || []).length}, ${d.qty_per_cycle || 0} ед. за цикл ${d.cycle_time ? fmtCycle(d.cycle_time) : ''}
+            · запущен ${fmtDate(p.install_time)} · до ${fmtDate(p.expiry_time)} ${fmtLeft(p.expiry_time)}</li>`;
+    }).join('');
+    const fac = Array.from(byProduct.entries())
+        .map(([name, n]) => `<li>${resChip(name)} × ${n}</li>`).join('');
+    const sto = stores.map((p) => `<li><b>${escapeHtml(esiTypeName(p.type_id))}</b>: ${(p.contents || [])
+        .map((c) => `${resChip(esiTypeName(c.type_id))} ${c.amount.toLocaleString('ru-RU')}`).join(' · ')}</li>`).join('');
+    const rts = routes.map((r) => `<li>${resChip(esiTypeName(r.content_type_id))} ${r.quantity.toLocaleString('ru-RU')}:
+        ${escapeHtml(pinName.get(r.source_pin_id) || r.source_pin_id)} → ${escapeHtml(pinName.get(r.destination_pin_id) || r.destination_pin_id)}</li>`).join('');
+
+    const title = planet.name || `Планета ${col.planet_id}`;
+    return `
+        <section class="evt-colony">
+            <h5>${escapeHtml(title)} <span class="evt-dim">· ${escapeHtml(PLANET_TYPE_OF_ESI[col.planet_type] || col.planet_type)}
+                · ${escapeHtml(system.name || String(col.solar_system_id))}
+                · CC ${col.upgrade_level} · построек ${col.num_pins} · открыта в игре ${fmtDate(col.last_update)}</span></h5>
+            <div class="evt-grid">
+                <div><h6>Добыча</h6><ul>${ext || '<li class="evt-dim">нет</li>'}</ul></div>
+                <div><h6>Фабрики</h6><ul>${fac || '<li class="evt-dim">нет</li>'}</ul></div>
+                <div><h6>Склады</h6><ul>${sto || '<li class="evt-dim">пусто</li>'}</ul></div>
+                <div><h6>Маршруты (${routes.length}) · связей ${links.length}</h6><ul>${rts || '<li class="evt-dim">нет</li>'}</ul></div>
+            </div>
+        </section>`;
+}
+
+async function renderEveTest() {
+    const body = document.getElementById('evetest-body');
+    const chars = typeof eveChars === 'function' ? eveChars() : [];
+    body.innerHTML = EVE_TEST_PILOTS.map((name, i) => `
+        <article class="evt-card" data-i="${i}">
+            <div class="evt-head"><b>${escapeHtml(name)}</b> <span class="evt-dim">загрузка…</span></div>
+        </article>`).join('');
+
+    await Promise.all(EVE_TEST_PILOTS.map(async (name, i) => {
+        const box = body.querySelector(`.evt-card[data-i="${i}"]`);
+        const char = chars.find((c) => (c.characterName || '').toLowerCase() === name.toLowerCase());
+        if (!char) {
+            box.innerHTML = `<div class="evt-head"><b>${escapeHtml(name)}</b>
+                <span class="evt-bad">не подключён — войдите им через «LOG IN with EVE Online»</span></div>`;
+            return;
+        }
+        try {
+            const data = await loadEveTest(char);
+            const extractors = data.details.reduce((n, d) => n + (d.layout.pins || []).filter((p) => p.extractor_details).length, 0);
+            box.innerHTML = `
+                <div class="evt-head">
+                    <img class="eve-char-img" src="${evePortrait(char.characterId)}" alt="" width="32" height="32">
+                    <b>${escapeHtml(char.characterName)}</b>
+                    <span class="evt-dim">id ${char.characterId} · колоний ${data.colonies.length} · экстракторов ${extractors}
+                        · права: ${escapeHtml([].concat(char.scopes || []).join(', ') || '—')}</span>
+                </div>
+                ${data.details.map(eveTestColonyHtml).join('') || '<p class="evt-dim">Колоний нет</p>'}
+                <details class="evt-raw"><summary>Сырые ответы ESI</summary>
+                    <pre>${escapeHtml(JSON.stringify(data.details.map((d) => ({ colony: d.col, layout: d.layout })), null, 1))}</pre>
+                </details>`;
+        } catch (e) {
+            box.innerHTML = `<div class="evt-head"><b>${escapeHtml(name)}</b>
+                <span class="evt-bad">ошибка: ${escapeHtml(e.message)}</span></div>`;
+        }
+    }));
+}
+
+(function initEveTest() {
+    const btn = document.getElementById('evetest-open');
+    const modal = document.getElementById('evetest-modal');
+    if (!btn || !modal) return;
+    document.body.appendChild(modal);
+    const close = () => {
+        modal.hidden = true;
+        btn.focus();
+    };
+    btn.addEventListener('click', () => {
+        modal.hidden = false;
+        modal.querySelector('.ct-modal-close').focus();
+        renderEveTest();
+    });
+    modal.querySelector('.ct-modal-close').addEventListener('click', close);
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) close();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !modal.hidden) close();
+    });
+}());
+
 /* Выбрать некого — нажатие на список (или «Добавить») открывает
    всплывающую подсказку под списком: подключить персонажей можно
    кнопкой «LOG IN with EVE Online» в шапке, а прямо отсюда — кнопкой
