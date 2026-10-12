@@ -1377,8 +1377,17 @@ form button:focus-visible,
 }
 
 .card-add {
-    padding: 0.45rem 0.9rem;
+    /* Текст ровно по центру: по вертикали — flex и line-height 1,
+       по горизонтали — слева добавлен отступ на величину разрядки
+       (letter-spacing ставит пустое место и после последней буквы,
+       из-за этого надпись смещалась влево) */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.9rem 0.45rem calc(0.9rem + 0.14em);
     font-size: 0.84rem;
+    line-height: 1;
+    min-height: 2.3rem;
 }
 
 .card-add:hover { filter: brightness(1.1); }
@@ -1478,10 +1487,7 @@ form button:focus-visible,
     padding: 0.7rem 0.8rem;
 }
 
-.card-head.stats-panel > .card-pilot-label {
-    flex: 0 0 auto;
-    margin-right: 0.6rem;
-}
+
 
 /* Окно «Статистика»: по ширине таблицы, длинное — прокручивается */
 .ct-modal-box.stats-modal-box {
@@ -1492,10 +1498,33 @@ form button:focus-visible,
     padding-right: 3rem;
 }
 
-/* Подключённые персонажи: портрет и имя в ряд */
+/* Подключённые персонажи: в два ряда — заполняются по столбцам
+   сверху вниз, подпись «Персонажи» слева на оба ряда */
 .eve-roster {
-    flex-wrap: wrap;
-    gap: 0.4rem 0.9rem;
+    display: grid;
+    grid-template-rows: repeat(2, auto);
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    justify-content: start;
+    align-content: center;
+    gap: 0.2rem 1.1rem;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+}
+
+.eve-roster > .card-pilot-label {
+    grid-row: 1 / 3;
+    align-self: center;
+}
+
+.eve-roster .eve-char-img {
+    width: 20px;
+    height: 20px;
+}
+
+.eve-roster-empty {
+    grid-row: 1 / 3;
+    align-self: center;
 }
 
 .eve-roster > .card-pilot-label {
