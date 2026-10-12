@@ -2013,7 +2013,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 04:40';
+const APP_BUILD = '13.10.2026 05:20';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3265,14 +3265,14 @@ function restoreCard(card, saved) {
    последнего открытия колонии в игре, как в окне «Тест») и иконки
    складов, где он лежит. Товар, которого нет, — в дереве с нулём.
    Видимость:
-     сразу после сборки видны только главные товары колоний (TOP);
-     кнопки P1…P4 в шапке показывают все товары своего уровня во всех
+     при каждом показе карточки видны только главные товары (нажата TOP);
+     кнопки P0…P4 в шапке показывают все товары своего уровня во всех
        колониях (уровни выше могут быть скрыты — тогда ветка встаёт
        ближе к главному товару);
      стрелка ▸ раскрывает ветки одного товара (так же видно и P0 под P1);
      кнопка TOP возвращает «только главные товары».
    Круглая кнопка ✎ открывает форму в окне редактирования. */
-const VIEW_TIERS = ['P1', 'P2', 'P3', 'P4'];
+const VIEW_TIERS = ['P0', 'P1', 'P2', 'P3', 'P4'];
 const VIEW_STOCK_TTL = 10 * 60 * 1000;
 const viewStockCache = new Map();        // characterId -> { at, promise }
 
@@ -3334,8 +3334,9 @@ function viewResHtml(name) {
         + `<span class="uv-name" lang="en" title="${escapeHtml(name)} (${tier})">${escapeHtml(name)}</span>`;
 }
 
-// Узел дерева: строка товара и ветки — входы рецепта (у P1 — его P0)
-function viewNodeHtml(name, p0Hint) {
+// Узел дерева: строка товара и ветки — входы рецепта (у P1 — его P0).
+// prefix — начало строки главного товара: система, планета.
+function viewNodeHtml(name, p0Hint, prefix = '') {
     const tier = piTierOf(name);
     const recipe = PI_RECIPE_OF.get(name);
     let kids = [];
@@ -3350,7 +3351,7 @@ function viewNodeHtml(name, p0Hint) {
         : '<span class="uv-toggle-gap"></span>';
     return `
         <div class="uv-node" data-tier="P${tier}">
-            <div class="uv-line">${toggle}${viewResHtml(name)}<span class="uv-sep">–</span>${viewQtyHtml(name)}</div>
+            <div class="uv-line">${prefix}${toggle}${viewResHtml(name)}<span class="uv-sep">–</span>${viewQtyHtml(name)}</div>
             ${kids.length ? `<div class="uv-kids">${kids.map((k) => viewNodeHtml(k)).join('')}</div>` : ''}
         </div>`;
 }
@@ -3367,10 +3368,13 @@ function applyViewVisibility(card) {
     if (!view) return;
     const shown = viewShownOf(card);
     let opened = false;
+    /* Ветки — под главным товаром: отступ от начала товара в верхней
+       строке (после «система · планета ·»), дальше по 1.1rem на уровень */
+    let base = 0;
     const walk = (node, visible, depth) => {
         const line = node.querySelector(':scope > .uv-line');
         line.hidden = !visible;
-        line.style.paddingLeft = `${depth * 1.1}rem`;
+        line.style.paddingLeft = depth ? `calc(${base}px + ${(depth - 1) * 1.1}rem)` : '0';
         const kidsWrap = node.querySelector(':scope > .uv-kids');
         if (!kidsWrap) return;
         const open = node.dataset.open === '1';
@@ -3384,7 +3388,11 @@ function applyViewVisibility(card) {
         const toggle = line.querySelector('[data-role="uv-toggle"]');
         if (toggle) toggle.setAttribute('aria-expanded', String(open || allKids));
     };
-    view.querySelectorAll('.uv-colony > .uv-node').forEach((top) => walk(top, true, 0));
+    view.querySelectorAll('.uv-colony > .uv-node').forEach((top) => {
+        const where = top.querySelector(':scope > .uv-line > .uv-where');
+        base = where ? where.offsetWidth + 6 : 0;
+        walk(top, true, 0);
+    });
     view.querySelectorAll('[data-role="uv-tier"]').forEach((b) => {
         b.setAttribute('aria-pressed', String(shown.has(b.dataset.tier)));
     });
@@ -3404,11 +3412,11 @@ function cardViewHtml(card) {
     const body = colonies.map((c) => {
         const system = c.system || '';
         const key = [system, c.number].filter(Boolean).join(' ');
+        // «DFTK-D II · Barren · ▸ [P4] Wetware Mainframe – 6» — одной строкой
+        const where = `<span class="uv-where">${c.planet ? `<span class="uv-icon uv-planet-icon"><img src="img/planets/${escapeHtml(c.planet.toLowerCase())}.png" alt="" width="24" height="24" loading="lazy" onerror="this.remove()"></span>` : ''}<span class="uv-sys">${escapeHtml([system || 'Система не выбрана', c.planet ? c.number : ''].filter(Boolean).join(' '))}</span><span class="uv-ptype">· ${escapeHtml(c.planet || 'планета не выбрана')}</span><span class="uv-sep">·</span></span>`;
         return `
             <div class="uv-colony" data-planet="${escapeHtml(key)}">
-                <div class="uv-where">${c.planet ? `<span class="uv-icon uv-planet-icon"><img src="img/planets/${escapeHtml(c.planet.toLowerCase())}.png" alt="" width="24" height="24" loading="lazy" onerror="this.remove()"></span>` : ''}<span class="uv-sys">${escapeHtml([system || 'Система не выбрана', c.planet ? c.number : ''].filter(Boolean).join(' '))}</span>
-                    ${escapeHtml(c.planet ? `· ${c.planet}` : '· планета не выбрана')}</div>
-                ${viewNodeHtml(c.prod, c.p0)}
+                ${viewNodeHtml(c.prod, c.p0, where)}
             </div>`;
     }).join('') || '<p class="uv-empty">Колоний нет — нажмите ✎ и добавьте их</p>';
     const safe = escapeHtml(name);
@@ -3455,6 +3463,7 @@ function renderCardView(card) {
     if (view) view.outerHTML = html;
     else card.insertAdjacentHTML('beforeend', html);
     view = card.querySelector(':scope > .uv');
+    card.dataset.showTiers = '';
     applyViewVisibility(card);
     viewStockOf(card.dataset.name).then((stocks) => {
         if (!view.isConnected) return;

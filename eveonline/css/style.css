@@ -4314,13 +4314,13 @@ input.chain-amount:focus {
 .uv-colony { padding: 0.35rem 0; }
 .uv-colony + .uv-colony { border-top: 1px solid var(--border); }
 .uv-where {
-    display: flex;
+    flex: 0 0 auto;
+    display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    min-height: 1.6rem;
-    margin-bottom: 0.2rem;
     color: var(--text);
 }
+.uv-ptype { color: var(--text); }
 .uv-planet-icon img { border-radius: 50%; }
 .uv-sys { color: var(--accent); font-weight: 600; }
 .uv-empty { margin: 0.5rem 0; color: var(--text-dim); font-size: 0.8rem; }
