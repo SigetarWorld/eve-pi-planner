@@ -29,8 +29,10 @@
    впишите clientSecret — сервер примет и секрет, и код проверки. */
 
 const EVE_AUTH = {
-    /* client_id из developers.eveonline.com. Пусто — вход не настроен. */
-    clientId: '',
+    /* client_id приложения на developers.eveonline.com
+       (адрес возврата там: https://sigetar.ru/eveonline/). Не секрет —
+       он и так виден в адресе входа. Пусто — вход не настроен. */
+    clientId: 'f1a8cb49044c49a19c669946494214a4',
     /* Нужен только конфиденциальному приложению. */
     clientSecret: '',
     authorizeUrl: 'https://login.eveonline.com/v2/oauth/authorize',
