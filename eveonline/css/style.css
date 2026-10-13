@@ -4936,11 +4936,7 @@ input.chain-amount:focus {
 .wh-chart { margin: 0; padding: 0.5rem 0.6rem 0.4rem; background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .wh-ch-title { margin-bottom: 0.3rem; font-size: 0.8rem; color: var(--text-dim); }
 .wh-chart svg { display: block; max-width: 100%; height: auto; }
-.wh-ch-grid { stroke: var(--border); stroke-width: 1; }
 .wh-ch-axis { stroke: var(--border-lit); stroke-width: 1; }
-.wh-ch-ytick, .wh-ch-xtick { fill: var(--text-faint); font-size: 10px; font-variant-numeric: tabular-nums; }
-.wh-ch-ytick { text-anchor: end; }
-.wh-ch-xtick { text-anchor: middle; }
 .wh-ch-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .wh-ch-dot { fill: var(--accent); stroke: var(--bg-deep); stroke-width: 2; }
 .wh-ch-hit { fill: transparent; cursor: default; }
@@ -4969,3 +4965,15 @@ input.chain-amount:focus {
 .wh-table .wh-tr-flat, .wh-table .wh-tr-none { color: var(--text-faint); }
 .wh-table .wh-total { text-align: right; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
 .wh-table .wh-total .uv-sep { margin: 0 0.3rem; }
+
+/* График справа — маленький график на ресурс */
+.uv.wh-sum-box .wh-chart { flex: 1 1 30rem; min-width: 0; }
+.wh-ch-range { margin-left: 0.4rem; color: var(--text-faint); }
+.wh-ch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.4rem 0.8rem; }
+.wh-ch-tile { padding: 0.25rem 0.35rem; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.wh-ch-head { display: flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; }
+.wh-ch-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.wh-ch-last { margin-left: auto; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.wh-ch-tile svg { display: block; width: 230px; max-width: 100%; height: auto; }
+.wh-ch-tile .wh-ch-dot { stroke-width: 1.5; }
+.uv.wh-sum-box { flex: 1 1 100%; min-width: 0; }

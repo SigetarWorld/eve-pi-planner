@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '14.10.2026 00:55';
+const APP_BUILD = '14.10.2026 01:15';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3320,63 +3320,57 @@ function whSaveHistory(owners) {
     store.set(WH_HIST_KEY, hist);
 }
 
-// Объём за день по фильтрам; null — среза за этот день нет
-function whDayVolume(day) {
-    if (!day) return null;
-    let v = 0;
-    Object.entries(day).forEach(([key, o]) => {
-        if (whFilter.owner && key !== whFilter.owner) return;
-        Object.entries(o.items || {}).forEach(([n, q]) => {
-            if (PI_COMMODITIES[n] && whTierOn(piTierOf(n))) v += whVolOf(n, q);
-        });
-    });
-    return v;
-}
-
-// График: одна линия — занимаемый объём, 10 последних дней
-function whChartHtml() {
+/* График справа — количество каждого ресурса отдельно за 10 дней:
+   маленький график на товар, у каждого своя шкала (30 000 и 5 штук на
+   одной шкале не прочитать). Только видимое в таблице: открытые уровни
+   и выбранные склады; порядок — как в таблице. */
+function whChartHtml(names, owners) {
     const hist = store.get(WH_HIST_KEY, {}) || {};
+    const keys = new Set(owners.map(whOwnerKey));
     const days = [];
     for (let i = 9; i >= 0; i -= 1) {
         const d = new Date(Date.now() - i * 864e5);
-        days.push({ key: whDayKey(d), label: `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`, v: whDayVolume(hist[whDayKey(d)]) });
+        days.push({ key: whDayKey(d), label: `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}` });
     }
-    const W = 420;
-    const H = 200;
-    const L = 56;
-    const R = 22;
-    const T = 12;
-    const B = 26;
-    const vals = days.map((d) => d.v).filter((v) => v !== null);
-    const max = Math.max(1, ...vals);
-    // «круглая» верхняя граница шкалы: 1, 2, 2.5, 5 × 10^n
-    const pow = 10 ** Math.floor(Math.log10(max));
-    const top = [1, 2, 2.5, 5, 10].map((k) => k * pow).find((x) => x >= max);
-    const x = (i) => L + (i * (W - L - R)) / 9;
-    const y = (v) => T + (H - T - B) * (1 - v / top);
-    const ticks = [0, 0.25, 0.5, 0.75, 1].map((k) => k * top);
-    const grid = ticks.map((t) => `<line class="wh-ch-grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/>`
-        + `<text class="wh-ch-ytick" x="${L - 6}" y="${y(t) + 3.5}">${Math.round(t).toLocaleString('ru-RU')}</text>`).join('');
-    const xl = days.map((d, i) => `<text class="wh-ch-xtick" x="${x(i)}" y="${H - 8}">${d.label}</text>`).join('');
-    // линия — отрезками по дням подряд, где срез есть
-    const runs = [];
-    let run = [];
-    days.forEach((d, i) => {
-        if (d.v === null) { if (run.length) runs.push(run); run = []; } else run.push([x(i), y(d.v)]);
-    });
-    if (run.length) runs.push(run);
-    const lines = runs.filter((r) => r.length > 1).map((r) => `<polyline class="wh-ch-line" points="${r.map((p) => p.join(',')).join(' ')}"/>`).join('');
-    const dots = days.map((d, i) => (d.v === null ? '' : `<circle class="wh-ch-dot" cx="${x(i)}" cy="${y(d.v)}" r="4"/>`)).join('');
-    // зоны наведения — шире точки, на всю высоту; подсказка — общая подсказка сайта
-    const hits = days.map((d, i) => `<rect class="wh-ch-hit" x="${x(i) - (W - L - R) / 18}" y="${T}" width="${(W - L - R) / 9}" height="${H - T - B}"
-        title="${d.label}${d.v === null ? '\nСреза нет' : `\nОбъём: ${whFmtM3(d.v)}`}"/>`).join('');
-    const note = vals.length < 2
-        ? '<p class="wh-ch-note">История копится: срез сохраняется раз в день, когда открываете «Склад».</p>' : '';
+    const qtyOn = (day, name) => {
+        const rec = hist[day];
+        if (!rec) return null;
+        let q = 0;
+        Object.entries(rec).forEach(([key, o]) => { if (keys.has(key)) q += (o.items || {})[name] || 0; });
+        return q;
+    };
+    const W = 230;
+    const H = 46;
+    const P = 4;
+    const tiles = names.map((n) => {
+        const vals = days.map((d) => qtyOn(d.key, n));
+        const known = vals.filter((v) => v !== null);
+        const max = Math.max(1, ...known);
+        const x = (i) => P + (i * (W - 2 * P)) / 9;
+        const y = (v) => P + (H - 2 * P) * (1 - v / max);
+        const runs = [];
+        let run = [];
+        vals.forEach((v, i) => {
+            if (v === null) { if (run.length) runs.push(run); run = []; } else run.push(`${x(i)},${y(v)}`);
+        });
+        if (run.length) runs.push(run);
+        const lines = runs.filter((r) => r.length > 1).map((r) => `<polyline class="wh-ch-line" points="${r.join(' ')}"/>`).join('');
+        const dots = vals.map((v, i) => (v === null ? '' : `<circle class="wh-ch-dot" cx="${x(i)}" cy="${y(v)}" r="3"/>`)).join('');
+        const hits = days.map((d, i) => `<rect class="wh-ch-hit" x="${x(i) - (W - 2 * P) / 18}" y="0" width="${(W - 2 * P) / 9}" height="${H}"
+            title="${escapeHtml(`${n}\n${d.label}: ${vals[i] === null ? 'среза нет' : `${Math.round(vals[i]).toLocaleString('ru-RU')} шт`}`)}"/>`).join('');
+        const last = known.length ? known[known.length - 1] : 0;
+        return `<div class="wh-ch-tile">
+                <div class="wh-ch-head">${tierBadgeHtml(`P${piTierOf(n)}`)}<span class="wh-ch-name" lang="en">${escapeHtml(n)}</span><span class="wh-ch-last">${whFmt(last) || '0'}</span></div>
+                <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${escapeHtml(n)}: количество по дням">
+                    <line class="wh-ch-axis" x1="${P}" x2="${W - P}" y1="${y(0)}" y2="${y(0)}"/>${lines}${dots}${hits}
+                </svg>
+            </div>`;
+    }).join('');
+    const filled = Object.keys(hist).filter((k) => k >= days[0].key).length;
+    const note = filled < 2 ? '<p class="wh-ch-note">История копится: срез сохраняется раз в день, когда открываете «Склад».</p>' : '';
     return `<figure class="wh-chart">
-            <figcaption class="wh-ch-title">Занимаемый объём, м³ · 10 дней</figcaption>
-            <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Занимаемый объём по дням">
-                ${grid}<line class="wh-ch-axis" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>${xl}${lines}${dots}${hits}
-            </svg>${note}
+            <figcaption class="wh-ch-title">Количество, шт · 10 дней <span class="wh-ch-range">${days[0].label} – ${days[9].label}</span></figcaption>
+            ${tiles ? `<div class="wh-ch-grid">${tiles}</div>` : '<p class="wh-ch-note">Нет открытых уровней</p>'}${note}
         </figure>`;
 }
 
@@ -3477,7 +3471,7 @@ function whSumInnerHtml() {
                 <tbody>${rows}</tbody>
                 <tfoot><tr><th scope="row" class="st-name">Итого</th><td colspan="${cols - 1}" class="wh-total">${whFmtM3(sumVol)}<span class="uv-sep">·</span>${whFmtIsk(sumIsk) || '0 ISK'}${pricePending ? ' …' : ''}</td></tr></tfoot>
             </table>` : '<p class="evt-dim">Планетарки на складе нет</p>'}</div>
-            ${whChartHtml()}
+            ${whChartHtml([4, 3, 2, 1, 0].filter(whTierOn).flatMap((t) => names.filter((n) => piTierOf(n) === t).sort((a, b) => a.localeCompare(b))), owners)}
         </div>`;
 }
 
