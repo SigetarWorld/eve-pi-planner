@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=153">
+    <link rel="stylesheet" href="css/style.css?v=155">
 </head>
 <body>
     <header>
@@ -32,11 +32,9 @@
                     <img src="https://web.ccpgamescdn.com/eveonlineassets/developers/eve-sso-login-black-small.png"
                          alt="LOG IN with EVE Online" width="195" height="30">
                 </button>
-                <!-- Подключённые персонажи: кнопка со счётчиком и список под ней.
-                     Каждый вход кнопкой выше добавляет ещё одного персонажа. -->
-                <button type="button" id="eve-chars-btn" class="eve-chars-btn" hidden
-                        aria-haspopup="true" aria-expanded="false" aria-controls="eve-chars"></button>
-                <div id="eve-chars" class="eve-chars" hidden></div>
+                <!-- Статистика сервера EVE Online (Tranquility): игроков онлайн,
+                     с какого времени работает. Заполняет app.js (eveServerStatus) -->
+                <span id="eve-status" class="eve-status" aria-live="polite"></span>
                 <span id="eve-hint" class="eve-hint"></span>
             </div>
             <nav class="tabs">
@@ -81,7 +79,19 @@
 
                 <!-- Подключённые персонажи EVE — над «Статистикой», на уровне
                      строки «Регион». Заполняет app.js (renderEveAuth). -->
-                <div id="eve-roster" class="card-head eve-roster" aria-label="Подключённые персонажи"></div>
+                <!-- Подключённые персонажи: вместо подписи — список-меню «Персонажи»,
+                     справа портреты с именами.
+                     Внутри — портреты и крестик отключения; каждый вход кнопкой
+                     «LOG IN with EVE Online» вверху добавляет ещё персонажа. -->
+                <div id="eve-roster" class="card-head eve-roster" aria-label="Подключённые персонажи">
+                    <div class="eve-chars-wrap">
+                        <button type="button" id="eve-chars-btn" class="ct-input card-new pilot-select eve-chars-select"
+                                aria-haspopup="true" aria-expanded="false" aria-controls="eve-chars"></button>
+                        <div id="eve-chars" class="eve-chars" hidden></div>
+                    </div>
+                    <!-- портреты подключённых персонажей, в два ряда (renderEveRoster) -->
+                    <div id="eve-roster-list" class="eve-roster-list"></div>
+                </div>
 
                 <!-- Таблицу подсчёта P1 строит и заполняет app.js (updateStats) -->
                 <div class="card-head stats-panel">
@@ -199,7 +209,7 @@
     <script src="js/calculator.js?v=35"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=137"></script>
+    <script src="js/app.js?v=139"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
         if (location.protocol === "file:") {

@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 17:00';
+const APP_BUILD = '13.10.2026 17:30';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -4478,8 +4478,8 @@ function renderEveAuth(message) {
     const list = eveChars();
     eveLoginBtn.hidden = false;
     eveLoginBtn.title = list.length ? 'Добавить ещё персонажа' : 'Войти через EVE Online';
-    eveCharsBtn.hidden = !list.length;
-    eveCharsBtn.innerHTML = `<span class="eve-chars-label">Персонажи: </span>${list.length}`;
+    // список-меню на месте подписи «Персонажи»
+    eveCharsBtn.textContent = `Персонажи: ${list.length}`;
     eveCharsBtn.setAttribute('aria-label', `Персонажи: ${list.length}`);
     if (!list.length) closeEveChars();
     eveCharsBox.innerHTML = list.map((c) => `
@@ -4496,24 +4496,54 @@ function renderEveAuth(message) {
     refreshPilotSelects();
 }
 
-/* Строка над «Статистикой»: все подключённые персонажи с портретами */
-const eveRoster = document.getElementById('eve-roster');
+/* Блок «Персонажи» внизу — список-меню (кнопка eve-chars-btn и окно
+   eve-chars под ней); всё содержимое заполняет renderEveAuth */
+const eveRosterList = document.getElementById('eve-roster-list');
 function renderEveRoster(list) {
-    if (!eveRoster) return;
-    eveRoster.innerHTML = `<span class="card-pilot-label">Персонажи</span>`
-        + (list.length
-            ? list.map((c) => `
-                <span class="eve-roster-char" title="${escapeHtml(c.characterName || 'Персонаж')}">
-                    ${c.characterId ? `<img class="eve-char-img" src="${evePortrait(c.characterId)}" alt="" width="24" height="24">` : ''}
-                    <span class="eve-roster-name">${escapeHtml(c.characterName || 'Персонаж')}</span>
-                </span>`).join('')
-            : '<span class="eve-roster-empty">не подключены — «LOG IN with EVE Online» вверху</span>');
+    if (!eveRosterList) return;
+    eveRosterList.innerHTML = list.length
+        ? list.map((c) => `
+            <span class="eve-roster-char">
+                ${c.characterId ? `<img class="eve-char-img" src="${evePortrait(c.characterId)}" alt="" width="24" height="24">` : ''}
+                <span class="eve-roster-name">${escapeHtml(c.characterName || 'Персонаж')}</span>
+            </span>`).join('')
+        : '<span class="eve-roster-empty">не подключены — «LOG IN with EVE Online» вверху</span>';
 }
 
 function closeEveChars() {
     eveCharsBox.hidden = true;
     eveCharsBtn.setAttribute('aria-expanded', 'false');
 }
+
+/* ---- Статистика сервера EVE Online ----
+   В шапке рядом со входом: игроков онлайн на Tranquility и с какого
+   времени сервер работает (после ежедневного даунтайма). Обновляется
+   раз в 2 минуты (ESI кэширует /status/ на 30 секунд). */
+const eveStatusEl = document.getElementById('eve-status');
+async function eveServerStatus() {
+    if (!eveStatusEl) return;
+    try {
+        const res = await fetch(`${ESI_BASE}/status/?datasource=tranquility`);
+        if (!res.ok) throw new Error(String(res.status));
+        const st = await res.json();
+        const since = new Date(st.start_time);
+        const hours = Math.floor((Date.now() - since) / 3600000);
+        const p2 = (n) => String(n).padStart(2, '0');
+        eveStatusEl.className = 'eve-status is-online';
+        eveStatusEl.innerHTML = `<span class="eve-status-dot"></span>Tranquility
+            <b>${Number(st.players || 0).toLocaleString('ru-RU')}</b>`;
+        eveStatusEl.title = `Сервер EVE Online работает · игроков онлайн: ${Number(st.players || 0).toLocaleString('ru-RU')}`
+            + `\nзапущен ${p2(since.getHours())}:${p2(since.getMinutes())} (${hours} ч назад)`
+            + (st.server_version ? ` · версия ${st.server_version}` : '')
+            + (st.vip ? ' · только для разработчиков (VIP)' : '');
+    } catch (e) {
+        eveStatusEl.className = 'eve-status is-offline';
+        eveStatusEl.innerHTML = '<span class="eve-status-dot"></span>Tranquility <b>недоступен</b>';
+        eveStatusEl.title = 'Сервер EVE Online не отвечает — даунтайм или проблемы со связью';
+    }
+}
+eveServerStatus();
+setInterval(() => { if (!document.hidden) eveServerStatus(); }, 2 * 60 * 1000);
 
 /* Повторный вызов не должен навешивать слушатели заново: в тестах
    initEveAuth() зовут несколько раз подряд на одной странице. */
