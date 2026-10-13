@@ -4961,3 +4961,11 @@ input.chain-amount:focus {
 /* окно «Склада» — от верха экрана: при сворачивании уровней не смещается */
 #wh-modal { align-items: flex-start; padding-top: 2rem; }
 #wh-modal .stats-modal-box { max-height: calc(100vh - 4rem); }
+
+/* Тренд за 2 недели — столбец справа */
+.wh-table .wh-trend { width: 2rem; text-align: center; font-size: 0.8rem; }
+.wh-table .wh-tr-up { color: var(--green); }
+.wh-table .wh-tr-down { color: var(--red); }
+.wh-table .wh-tr-flat, .wh-table .wh-tr-none { color: var(--text-faint); }
+.wh-table .wh-total { text-align: right; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.wh-table .wh-total .uv-sep { margin: 0 0.3rem; }

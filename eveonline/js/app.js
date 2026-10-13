@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '14.10.2026 00:40';
+const APP_BUILD = '14.10.2026 00:55';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3380,6 +3380,35 @@ function whChartHtml() {
         </figure>`;
 }
 
+/* Тренд за 2 недели: количество товара сейчас против самого раннего
+   среза за последние 14 дней (те же склады, что выбраны в списке).
+   Зелёная ▲ — выросло, красная ▼ — упало, серая — без изменений,
+   «—» — более ранних срезов ещё нет. */
+function whTrendFn(owners) {
+    const hist = store.get(WH_HIST_KEY, {}) || {};
+    const today = whDayKey(new Date());
+    const from = whDayKey(new Date(Date.now() - 14 * 864e5));
+    const day = Object.keys(hist).filter((k) => k >= from && k < today).sort()[0];
+    const keys = new Set(owners.map(whOwnerKey));
+    const old = new Map();
+    if (day) {
+        Object.entries(hist[day]).forEach(([key, o]) => {
+            if (!keys.has(key)) return;
+            Object.entries(o.items || {}).forEach(([n, q]) => old.set(n, (old.get(n) || 0) + q));
+        });
+    }
+    return (name) => (day ? { day, was: old.get(name) || 0 } : null);
+}
+function whTrendCellHtml(name, now, t) {
+    if (!t) return '<td class="wh-trend wh-tr-none" title="Сравнить не с чем: история копится">—</td>';
+    const d = Math.round(now - t.was);
+    const [y, m, dd] = t.day.split('-');
+    const tip = `${name}\nС ${dd}.${m}.${y}: ${d > 0 ? '+' : ''}${d.toLocaleString('ru-RU')} шт`;
+    if (d > 0) return `<td class="wh-trend wh-tr-up" title="${escapeHtml(tip)}">▲</td>`;
+    if (d < 0) return `<td class="wh-trend wh-tr-down" title="${escapeHtml(tip)}">▼</td>`;
+    return `<td class="wh-trend wh-tr-flat" title="${escapeHtml(tip)}">▬</td>`;
+}
+
 function whSumInnerHtml() {
     const all = whLast;
     const owners = whFilter.owner ? all.filter((o) => whOwnerKey(o) === whFilter.owner) : all;
@@ -3390,7 +3419,8 @@ function whSumInnerHtml() {
     });
     const names = uniqValues(owners.flatMap((o) => o.entries.map((e) => e.name)));
     const many = owners.length > 1;
-    const cols = owners.length + (many ? 1 : 0) + 3;            // товар, владельцы, всего, м³, ISK
+    const cols = owners.length + (many ? 1 : 0) + 2;            // товар, владельцы, всего, тренд
+    const trendOf = whTrendFn(owners);
     const head = owners.map((o) => `<th scope="col" class="wh-col">${whAvaHtml(o)}<span>${escapeHtml(o.title)}</span></th>`).join('');
     let sumVol = 0;
     let sumIsk = 0;
@@ -3415,8 +3445,7 @@ function whSumInnerHtml() {
             return `<tr class="wh-row"${open ? '' : ' data-collapsed="1"'}><th scope="row" class="st-name"><span class="st-name-inner">${iconFor(n) || ''}<span lang="en">${escapeHtml(n)}</span></span></th>`
                 + qs.map((x) => `<td class="wh-n">${whFmt(x)}</td>`).join('')
                 + (many ? `<td class="wh-n wh-sum">${whFmt(q)}</td>` : '')
-                + `<td class="wh-n wh-vol">${whFmt(v)}</td>`
-                + `<td class="wh-n wh-isk"${price ? ` title="${escapeHtml(`${n}\nЦена: ${whFmtIsk(price)}`)}"` : ''}>${price === undefined ? '…' : price === null ? '—' : whFmtIsk(isk).replace(' ISK', '')}</td></tr>`;
+                + whTrendCellHtml(n, q, trendOf(n)) + '</tr>';
         }).join('');
         if (open) {
             sumVol += tierVol;
@@ -3444,9 +3473,9 @@ function whSumInnerHtml() {
         </div>
         <div class="wh-sum-row">
             <div class="st-scroll">${rows ? `<table class="stats-p1 wh-table">
-                <thead><tr><th scope="col" class="st-name">Товар</th>${head}${many ? '<th scope="col" class="wh-col">Всего</th>' : ''}<th scope="col" class="wh-col">м³</th><th scope="col" class="wh-col" title="Цена — минимальная на продажу в хабе ${escapeHtml(hub ? hub.name : '')}">ISK</th></tr></thead>
+                <thead><tr><th scope="col" class="st-name">Товар</th>${head}${many ? '<th scope="col" class="wh-col">Всего</th>' : ''}<th scope="col" class="wh-col wh-trend" title="Изменение количества за 2 недели">±</th></tr></thead>
                 <tbody>${rows}</tbody>
-                <tfoot><tr><th scope="row" class="st-name">Итого</th><td colspan="${owners.length + (many ? 1 : 0)}"></td><td class="wh-n wh-vol">${whFmtM3(sumVol)}</td><td class="wh-n wh-isk">${whFmtIsk(sumIsk)}${pricePending ? ' …' : ''}</td></tr></tfoot>
+                <tfoot><tr><th scope="row" class="st-name">Итого</th><td colspan="${cols - 1}" class="wh-total">${whFmtM3(sumVol)}<span class="uv-sep">·</span>${whFmtIsk(sumIsk) || '0 ISK'}${pricePending ? ' …' : ''}</td></tr></tfoot>
             </table>` : '<p class="evt-dim">Планетарки на складе нет</p>'}</div>
             ${whChartHtml()}
         </div>`;
