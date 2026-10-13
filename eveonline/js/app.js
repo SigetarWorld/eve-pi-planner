@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 22:55';
+const APP_BUILD = '13.10.2026 23:05';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3197,8 +3197,13 @@ function whSecHtml(place) {
     const v = Math.round(place.sec * 10) / 10;
     const kind = /^J\d{6}$/.test(place.system || '') ? 'w' : v >= 0.5 ? 'hi' : v > 0 ? 'low' : 'null';
     const label = { hi: 'Hi', low: 'Low', null: 'Null', w: 'W' }[kind];
-    return `<span class="wh-sec wh-sec-${kind}" title="Безопасность системы ${v.toFixed(1)}">${label} ${v.toFixed(1)}</span>`;
+    // два значка в стиле [P1]: вид и число
+    const tip = `Безопасность системы ${v.toFixed(1)}`;
+    return `<span class="ct-tier wh-sec wh-sec-${kind}" title="${tip}">${label}</span>`
+        + `<span class="ct-tier wh-sec wh-sec-${kind}" title="${tip}">${v.toFixed(1)}</span>`;
 }
+// Сводная таблица — за кнопкой под заголовком «Склад»; по умолчанию скрыта
+let whSumShown = false;
 const whFmt = (n) => (n ? Math.floor(n).toLocaleString('ru-RU') : '');
 
 function warehouseHtml(owners) {
@@ -3267,7 +3272,7 @@ function warehouseHtml(owners) {
             </div>`;
     }).join('');
     return `<div class="wh-layout">
-            <div class="st-scroll wh-sum-box"><table class="stats-p1 wh-table">
+            <div class="st-scroll wh-sum-box"${whSumShown ? '' : ' hidden'}><table class="stats-p1 wh-table">
                 <thead><tr><th scope="col" class="st-name">Товар</th>${head}<th scope="col" class="wh-col">Всего</th></tr></thead>
                 <tbody>${rows}</tbody></table></div>
             <section class="wh-where-box"><h4 class="wh-h">Где лежит</h4>
@@ -3304,6 +3309,16 @@ async function renderWarehouse() {
         modal.querySelector('.ct-modal-close').focus();
         renderWarehouse();
     });
+    // кнопка под заголовком — показать / скрыть сводную таблицу
+    const sumBtn = document.getElementById('wh-sum-toggle');
+    if (sumBtn) {
+        sumBtn.addEventListener('click', () => {
+            whSumShown = !whSumShown;
+            sumBtn.setAttribute('aria-expanded', String(whSumShown));
+            const box = modal.querySelector('.wh-sum-box');
+            if (box) box.hidden = !whSumShown;
+        });
+    }
     // круглая кнопка у пути — свернуть / развернуть товары этого места
     modal.addEventListener('click', (event) => {
         const fold = event.target.closest('[data-role="wh-fold"]');

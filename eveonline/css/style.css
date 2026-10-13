@@ -4865,11 +4865,17 @@ input.chain-amount:focus {
 .wh-loc { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; font-size: 0.8rem; }
 .wh-region { color: var(--text-dim); }
 .wh-station { color: var(--text); }
-.wh-sec { padding: 0 0.3rem; font-size: 0.7rem; font-weight: 700; border: 1px solid currentColor; border-radius: 3px; font-variant-numeric: tabular-nums; }
-.wh-sec-hi { color: var(--green); }
-.wh-sec-low { color: var(--yellow); }
-.wh-sec-null { color: var(--red); }
-.wh-sec-w { color: #c9a7ff; }
+/* Hi / Low / Null и число — значки как [P1]: квадрат с рамкой */
+.uv .ct-tier.wh-sec { width: auto; min-width: 1.4rem; padding: 0 0.25rem; font-variant-numeric: tabular-nums; }
+.uv .ct-tier.wh-sec-hi   { color: var(--green);  border-color: rgba(79, 209, 139, 0.55); background: rgba(79, 209, 139, 0.08); }
+.uv .ct-tier.wh-sec-low  { color: var(--yellow); border-color: rgba(255, 210, 63, 0.55); background: rgba(255, 210, 63, 0.08); }
+.uv .ct-tier.wh-sec-null { color: var(--red);    border-color: rgba(255, 107, 107, 0.55); background: rgba(255, 107, 107, 0.08); }
+.uv .ct-tier.wh-sec-w    { color: #c9a7ff;       border-color: rgba(201, 167, 255, 0.55); background: rgba(201, 167, 255, 0.08); }
+.wh-loc .wh-sec + .wh-sec { margin-left: -0.15rem; }
+/* кнопка «Сводная таблица» под заголовком */
+.wh-sum-toggle { margin: 0 0 0.6rem; }
+.wh-sum-toggle[aria-expanded="true"] { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+.wh-sum-box[hidden] { display: none; }
 .wh-spot { min-height: 30px; }
 .wh-path { padding: 0.15rem 0 0.1rem; font-size: 0.78rem; color: var(--text-dim); }
 .wh-items[hidden] { display: none; }
