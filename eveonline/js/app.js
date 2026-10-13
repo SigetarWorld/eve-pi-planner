@@ -2013,7 +2013,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 05:20';
+const APP_BUILD = '13.10.2026 10:40';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -2254,8 +2254,15 @@ function parseInventoryText(text) {
 
 const pinIsFactory = (p) => Boolean((p.factory_details && p.factory_details.schematic_id) || p.schematic_id || p.extractor_details);
 
+/* Снимки и срезы хранятся по номеру планеты, а на одной планете бывают
+   колонии разных персонажей (у Sigetar и CrazyJam — общие DFTK-D II, III,
+   IX). Своё у колонии — только то, что относится к её постройкам. */
+const ownPinsOf = (layout) => new Set((layout.pins || []).map((p) => String(p.pin_id)));
+const snapIsOwn = (own, snap) => Object.keys((snap && snap.pins) || {}).some((id) => own.has(id));
+
 function simulateColony(layout, schematics, startTime, endTime, opts = {}) {
     const pins = layout.pins || [];
+    const own = ownPinsOf(layout);
     const routes = layout.routes || [];
     const stock = new Map();             // pin_id -> Map(название -> количество)
     const bag = (id) => {
@@ -2264,7 +2271,7 @@ function simulateColony(layout, schematics, startTime, endTime, opts = {}) {
     };
     const add = (id, name, qty) => bag(id).set(name, (bag(id).get(name) || 0) + qty);
     const initial = opts.stock || pinsContentsOf(layout);
-    Object.entries(initial).forEach(([id, items]) => Object.entries(items)
+    Object.entries(initial).filter(([id]) => own.has(String(id))).forEach(([id, items]) => Object.entries(items)
         .forEach(([name, n]) => add(Number(id), name, n)));
     // буферы фабрик берём из ответа EVE, если считаем от его снимка
     if (opts.stock) {
@@ -2387,7 +2394,7 @@ function simulateColony(layout, schematics, startTime, endTime, opts = {}) {
     // Срезы из игры: сверка с расчётом и замена расчёта фактом
     (opts.slices || []).forEach((sl) => {
         const t = new Date(sl.t).getTime();
-        if (t <= t0 || t > t1) return;
+        if (t <= t0 || t > t1 || !own.has(String(sl.pin))) return;
         push({ t, order: 2, kind: 'slice', run: () => {
             const was = bag(sl.pin);
             const names = new Set([...was.keys(), ...Object.keys(sl.items)]);
@@ -2519,17 +2526,19 @@ function eveTestColonyHtml(detail) {
     const snaps = saveEsiSnapshot(col, layout);
     const esiT = new Date(col.last_update).getTime();
     const now = Date.now();
-    const slicesAfter = snaps.manual.filter((x) => new Date(x.t).getTime() > esiT);
+    const ownPins = ownPinsOf(layout);
+    const slicesAfter = snaps.manual.filter((x) => new Date(x.t).getTime() > esiT && ownPins.has(String(x.pin)));
     const sim = simulateColony(layout, schematics, col.last_update, now, { slices: slicesAfter });
 
     // Сверка прошлого открытия в игре с нынешним: что сделали руками
     let esiLog = [];
-    const idx = snaps.esi.findIndex((x) => x.t === col.last_update);
-    const prev = idx > 0 ? snaps.esi[idx - 1] : null;
+    const ownEsi = snaps.esi.filter((x) => x.t === col.last_update || snapIsOwn(ownPins, x));
+    const idx = ownEsi.findIndex((x) => x.t === col.last_update);
+    const prev = idx > 0 ? ownEsi[idx - 1] : null;
     if (prev) {
         const between = snaps.manual.filter((x) => {
             const t = new Date(x.t).getTime();
-            return t > new Date(prev.t).getTime() && t < esiT;
+            return t > new Date(prev.t).getTime() && t < esiT && ownPins.has(String(x.pin));
         });
         const cur = pinsContentsOf(layout);
         const slicesAtEsi = Object.keys(cur).concat(Object.keys(prev.pins))
@@ -3291,7 +3300,8 @@ function viewStockOf(name) {
         data.details.forEach(({ col, layout, planet, schematics }) => {
             const snaps = saveEsiSnapshot(col, layout);
             const esiT = new Date(col.last_update).getTime();
-            const slices = snaps.manual.filter((x) => new Date(x.t).getTime() > esiT);
+            const own = ownPinsOf(layout);
+            const slices = snaps.manual.filter((x) => new Date(x.t).getTime() > esiT && own.has(String(x.pin)));
             let byPin;
             try {
                 byPin = simulateColony(layout, schematics, col.last_update, Date.now(), { slices }).stock;
@@ -3305,7 +3315,7 @@ function viewStockOf(name) {
             const stock = new Map();
             const where = new Map();
             byPin.forEach((items, pinId) => {
-                if (factories.has(pinId)) return;
+                if (factories.has(pinId) || !typeOfPin.has(pinId)) return;
                 items.forEach((n, item) => {
                     if (!(n > 0)) return;
                     stock.set(item, (stock.get(item) || 0) + n);
