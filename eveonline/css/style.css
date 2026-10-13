@@ -4966,14 +4966,24 @@ input.chain-amount:focus {
 .wh-table .wh-total { text-align: right; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
 .wh-table .wh-total .uv-sep { margin: 0 0.3rem; }
 
-/* График справа — маленький график на ресурс */
+/* График справа — все ресурсы на одном графике, шкала логарифмическая */
 .uv.wh-sum-box .wh-chart { flex: 1 1 30rem; min-width: 0; }
 .wh-ch-range { margin-left: 0.4rem; color: var(--text-faint); }
-.wh-ch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.4rem 0.8rem; }
-.wh-ch-tile { padding: 0.25rem 0.35rem; border: 1px solid var(--border); border-radius: var(--radius-sm); }
-.wh-ch-head { display: flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; }
-.wh-ch-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
-.wh-ch-last { margin-left: auto; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
-.wh-ch-tile svg { display: block; width: 230px; max-width: 100%; height: auto; }
-.wh-ch-tile .wh-ch-dot { stroke-width: 1.5; }
+.wh-ch-svg { display: block; width: 560px; max-width: 100%; height: auto; }
+.wh-ch-gridline { stroke: var(--border); stroke-width: 1; }
+.wh-ch-ytick, .wh-ch-xtick { fill: var(--text-faint); font-size: 10px; font-variant-numeric: tabular-nums; }
+.wh-ch-ytick { text-anchor: end; }
+.wh-ch-xtick { text-anchor: middle; }
+.wh-ch-series .wh-ch-line { stroke: var(--c); }
+.wh-ch-series .wh-ch-dot { fill: var(--c); stroke: var(--bg-deep); stroke-width: 1.5; }
+.wh-ch-hitline { fill: none; stroke: transparent; stroke-width: 10; }
+.wh-ch-series, .wh-lg-item { transition: opacity 0.12s; }
+.wh-chart.has-hl .wh-ch-series:not(.is-hl),
+.wh-chart.has-hl .wh-lg-item:not(.is-hl) { opacity: 0.18; }
+.wh-chart.has-hl .wh-ch-series.is-hl .wh-ch-line { stroke-width: 3; }
+.wh-legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.15rem 0.8rem; margin: 0.4rem 0 0; padding: 0; list-style: none; font-size: 0.76rem; }
+.wh-lg-item { display: flex; align-items: center; gap: 0.3rem; min-width: 0; cursor: default; }
+.wh-lg-swatch { flex: 0 0 auto; width: 12px; height: 2px; border-radius: 1px; background: var(--c); }
+.wh-lg-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.wh-lg-last { margin-left: auto; color: var(--text-dim); font-variant-numeric: tabular-nums; }
 .uv.wh-sum-box { flex: 1 1 100%; min-width: 0; }

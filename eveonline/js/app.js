@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '14.10.2026 01:15';
+const APP_BUILD = '14.10.2026 01:25';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3320,10 +3320,12 @@ function whSaveHistory(owners) {
     store.set(WH_HIST_KEY, hist);
 }
 
-/* График справа — количество каждого ресурса отдельно за 10 дней:
-   маленький график на товар, у каждого своя шкала (30 000 и 5 штук на
-   одной шкале не прочитать). Только видимое в таблице: открытые уровни
-   и выбранные склады; порядок — как в таблице. */
+/* График справа — количество каждого ресурса за 10 дней, все на одном
+   графике. Количества отличаются в тысячи раз, поэтому шкала по
+   вертикали логарифмическая (1, 10, 100…). Цвет линии — уровень товара;
+   какая линия чья — в подсказке и в легенде (наведение выделяет линию).
+   Только видимое в таблице: открытые уровни и выбранные склады. */
+const WH_TIER_COLORS = ['#9aa6b8', '#ff9d2e', '#4ec9e0', '#7fb0ff', '#c9a7ff'];
 function whChartHtml(names, owners) {
     const hist = store.get(WH_HIST_KEY, {}) || {};
     const keys = new Set(owners.map(whOwnerKey));
@@ -3339,38 +3341,49 @@ function whChartHtml(names, owners) {
         Object.entries(rec).forEach(([key, o]) => { if (keys.has(key)) q += (o.items || {})[name] || 0; });
         return q;
     };
-    const W = 230;
-    const H = 46;
-    const P = 4;
-    const tiles = names.map((n) => {
-        const vals = days.map((d) => qtyOn(d.key, n));
-        const known = vals.filter((v) => v !== null);
-        const max = Math.max(1, ...known);
-        const x = (i) => P + (i * (W - 2 * P)) / 9;
-        const y = (v) => P + (H - 2 * P) * (1 - v / max);
+    const series = names.map((n) => ({ n, vals: days.map((d) => qtyOn(d.key, n)) }));
+    const all = series.flatMap((x) => x.vals).filter((v) => v !== null && v > 0);
+    const top = 10 ** Math.max(1, Math.ceil(Math.log10(Math.max(10, ...all))));
+    const W = 560;
+    const H = 260;
+    const L = 52;
+    const R = 22;
+    const T = 10;
+    const B = 24;
+    const x = (i) => L + (i * (W - L - R)) / 9;
+    const y = (v) => T + (H - T - B) * (1 - Math.log10(Math.max(1, v)) / Math.log10(top));
+    const ticks = [];
+    for (let t = 1; t <= top; t *= 10) ticks.push(t);
+    const grid = ticks.map((t) => `<line class="wh-ch-gridline" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/>`
+        + `<text class="wh-ch-ytick" x="${L - 6}" y="${y(t) + 3.5}">${t >= 1e6 ? `${t / 1e6} млн` : t >= 1e3 ? `${t / 1e3} тыс` : t}</text>`).join('');
+    const xl = days.map((d, i) => `<text class="wh-ch-xtick" x="${x(i)}" y="${H - 7}">${d.label}</text>`).join('');
+    const lines = series.map(({ n, vals }, si) => {
+        const color = WH_TIER_COLORS[piTierOf(n)];
         const runs = [];
         let run = [];
         vals.forEach((v, i) => {
             if (v === null) { if (run.length) runs.push(run); run = []; } else run.push(`${x(i)},${y(v)}`);
         });
         if (run.length) runs.push(run);
-        const lines = runs.filter((r) => r.length > 1).map((r) => `<polyline class="wh-ch-line" points="${r.join(' ')}"/>`).join('');
-        const dots = vals.map((v, i) => (v === null ? '' : `<circle class="wh-ch-dot" cx="${x(i)}" cy="${y(v)}" r="3"/>`)).join('');
-        const hits = days.map((d, i) => `<rect class="wh-ch-hit" x="${x(i) - (W - 2 * P) / 18}" y="0" width="${(W - 2 * P) / 9}" height="${H}"
-            title="${escapeHtml(`${n}\n${d.label}: ${vals[i] === null ? 'среза нет' : `${Math.round(vals[i]).toLocaleString('ru-RU')} шт`}`)}"/>`).join('');
-        const last = known.length ? known[known.length - 1] : 0;
-        return `<div class="wh-ch-tile">
-                <div class="wh-ch-head">${tierBadgeHtml(`P${piTierOf(n)}`)}<span class="wh-ch-name" lang="en">${escapeHtml(n)}</span><span class="wh-ch-last">${whFmt(last) || '0'}</span></div>
-                <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${escapeHtml(n)}: количество по дням">
-                    <line class="wh-ch-axis" x1="${P}" x2="${W - P}" y1="${y(0)}" y2="${y(0)}"/>${lines}${dots}${hits}
-                </svg>
-            </div>`;
+        const last = vals.filter((v) => v !== null).pop();
+        const tip = `${n}\n${vals.map((v, i) => (v === null ? '' : `${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')}`)).filter(Boolean).join('\n')}`;
+        return `<g class="wh-ch-series" data-s="${si}" style="--c:${color}">
+                ${runs.filter((r) => r.length > 1).map((r) => `<polyline class="wh-ch-line" points="${r.join(' ')}"/><polyline class="wh-ch-hitline" points="${r.join(' ')}" title="${escapeHtml(tip)}"/>`).join('')}
+                ${vals.map((v, i) => (v === null ? '' : `<circle class="wh-ch-dot" cx="${x(i)}" cy="${y(v)}" r="3.5" title="${escapeHtml(`${n}\n${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')} шт`)}"/>`)).join('')}
+            </g>`;
+    }).join('');
+    const legend = series.map(({ n, vals }, si) => {
+        const last = vals.filter((v) => v !== null).pop();
+        return `<li class="wh-lg-item" data-s="${si}" style="--c:${WH_TIER_COLORS[piTierOf(n)]}"><span class="wh-lg-swatch"></span>${tierBadgeHtml(`P${piTierOf(n)}`)}<span class="wh-lg-name" lang="en">${escapeHtml(n)}</span><span class="wh-lg-last">${last === undefined ? '—' : whFmt(last) || '0'}</span></li>`;
     }).join('');
     const filled = Object.keys(hist).filter((k) => k >= days[0].key).length;
     const note = filled < 2 ? '<p class="wh-ch-note">История копится: срез сохраняется раз в день, когда открываете «Склад».</p>' : '';
     return `<figure class="wh-chart">
-            <figcaption class="wh-ch-title">Количество, шт · 10 дней <span class="wh-ch-range">${days[0].label} – ${days[9].label}</span></figcaption>
-            ${tiles ? `<div class="wh-ch-grid">${tiles}</div>` : '<p class="wh-ch-note">Нет открытых уровней</p>'}${note}
+            <figcaption class="wh-ch-title">Количество, шт · 10 дней <span class="wh-ch-range">шкала логарифмическая</span></figcaption>
+            ${series.length ? `<svg class="wh-ch-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Количество ресурсов по дням">
+                ${grid}<line class="wh-ch-axis" x1="${L}" x2="${W - R}" y1="${y(1)}" y2="${y(1)}"/>${xl}${lines}
+            </svg>
+            <ul class="wh-legend">${legend}</ul>` : '<p class="wh-ch-note">Нет открытых уровней</p>'}${note}
         </figure>`;
 }
 
@@ -3579,6 +3592,20 @@ async function renderWarehouse() {
         whView = t.dataset.view;
         showView();
     }));
+    // наведение на легенду или линию графика — выделяем эту линию
+    modal.addEventListener('mouseover', (event) => {
+        const it = event.target.closest && event.target.closest('.wh-lg-item, .wh-ch-series');
+        const chart = event.target.closest && event.target.closest('.wh-chart');
+        if (!chart) return;
+        const k = it ? it.dataset.s : '';
+        chart.classList.toggle('has-hl', !!k);
+        chart.querySelectorAll('[data-s]').forEach((el) => el.classList.toggle('is-hl', el.dataset.s === k));
+    });
+    modal.addEventListener('mouseout', (event) => {
+        const chart = event.target.closest && event.target.closest('.wh-chart');
+        if (!chart || (event.relatedTarget && chart.contains(event.relatedTarget))) return;
+        chart.classList.remove('has-hl');
+    });
     // фильтры сводной: уровни и склад — перерисовываем только сводную
     const redrawSum = () => {
         const box = modal.querySelector('.wh-sum-box');
