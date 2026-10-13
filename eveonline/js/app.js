@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 23:58';
+const APP_BUILD = '14.10.2026 00:25';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3254,12 +3254,53 @@ const whFmt = (n) => (n ? Math.floor(n).toLocaleString('ru-RU') : '');
    открытии «Склада» сегодняшний срез перезаписывается (в браузере,
    WH_HIST_KEY, хранится 30 дней). */
 const WH_HIST_KEY = 'evepi.wh.history';
+// tiers — свёрнутые уровни (их строки скрыты, заголовок уровня остаётся)
 const whFilter = { tiers: new Set(), owner: '' };
 let whLast = [];
+let whRedrawSum = () => {};
 const whOwnerKey = (o) => `${o.kind}:${o.corpId || o.char.characterId}`;
 const whDayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const whVolOf = (name, qty) => qty * (PI_TIER_VOLUME[piTierOf(name)] || 0);
-const whTierOn = (tier) => !whFilter.tiers.size || whFilter.tiers.has(tier);
+const whTierOn = (tier) => !whFilter.tiers.has(tier);
+
+/* Цены — как во вкладке «Цепочки производства»: минимальная цена заявок
+   на продажу в системе выбранного торгового хаба (EVE_PRICES.sellMin,
+   хабы PI_PRICE_HUBS из js/chains.js). Хаб общий с цепочками — тот же
+   ключ PI_HUB_STORAGE. Цены кэшируем на хаб, пока страница открыта. */
+const whPrices = new Map();           // хаб -> Map(товар -> цена | null)
+function whHub() {
+    const hubs = typeof PI_PRICE_HUBS !== 'undefined' ? PI_PRICE_HUBS : [];
+    let saved = '';
+    try { saved = localStorage.getItem(typeof PI_HUB_STORAGE !== 'undefined' ? PI_HUB_STORAGE : 'eve-pi-hub') || ''; } catch (e) { /* без памяти */ }
+    return hubs.find((h) => h.name === saved) || hubs.find((h) => h.name === 'Jita') || hubs[0] || null;
+}
+async function whLoadPrices(names, hub) {
+    if (!hub || typeof EVE_PRICES === 'undefined') return;
+    if (!whPrices.has(hub.name)) whPrices.set(hub.name, new Map());
+    const known = whPrices.get(hub.name);
+    const need = names.filter((n) => !known.has(n) && PI_COMMODITIES[n]);
+    let i = 0;
+    const worker = async () => {
+        while (i < need.length) {
+            const n = need[i];
+            i += 1;
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                const r = await EVE_PRICES.sellMin({ typeId: PI_COMMODITIES[n][0], regionId: hub.regionId, systemId: hub.systemId });
+                known.set(n, r.price);
+            } catch (e) {
+                known.set(n, null);
+            }
+        }
+    };
+    await Promise.all(Array.from({ length: 8 }, worker));
+}
+const whPriceOf = (name) => {
+    const hub = whHub();
+    const m = hub && whPrices.get(hub.name);
+    return m && m.has(name) ? m.get(name) : undefined;     // undefined — ещё грузится
+};
+const whFmtIsk = (v) => (v ? `${Math.round(v).toLocaleString('ru-RU')} ISK` : '');
 const whFmtM3 = (v) => `${Math.round(v).toLocaleString('ru-RU')} м³`;
 
 function whSaveHistory(owners) {
@@ -3346,42 +3387,64 @@ function whSumInnerHtml() {
     });
     const names = uniqValues(owners.flatMap((o) => o.entries.map((e) => e.name)));
     const many = owners.length > 1;
+    const cols = owners.length + (many ? 1 : 0) + 3;            // товар, владельцы, всего, м³, ISK
     const head = owners.map((o) => `<th scope="col" class="wh-col">${whAvaHtml(o)}<span>${escapeHtml(o.title)}</span></th>`).join('');
-    let sumQty = 0;
     let sumVol = 0;
-    const rows = [4, 3, 2, 1, 0].filter(whTierOn).map((tier) => {
+    let sumIsk = 0;
+    let pricePending = false;
+    const rows = [4, 3, 2, 1, 0].map((tier) => {
         const list = names.filter((n) => piTierOf(n) === tier).sort((a, b) => a.localeCompare(b));
         if (!list.length) return '';
+        const open = whTierOn(tier);
+        let tierQty = 0;
         let tierVol = 0;
+        let tierIsk = 0;
         const body = list.map((n) => {
             const qs = totals.map((m) => m.get(n) || 0);
             const q = qs.reduce((a, b) => a + b, 0);
             const v = whVolOf(n, q);
+            const price = whPriceOf(n);
+            if (price === undefined) pricePending = true;
+            const isk = price ? price * q : 0;
+            tierQty += q;
             tierVol += v;
-            sumQty += q;
-            return `<tr><th scope="row" class="st-name"><span class="st-name-inner">${iconFor(n) || ''}<span lang="en">${escapeHtml(n)}</span></span></th>`
+            tierIsk += isk;
+            return `<tr class="wh-row"${open ? '' : ' data-collapsed="1"'}><th scope="row" class="st-name"><span class="st-name-inner">${iconFor(n) || ''}<span lang="en">${escapeHtml(n)}</span></span></th>`
                 + qs.map((x) => `<td class="wh-n">${whFmt(x)}</td>`).join('')
                 + (many ? `<td class="wh-n wh-sum">${whFmt(q)}</td>` : '')
-                + `<td class="wh-n wh-vol">${whFmt(v)}</td></tr>`;
+                + `<td class="wh-n wh-vol">${whFmt(v)}</td>`
+                + `<td class="wh-n wh-isk"${price ? ` title="${escapeHtml(`${n}\nЦена: ${whFmtIsk(price)}`)}"` : ''}>${price === undefined ? '…' : price === null ? '—' : whFmtIsk(isk).replace(' ISK', '')}</td></tr>`;
         }).join('');
-        sumVol += tierVol;
-        return `<tr class="wh-tier"><th colspan="${owners.length + (many ? 2 : 1)}" scope="rowgroup">${tierBadgeHtml(`P${tier}`)}</th>`
-            + `<td class="wh-n wh-vol wh-tier-vol">${whFmtM3(tierVol)}</td></tr>${body}`;
+        if (open) {
+            sumVol += tierVol;
+            sumIsk += tierIsk;
+        }
+        // заголовок уровня: ▾ [P4]  штук · м³ · ISK — остаётся и у свёрнутого
+        return `<tr class="wh-tier"><th colspan="${cols}" scope="rowgroup">
+                <button type="button" class="wh-tier-head" data-role="wh-tier" data-tier="${tier}" aria-expanded="${open}" title="${open ? 'Свернуть' : 'Развернуть'} P${tier}">
+                    <span class="wh-arrow" aria-hidden="true">${open ? '▾' : '▸'}</span>${tierBadgeHtml(`P${tier}`)}
+                    <span class="wh-tier-sum">${whFmt(tierQty)} шт<span class="uv-sep">·</span>${whFmtM3(tierVol)}<span class="uv-sep">·</span>${whFmtIsk(tierIsk) || '…'}</span>
+                </button></th></tr>${body}`;
     }).join('');
     const tierBtns = [0, 1, 2, 3, 4].map((t) => `<button type="button" class="ct-tier ct-tier-p${t} uv-tier" data-role="wh-tier" data-tier="${t}"
-        aria-pressed="${whFilter.tiers.has(t)}" title="Показать P${t}">P${t}</button>`).join('');
+        aria-pressed="${whTierOn(t)}" title="${whTierOn(t) ? 'Свернуть' : 'Развернуть'} P${t}">P${t}</button>`).join('');
     const opts = [`<option value="">Все склады</option>`]
         .concat(all.map((o) => `<option value="${escapeHtml(whOwnerKey(o))}"${whOwnerKey(o) === whFilter.owner ? ' selected' : ''}>${escapeHtml(o.kind === 'corp' ? `Корп. склад ${o.title}` : o.title)}</option>`)).join('');
+    const hub = whHub();
+    const hubs = typeof PI_PRICE_HUBS !== 'undefined' ? PI_PRICE_HUBS : [];
+    const hubSel = hubs.length ? `<label class="wh-hub"><span class="chain-bar-label">Торговый хаб</span>
+            <select class="ct-input wh-hub-sel" data-role="wh-hub" aria-label="Торговый хаб">${hubs.map((h) => `<option value="${escapeHtml(h.name)}"${hub && h.name === hub.name ? ' selected' : ''}>${escapeHtml(h.name)}</option>`).join('')}</select></label>` : '';
     return `<div class="wh-filters">
             <span class="uv-tiers wh-tiers" role="group" aria-label="Уровни">${tierBtns}</span>
             <select class="ct-input wh-owner-sel" data-role="wh-owner" aria-label="Склад">${opts}</select>
+            ${hubSel}
         </div>
         <div class="wh-sum-row">
             <div class="st-scroll">${rows ? `<table class="stats-p1 wh-table">
-                <thead><tr><th scope="col" class="st-name">Товар</th>${head}${many ? '<th scope="col" class="wh-col">Всего</th>' : ''}<th scope="col" class="wh-col">м³</th></tr></thead>
+                <thead><tr><th scope="col" class="st-name">Товар</th>${head}${many ? '<th scope="col" class="wh-col">Всего</th>' : ''}<th scope="col" class="wh-col">м³</th><th scope="col" class="wh-col" title="Цена — минимальная на продажу в хабе ${escapeHtml(hub ? hub.name : '')}">ISK</th></tr></thead>
                 <tbody>${rows}</tbody>
-                <tfoot><tr><th scope="row" class="st-name">Итого</th><td colspan="${owners.length + (many ? 1 : 0)}" class="wh-n">${whFmt(sumQty)}</td><td class="wh-n wh-vol">${whFmtM3(sumVol)}</td></tr></tfoot>
-            </table>` : '<p class="evt-dim">По этим фильтрам планетарки нет</p>'}</div>
+                <tfoot><tr><th scope="row" class="st-name">Итого</th><td colspan="${owners.length + (many ? 1 : 0)}"></td><td class="wh-n wh-vol">${whFmtM3(sumVol)}</td><td class="wh-n wh-isk">${whFmtIsk(sumIsk)}${pricePending ? ' …' : ''}</td></tr></tfoot>
+            </table>` : '<p class="evt-dim">Планетарки на складе нет</p>'}</div>
             ${whChartHtml()}
         </div>`;
 }
@@ -3454,6 +3517,7 @@ async function renderWarehouse() {
         if (whLast.length) whSaveHistory(whLast);
         if (whFilter.owner && !whLast.some((o) => whOwnerKey(o) === whFilter.owner)) whFilter.owner = '';
         body.innerHTML = warehouseHtml(whLast);
+        whRedrawSum();
     } catch (e) {
         body.innerHTML = `<p class="evt-bad">Ошибка: ${escapeHtml(e.message)}</p>`;
     }
@@ -3494,15 +3558,29 @@ async function renderWarehouse() {
         const box = modal.querySelector('.wh-sum-box');
         if (box) box.innerHTML = whSumInnerHtml();
     };
+    // цены для товаров на складах — по хабу; пришли — перерисовываем
+    whRedrawSum = () => {
+        redrawSum();
+        const names = uniqValues(whLast.flatMap((o) => o.entries.map((e) => e.name)));
+        const hub = whHub();
+        whLoadPrices(names, hub).then(() => { if (hub === whHub()) redrawSum(); });
+    };
     modal.addEventListener('click', (event) => {
         const t = event.target.closest('[data-role="wh-tier"]');
         if (!t) return;
+        // уровень сворачивается: строки скрыты, заголовок со стрелкой остаётся
         const tier = Number(t.dataset.tier);
         if (whFilter.tiers.has(tier)) whFilter.tiers.delete(tier);
         else whFilter.tiers.add(tier);
         redrawSum();
     });
     modal.addEventListener('change', (event) => {
+        const hubSel = event.target.closest('[data-role="wh-hub"]');
+        if (hubSel) {
+            try { localStorage.setItem(typeof PI_HUB_STORAGE !== 'undefined' ? PI_HUB_STORAGE : 'eve-pi-hub', hubSel.value); } catch (e) { /* без памяти */ }
+            whRedrawSum();
+            return;
+        }
         const sel = event.target.closest('[data-role="wh-owner"]');
         if (!sel) return;
         whFilter.owner = sel.value;

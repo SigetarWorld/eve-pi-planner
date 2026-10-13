@@ -4926,9 +4926,7 @@ input.chain-amount:focus {
 .wh-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
 .wh-filters .wh-tiers { margin-left: 0; }
 .wh-filters .uv-tier { width: 1.8rem; height: 1.6rem; font-size: 0.68rem; }
-.wh-filters .uv-tier[aria-pressed="false"] { opacity: 0.45; }
-/* ни один уровень не выбран — показаны все, кнопки яркие */
-.wh-filters .wh-tiers:not(:has([aria-pressed="true"])) .uv-tier { opacity: 1; }
+.wh-filters .uv-tier[aria-pressed="false"] { opacity: 0.4; }
 .wh-owner-sel { min-width: 12rem; }
 .wh-sum-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1.2rem; }
 .wh-table .wh-vol { color: var(--text-dim); }
@@ -4948,3 +4946,18 @@ input.chain-amount:focus {
 .wh-ch-hit { fill: transparent; cursor: default; }
 .wh-ch-hit:hover { fill: rgba(255, 255, 255, 0.04); }
 .wh-ch-note { margin: 0.3rem 0 0; font-size: 0.74rem; color: var(--text-faint); max-width: 420px; }
+
+/* Уровни сворачиваются: строки скрыты через visibility: collapse — ширина
+   столбцов не меняется, таблица и окно не прыгают */
+.wh-table tr[data-collapsed] { visibility: collapse; }
+.wh-table .wh-tier th { padding: 0.15rem 0.4rem; }
+.wh-tier-head { display: flex; align-items: center; gap: 0.4rem; width: 100%; padding: 0; font: inherit; color: inherit; text-align: left; background: none; border: 0; cursor: pointer; }
+.wh-arrow { width: 0.8rem; color: var(--text-dim); font-size: 0.75rem; }
+.wh-tier-sum { display: inline-flex; align-items: center; gap: 0.3rem; font-weight: 600; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.wh-table .wh-isk { color: var(--text); }
+.wh-table tfoot .wh-isk { color: var(--accent); font-weight: 700; }
+.wh-hub { display: inline-flex; align-items: center; gap: 0.4rem; }
+.wh-hub-sel { width: auto; }
+/* окно «Склада» — от верха экрана: при сворачивании уровней не смещается */
+#wh-modal { align-items: flex-start; padding-top: 2rem; }
+#wh-modal .stats-modal-box { max-height: calc(100vh - 4rem); }
