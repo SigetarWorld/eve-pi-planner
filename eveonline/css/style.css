@@ -4872,6 +4872,7 @@ input.chain-amount:focus {
 .uv .ct-tier.wh-sec-null { color: var(--red);    border-color: rgba(255, 107, 107, 0.55); background: rgba(255, 107, 107, 0.08); }
 .uv .ct-tier.wh-sec-w    { color: #c9a7ff;       border-color: rgba(201, 167, 255, 0.55); background: rgba(201, 167, 255, 0.08); }
 .wh-loc .wh-sec + .wh-sec { margin-left: -0.15rem; }
+.wh-loc .wh-sec + .wh-region { margin-left: 0.15rem; }
 /* кнопка «Сводная таблица» под заголовком */
 .wh-sum-toggle { margin: 0 0 0.6rem; }
 .wh-sum-toggle[aria-expanded="true"] { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }

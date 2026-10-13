@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 23:05';
+const APP_BUILD = '13.10.2026 23:10';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3250,7 +3250,7 @@ function warehouseHtml(owners) {
         return `
             <div class="uv wh-card">
                 <div class="uv-head wh-card-head">
-                    <span class="wh-loc"><span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span><span class="uv-sys">${escapeHtml(place.system || 'Система ?')}</span>${whSecHtml(place)}<span class="uv-sep">›</span><span class="wh-station">${escapeHtml(station)}</span></span>
+                    <span class="wh-loc">${whSecHtml(place)}<span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span><span class="uv-sys">${escapeHtml(place.system || 'Система ?')}</span><span class="uv-sep">›</span><span class="wh-station">${escapeHtml(station)}</span></span>
                 </div>
                 <div class="uv-body">${Array.from(spots.entries()).map(([path, items]) => `
                     <div class="uv-colony wh-spot">
