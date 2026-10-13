@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '14.10.2026 00:25';
+const APP_BUILD = '14.10.2026 00:40';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -2722,6 +2722,9 @@ document.addEventListener('click', (event) => {
     const section = li.closest('.evt-colony');
     const detail = evtData.get(String(planetId));
     if (section && detail) section.outerHTML = eveTestColonyHtml(detail);
+    // карточки считают склады от тех же срезов — пересчитываем их сразу
+    viewStockCache.clear();
+    document.querySelectorAll('.card.is-view').forEach((card) => renderCardView(card));
 });
 
 async function renderEveTest() {
@@ -4113,8 +4116,11 @@ function viewStockOf(name) {
             const typeOfPin = new Map(pins.map((p) => [p.pin_id, p.type_id]));
             const stock = new Map();
             const where = new Map();
+            /* Считаем только склады — Launchpad, Storage Facility, Command
+               Center, как в «Тесте». Экстрактор без маршрута копит добычу
+               «в себе» (в игре так не бывает) — в сумму её не берём. */
             byPin.forEach((items, pinId) => {
-                if (factories.has(pinId) || !typeOfPin.has(pinId)) return;
+                if (factories.has(pinId) || !typeOfPin.has(pinId) || !storeKindOf(typeOfPin.get(pinId), true)) return;
                 items.forEach((n, item) => {
                     if (!(n > 0)) return;
                     stock.set(item, (stock.get(item) || 0) + n);
