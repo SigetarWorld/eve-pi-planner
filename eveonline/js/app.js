@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 22:10';
+const APP_BUILD = '13.10.2026 22:25';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -2813,19 +2813,25 @@ async function loadCharAssets(char, corpId) {
        контейнер (is_singleton) имя имеет всегда, поэтому EVE не отвергает пачку. */
     await esiNamesOf(uniqValues(items.map((x) => x.type_id)));
     const names = new Map();
-    const boxes = items.filter((x) => x.is_singleton && /Container$/i.test(esiTypeName(x.type_id)))
-        .map((x) => x.item_id);
-    for (let i = 0; i < boxes.length; i += 1000) {
-        try {
-            // eslint-disable-next-line no-await-in-loop
-            const list = await eveFetchJson(`${ESI_BASE}/${owner}/assets/names/?datasource=tranquility`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(boxes.slice(i, i + 1000))
-            }, id);
-            list.forEach((n) => { if (n.name && n.name !== 'None') names.set(n.item_id, n.name); });
-        } catch (e) {
-            // без имён — покажем только тип
+    const parents = new Set(items.map((x) => x.location_id));
+    const isBox = (x) => /Container$/i.test(esiTypeName(x.type_id));
+    const named = items.filter((x) => x.is_singleton && x.location_flag !== 'OfficeFolder');
+    // контейнеры и корабли с грузом — разными пачками: если EVE отвергнет
+    // пачку кораблей, имена контейнеров (теги [Sigetar]) всё равно будут
+    const groups = [named.filter(isBox), named.filter((x) => !isBox(x) && parents.has(x.item_id))];
+    for (const ids of groups.map((g) => g.map((x) => x.item_id))) {
+        for (let i = 0; i < ids.length; i += 1000) {
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                const list = await eveFetchJson(`${ESI_BASE}/${owner}/assets/names/?datasource=tranquility`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ids.slice(i, i + 1000))
+                }, id);
+                list.forEach((n) => { if (n.name && n.name !== 'None') names.set(n.item_id, n.name); });
+            } catch (e) {
+                // без имён — покажем только тип
+            }
         }
     }
     // Верхние места: станции, структуры, системы (то, что не предмет из списка)
@@ -3015,58 +3021,127 @@ async function renderCorpAssets(body, chars) {
 
 /* ---- Склад: вся планетарка (P0–P4) подключённых персонажей ----
    Личное имущество каждого персонажа — всё, где бы ни лежало (ангары,
-   контейнеры, корабли). С корпоративного склада — только содержимое
-   контейнеров, в имени которых есть тег [Sigetar] (вместе с вложенными).
-   Таблица: товары по уровням P4 → P0, столбец на персонажа, корпорацию
-   и итог. Данные — при каждом открытии окна. */
+   контейнеры, корабли). С корпоративного склада — только то, что лежит
+   в контейнерах с тегом [Sigetar] в имени (вместе с вложенными).
+   Персонажи без права на имущество или без планетарки не показываются.
+   Вверху — итог: товары по уровням P4 → P0, столбец на владельца.
+   Ниже — где лежит: регион › система › станция, внутри станции —
+   ангар / офис корпорации › отдел › контейнер / корабль › трюм. */
 const STORE_CORP_TAG = '[sigetar]';
+const WH_FLAGS = {
+    Hangar: 'Ангар',
+    Cargo: 'Трюм',
+    SpecializedPlanetaryCommoditiesHold: 'Трюм планетарки',
+    SpecializedCommandCenterHold: 'Трюм командных центров',
+    FleetHangar: 'Ангар флота',
+    ShipHangar: 'Корабельный ангар',
+    Deliveries: 'Доставка',
+    AssetSafety: 'Asset Safety',
+    CorpDeliveries: 'Доставка корпорации'
+};
+// Флаги внутри контейнера и папка офиса — без подписи
+const WH_FLAGS_SILENT = new Set(['Unlocked', 'Locked', 'AutoFit', 'OfficeFolder', 'Impounded']);
 
-// Map(товар -> штук) из списка предметов
-function piTotalsOf(list) {
-    const out = new Map();
-    list.forEach((x) => {
+// Регион по названию системы — из своего справочника SYSTEMS_BY_REGION
+let whRegionBySystem = null;
+function whRegionOf(system) {
+    if (!whRegionBySystem) {
+        whRegionBySystem = new Map();
+        if (typeof SYSTEMS_BY_REGION === 'object') {
+            Object.entries(SYSTEMS_BY_REGION).forEach(([r, list]) => list.forEach((n) => whRegionBySystem.set(n, r)));
+        }
+    }
+    return whRegionBySystem.get(system) || '';
+}
+
+// Верхнее место (станция / структура / космос) -> { station, system, region }
+const whPlaces = new Map();
+const whSystemNames = new Map();
+async function whPlaceOf(loc, char) {
+    if (whPlaces.has(loc)) return whPlaces.get(loc);
+    const place = { station: '', system: '', region: '' };
+    let systemId = 0;
+    try {
+        if (loc >= 60000000 && loc < 64000000) {
+            const st = await esiPublicJson(`/universe/stations/${loc}/`);
+            place.station = st.name;
+            systemId = st.system_id;
+        } else if (loc >= 30000000 && loc < 33000000) {
+            systemId = loc;
+            place.station = 'в космосе';
+        } else if (charScopes(char).includes(STRUCTURES_SCOPE)) {
+            const st = await eveFetchJson(`${ESI_BASE}/universe/structures/${loc}/?datasource=tranquility`, {}, char.characterId);
+            place.station = st.name;
+            systemId = st.solar_system_id;
+        }
+    } catch (e) {
+        // нет доступа к структуре — останется номер
+    }
+    if (!place.station) place.station = loc > 1e12 ? `Структура ${loc}` : `Место ${loc}`;
+    if (systemId) {
+        if (!whSystemNames.has(systemId)) {
+            whSystemNames.set(systemId, await esiPublicJson(`/universe/systems/${systemId}/`).then((x) => x.name).catch(() => ''));
+        }
+        place.system = whSystemNames.get(systemId);
+        place.region = whRegionOf(place.system);
+    }
+    // структура: «Система - Название» — система уже есть, оставляем название
+    if (place.system && place.station.startsWith(`${place.system} - `)) place.station = place.station.slice(place.system.length + 3);
+    whPlaces.set(loc, place);
+    return place;
+}
+
+/* Планетарка из имущества: [{ name, qty, top, path }], path — где внутри
+   станции («Офис корпорации › Отдел 3 › Giant Secure Container «PI [Sigetar]»»).
+   onlyTagged — только из контейнеров с тегом [Sigetar]. */
+function whEntriesOf(data, divisions, onlyTagged) {
+    const divName = (flag) => {
+        const m = /^CorpSAG(\d)$/.exec(flag || '');
+        if (!m) return '';
+        const d = (divisions || []).find((x) => x.division === Number(m[1]));
+        return (d && d.name) || `Отдел ${m[1]}`;
+    };
+    const flagLabel = (flag) => (WH_FLAGS_SILENT.has(flag) ? '' : divName(flag) || WH_FLAGS[flag] || flag || '');
+    const itemLabel = (x) => {
+        if (x.location_flag === 'OfficeFolder') return 'Офис корпорации';
+        const n = data.names.get(x.item_id);
+        return `${esiTypeName(x.type_id)}${n ? ` «${n}»` : ''}`;
+    };
+    const out = [];
+    data.items.forEach((x) => {
         const name = esiTypeName(x.type_id);
         if (!PI_COMMODITIES[name]) return;
-        out.set(name, (out.get(name) || 0) + (x.quantity || 0));
+        const parts = [];
+        let tagged = false;
+        let cur = x;
+        while (data.byItem.has(cur.location_id)) {
+            const parent = data.byItem.get(cur.location_id);
+            parts.unshift(flagLabel(cur.location_flag));
+            parts.unshift(itemLabel(parent));
+            if ((data.names.get(parent.item_id) || '').toLowerCase().includes(STORE_CORP_TAG)) tagged = true;
+            cur = parent;
+        }
+        parts.unshift(flagLabel(cur.location_flag));
+        if (onlyTagged && !tagged) return;
+        out.push({ name, qty: x.quantity || 0, top: cur.location_id, path: parts.filter(Boolean).join(' › ') || 'Ангар' });
     });
     return out;
 }
 
-// Корпоративные предметы: только внутри контейнеров с тегом [Sigetar]
-function taggedCorpItems(data) {
-    const kids = new Map();
-    data.items.forEach((x) => {
-        if (!kids.has(x.location_id)) kids.set(x.location_id, []);
-        kids.get(x.location_id).push(x);
-    });
-    const roots = data.items.filter((x) => (data.names.get(x.item_id) || '').toLowerCase().includes(STORE_CORP_TAG));
-    const out = [];
-    const seen = new Set();
-    const walk = (id) => (kids.get(id) || []).forEach((y) => {
-        if (seen.has(y.item_id)) return;
-        seen.add(y.item_id);
-        out.push(y);
-        walk(y.item_id);
-    });
-    roots.forEach((r) => walk(r.item_id));
-    return { items: out, boxes: roots.length };
-}
-
-// Колонки: персонажи, затем корпорации; у каждой — totals или ошибка
+/* Владельцы с планетаркой: персонажи, затем корпорации.
+   { kind, title, char | corpId, entries } — без прав или пустые отброшены. */
 async function loadWarehouse(chars) {
-    const cols = chars.map((c) => ({ kind: 'char', char: c, title: c.characterName }));
-    await Promise.all(cols.map(async (col) => {
-        if (!charScopes(col.char).includes(ASSETS_SCOPE)) {
-            col.error = 'нет права на имущество — подключите персонажа заново';
-            return;
-        }
+    const owners = [];
+    await Promise.all(chars.map(async (char, i) => {
+        if (!charScopes(char).includes(ASSETS_SCOPE)) return;
         try {
-            col.totals = piTotalsOf((await loadCharAssets(col.char)).items);
+            const entries = whEntriesOf(await loadCharAssets(char), null, false);
+            if (entries.length) owners[i] = { kind: 'char', char, title: char.characterName, entries };
         } catch (e) {
-            col.error = e.message;
+            // не отдал — не показываем
         }
     }));
-    // корпорации персонажей (без NPC) — каждая один раз
+    const list = owners.filter(Boolean);
     const corps = new Map();
     await Promise.all(chars.map(async (char) => {
         try {
@@ -3079,65 +3154,93 @@ async function loadWarehouse(chars) {
         }
     }));
     for (const [corpId, members] of corps) {
-        // eslint-disable-next-line no-await-in-loop
-        const name = await esiPublicJson(`/corporations/${corpId}/`).then((x) => x.name).catch(() => String(corpId));
-        const col = { kind: 'corp', corpId, title: name };
-        cols.push(col);
-        const able = members.filter((c) => charScopes(c).includes(CORP_ASSETS_SCOPE));
-        if (!able.length) {
-            col.error = 'нет права на имущество корпорации (нужен Director)';
-            continue;
-        }
-        const errors = [];
-        for (const char of able) {
+        for (const char of members.filter((c) => charScopes(c).includes(CORP_ASSETS_SCOPE))) {
             try {
                 // eslint-disable-next-line no-await-in-loop
-                const tagged = taggedCorpItems(await loadCharAssets(char, corpId));
-                col.totals = piTotalsOf(tagged.items);
-                col.boxes = tagged.boxes;
+                const data = await loadCharAssets(char, corpId);
+                let divisions = [];
+                if (charScopes(char).includes(CORP_DIVISIONS_SCOPE)) {
+                    // eslint-disable-next-line no-await-in-loop
+                    divisions = await eveFetchJson(`${ESI_BASE}/corporations/${corpId}/divisions/?datasource=tranquility`, {}, char.characterId)
+                        .then((d) => d.hangar || []).catch(() => []);
+                }
+                const entries = whEntriesOf(data, divisions, true);
+                if (entries.length) {
+                    // eslint-disable-next-line no-await-in-loop
+                    const title = await esiPublicJson(`/corporations/${corpId}/`).then((x) => x.name).catch(() => String(corpId));
+                    list.push({ kind: 'corp', corpId, char, title: `${title} [Sigetar]`, entries });
+                }
                 break;
             } catch (e) {
-                errors.push(e.message);
+                // нет роли Director — пробуем следующего
             }
         }
-        if (!col.totals) col.error = errors.join('; ') || 'EVE не отдал имущество корпорации';
     }
-    return cols;
+    // места: станция, система, регион
+    await Promise.all(list.flatMap((o) => uniqValues(o.entries.map((e) => e.top)).map((loc) => whPlaceOf(loc, o.char))));
+    return list;
 }
 
-function warehouseHtml(cols) {
-    const fmtN = (n) => (n ? Math.floor(n).toLocaleString('ru-RU') : '');
-    const ok = cols.filter((c) => c.totals);
-    const names = uniqValues(ok.flatMap((c) => Array.from(c.totals.keys())));
-    const head = cols.map((c) => {
-        const img = c.kind === 'char'
-            ? `<img class="wh-ava" src="${evePortrait(c.char.characterId)}" alt="" width="20" height="20">`
-            : `<img class="wh-ava" src="https://images.evetech.net/corporations/${c.corpId}/logo?size=32" alt="" width="20" height="20">`;
-        const hint = c.error ? `${c.title}\nОшибка: ${c.error}`
-            : c.kind === 'corp' ? `${c.title}\nКонтейнеров [Sigetar]: ${c.boxes}` : c.title;
-        return `<th scope="col" class="wh-col${c.error ? ' is-bad' : ''}" title="${escapeHtml(hint)}">${img}<span>${escapeHtml(c.kind === 'corp' ? `${c.title} [Sigetar]` : c.title)}</span>${c.error ? ' ⚠' : ''}</th>`;
-    }).join('');
+const whAvaHtml = (o) => (o.kind === 'char'
+    ? `<img class="wh-ava" src="${evePortrait(o.char.characterId)}" alt="" width="20" height="20">`
+    : `<img class="wh-ava" src="https://images.evetech.net/corporations/${o.corpId}/logo?size=32" alt="" width="20" height="20">`);
+const whFmt = (n) => (n ? Math.floor(n).toLocaleString('ru-RU') : '');
+const whResHtml = (n) => `${tierBadgeHtml(`P${piTierOf(n)}`)}<span class="st-name-inner">${iconFor(n) || ''}<span lang="en">${escapeHtml(n)}</span></span>`;
+
+function warehouseHtml(owners) {
+    if (!owners.length) return '<p class="evt-dim">Планетарки на складах нет</p>';
+    // итог: товар × владелец
+    const totals = owners.map((o) => {
+        const m = new Map();
+        o.entries.forEach((e) => m.set(e.name, (m.get(e.name) || 0) + e.qty));
+        return m;
+    });
+    const names = uniqValues(owners.flatMap((o) => o.entries.map((e) => e.name)));
+    const head = owners.map((o) => `<th scope="col" class="wh-col">${whAvaHtml(o)}<span>${escapeHtml(o.title)}</span></th>`).join('');
     const rows = [4, 3, 2, 1, 0].map((tier) => {
         const list = names.filter((n) => piTierOf(n) === tier).sort((a, b) => a.localeCompare(b));
         if (!list.length) return '';
-        return `<tr class="wh-tier"><th colspan="${cols.length + 2}" scope="rowgroup">${tierBadgeHtml(`P${tier}`)}</th></tr>`
+        return `<tr class="wh-tier"><th colspan="${owners.length + 2}" scope="rowgroup">${tierBadgeHtml(`P${tier}`)}</th></tr>`
             + list.map((n) => {
-                let sum = 0;
-                const cells = cols.map((c) => {
-                    const q = c.totals ? c.totals.get(n) || 0 : 0;
-                    sum += q;
-                    return `<td class="wh-n">${fmtN(q)}</td>`;
-                }).join('');
-                return `<tr><th scope="row" class="st-name"><span class="st-name-inner">${iconFor(n) || ''}<span lang="en">${escapeHtml(n)}</span></span></th>${cells}<td class="wh-n wh-sum">${fmtN(sum)}</td></tr>`;
+                const qs = totals.map((m) => m.get(n) || 0);
+                return `<tr><th scope="row" class="st-name"><span class="st-name-inner">${iconFor(n) || ''}<span lang="en">${escapeHtml(n)}</span></span></th>`
+                    + `${qs.map((q) => `<td class="wh-n">${whFmt(q)}</td>`).join('')}<td class="wh-n wh-sum">${whFmt(qs.reduce((a, b) => a + b, 0))}</td></tr>`;
             }).join('');
     }).join('');
-    const errors = cols.filter((c) => c.error)
-        .map((c) => `<li><b>${escapeHtml(c.title)}</b> — ${escapeHtml(c.error)}</li>`).join('');
-    return `
-        ${rows ? `<div class="st-scroll"><table class="stats-p1 wh-table">
+
+    // где лежит: регион › система › станция › место внутри станции
+    const stations = new Map();       // top -> { place, spots: Map(key -> { owner, path, items: Map }) }
+    owners.forEach((o) => o.entries.forEach((e) => {
+        if (!stations.has(e.top)) stations.set(e.top, { place: whPlaces.get(e.top) || {}, spots: new Map() });
+        const spots = stations.get(e.top).spots;
+        const key = `${o.kind}:${o.corpId || o.char.characterId}|${e.path}`;
+        if (!spots.has(key)) spots.set(key, { owner: o, path: e.path, items: new Map() });
+        const items = spots.get(key).items;
+        items.set(e.name, (items.get(e.name) || 0) + e.qty);
+    }));
+    const byTier = (a, b) => piTierOf(b[0]) - piTierOf(a[0]) || a[0].localeCompare(b[0]);
+    const placeKey = (p) => `${p.region || 'я'}|${p.system || ''}|${p.station || ''}`;
+    const where = Array.from(stations.values())
+        .sort((a, b) => placeKey(a.place).localeCompare(placeKey(b.place)))
+        .map(({ place, spots }) => {
+            const count = Array.from(spots.values()).reduce((n, sp) => n + sp.items.size, 0);
+            return `<details class="wh-st" open><summary>
+                    <span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span>
+                    <span class="wh-system">${escapeHtml(place.system || 'Система ?')}</span><span class="uv-sep">›</span>
+                    <b class="wh-station">${escapeHtml(place.station || '')}</b>
+                    <span class="evt-dim">· товаров ${count}</span></summary>
+                ${Array.from(spots.values()).map((sp) => `<div class="wh-spot">
+                    <div class="wh-spot-head">${whAvaHtml(sp.owner)}<span class="wh-owner">${escapeHtml(sp.owner.title)}</span>
+                        <span class="uv-sep">·</span><span class="wh-path">${escapeHtml(sp.path)}</span></div>
+                    ${Array.from(sp.items.entries()).sort(byTier).map(([n, q]) => `<div class="wh-line">${whResHtml(n)}<span class="wh-q">${whFmt(q)}</span></div>`).join('')}
+                </div>`).join('')}
+            </details>`;
+        }).join('');
+    return `<div class="st-scroll"><table class="stats-p1 wh-table">
             <thead><tr><th scope="col" class="st-name">Товар</th>${head}<th scope="col" class="wh-col">Всего</th></tr></thead>
-            <tbody>${rows}</tbody></table></div>` : '<p class="evt-dim">Планетарки на складах нет</p>'}
-        ${errors ? `<ul class="wh-errors evt-bad">${errors}</ul>` : ''}`;
+            <tbody>${rows}</tbody></table></div>
+        <h4 class="wh-h">Где лежит</h4>
+        <div class="wh-where">${where}</div>`;
 }
 
 async function renderWarehouse() {
