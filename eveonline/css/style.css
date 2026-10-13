@@ -4773,43 +4773,64 @@ input.chain-amount:focus {
 .eve-status.is-offline .eve-status-dot { background: var(--red); box-shadow: 0 0 6px var(--red); }
 
 
-/* ---------- Пустой и переполненный склад ----------
-   Пустой — красный (как раньше), переполненный — жёлтый. Выделяется
-   кнопка склада, строка колонии (полоса слева) и вся карточка (рамка). */
-:root { --yellow: #ffd23f; }
+/* ---------- Заполненность складов ----------
+   Пустой — серый, заполнен от 75 % — жёлтый, переполнен (от 99 %) —
+   красный. Выделяется кнопка склада, строка колонии (полоса слева)
+   и вся карточка (рамка) — по самому тревожному складу. */
+:root { --yellow: #ffd23f; --store-grey: #9aa6b8; }
 
-.uv-store-btn.is-full {
+/* пустой — серый, без мигания (раньше был красный) */
+.uv-store-btn.is-empty {
+    color: var(--store-grey);
+    border-color: var(--store-grey);
+    background: rgba(154, 166, 184, 0.14);
+    animation: none;
+    opacity: 1;
+    filter: none;
+}
+.uv-store-btn.is-warn {
     color: var(--yellow);
     border-color: var(--yellow);
-    background: rgba(255, 210, 63, 0.18);
+    background: rgba(255, 210, 63, 0.16);
+    opacity: 1;
+    filter: none;
+}
+.uv-store-btn.is-full {
+    color: var(--red);
+    border-color: var(--red);
+    background: rgba(255, 107, 107, 0.18);
     opacity: 1;
     filter: none;
     animation: uv-full-pulse 1.6s ease-in-out infinite;
 }
 @keyframes uv-full-pulse {
-    50% { box-shadow: 0 0 8px rgba(255, 210, 63, 0.75); }
+    50% { box-shadow: 0 0 8px rgba(255, 107, 107, 0.75); }
 }
 
+/* полоса слева у колонии: красный > жёлтый > серый */
 .uv-colony.has-store-empty,
-.uv-colony.has-store-full {
-    padding-left: 0.45rem;
-    box-shadow: inset 3px 0 0 var(--red);
-    background: linear-gradient(90deg, rgba(255, 107, 107, 0.08), transparent 60%);
+.uv-colony.has-store-warn,
+.uv-colony.has-store-full { padding-left: 0.45rem; }
+.uv-colony.has-store-empty {
+    box-shadow: inset 3px 0 0 var(--store-grey);
+    background: linear-gradient(90deg, rgba(154, 166, 184, 0.07), transparent 60%);
 }
-.uv-colony.has-store-full {
+.uv-colony.has-store-warn {
     box-shadow: inset 3px 0 0 var(--yellow);
     background: linear-gradient(90deg, rgba(255, 210, 63, 0.08), transparent 60%);
 }
-/* и пустой, и переполненный в одной колонии — двойная полоса */
-.uv-colony.has-store-empty.has-store-full {
-    box-shadow: inset 3px 0 0 var(--red), inset 6px 0 0 var(--yellow);
+.uv-colony.has-store-full {
+    box-shadow: inset 3px 0 0 var(--red);
+    background: linear-gradient(90deg, rgba(255, 107, 107, 0.09), transparent 60%);
 }
 
-.card.has-store-full > .uv  { border-color: var(--yellow); box-shadow: 0 0 0 1px rgba(255, 210, 63, 0.35), 0 0 14px rgba(255, 210, 63, 0.15); }
-.card.has-store-empty > .uv { border-color: var(--red);    box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.35), 0 0 14px rgba(255, 107, 107, 0.15); }
-.card.has-store-empty.has-store-full > .uv { box-shadow: 0 0 0 1px var(--yellow), 0 0 14px rgba(255, 107, 107, 0.2); }
+/* рамка карточки: красный > жёлтый > серый */
+.card.has-store-empty > .uv { border-color: var(--store-grey); }
+.card.has-store-warn > .uv  { border-color: var(--yellow); box-shadow: 0 0 0 1px rgba(255, 210, 63, 0.3), 0 0 14px rgba(255, 210, 63, 0.12); }
+.card.has-store-full > .uv  { border-color: var(--red);    box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.35), 0 0 14px rgba(255, 107, 107, 0.15); }
 
 /* заполненность в раскрытом списке склада */
 .uv-store-fill { margin-left: 0.4rem; color: var(--text-faint); }
-.uv-store-fill.is-full  { color: var(--yellow); font-weight: 600; }
-.uv-store-fill.is-empty { color: var(--red); font-weight: 600; }
+.uv-store-fill.is-empty { color: var(--store-grey); font-weight: 600; }
+.uv-store-fill.is-warn  { color: var(--yellow); font-weight: 600; }
+.uv-store-fill.is-full  { color: var(--red); font-weight: 600; }
