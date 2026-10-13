@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 16:30';
+const APP_BUILD = '13.10.2026 16:40';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -2813,21 +2813,32 @@ async function loadCharAssets(char, corpId) {
     // Имена — у всех собранных предметов (контейнеры, в т.ч. пустые, корабли),
     // кроме самого офиса: у него имени нет
     const named = items.filter((x) => x.is_singleton && x.location_flag !== 'OfficeFolder');
+    /* Если в пачке есть предмет, у которого имени быть не может, EVE
+       отвергает всю пачку — тогда делим её пополам, пока не пройдёт */
     const names = new Map();
-    for (let i = 0; i < named.length; i += 1000) {
+    const askNames = async (ids) => {
+        if (!ids.length) return;
         try {
-            // eslint-disable-next-line no-await-in-loop
             const list = await eveFetchJson(`${ESI_BASE}/${owner}/assets/names/?datasource=tranquility`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(named.slice(i, i + 1000).map((x) => x.item_id))
+                body: JSON.stringify(ids)
             }, id);
             list.forEach((n) => { if (n.name && n.name !== 'None') names.set(n.item_id, n.name); });
         } catch (e) {
-            // без имён — покажем названия типов
+            if (ids.length === 1) return;
+            const half = Math.ceil(ids.length / 2);
+            await askNames(ids.slice(0, half));
+            await askNames(ids.slice(half));
         }
-    }
+    };
     await esiNamesOf(uniqValues(items.map((x) => x.type_id)));
+    // сначала контейнеры (их имена важнее всего), потом остальное собранное
+    const isBox = (x) => /Container|Warehouse|Secure|Freight/i.test(esiTypeName(x.type_id));
+    const boxes = named.filter(isBox).map((x) => x.item_id);
+    const rest = named.filter((x) => !isBox(x)).map((x) => x.item_id);
+    for (let i = 0; i < boxes.length; i += 1000) await askNames(boxes.slice(i, i + 1000)); // eslint-disable-line no-await-in-loop
+    for (let i = 0; i < rest.length; i += 1000) await askNames(rest.slice(i, i + 1000)); // eslint-disable-line no-await-in-loop
     // Верхние места: станции, структуры, системы (то, что не предмет из списка)
     const tops = uniqValues(items.filter((x) => !byItem.has(x.location_id)).map((x) => x.location_id));
     const scopes = charScopes(char);
