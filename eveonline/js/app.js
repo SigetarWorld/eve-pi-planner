@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 21:45';
+const APP_BUILD = '13.10.2026 21:55';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3809,7 +3809,7 @@ function renderCardView(card) {
                     const cls = fill.state ? ` is-${fill.state}` : '';
                     // подсказка — название и код, под ними % заполнения; что внутри — по нажатию
                     const title = storeHintOf(st);
-                    return `<button type="button" class="uv-store uv-store-${kind} uv-store-btn${cls}" data-role="uv-store" data-i="${i}" title="${escapeHtml(title)}" aria-expanded="false"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${STORE_SVG[kind]}</svg></button>`;
+                    return `<button type="button" class="uv-store uv-store-${kind} uv-store-btn${cls}" data-role="uv-store" data-i="${i}" data-fill="${fill.state || 'ok'}" title="${escapeHtml(title)}" aria-expanded="false"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${STORE_SVG[kind]}</svg></button>`;
                 }).join('');
                 col.storeData = data.stores;
                 // колония с пустым / переполненным складом выделяется целиком
@@ -4791,6 +4791,9 @@ initEveAuth().finally(startEveAutoSnaps);
         timer = setTimeout(() => {
             if (cur !== el || !el.isConnected) return;
             fill(el.dataset.tip);
+            // рамка подсказки по заполненности склада (data-fill у кнопки)
+            if (el.dataset.fill) box.dataset.fill = el.dataset.fill;
+            else delete box.dataset.fill;
             place(el);
         }, 250);
     });

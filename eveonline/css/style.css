@@ -4834,3 +4834,11 @@ input.chain-amount:focus {
 .uv-store-fill.is-empty { color: var(--store-grey); font-weight: 600; }
 .uv-store-fill.is-warn  { color: var(--yellow); font-weight: 600; }
 .uv-store-fill.is-full  { color: var(--red); font-weight: 600; }
+
+/* Подсказка склада — тонкая рамка цвета заполненности.
+   clip-path срезает угол, поэтому рамка — внутренней тенью. */
+.eve-tip[data-fill] { box-shadow: inset 0 0 0 1px var(--fill-c); }
+.eve-tip[data-fill="ok"]    { --fill-c: var(--green); }
+.eve-tip[data-fill="empty"] { --fill-c: var(--store-grey); }
+.eve-tip[data-fill="warn"]  { --fill-c: var(--yellow); }
+.eve-tip[data-fill="full"]  { --fill-c: var(--red); }
