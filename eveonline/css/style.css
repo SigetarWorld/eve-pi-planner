@@ -4611,3 +4611,10 @@ input.chain-amount:focus {
 }
 .cards-drop-new[hidden] { display: none; }
 .account-line > .cards-row { margin-top: 0; }
+
+/* Кнопки складов — как фильтры: не нажата — тусклая, нажата (открыт
+   список) — яркая; пустой склад яркий всегда. Значки у количества — яркие. */
+.uv-store-btn { opacity: 0.6; filter: saturate(0.75); }
+.uv-store-btn:hover,
+.uv-store-btn[aria-expanded="true"],
+.uv-store-btn.is-empty { opacity: 1; filter: none; }

@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 12:00';
+const APP_BUILD = '13.10.2026 12:30';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3302,7 +3302,9 @@ function viewStockOf(name) {
             });
             // все склады колонии — и пустые
             const stores = pins.filter((p) => !factories.has(p.pin_id) && storeKindOf(p.type_id, true))
-                .map((p) => ({ pinId: p.pin_id, typeId: p.type_id, items: byPin.get(p.pin_id) || new Map() }));
+                .map((p) => ({ pinId: p.pin_id, typeId: p.type_id, items: byPin.get(p.pin_id) || new Map() }))
+                // всегда в одном порядке: Launchpad, Storage Facility, Command Center
+                .sort((a, b) => STORE_ORDER[storeKindOf(a.typeId)] - STORE_ORDER[storeKindOf(b.typeId)] || a.pinId - b.pinId);
             out.set(planet.name || String(col.planet_id), { stock, where, stores, from: col.last_update });
         });
         return out;
@@ -3370,7 +3372,7 @@ function applyViewVisibility(card) {
         const kidsWrap = node.querySelector(':scope > .uv-kids');
         if (!kidsWrap) return;
         const open = node.dataset.open === '1';
-        if (open) opened = true;
+        if (open || node.dataset.auto === '1') opened = true;
         let allKids = true;
         Array.from(kidsWrap.children).forEach((kid) => {
             const kv = (colonyOpen && shown.has(kid.dataset.tier)) || (visible && open);
@@ -3383,7 +3385,7 @@ function applyViewVisibility(card) {
     view.querySelectorAll('.uv-colony > .uv-node').forEach((top) => {
         const where = top.querySelector(':scope > .uv-line > .uv-where');
         base = where ? where.offsetWidth + 6 : 0;
-        colonyOpen = top.dataset.open === '1';
+        colonyOpen = top.dataset.open === '1' || top.dataset.auto === '1';
         walk(top, true, 0);
     });
     view.querySelectorAll('[data-role="uv-tier"]').forEach((b) => {
@@ -3439,6 +3441,7 @@ const STORE_SVG = {
     sf: '<path d="M8 1.8 13.6 5v6.2L8 14.4 2.4 11.2V5Z M2.4 5 8 8.2 13.6 5 M8 8.2v6.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>',
     cc: '<circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2.3"/>'
 };
+const STORE_ORDER = { lp: 0, sf: 1, cc: 2, '': 3 };
 function storeKindOf(typeId, strict = false) {
     const name = String(esiTypeName(typeId) || '').toLowerCase();
     if (name.includes('launchpad')) return 'lp';
@@ -3483,7 +3486,9 @@ function renderCardView(card) {
                 const n = data ? Math.floor(data.stock.get(item) || 0) : null;
                 const stores = data && data.where.get(item);
                 const icons = stores
-                    ? Array.from(stores.entries()).map(([t, q]) => storeIconHtml(t, `${esiTypeName(t)}: ${Math.floor(q).toLocaleString('ru-RU')}`)).join('')
+                    ? Array.from(stores.entries())
+                        .sort((a, b) => STORE_ORDER[storeKindOf(a[0])] - STORE_ORDER[storeKindOf(b[0])])
+                        .map(([t, q]) => storeIconHtml(t, `${esiTypeName(t)}: ${Math.floor(q).toLocaleString('ru-RU')}`)).join('')
                     : '';
                 el.innerHTML = icons + (n === null ? '—' : n.toLocaleString('ru-RU'));
                 el.classList.toggle('is-zero', n === 0);
@@ -3528,18 +3533,25 @@ function handleViewClick(event) {
         if (shown.has(tier)) shown.delete(tier);
         else shown.add(tier);
         card.dataset.showTiers = Array.from(shown).join(',');
-        // ни одна колония не раскрыта — кнопка уровня раскрывает все
+        /* Ни одна колония не раскрыта — кнопка уровня раскрывает все, но
+           «для уровней» (data-auto): видны только товары включённых
+           уровней, без прочих веток. Уровни выключили — такие колонии
+           сворачиваются обратно. */
         const tops = Array.from(card.querySelectorAll('.uv-colony > .uv-node'));
-        if (shown.size && !tops.some((n) => n.dataset.open === '1')) {
-            tops.forEach((n) => { if (n.querySelector(':scope > .uv-kids')) n.dataset.open = '1'; });
+        if (shown.size && !tops.some((n) => n.dataset.open === '1' || n.dataset.auto === '1')) {
+            tops.forEach((n) => { if (n.querySelector(':scope > .uv-kids')) n.dataset.auto = '1'; });
         }
+        if (!shown.size) tops.forEach((n) => { delete n.dataset.auto; });
         applyViewVisibility(card);
         saveAccounts();
         return true;
     }
     if (event.target.closest('[data-role="uv-top"]')) {
         card.dataset.showTiers = '';
-        card.querySelectorAll('.uv-node[data-open]').forEach((n) => { delete n.dataset.open; });
+        card.querySelectorAll('.uv-node[data-open], .uv-node[data-auto]').forEach((n) => {
+            delete n.dataset.open;
+            delete n.dataset.auto;
+        });
         applyViewVisibility(card);
         saveAccounts();
         return true;
@@ -3568,8 +3580,10 @@ function handleViewClick(event) {
     const toggle = event.target.closest('[data-role="uv-toggle"]');
     if (toggle) {
         const node = toggle.closest('.uv-node');
-        if (toggle.getAttribute('aria-expanded') === 'true') delete node.dataset.open;
-        else node.dataset.open = '1';
+        if (toggle.getAttribute('aria-expanded') === 'true') {
+            delete node.dataset.open;
+            delete node.dataset.auto;
+        } else node.dataset.open = '1';
         // закрываем — закрываем и ветки под ним
         if (!node.dataset.open) node.querySelectorAll('.uv-node[data-open]').forEach((n) => { delete n.dataset.open; });
         applyViewVisibility(card);
