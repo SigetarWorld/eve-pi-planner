@@ -4618,3 +4618,37 @@ input.chain-amount:focus {
 .uv-store-btn:hover,
 .uv-store-btn[aria-expanded="true"],
 .uv-store-btn.is-empty { opacity: 1; filter: none; }
+
+
+/* Свернуть / развернуть колонию — круглая, как крестик карточки, справа
+   в строке колонии; видна при наведении на колонию (и когда раскрыта) */
+.uv-colony { position: relative; padding-right: 32px; }
+.uv-fold {
+    position: absolute;
+    top: 0.35rem;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--text-faint);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.16s, border-color 0.16s, background 0.16s;
+}
+.uv-fold[hidden] { display: none; }
+.uv-colony:hover > .uv-fold,
+.uv-fold:focus-visible { opacity: 1; }
+.uv-fold:hover {
+    color: var(--text);
+    border-color: var(--border-lit);
+    background: rgba(255, 255, 255, 0.05);
+}

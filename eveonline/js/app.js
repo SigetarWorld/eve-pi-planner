@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 12:30';
+const APP_BUILD = '13.10.2026 13:00';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3337,9 +3337,11 @@ function viewNodeHtml(name, p0Hint, prefix = '') {
     } else if (tier >= 2 && recipe) {
         kids = recipe.in.map(([n]) => n);
     }
-    const toggle = kids.length
-        ? '<button type="button" class="uv-toggle" data-role="uv-toggle" aria-expanded="false" title="Из чего делается">▸</button>'
-        : '<span class="uv-toggle-gap"></span>';
+    // У главного товара стрелки нет: колонию сворачивает круглая кнопка справа
+    const toggle = prefix ? ''
+        : (kids.length
+            ? '<button type="button" class="uv-toggle" data-role="uv-toggle" aria-expanded="false" title="Из чего делается">▸</button>'
+            : '<span class="uv-toggle-gap"></span>');
     return `
         <div class="uv-node" data-tier="P${tier}">
             <div class="uv-line">${prefix}${toggle}${viewResHtml(name)}<span class="uv-sep">–</span>${viewQtyHtml(name)}</div>
@@ -3388,6 +3390,18 @@ function applyViewVisibility(card) {
         colonyOpen = top.dataset.open === '1' || top.dataset.auto === '1';
         walk(top, true, 0);
     });
+    view.querySelectorAll('.uv-colony').forEach((col) => {
+        const top = col.querySelector(':scope > .uv-node');
+        const fold = col.querySelector(':scope > [data-role="uv-fold"]');
+        if (!top || !fold) return;
+        const hasKids = Boolean(top.querySelector(':scope > .uv-kids'));
+        const isOpen = top.dataset.open === '1' || top.dataset.auto === '1';
+        fold.hidden = !hasKids;
+        fold.textContent = isOpen ? '−' : '+';
+        fold.setAttribute('aria-expanded', String(isOpen));
+        fold.title = isOpen ? 'Свернуть колонию' : 'Развернуть колонию';
+        fold.setAttribute('aria-label', fold.title);
+    });
     view.querySelectorAll('[data-role="uv-tier"]').forEach((b) => {
         b.setAttribute('aria-pressed', String(shown.has(b.dataset.tier)));
     });
@@ -3412,6 +3426,8 @@ function cardViewHtml(card) {
         return `
             <div class="uv-colony" data-planet="${escapeHtml(key)}">
                 ${viewNodeHtml(c.prod, c.p0, where)}
+                <button type="button" class="uv-fold" data-role="uv-fold" aria-expanded="false"
+                        title="Развернуть колонию" aria-label="Развернуть колонию">+</button>
             </div>`;
     }).join('') || '<p class="uv-empty">Колоний нет — нажмите ✎ и добавьте их</p>';
     const safe = escapeHtml(name);
@@ -3575,6 +3591,21 @@ function handleViewClick(event) {
                     : '<div class="uv-empty">пусто</div>'}
             </div>`);
         storeBtn.setAttribute('aria-expanded', 'true');
+        return true;
+    }
+    /* Круглая кнопка колонии: развернуть / свернуть. Все колонии
+       свёрнуты — фильтры уровней сбрасываются (снова TOP). */
+    const fold = event.target.closest('[data-role="uv-fold"]');
+    if (fold) {
+        const top = fold.closest('.uv-colony').querySelector(':scope > .uv-node');
+        if (top.dataset.open === '1' || top.dataset.auto === '1') {
+            delete top.dataset.open;
+            delete top.dataset.auto;
+            top.querySelectorAll('.uv-node[data-open]').forEach((n) => { delete n.dataset.open; });
+        } else top.dataset.open = '1';
+        const tops = Array.from(card.querySelectorAll('.uv-colony > .uv-node'));
+        if (!tops.some((n) => n.dataset.open === '1' || n.dataset.auto === '1')) card.dataset.showTiers = '';
+        applyViewVisibility(card);
         return true;
     }
     const toggle = event.target.closest('[data-role="uv-toggle"]');
