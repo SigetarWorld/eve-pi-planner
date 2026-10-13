@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 16:00';
+const APP_BUILD = '13.10.2026 16:20';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -2791,27 +2791,33 @@ async function renderEveTest() {
    esi-universe.read_structures.v1): персонажей, вошедших раньше только
    с правом на планеты, надо подключить заново через «LOG IN». */
 const ASSETS_SCOPE = 'esi-assets.read_assets.v1';
+const CORP_ASSETS_SCOPE = 'esi-assets.read_corporation_assets.v1';
+const CORP_DIVISIONS_SCOPE = 'esi-corporations.read_divisions.v1';
 const STRUCTURES_SCOPE = 'esi-universe.read_structures.v1';
 const charScopes = (char) => [].concat(char.scopes || []).join(' ').split(/\s+/).filter(Boolean);
 const locationNames = new Map();
 
-async function loadCharAssets(char) {
+async function loadCharAssets(char, corpId) {
     const id = char.characterId;
+    // корпорация: те же запросы, только /corporations/{id}/ (нужна роль Director)
+    const owner = corpId ? `corporations/${corpId}` : `characters/${id}`;
     const items = [];
     for (let page = 1; page <= 50; page += 1) {
         // eslint-disable-next-line no-await-in-loop
-        const part = await eveFetchJson(`${ESI_BASE}/characters/${id}/assets/?datasource=tranquility&page=${page}`, {}, id);
+        const part = await eveFetchJson(`${ESI_BASE}/${owner}/assets/?datasource=tranquility&page=${page}`, {}, id);
         items.push(...part);
         if (part.length < 1000) break;
     }
     const byItem = new Map(items.map((x) => [x.item_id, x]));
     // Имена контейнеров и кораблей (то, во что что-то вложено, и собранные корабли)
-    const named = items.filter((x) => x.is_singleton && (items.some((y) => y.location_id === x.item_id) || /Container|Ship/i.test(x.location_flag || '')));
+    const parents = new Set(items.map((y) => y.location_id));
+    const named = items.filter((x) => x.is_singleton && x.location_flag !== 'OfficeFolder'
+        && (parents.has(x.item_id) || /Container|Ship/i.test(x.location_flag || '')));
     const names = new Map();
     for (let i = 0; i < named.length; i += 1000) {
         try {
             // eslint-disable-next-line no-await-in-loop
-            const list = await eveFetchJson(`${ESI_BASE}/characters/${id}/assets/names/?datasource=tranquility`, {
+            const list = await eveFetchJson(`${ESI_BASE}/${owner}/assets/names/?datasource=tranquility`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(named.slice(i, i + 1000).map((x) => x.item_id))
@@ -2842,21 +2848,38 @@ async function loadCharAssets(char) {
     return { items, byItem, names, tops };
 }
 
-function assetsCharHtml(char, data) {
+function assetsCharHtml(char, data, corp) {
     const fmtN = (n) => Number(n).toLocaleString('ru-RU');
+    const divName = (flag) => {
+        const m = /^CorpSAG(\d)$/.exec(flag || '');
+        if (!m) return flag || '';
+        const d = corp && corp.divisions && corp.divisions.find((x) => x.division === Number(m[1]));
+        return (d && d.name) || `Отдел ${m[1]}`;
+    };
     const kids = new Map();
     data.items.forEach((x) => {
         if (!kids.has(x.location_id)) kids.set(x.location_id, []);
         kids.get(x.location_id).push(x);
     });
     const itemHtml = (x) => {
+        // Офис корпорации на станции — его ангар по отделам (CorpSAG1–7)
+        if (x.location_flag === 'OfficeFolder') {
+            const inner = kids.get(x.item_id) || [];
+            const flags = uniqValues(inner.map((y) => y.location_flag)).sort();
+            return `<li class="as-item as-office"><details open><summary><b>Офис корпорации</b>
+                <span class="evt-dim">· предметов ${inner.length}</span></summary><ul>${flags.map((f) => {
+                    const list = inner.filter((y) => y.location_flag === f);
+                    return `<li class="as-item"><details><summary>${escapeHtml(divName(f))}
+                        <span class="evt-dim">· ${list.length}</span></summary><ul>${list.map(itemHtml).join('')}</ul></details></li>`;
+                }).join('')}</ul></details></li>`;
+        }
         const type = esiTypeName(x.type_id);
         const pi = PI_COMMODITIES[type] ? `P${piTierOf(type)}` : '';
         const inner = kids.get(x.item_id) || [];
         const label = `${pi ? tierBadgeHtml(pi) : ''}<span class="as-name" lang="en">${escapeHtml(data.names.get(x.item_id) || type)}</span>`
             + (data.names.get(x.item_id) ? ` <span class="evt-dim">(${escapeHtml(type)})</span>` : '')
             + ` <span class="as-qty">×${fmtN(x.quantity)}</span>`
-            + ` <span class="evt-dim">${escapeHtml(x.location_flag || '')}</span>`;
+            + ` <span class="evt-dim">${escapeHtml(/^CorpSAG/.test(x.location_flag || '') ? '' : (x.location_flag || ''))}</span>`;
         return inner.length
             ? `<li class="as-item${pi ? ' is-pi' : ''}"><details><summary>${label} <span class="evt-dim">· внутри ${inner.length}</span></summary><ul>${inner.map(itemHtml).join('')}</ul></details></li>`
             : `<li class="as-item${pi ? ' is-pi' : ''}">${label}</li>`;
@@ -2869,11 +2892,13 @@ function assetsCharHtml(char, data) {
             <span class="evt-dim">· предметов ${list.length}${pis ? ` · планетарки ${pis}` : ''}</span></summary>
             <ul>${list.map(itemHtml).join('')}</ul></details>`;
     }).join('');
+    const offices = data.items.filter((x) => x.location_flag === 'OfficeFolder').length;
     return `
         <div class="evt-head">
-            <img class="eve-char-img" src="${evePortrait(char.characterId)}" alt="" width="32" height="32">
-            <b>${escapeHtml(char.characterName)}</b>
-            <span class="evt-dim">записей ${data.items.length} · мест ${data.tops.length} · планетарки ${piCount}</span>
+            ${corp ? `<img class="eve-char-img" src="https://images.evetech.net/corporations/${corp.id}/logo?size=32" alt="" width="32" height="32">`
+                : `<img class="eve-char-img" src="${evePortrait(char.characterId)}" alt="" width="32" height="32">`}
+            <b>${escapeHtml(corp ? `Корпорация ${corp.name}` : char.characterName)}</b>
+            <span class="evt-dim">${corp ? `через ${escapeHtml(char.characterName)} · офисов ${offices} · ` : ''}записей ${data.items.length} · мест ${data.tops.length} · планетарки ${piCount}</span>
         </div>
         ${locs || '<p class="evt-dim">Имущества нет</p>'}
         <details class="evt-raw"><summary>Сырые ответы ESI</summary>
@@ -2904,6 +2929,61 @@ async function renderAssetsTest() {
                 <span class="evt-bad">ошибка: ${escapeHtml(e.message)}</span></div>`;
         }
     }));
+    await renderCorpAssets(body, chars);
+}
+
+/* Корпоративные офисы — склады, которые арендует корпорация. Читать их
+   может персонаж с ролью Director и правом esi-assets.read_corporation_assets.v1;
+   названия отделов ангара — esi-corporations.read_divisions.v1. Каждая
+   корпорация — один раз, через первого подходящего персонажа. */
+async function renderCorpAssets(body, chars) {
+    const corps = new Map();     // corpId -> { id, name, chars: [] }
+    await Promise.all(chars.map(async (char) => {
+        try {
+            const info = await esiPublicJson(`/characters/${char.characterId}/`);
+            if (!info.corporation_id || info.corporation_id < 2000000) return;   // NPC-корпорации — без офисов
+            if (!corps.has(info.corporation_id)) corps.set(info.corporation_id, { id: info.corporation_id, name: '', chars: [] });
+            corps.get(info.corporation_id).chars.push(char);
+        } catch (e) {
+            // без корпорации
+        }
+    }));
+    for (const corp of corps.values()) {
+        // eslint-disable-next-line no-await-in-loop
+        corp.name = await esiPublicJson(`/corporations/${corp.id}/`).then((x) => x.name).catch(() => String(corp.id));
+        body.insertAdjacentHTML('beforeend', `<article class="evt-card as-corp" data-corp="${corp.id}">
+            <div class="evt-head"><b>Корпорация ${escapeHtml(corp.name)}</b> <span class="evt-dim">загрузка…</span></div></article>`);
+        const box = body.querySelector(`.as-corp[data-corp="${corp.id}"]`);
+        const able = corp.chars.filter((c) => charScopes(c).includes(CORP_ASSETS_SCOPE));
+        if (!able.length) {
+            box.innerHTML = `<div class="evt-head"><b>Корпорация ${escapeHtml(corp.name)}</b>
+                <span class="evt-bad">нет права на имущество корпорации — подключите заново через «LOG IN» персонажа с ролью Director</span></div>`;
+            continue;
+        }
+        let shown = false;
+        const errors = [];
+        for (const char of able) {
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                const data = await loadCharAssets(char, corp.id);
+                let divisions = [];
+                if (charScopes(char).includes(CORP_DIVISIONS_SCOPE)) {
+                    // eslint-disable-next-line no-await-in-loop
+                    divisions = await eveFetchJson(`${ESI_BASE}/corporations/${corp.id}/divisions/?datasource=tranquility`, {}, char.characterId)
+                        .then((d) => d.hangar || []).catch(() => []);
+                }
+                box.innerHTML = assetsCharHtml(char, data, { id: corp.id, name: corp.name, divisions });
+                shown = true;
+                break;
+            } catch (e) {
+                errors.push(`${char.characterName}: ${e.message}`);
+            }
+        }
+        if (!shown) {
+            box.innerHTML = `<div class="evt-head"><b>Корпорация ${escapeHtml(corp.name)}</b>
+                <span class="evt-bad">EVE не отдал имущество корпорации — нужна роль Director (${escapeHtml(errors.join('; '))})</span></div>`;
+        }
+    }
 }
 
 (function initAssetsTest() {

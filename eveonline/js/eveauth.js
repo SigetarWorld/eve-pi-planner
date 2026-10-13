@@ -44,8 +44,9 @@ const EVE_AUTH = {
     tokenUrl: 'https://login.eveonline.com/v2/oauth/token',
     revokeUrl: 'https://login.eveonline.com/oauth/revoke',
     verifyUrl: 'https://login.eveonline.com/oauth/verify',
-    // планеты; имущество (склады) и названия структур — для «Тест2»
-    scope: 'esi-planets.manage_planets.v1 esi-assets.read_assets.v1 esi-universe.read_structures.v1',
+    // планеты; имущество (склады), названия структур, офисы корпорации
+    // и названия её отделов — для «Тест2»
+    scope: 'esi-planets.manage_planets.v1 esi-assets.read_assets.v1 esi-universe.read_structures.v1 esi-assets.read_corporation_assets.v1 esi-corporations.read_divisions.v1',
     storageKey: 'evepi.eve',
     pendingKey: 'evepi.eve.pending'
 };
