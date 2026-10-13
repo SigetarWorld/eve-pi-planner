@@ -1983,14 +1983,18 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 23:15';
+const APP_BUILD = '13.10.2026 23:20';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
     if (!el) return;
-    const m = (document.querySelector('script[src*="js/app.js"]') || {}).getAttribute
-        ? (document.querySelector('script[src*="js/app.js"]').getAttribute('src') || '').match(/[?&]v=(\d+)/) : null;
-    el.textContent = `v${m ? m[1] : '?'} · ${APP_BUILD}`;
+    // версия app.js и версия стилей — из адресов (?v=)
+    const ver = (sel, attr) => {
+        const node = document.querySelector(sel);
+        const m = node && (node.getAttribute(attr) || '').match(/[?&]v=(\d+)/);
+        return m ? m[1] : '?';
+    };
+    el.textContent = `v${ver('script[src*="js/app.js"]', 'src')} · css v${ver('link[href*="css/style.css"]', 'href')} · ${APP_BUILD}`;
     el.title = 'Версия сайта: если после обновления она не сменилась — Ctrl+F5';
 }());
 function appVersionText() {
