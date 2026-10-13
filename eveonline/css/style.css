@@ -4854,7 +4854,7 @@ input.chain-amount:focus {
    в ней карточки станций в стиле карточек персонажей */
 .wh-layout { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1rem; }
 .wh-sum-box { flex: 0 0 auto; }
-.wh-where-box { flex: 1 1 30rem; min-width: 0; }
+.wh-where-box { flex: 1 1 100%; min-width: 0; }
 .wh-h { margin: 0 0 0.5rem; font-family: var(--font-heading); font-size: 0.9rem; color: var(--accent); }
 /* колонки аккаунтов одинаковой ширины: сетка с равными долями,
    не уже 30rem — иначе переносятся на новый ряд */
@@ -4874,12 +4874,18 @@ input.chain-amount:focus {
 .uv .ct-tier.wh-sec-w    { color: #c9a7ff;       border-color: rgba(201, 167, 255, 0.55); background: rgba(201, 167, 255, 0.08); }
 .wh-loc .wh-sec + .wh-sec { margin-left: -0.15rem; }
 .wh-loc .wh-sec + .wh-region { margin-left: 0.15rem; }
-/* кнопка «Сводная таблица» под заголовком */
-.wh-sum-toggle { margin: 0 0 0.6rem; }
-.wh-sum-toggle[aria-expanded="true"] { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
-.wh-sum-box[hidden] { display: none; }
+/* кнопки-вкладки под заголовком: «Сводная таблица» / «Планетарное имущество» */
+.wh-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 0.7rem; }
+.wh-tab[aria-pressed="true"] { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+.wh-tab[aria-pressed="false"] { opacity: 0.6; }
+.wh-sum-box[hidden], .wh-where-box[hidden] { display: none; }
+/* свернуть — в шапке карточки станции, справа, как «+» у карточки персонажа */
+.wh-card-head { position: relative; padding-right: 2.4rem; }
+.wh-card-head > .wh-fold { position: absolute; top: 50%; right: 0.5rem; transform: translateY(-50%); }
+.wh-card .uv-body[hidden] { display: none; }
+.wh-spot { padding-right: 0; }
 .wh-spot { min-height: 30px; }
-.wh-path { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; padding: 0.15rem 32px 0.1rem 0; font-size: 0.78rem; color: var(--text-dim); }
+.wh-path { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; padding: 0.15rem 0 0.1rem; font-size: 0.78rem; color: var(--text-dim); }
 /* значки шагов пути: ангар, офис, трюм — рисунки; контейнер, корабль — иконки EVE */
 .wh-seg { display: inline-flex; align-items: center; gap: 0.25rem; }
 /* Новые значки «Склада» — общий вид, как [P1] и значки складов колонии:
@@ -4910,6 +4916,5 @@ input.chain-amount:focus {
 .wh-ico-corp   { --ico: var(--text-dim); }
 .wh-ico-char img, .wh-ico-corp img { width: 100%; height: 100%; border-radius: 0; }
 .wh-seg-k-box > span, .wh-seg-k-ship > span { color: var(--text); }
-.wh-items[hidden] { display: none; }
 .wh-line { padding-left: 0.6rem; }
 #wh-modal .stats-modal-box { width: min(1400px, calc(100vw - 2rem)); }

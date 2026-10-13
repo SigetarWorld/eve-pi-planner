@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=168">
+    <link rel="stylesheet" href="css/style.css?v=169">
 </head>
 <body>
     <header>
@@ -127,8 +127,12 @@
                  aria-labelledby="wh-modal-title" hidden>
                 <div class="ct-modal-box stats-modal-box">
                     <h3 id="wh-modal-title" class="ct-modal-title">Склад</h3>
-                    <button type="button" id="wh-sum-toggle" class="btn card-add wh-sum-toggle"
-                            aria-expanded="false">Сводная таблица</button>
+                    <div class="wh-tabs" role="group" aria-label="Вид">
+                        <button type="button" class="btn card-add wh-tab" data-role="wh-view" data-view="sum"
+                                aria-pressed="true">Сводная таблица</button>
+                        <button type="button" class="btn card-add wh-tab" data-role="wh-view" data-view="where"
+                                aria-pressed="false">Планетарное имущество</button>
+                    </div>
                     <div id="wh-body" class="stats-body"></div>
                     <button type="button" class="ct-modal-close" aria-label="Закрыть">&times;</button>
                 </div>
@@ -225,7 +229,7 @@
     <script src="js/calculator.js?v=35"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=156"></script>
+    <script src="js/app.js?v=157"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
         if (location.protocol === "file:") {

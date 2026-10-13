@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 23:50';
+const APP_BUILD = '13.10.2026 23:55';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3219,8 +3219,9 @@ function whSecHtml(place) {
     return `<span class="ct-tier wh-sec wh-sec-${kind}" title="${tip}">${label}</span>`
         + `<span class="ct-tier wh-sec wh-sec-${kind}" title="${tip}">${v.toFixed(1)}</span>`;
 }
-// Сводная таблица — за кнопкой под заголовком «Склад»; по умолчанию скрыта
-let whSumShown = false;
+/* Две кнопки под заголовком «Склад», как вкладки: «Сводная таблица»
+   (открыта по умолчанию) и «Планетарное имущество» (где что лежит). */
+let whView = 'sum';
 /* Значки пути: ангар и офис — свои рисунки (как значки складов колонии),
    контейнер и корабль — иконка типа с сервера картинок EVE. */
 const WH_SEG_SVG = {
@@ -3290,13 +3291,13 @@ function warehouseHtml(owners) {
         return `
             <div class="uv wh-card">
                 <div class="uv-head wh-card-head">
+                    <button type="button" class="uv-fold uv-fold-all wh-fold" data-role="wh-fold" aria-expanded="true" title="Свернуть" aria-label="Свернуть">−</button>
                     <span class="wh-loc">${whSecHtml(place)}<span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span><span class="uv-sys">${escapeHtml(place.system || 'Система ?')}</span><span class="uv-sep">›</span><span class="wh-station">${escapeHtml(station)}</span></span>
                 </div>
                 <div class="uv-body">${Array.from(spots.values()).map(({ segs, items }) => `
                     <div class="uv-colony wh-spot">
                         <div class="wh-path">${whPathHtml(segs)}</div>
-                        <div class="wh-items">${Array.from(items.entries()).sort(byTier).map(([n, q]) => `<div class="uv-line wh-line">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${whFmt(q)}</span></div>`).join('')}</div>
-                        <button type="button" class="uv-fold" data-role="wh-fold" aria-expanded="true" title="Свернуть" aria-label="Свернуть">−</button>
+                        ${Array.from(items.entries()).sort(byTier).map(([n, q]) => `<div class="uv-line wh-line">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${whFmt(q)}</span></div>`).join('')}
                     </div>`).join('')}
                 </div>
             </div>`;
@@ -3312,10 +3313,10 @@ function warehouseHtml(owners) {
             </div>`;
     }).join('');
     return `<div class="wh-layout">
-            <div class="st-scroll wh-sum-box"${whSumShown ? '' : ' hidden'}><table class="stats-p1 wh-table">
+            <div class="st-scroll wh-sum-box"${whView === 'sum' ? '' : ' hidden'}><table class="stats-p1 wh-table">
                 <thead><tr><th scope="col" class="st-name">Товар</th>${head}<th scope="col" class="wh-col">Всего</th></tr></thead>
                 <tbody>${rows}</tbody></table></div>
-            <section class="wh-where-box"><h4 class="wh-h">Где лежит</h4>
+            <section class="wh-where-box"${whView === 'where' ? '' : ' hidden'}>
                 <div class="wh-where">${where}</div></section>
         </div>`;
 }
@@ -3347,24 +3348,30 @@ async function renderWarehouse() {
     btn.addEventListener('click', () => {
         modal.hidden = false;
         modal.querySelector('.ct-modal-close').focus();
+        // при каждом открытии — сводная таблица
+        whView = 'sum';
+        modal.querySelectorAll('[data-role="wh-view"]').forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.view === 'sum')));
         renderWarehouse();
     });
-    // кнопка под заголовком — показать / скрыть сводную таблицу
-    const sumBtn = document.getElementById('wh-sum-toggle');
-    if (sumBtn) {
-        sumBtn.addEventListener('click', () => {
-            whSumShown = !whSumShown;
-            sumBtn.setAttribute('aria-expanded', String(whSumShown));
-            const box = modal.querySelector('.wh-sum-box');
-            if (box) box.hidden = !whSumShown;
-        });
-    }
-    // круглая кнопка у пути — свернуть / развернуть товары этого места
+    // кнопки-вкладки под заголовком: сводная таблица / планетарное имущество
+    const tabs = Array.from(modal.querySelectorAll('[data-role="wh-view"]'));
+    const showView = () => {
+        tabs.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.view === whView)));
+        const sum = modal.querySelector('.wh-sum-box');
+        const where = modal.querySelector('.wh-where-box');
+        if (sum) sum.hidden = whView !== 'sum';
+        if (where) where.hidden = whView !== 'where';
+    };
+    tabs.forEach((t) => t.addEventListener('click', () => {
+        whView = t.dataset.view;
+        showView();
+    }));
+    // круглая кнопка в шапке карточки станции — свернуть / развернуть её
     modal.addEventListener('click', (event) => {
         const fold = event.target.closest('[data-role="wh-fold"]');
         if (!fold) return;
         const open = fold.getAttribute('aria-expanded') !== 'true';
-        fold.closest('.wh-spot').querySelector('.wh-items').hidden = !open;
+        fold.closest('.wh-card').querySelector('.uv-body').hidden = !open;
         fold.setAttribute('aria-expanded', String(open));
         fold.textContent = open ? '−' : '+';
         fold.title = open ? 'Свернуть' : 'Развернуть';
