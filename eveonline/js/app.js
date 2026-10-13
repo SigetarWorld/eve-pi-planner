@@ -3729,7 +3729,7 @@ document.addEventListener('change', (event) => {
     (col && col.storeData ? col.storeData : []).forEach((st, i) => {
         const btn = col.querySelector(`[data-role="uv-store"][data-i="${i}"]`);
         if (!btn) return;
-        btn.title = storeTitleOf(st);
+        btn.title = [storeTitleOf(st), storeFillText(storeStateOf(st))].filter(Boolean).join(' · ');
     });
 });
 function storeKindOf(typeId, strict = false) {
@@ -3739,6 +3739,36 @@ function storeKindOf(typeId, strict = false) {
     if (name.includes('storage')) return 'sf';
     return strict ? '' : 'sf';
 }
+/* Вместимость складов (м³) и объём товара по уровню — из static-data
+   (types.jsonl): Launchpad 10 000, Storage Facility 12 000, Command Center 500;
+   P0 0.005, P1 0.19, P2 0.75, P3 3, P4 50. */
+const STORE_CAPACITY = { lp: 10000, sf: 12000, cc: 500 };
+const PI_TIER_VOLUME = [0.005, 0.19, 0.75, 3, 50];
+// Склад считаем переполненным, когда занято от 99 % объёма
+const STORE_FULL_SHARE = 0.99;
+function storeUsedOf(items) {
+    let used = 0;
+    items.forEach((q, item) => { if (q > 0) used += q * (PI_TIER_VOLUME[piTierOf(item)] || 0); });
+    return used;
+}
+// Состояние склада: '' | 'empty' | 'full'; used / cap — для подсказки
+function storeStateOf(st) {
+    const kind = storeKindOf(st.typeId);
+    const cap = STORE_CAPACITY[kind] || 0;
+    const used = storeUsedOf(st.items);
+    const empty = !Array.from(st.items.values()).some((q) => q >= 1);
+    let state = '';
+    if (empty && kind !== 'cc') state = 'empty';
+    else if (cap && used >= cap * STORE_FULL_SHARE) state = 'full';
+    return { state, used, cap };
+}
+const fmtM3 = (v) => `${Math.round(v).toLocaleString('ru-RU')} м³`;
+const storeFillText = ({ state, used, cap }) => {
+    if (state === 'empty') return 'пусто';
+    if (!cap) return '';
+    const pct = Math.round(used / cap * 100);
+    return `${fmtM3(used)} из ${fmtM3(cap)} (${pct} %)${state === 'full' ? ' — переполнен' : ''}`;
+};
 const storeIconHtml = (typeId, title) => {
     const kind = storeKindOf(typeId);
     return `<span class="uv-store uv-store-${kind}" title="${escapeHtml(title)}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${STORE_SVG[kind]}</svg></span>`;
@@ -3760,16 +3790,21 @@ function renderCardView(card) {
                или Storage Facility подсвечен. Нажатие — что в нём лежит. */
             const box = col.querySelector('[data-role="uv-stores"]');
             if (box && data) {
+                const states = data.stores.map(storeStateOf);
                 box.innerHTML = data.stores.map((st, i) => {
                     const kind = storeKindOf(st.typeId);
-                    const list = Array.from(st.items.entries()).filter(([, q]) => q >= 1)
-                        .sort((a, b) => piTierOf(b[0]) - piTierOf(a[0]) || a[0].localeCompare(b[0]));
-                    const empty = !list.length;
-                    // подсказка — только название и код; что внутри — по нажатию
-                    const title = storeTitleOf(st);
-                    return `<button type="button" class="uv-store uv-store-${kind} uv-store-btn${empty && kind !== 'cc' ? ' is-empty' : ''}" data-role="uv-store" data-i="${i}" title="${escapeHtml(title)}" aria-expanded="false"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${STORE_SVG[kind]}</svg></button>`;
+                    const fill = states[i];
+                    const cls = fill.state ? ` is-${fill.state}` : '';
+                    // подсказка — название, код и заполненность; что внутри — по нажатию
+                    const title = [storeTitleOf(st), storeFillText(fill)].filter(Boolean).join(' · ');
+                    return `<button type="button" class="uv-store uv-store-${kind} uv-store-btn${cls}" data-role="uv-store" data-i="${i}" title="${escapeHtml(title)}" aria-expanded="false"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${STORE_SVG[kind]}</svg></button>`;
                 }).join('');
                 col.storeData = data.stores;
+                // колония с пустым / переполненным складом выделяется целиком
+                col.classList.toggle('has-store-empty', states.some((s) => s.state === 'empty'));
+                col.classList.toggle('has-store-full', states.some((s) => s.state === 'full'));
+                card.classList.toggle('has-store-empty', !!view.querySelector('.uv-colony.has-store-empty'));
+                card.classList.toggle('has-store-full', !!view.querySelector('.uv-colony.has-store-full'));
                 applyViewVisibility(card);
             }
             col.querySelectorAll('[data-qty]').forEach((el) => {
@@ -3861,11 +3896,13 @@ function handleViewClick(event) {
         if (same) return true;
         const st = (col.storeData || [])[Number(storeBtn.dataset.i)];
         if (!st) return true;
+        const fillOf = storeStateOf(st);
         const list = Array.from(st.items.entries()).filter(([, q]) => q >= 1)
             .sort((a, b) => piTierOf(b[0]) - piTierOf(a[0]) || a[0].localeCompare(b[0]));
         col.querySelector('.uv-node > .uv-line').insertAdjacentHTML('afterend', `
             <div class="uv-store-list" data-i="${storeBtn.dataset.i}">
                 <div class="uv-store-title">${escapeHtml(esiTypeName(st.typeId))}
+                    <span class="uv-store-fill${fillOf.state ? ` is-${fillOf.state}` : ''}">${escapeHtml(storeFillText(fillOf))}</span>
                     <input class="uv-pin-code" data-role="uv-pin-code" data-pin="${st.pinId}" value="${escapeHtml(pinCodeOf(st.pinId))}"
                            placeholder="код из игры" maxlength="12" spellcheck="false" title="Код склада из игры, например MN-XFG"></div>
                 ${list.length ? list.map(([n, q]) => `<div class="uv-line">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${Math.floor(q).toLocaleString('ru-RU')}</span></div>`).join('')

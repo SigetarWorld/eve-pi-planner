@@ -4771,3 +4771,45 @@ input.chain-amount:focus {
 }
 .eve-status.is-online .eve-status-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
 .eve-status.is-offline .eve-status-dot { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+
+/* ---------- Пустой и переполненный склад ----------
+   Пустой — красный (как раньше), переполненный — жёлтый. Выделяется
+   кнопка склада, строка колонии (полоса слева) и вся карточка (рамка). */
+:root { --yellow: #ffd23f; }
+
+.uv-store-btn.is-full {
+    color: var(--yellow);
+    border-color: var(--yellow);
+    background: rgba(255, 210, 63, 0.18);
+    opacity: 1;
+    filter: none;
+    animation: uv-full-pulse 1.6s ease-in-out infinite;
+}
+@keyframes uv-full-pulse {
+    50% { box-shadow: 0 0 8px rgba(255, 210, 63, 0.75); }
+}
+
+.uv-colony.has-store-empty,
+.uv-colony.has-store-full {
+    padding-left: 0.45rem;
+    box-shadow: inset 3px 0 0 var(--red);
+    background: linear-gradient(90deg, rgba(255, 107, 107, 0.08), transparent 60%);
+}
+.uv-colony.has-store-full {
+    box-shadow: inset 3px 0 0 var(--yellow);
+    background: linear-gradient(90deg, rgba(255, 210, 63, 0.08), transparent 60%);
+}
+/* и пустой, и переполненный в одной колонии — двойная полоса */
+.uv-colony.has-store-empty.has-store-full {
+    box-shadow: inset 3px 0 0 var(--red), inset 6px 0 0 var(--yellow);
+}
+
+.card.has-store-full > .uv  { border-color: var(--yellow); box-shadow: 0 0 0 1px rgba(255, 210, 63, 0.35), 0 0 14px rgba(255, 210, 63, 0.15); }
+.card.has-store-empty > .uv { border-color: var(--red);    box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.35), 0 0 14px rgba(255, 107, 107, 0.15); }
+.card.has-store-empty.has-store-full > .uv { box-shadow: 0 0 0 1px var(--yellow), 0 0 14px rgba(255, 107, 107, 0.2); }
+
+/* заполненность в раскрытом списке склада */
+.uv-store-fill { margin-left: 0.4rem; color: var(--text-faint); }
+.uv-store-fill.is-full  { color: var(--yellow); font-weight: 600; }
+.uv-store-fill.is-empty { color: var(--red); font-weight: 600; }
