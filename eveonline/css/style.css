@@ -4880,7 +4880,15 @@ input.chain-amount:focus {
 .wh-sum-toggle[aria-expanded="true"] { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
 .wh-sum-box[hidden] { display: none; }
 .wh-spot { min-height: 30px; }
-.wh-path { padding: 0.15rem 0 0.1rem; font-size: 0.78rem; color: var(--text-dim); }
+.wh-path { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; padding: 0.15rem 32px 0.1rem 0; font-size: 0.78rem; color: var(--text-dim); }
+/* значки шагов пути: ангар, офис, трюм — рисунки; контейнер, корабль — иконки EVE */
+.wh-seg { display: inline-flex; align-items: center; gap: 0.25rem; }
+.wh-seg-img { width: 16px; height: 16px; border-radius: 2px; }
+.wh-seg-svg { width: 14px; height: 14px; flex: 0 0 auto; }
+.wh-seg-hangar { color: var(--green); }
+.wh-seg-office { color: #c9a7ff; }
+.wh-seg-hold { color: var(--cyan); }
+.wh-seg-k-box > span, .wh-seg-k-ship > span { color: var(--text); }
 .wh-items[hidden] { display: none; }
 .wh-line { padding-left: 0.6rem; }
 #wh-modal .stats-modal-box { width: min(1400px, calc(100vw - 2rem)); }

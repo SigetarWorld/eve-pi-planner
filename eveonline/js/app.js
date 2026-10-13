@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 23:30';
+const APP_BUILD = '13.10.2026 23:40';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3109,11 +3109,22 @@ function whEntriesOf(data, divisions, onlyTagged) {
         const d = (divisions || []).find((x) => x.division === Number(m[1]));
         return (d && d.name) || `Отдел ${m[1]}`;
     };
-    const flagLabel = (flag) => (WH_FLAGS_SILENT.has(flag) ? '' : divName(flag) || WH_FLAGS[flag] || flag || '');
-    const itemLabel = (x) => {
-        if (x.location_flag === 'OfficeFolder') return 'Офис корпорации';
+    /* Шаги пути внутри станции — с видом для значка:
+       hangar — ангар / отдел ангара корпорации, office — офис корпорации,
+       box — контейнер, ship — корабль, hold — трюм, flag — прочее. */
+    const flagSeg = (flag) => {
+        if (WH_FLAGS_SILENT.has(flag)) return null;
+        const div = divName(flag);
+        if (div) return { kind: 'hangar', label: div };
+        if (flag === 'Hangar' || flag === 'FleetHangar' || flag === 'ShipHangar') return { kind: 'hangar', label: WH_FLAGS[flag] };
+        if (/Hold$|^Cargo$/.test(flag || '')) return { kind: 'hold', label: WH_FLAGS[flag] || flag };
+        return flag ? { kind: 'flag', label: WH_FLAGS[flag] || flag } : null;
+    };
+    const itemSeg = (x) => {
+        if (x.location_flag === 'OfficeFolder') return { kind: 'office', label: 'Офис корпорации' };
+        const type = esiTypeName(x.type_id);
         const n = data.names.get(x.item_id);
-        return `${esiTypeName(x.type_id)}${n ? ` «${n}»` : ''}`;
+        return { kind: /Container$/i.test(type) ? 'box' : 'ship', typeId: x.type_id, label: `${type}${n ? ` «${n}»` : ''}` };
     };
     const out = [];
     data.items.forEach((x) => {
@@ -3124,14 +3135,16 @@ function whEntriesOf(data, divisions, onlyTagged) {
         let cur = x;
         while (data.byItem.has(cur.location_id)) {
             const parent = data.byItem.get(cur.location_id);
-            parts.unshift(flagLabel(cur.location_flag));
-            parts.unshift(itemLabel(parent));
+            parts.unshift(flagSeg(cur.location_flag));
+            parts.unshift(itemSeg(parent));
             if ((data.names.get(parent.item_id) || '').toLowerCase().includes(STORE_CORP_TAG)) tagged = true;
             cur = parent;
         }
-        parts.unshift(flagLabel(cur.location_flag));
+        parts.unshift(flagSeg(cur.location_flag));
         if (onlyTagged && !tagged) return;
-        out.push({ name, qty: x.quantity || 0, top: cur.location_id, path: parts.filter(Boolean).join(' › ') || 'Ангар' });
+        const segs = parts.filter(Boolean);
+        if (!segs.length) segs.push({ kind: 'hangar', label: 'Ангар' });
+        out.push({ name, qty: x.quantity || 0, top: cur.location_id, segs, path: segs.map((g) => g.label).join(' › ') });
     });
     return out;
 }
@@ -3208,6 +3221,24 @@ function whSecHtml(place) {
 }
 // Сводная таблица — за кнопкой под заголовком «Склад»; по умолчанию скрыта
 let whSumShown = false;
+/* Значки пути: ангар и офис — свои рисунки (как значки складов колонии),
+   контейнер и корабль — иконка типа с сервера картинок EVE. */
+const WH_SEG_SVG = {
+    hangar: '<path d="M1.5 6.2 8 2.2l6.5 4V14h-2.2V8.4H3.7V14H1.5Z"/><path d="M4.6 9.3h6.8v1.1H4.6Zm0 2h6.8v1.1H4.6Zm0 2h6.8V14H4.6Z"/>',
+    office: '<path fill-rule="evenodd" d="M3 1.5h10V14.5H9.6v-3H6.4v3H3Zm2 2v1.6h1.6V3.5Zm4.4 0v1.6H11V3.5ZM5 6.7v1.6h1.6V6.7Zm4.4 0v1.6H11V6.7Z"/>',
+    hold: '<path d="M2 4.5 8 2l6 2.5v7L8 14l-6-2.5Z M2 4.5 8 7l6-2.5M8 7v7" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>'
+};
+function whPathHtml(segs) {
+    return segs.map((g) => {
+        let icon = '';
+        if (g.typeId && (g.kind === 'box' || g.kind === 'ship')) {
+            icon = `<img class="wh-seg-img" src="https://images.evetech.net/types/${g.typeId}/icon?size=32" alt="" width="16" height="16" loading="lazy" onerror="this.remove()">`;
+        } else if (WH_SEG_SVG[g.kind]) {
+            icon = `<svg class="wh-seg-svg wh-seg-${g.kind}" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${WH_SEG_SVG[g.kind]}</svg>`;
+        }
+        return `<span class="wh-seg wh-seg-k-${g.kind}">${icon}<span>${escapeHtml(g.label)}</span></span>`;
+    }).join('<span class="uv-sep">›</span>');
+}
 const whFmt = (n) => (n ? Math.floor(n).toLocaleString('ru-RU') : '');
 
 function warehouseHtml(owners) {
@@ -3240,8 +3271,8 @@ function warehouseHtml(owners) {
         const key = `${o.kind}:${o.corpId || o.char.characterId}|${e.top}`;
         if (!cards.has(key)) cards.set(key, { owner: o, top: e.top, spots: new Map() });
         const spots = cards.get(key).spots;
-        if (!spots.has(e.path)) spots.set(e.path, new Map());
-        const items = spots.get(e.path);
+        if (!spots.has(e.path)) spots.set(e.path, { segs: e.segs, items: new Map() });
+        const items = spots.get(e.path).items;
         items.set(e.name, (items.get(e.name) || 0) + e.qty);
     }));
     const byTier = (a, b) => piTierOf(b[0]) - piTierOf(a[0]) || a[0].localeCompare(b[0]);
@@ -3258,9 +3289,9 @@ function warehouseHtml(owners) {
                 <div class="uv-head wh-card-head">
                     <span class="wh-loc">${whSecHtml(place)}<span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span><span class="uv-sys">${escapeHtml(place.system || 'Система ?')}</span><span class="uv-sep">›</span><span class="wh-station">${escapeHtml(station)}</span></span>
                 </div>
-                <div class="uv-body">${Array.from(spots.entries()).map(([path, items]) => `
+                <div class="uv-body">${Array.from(spots.values()).map(({ segs, items }) => `
                     <div class="uv-colony wh-spot">
-                        <div class="wh-path">${escapeHtml(path)}</div>
+                        <div class="wh-path">${whPathHtml(segs)}</div>
                         <div class="wh-items">${Array.from(items.entries()).sort(byTier).map(([n, q]) => `<div class="uv-line wh-line">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${whFmt(q)}</span></div>`).join('')}</div>
                         <button type="button" class="uv-fold" data-role="wh-fold" aria-expanded="true" title="Свернуть" aria-label="Свернуть">−</button>
                     </div>`).join('')}
