@@ -4668,3 +4668,43 @@ input.chain-amount:focus {
     border-radius: 3px;
 }
 .uv-pin-code:focus { outline: none; border-color: var(--accent-line); }
+
+/* «Свернуть / развернуть все» в шапке — между ✎ и ×, видна всегда */
+.uv-fold.uv-fold-all { position: static; opacity: 1; flex: 0 0 auto; }
+
+
+/* ---------- Подсказки в стиле EVE Online ----------
+   Как метка объекта в космосе: выноска и серая полупрозрачная плашка */
+.eve-tip {
+    position: fixed;
+    z-index: 1000;
+    max-width: 22rem;
+    padding: 0.2rem 0.5rem 0.25rem;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    color: #e6e6e6;
+    padding-right: 0.8rem;
+    background: rgba(58, 60, 64, 0.82);
+    /* правый верхний угол срезан под 45° */
+    clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%);
+    pointer-events: none;
+}
+.eve-tip-name { white-space: nowrap; }
+.eve-tip-row {
+    margin-top: 0.1rem;
+    font-size: 0.72rem;
+    color: #cfcfcf;
+    white-space: nowrap;
+}
+.eve-tip-row b { color: #fff; font-weight: 700; margin-right: 0.25rem; }
+.eve-tip[hidden] { display: none; }
+.eve-tip-line {
+    position: fixed;
+    /* поверх плашки: закрашенный кружок лежит на её краю */
+    z-index: 1001;
+    pointer-events: none;
+    overflow: visible;
+}
+.eve-tip-line polyline { stroke: rgba(220, 220, 220, 0.75); stroke-width: 1; }
+.eve-tip-line .eve-tip-from { fill: none; stroke: rgba(220, 220, 220, 0.75); stroke-width: 1; }
+.eve-tip-line .eve-tip-to { fill: rgba(235, 235, 235, 0.95); }

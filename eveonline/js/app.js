@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 13:50';
+const APP_BUILD = '13.10.2026 15:05';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3408,6 +3408,12 @@ function applyViewVisibility(card) {
     });
     const top = view.querySelector('[data-role="uv-top"]');
     if (top) top.setAttribute('aria-pressed', String(!shown.size && !opened));
+    const all = view.querySelector('[data-role="uv-fold-all"]');
+    if (all) {
+        all.textContent = opened ? '−' : '+';
+        all.title = opened ? 'Свернуть все колонии' : 'Развернуть все колонии';
+        all.setAttribute('aria-label', all.title);
+    }
 }
 
 function cardViewHtml(card) {
@@ -3442,6 +3448,7 @@ function cardViewHtml(card) {
                 </span>
                 <button type="button" class="card-light" aria-pressed="${card.classList.contains('is-lit')}" title="Подсветить карточку" aria-label="Подсветить карточку">💡</button>
                 <button type="button" class="uv-edit" data-role="card-edit" title="Редактировать карточку" aria-label="Редактировать карточку">✎</button>
+                <button type="button" class="uv-fold uv-fold-all" data-role="uv-fold-all" title="Развернуть все колонии" aria-label="Развернуть все колонии">+</button>
                 <button type="button" class="account-del" data-role="card-del"
                         title="Удалить карточку" aria-label="Удалить карточку ${safe}">&times;</button>
             </div>
@@ -3492,7 +3499,7 @@ document.addEventListener('change', (event) => {
     (col && col.storeData ? col.storeData : []).forEach((st, i) => {
         const btn = col.querySelector(`[data-role="uv-store"][data-i="${i}"]`);
         if (!btn) return;
-        btn.title = btn.title.replace(/^[^:]*:/, `${storeTitleOf(st)}:`);
+        btn.title = storeTitleOf(st);
     });
 });
 function storeKindOf(typeId, strict = false) {
@@ -3528,7 +3535,8 @@ function renderCardView(card) {
                     const list = Array.from(st.items.entries()).filter(([, q]) => q >= 1)
                         .sort((a, b) => piTierOf(b[0]) - piTierOf(a[0]) || a[0].localeCompare(b[0]));
                     const empty = !list.length;
-                    const title = `${storeTitleOf(st)}: ${empty ? 'пусто' : list.map(([n, q]) => `${n} ${Math.floor(q).toLocaleString('ru-RU')}`).join(', ')}`;
+                    // подсказка — только название и код; что внутри — по нажатию
+                    const title = storeTitleOf(st);
                     return `<button type="button" class="uv-store uv-store-${kind} uv-store-btn${empty && kind !== 'cc' ? ' is-empty' : ''}" data-role="uv-store" data-i="${i}" title="${escapeHtml(title)}" aria-expanded="false"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${STORE_SVG[kind]}</svg></button>`;
                 }).join('');
                 col.storeData = data.stores;
@@ -3545,13 +3553,13 @@ function renderCardView(card) {
                 const icons = stores
                     ? Array.from(stores.entries())
                         .sort((a, b) => STORE_ORDER[storeKindOf(a[0])] - STORE_ORDER[storeKindOf(b[0])])
-                        .map(([t, q]) => storeIconHtml(t, `${[esiTypeName(t), codeOfType(t)].filter(Boolean).join(' ')}: ${Math.floor(q).toLocaleString('ru-RU')}`)).join('')
+                        .map(([t]) => storeIconHtml(t, [esiTypeName(t), codeOfType(t)].filter(Boolean).join(' '))).join('')
                     : '';
                 el.innerHTML = icons + (n === null ? '—' : n.toLocaleString('ru-RU'));
                 el.classList.toggle('is-zero', n === 0);
-                el.title = data
-                    ? `На складах колонии сейчас (расчёт от открытия в игре ${fmtDate(data.from)})`
-                    : (stocks ? 'Колония не найдена в EVE у этого персонажа' : 'Персонаж не подключён к EVE');
+                // подсказка только когда числа нет — объяснить почему
+                if (data) el.removeAttribute('title');
+                else el.title = stocks ? 'Колония не найдена в EVE у этого персонажа' : 'Персонаж не подключён к EVE';
             });
         });
     });
@@ -3634,6 +3642,21 @@ function handleViewClick(event) {
                     : '<div class="uv-empty">пусто</div>'}
             </div>`);
         storeBtn.setAttribute('aria-expanded', 'true');
+        return true;
+    }
+    // Кнопка в шапке: что-то раскрыто — свернуть всё, иначе развернуть всё до низа
+    if (event.target.closest('[data-role="uv-fold-all"]')) {
+        const nodes = card.querySelectorAll('.uv-node[data-open], .uv-node[data-auto]');
+        if (nodes.length) {
+            nodes.forEach((n) => { delete n.dataset.open; delete n.dataset.auto; });
+            card.dataset.showTiers = '';
+        } else {
+            card.querySelectorAll('.uv-colony > .uv-node').forEach((n) => {
+                if (n.querySelector(':scope > .uv-kids')) n.dataset.open = '1';
+            });
+            card.dataset.showTiers = VIEW_TIERS.join(',');
+        }
+        applyViewVisibility(card);
         return true;
     }
     /* Круглая кнопка колонии: развернуть / свернуть. Все колонии
@@ -4354,3 +4377,99 @@ async function initEveAuth() {
 }
 
 initEveAuth().finally(startEveAutoSnaps);
+
+/* ---- Подсказки в стиле EVE Online ----
+   Как метка объекта в космосе: от кнопки идёт тонкая линия-выноска
+   (наискосок и вбок), на её конце — полупрозрачная серая плашка с
+   названием; ниже — строки «Ключ значение» (ключ жирным), если в
+   подсказке есть строки вида «Код: MN-XFG». Текст берётся из title
+   (переносится в data-tip, чтобы браузер не показывал свою подсказку). */
+(function eveTooltips() {
+    const box = document.createElement('div');
+    box.className = 'eve-tip';
+    box.setAttribute('role', 'tooltip');
+    box.hidden = true;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    line.setAttribute('class', 'eve-tip-line');
+    // кружок у кнопки — пустой, у плашки — закрашенный
+    line.innerHTML = '<circle class="eve-tip-from" r="2.2"/><polyline fill="none"/><circle class="eve-tip-to" r="2"/>';
+    line.style.display = 'none';
+    document.body.append(line, box);
+    let cur = null;
+    let timer = 0;
+    const hide = () => {
+        clearTimeout(timer);
+        box.hidden = true;
+        line.style.display = 'none';
+        cur = null;
+    };
+    const fill = (text) => {
+        const [head, ...rest] = String(text).split('\n');
+        box.innerHTML = `<div class="eve-tip-name">${escapeHtml(head)}</div>`
+            + rest.filter(Boolean).map((r) => {
+                const k = r.indexOf(':');
+                return k > 0
+                    ? `<div class="eve-tip-row"><b>${escapeHtml(r.slice(0, k))}</b> ${escapeHtml(r.slice(k + 1).trim())}</div>`
+                    : `<div class="eve-tip-row">${escapeHtml(r)}</div>`;
+            }).join('');
+    };
+    const place = (el) => {
+        const r = el.getBoundingClientRect();
+        box.hidden = false;
+        const w = box.offsetWidth;
+        const h = box.offsetHeight;
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const dx = 22;                    // наискосок
+        const run = 30;                   // и вбок
+        const right = cx + dx + run + w < window.innerWidth - 6;
+        const down = cy + dx + h < window.innerHeight - 6;
+        const ex = cx + (right ? dx : -dx);
+        const ey = cy + (down ? dx : -dx);
+        const fx = ex + (right ? run : -run);
+        const bx = right ? fx : fx - w;
+        const by = ey - 11;               // линия упирается в середину первой строки
+        box.style.left = `${Math.round(bx)}px`;
+        box.style.top = `${Math.round(by)}px`;
+        const minX = Math.min(cx, fx) - 3;
+        const minY = Math.min(cy, ey) - 3;
+        line.style.left = `${minX}px`;
+        line.style.top = `${minY}px`;
+        line.setAttribute('width', Math.abs(fx - cx) + 6);
+        line.setAttribute('height', Math.abs(ey - cy) + 6);
+        const p = (x, y) => `${x - minX},${y - minY}`;
+        line.querySelector('polyline').setAttribute('points', `${p(cx, cy)} ${p(ex, ey)} ${p(fx, ey)}`);
+        const dot = line.querySelector('.eve-tip-from');
+        dot.setAttribute('cx', cx - minX);
+        dot.setAttribute('cy', cy - minY);
+        const end = line.querySelector('.eve-tip-to');
+        end.setAttribute('cx', fx - minX);
+        end.setAttribute('cy', ey - minY);
+        line.style.display = '';
+    };
+    document.addEventListener('mouseover', (event) => {
+        const el = event.target.closest && event.target.closest('[title], [data-tip]');
+        if (!el || el === cur) return;
+        if (el.hasAttribute('title')) {
+            const t = el.getAttribute('title');
+            el.removeAttribute('title');
+            if (!t) return;
+            el.dataset.tip = t;
+            if (!el.hasAttribute('aria-label') && !el.textContent.trim()) el.setAttribute('aria-label', t.replace(/\n/g, ', '));
+        }
+        if (!el.dataset.tip) return;
+        cur = el;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            if (cur !== el || !el.isConnected) return;
+            fill(el.dataset.tip);
+            place(el);
+        }, 250);
+    });
+    document.addEventListener('mouseout', (event) => {
+        if (!cur) return;
+        if (event.relatedTarget && cur.contains(event.relatedTarget)) return;
+        if (event.target === cur || cur.contains(event.target)) hide();
+    });
+    ['mousedown', 'scroll', 'keydown'].forEach((type) => window.addEventListener(type, hide, true));
+}());
