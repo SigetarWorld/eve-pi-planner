@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 16:40';
+const APP_BUILD = '13.10.2026 16:50';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -2816,7 +2816,7 @@ async function loadCharAssets(char, corpId) {
     /* Если в пачке есть предмет, у которого имени быть не может, EVE
        отвергает всю пачку — тогда делим её пополам, пока не пройдёт */
     const names = new Map();
-    const askNames = async (ids) => {
+    const askNames = async (ids, split = true) => {
         if (!ids.length) return;
         try {
             const list = await eveFetchJson(`${ESI_BASE}/${owner}/assets/names/?datasource=tranquility`, {
@@ -2826,7 +2826,7 @@ async function loadCharAssets(char, corpId) {
             }, id);
             list.forEach((n) => { if (n.name && n.name !== 'None') names.set(n.item_id, n.name); });
         } catch (e) {
-            if (ids.length === 1) return;
+            if (ids.length === 1 || !split) return;
             const half = Math.ceil(ids.length / 2);
             await askNames(ids.slice(0, half));
             await askNames(ids.slice(half));
@@ -2838,7 +2838,9 @@ async function loadCharAssets(char, corpId) {
     const boxes = named.filter(isBox).map((x) => x.item_id);
     const rest = named.filter((x) => !isBox(x)).map((x) => x.item_id);
     for (let i = 0; i < boxes.length; i += 1000) await askNames(boxes.slice(i, i + 1000)); // eslint-disable-line no-await-in-loop
-    for (let i = 0; i < rest.length; i += 1000) await askNames(rest.slice(i, i + 1000)); // eslint-disable-line no-await-in-loop
+    // остальное (корабли и пр.) — одной попыткой на пачку, без деления: иначе
+    // сотни лишних запросов
+    for (let i = 0; i < rest.length; i += 1000) await askNames(rest.slice(i, i + 1000), false); // eslint-disable-line no-await-in-loop
     // Верхние места: станции, структуры, системы (то, что не предмет из списка)
     const tops = uniqValues(items.filter((x) => !byItem.has(x.location_id)).map((x) => x.location_id));
     const scopes = charScopes(char);
