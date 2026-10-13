@@ -44,7 +44,8 @@ const EVE_AUTH = {
     tokenUrl: 'https://login.eveonline.com/v2/oauth/token',
     revokeUrl: 'https://login.eveonline.com/oauth/revoke',
     verifyUrl: 'https://login.eveonline.com/oauth/verify',
-    scope: 'esi-planets.manage_planets.v1',
+    // планеты; имущество (склады) и названия структур — для «Тест2»
+    scope: 'esi-planets.manage_planets.v1 esi-assets.read_assets.v1 esi-universe.read_structures.v1',
     storageKey: 'evepi.eve',
     pendingKey: 'evepi.eve.pending'
 };
@@ -278,8 +279,9 @@ async function eveRefreshToken(state, force) {
     try {
         const token = await eveTokenRequest({
             grant_type: 'refresh_token',
-            refresh_token: state.refreshToken,
-            scope: EVE_AUTH.scope
+            // scope не передаём: токен обновляется с теми правами, что
+            // выданы при входе (иначе старый вход «только планеты» отвергнут)
+            refresh_token: state.refreshToken
         });
 
         const next = {

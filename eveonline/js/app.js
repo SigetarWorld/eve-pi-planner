@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 15:30';
+const APP_BUILD = '13.10.2026 16:00';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -2777,6 +2777,155 @@ async function renderEveTest() {
     modal.querySelector('.ct-modal-close').addEventListener('click', close);
     modal.addEventListener('click', (event) => {
         if (event.target === modal) close();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !modal.hidden) close();
+    });
+}());
+
+/* ---- Тест2: склады (имущество) персонажей из EVE ----
+   Кнопка «Тест2» рядом с «Тест» показывает всё, что EVE отдаёт об
+   имуществе подключённых персонажей: где что лежит (станции, структуры,
+   космос), контейнеры и корабли с содержимым, количество каждого
+   предмета. Нужно право esi-assets.read_assets.v1 (названия структур —
+   esi-universe.read_structures.v1): персонажей, вошедших раньше только
+   с правом на планеты, надо подключить заново через «LOG IN». */
+const ASSETS_SCOPE = 'esi-assets.read_assets.v1';
+const STRUCTURES_SCOPE = 'esi-universe.read_structures.v1';
+const charScopes = (char) => [].concat(char.scopes || []).join(' ').split(/\s+/).filter(Boolean);
+const locationNames = new Map();
+
+async function loadCharAssets(char) {
+    const id = char.characterId;
+    const items = [];
+    for (let page = 1; page <= 50; page += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        const part = await eveFetchJson(`${ESI_BASE}/characters/${id}/assets/?datasource=tranquility&page=${page}`, {}, id);
+        items.push(...part);
+        if (part.length < 1000) break;
+    }
+    const byItem = new Map(items.map((x) => [x.item_id, x]));
+    // Имена контейнеров и кораблей (то, во что что-то вложено, и собранные корабли)
+    const named = items.filter((x) => x.is_singleton && (items.some((y) => y.location_id === x.item_id) || /Container|Ship/i.test(x.location_flag || '')));
+    const names = new Map();
+    for (let i = 0; i < named.length; i += 1000) {
+        try {
+            // eslint-disable-next-line no-await-in-loop
+            const list = await eveFetchJson(`${ESI_BASE}/characters/${id}/assets/names/?datasource=tranquility`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(named.slice(i, i + 1000).map((x) => x.item_id))
+            }, id);
+            list.forEach((n) => { if (n.name && n.name !== 'None') names.set(n.item_id, n.name); });
+        } catch (e) {
+            // без имён — покажем названия типов
+        }
+    }
+    await esiNamesOf(uniqValues(items.map((x) => x.type_id)));
+    // Верхние места: станции, структуры, системы (то, что не предмет из списка)
+    const tops = uniqValues(items.filter((x) => !byItem.has(x.location_id)).map((x) => x.location_id));
+    const scopes = charScopes(char);
+    await Promise.all(tops.map(async (loc) => {
+        if (locationNames.has(loc)) return;
+        let name = '';
+        try {
+            if (loc >= 60000000 && loc < 64000000) name = (await esiPublicJson(`/universe/stations/${loc}/`)).name;
+            else if (loc >= 30000000 && loc < 33000000) name = `${(await esiPublicJson(`/universe/systems/${loc}/`)).name} — в космосе`;
+            else if (scopes.includes(STRUCTURES_SCOPE)) {
+                name = (await eveFetchJson(`${ESI_BASE}/universe/structures/${loc}/?datasource=tranquility`, {}, id)).name;
+            }
+        } catch (e) {
+            // нет доступа к структуре — покажем её номер
+        }
+        locationNames.set(loc, name || (loc > 1e12 ? `Структура ${loc}` : `Место ${loc}`));
+    }));
+    return { items, byItem, names, tops };
+}
+
+function assetsCharHtml(char, data) {
+    const fmtN = (n) => Number(n).toLocaleString('ru-RU');
+    const kids = new Map();
+    data.items.forEach((x) => {
+        if (!kids.has(x.location_id)) kids.set(x.location_id, []);
+        kids.get(x.location_id).push(x);
+    });
+    const itemHtml = (x) => {
+        const type = esiTypeName(x.type_id);
+        const pi = PI_COMMODITIES[type] ? `P${piTierOf(type)}` : '';
+        const inner = kids.get(x.item_id) || [];
+        const label = `${pi ? tierBadgeHtml(pi) : ''}<span class="as-name" lang="en">${escapeHtml(data.names.get(x.item_id) || type)}</span>`
+            + (data.names.get(x.item_id) ? ` <span class="evt-dim">(${escapeHtml(type)})</span>` : '')
+            + ` <span class="as-qty">×${fmtN(x.quantity)}</span>`
+            + ` <span class="evt-dim">${escapeHtml(x.location_flag || '')}</span>`;
+        return inner.length
+            ? `<li class="as-item${pi ? ' is-pi' : ''}"><details><summary>${label} <span class="evt-dim">· внутри ${inner.length}</span></summary><ul>${inner.map(itemHtml).join('')}</ul></details></li>`
+            : `<li class="as-item${pi ? ' is-pi' : ''}">${label}</li>`;
+    };
+    const piCount = data.items.filter((x) => PI_COMMODITIES[esiTypeName(x.type_id)]).length;
+    const locs = data.tops.map((loc) => {
+        const list = kids.get(loc) || [];
+        const pis = list.filter((x) => PI_COMMODITIES[esiTypeName(x.type_id)]).length;
+        return `<details class="as-loc"><summary><b>${escapeHtml(locationNames.get(loc) || String(loc))}</b>
+            <span class="evt-dim">· предметов ${list.length}${pis ? ` · планетарки ${pis}` : ''}</span></summary>
+            <ul>${list.map(itemHtml).join('')}</ul></details>`;
+    }).join('');
+    return `
+        <div class="evt-head">
+            <img class="eve-char-img" src="${evePortrait(char.characterId)}" alt="" width="32" height="32">
+            <b>${escapeHtml(char.characterName)}</b>
+            <span class="evt-dim">записей ${data.items.length} · мест ${data.tops.length} · планетарки ${piCount}</span>
+        </div>
+        ${locs || '<p class="evt-dim">Имущества нет</p>'}
+        <details class="evt-raw"><summary>Сырые ответы ESI</summary>
+            <pre>${escapeHtml(JSON.stringify(data.items, null, 1))}</pre></details>`;
+}
+
+async function renderAssetsTest() {
+    const body = document.getElementById('evetest2-body');
+    const chars = typeof eveChars === 'function' ? eveChars() : [];
+    body.classList.toggle('as-only-pi', document.getElementById('evetest2-pi').checked);
+    if (!chars.length) {
+        body.innerHTML = '<p class="evt-dim">Подключите персонажей через «LOG IN with EVE Online»</p>';
+        return;
+    }
+    body.innerHTML = chars.map((c, i) => `<article class="evt-card" data-i="${i}">
+        <div class="evt-head"><b>${escapeHtml(c.characterName)}</b> <span class="evt-dim">загрузка…</span></div></article>`).join('');
+    await Promise.all(chars.map(async (char, i) => {
+        const box = body.querySelector(`.evt-card[data-i="${i}"]`);
+        if (!charScopes(char).includes(ASSETS_SCOPE)) {
+            box.innerHTML = `<div class="evt-head"><b>${escapeHtml(char.characterName)}</b>
+                <span class="evt-bad">нет права на имущество — подключите персонажа заново через «LOG IN with EVE Online»</span></div>`;
+            return;
+        }
+        try {
+            box.innerHTML = assetsCharHtml(char, await loadCharAssets(char));
+        } catch (e) {
+            box.innerHTML = `<div class="evt-head"><b>${escapeHtml(char.characterName)}</b>
+                <span class="evt-bad">ошибка: ${escapeHtml(e.message)}</span></div>`;
+        }
+    }));
+}
+
+(function initAssetsTest() {
+    const btn = document.getElementById('evetest2-open');
+    const modal = document.getElementById('evetest2-modal');
+    if (!btn || !modal) return;
+    document.body.appendChild(modal);
+    const close = () => {
+        modal.hidden = true;
+        btn.focus();
+    };
+    btn.addEventListener('click', () => {
+        modal.hidden = false;
+        modal.querySelector('.ct-modal-close').focus();
+        renderAssetsTest();
+    });
+    modal.querySelector('.ct-modal-close').addEventListener('click', close);
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) close();
+    });
+    document.getElementById('evetest2-pi').addEventListener('change', (event) => {
+        document.getElementById('evetest2-body').classList.toggle('as-only-pi', event.target.checked);
     });
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && !modal.hidden) close();

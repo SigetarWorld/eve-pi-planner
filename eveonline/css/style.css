@@ -4708,3 +4708,17 @@ input.chain-amount:focus {
 .eve-tip-line polyline { stroke: rgba(220, 220, 220, 0.75); stroke-width: 1; }
 .eve-tip-line .eve-tip-from { fill: none; stroke: rgba(220, 220, 220, 0.75); stroke-width: 1; }
 .eve-tip-line .eve-tip-to { fill: rgba(235, 235, 235, 0.95); }
+
+
+/* ---------- Тест2: склады ---------- */
+.as-loc { margin: 0.25rem 0; }
+.as-loc > summary { cursor: pointer; padding: 0.15rem 0; }
+.as-loc ul { list-style: none; margin: 0.15rem 0 0.3rem; padding-left: 1.1rem; }
+.as-item { display: block; padding: 0.08rem 0; font-size: 0.8rem; }
+.as-item .ct-tier { margin-right: 0.3rem; }
+.as-item summary { cursor: pointer; }
+.as-qty { color: var(--text); font-variant-numeric: tabular-nums; }
+.as-item.is-pi > .as-name, .as-item.is-pi .as-name { color: var(--accent); }
+/* «только планетарка» — прячем остальное, контейнеры с планетаркой внутри видны */
+.as-only-pi .as-item:not(.is-pi):not(:has(.is-pi)) { display: none; }
+.as-only-pi .as-loc:not(:has(.is-pi)) { display: none; }

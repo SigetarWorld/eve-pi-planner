@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=151">
+    <link rel="stylesheet" href="css/style.css?v=152">
 </head>
 <body>
     <header>
@@ -91,6 +91,9 @@
                          Sigetar и CrazyJam (app.js, раздел «Тест EVE») -->
                     <button type="button" id="evetest-open" class="btn card-add" aria-haspopup="dialog"
                             aria-controls="evetest-modal">Тест</button>
+                    <!-- Тест2: имущество (склады) подключённых персонажей из EVE -->
+                    <button type="button" id="evetest2-open" class="btn card-add" aria-haspopup="dialog"
+                            aria-controls="evetest2-modal">Тест2</button>
                 </div>
             </div>
 
@@ -111,6 +114,16 @@
                     <h3 id="evetest-title" class="ct-modal-title">Тест: данные EVE по планетарке</h3>
                     <p id="evetest-version" class="evt-dim evt-version"></p>
                     <div id="evetest-body" class="evetest-body"></div>
+                    <button type="button" class="ct-modal-close" aria-label="Закрыть">&times;</button>
+                </div>
+            </div>
+
+            <div id="evetest2-modal" class="ct-modal" role="dialog" aria-modal="true"
+                 aria-labelledby="evetest2-title" hidden>
+                <div class="ct-modal-box evetest-box">
+                    <h3 id="evetest2-title" class="ct-modal-title">Тест2: склады персонажей в EVE</h3>
+                    <label class="evt-dim evt-version"><input type="checkbox" id="evetest2-pi"> только планетарка</label>
+                    <div id="evetest2-body" class="evetest-body"></div>
                     <button type="button" class="ct-modal-close" aria-label="Закрыть">&times;</button>
                 </div>
             </div>
@@ -181,12 +194,12 @@
     <script src="js/data.js?v=2"></script>
     <script src="js/systems.js?v=2"></script>
     <script src="js/planets.js?v=2"></script>
-    <script src="js/eveauth.js?v=6"></script>
+    <script src="js/eveauth.js?v=7"></script>
     <script src="js/mapdata.js?v=4"></script>
     <script src="js/calculator.js?v=35"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=131"></script>
+    <script src="js/app.js?v=132"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
         if (location.protocol === "file:") {
