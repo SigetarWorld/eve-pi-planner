@@ -2013,7 +2013,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 10:40';
+const APP_BUILD = '13.10.2026 11:30';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3275,6 +3275,10 @@ function restoreCard(card, saved) {
    складов, где он лежит. Товар, которого нет, — в дереве с нулём.
    Видимость:
      при каждом показе карточки видны только главные товары (нажата TOP);
+     ▸ у главного товара раскрывает колонию; кнопки уровней действуют
+       только в раскрытых колониях (ни одна не раскрыта — раскрывают все);
+     у главного товара — кнопки складов колонии: пустой подсвечен,
+       нажатие показывает, что в складе лежит;
      кнопки P0…P4 в шапке показывают все товары своего уровня во всех
        колониях (уровни выше могут быть скрыты — тогда ветка встаёт
        ближе к главному товару);
@@ -3324,7 +3328,10 @@ function viewStockOf(name) {
                     where.get(item).set(t, (where.get(item).get(t) || 0) + n);
                 });
             });
-            out.set(planet.name || String(col.planet_id), { stock, where, from: col.last_update });
+            // все склады колонии — и пустые
+            const stores = pins.filter((p) => !factories.has(p.pin_id) && storeKindOf(p.type_id, true))
+                .map((p) => ({ pinId: p.pin_id, typeId: p.type_id, items: byPin.get(p.pin_id) || new Map() }));
+            out.set(planet.name || String(col.planet_id), { stock, where, stores, from: col.last_update });
         });
         return out;
     }).catch(() => {
@@ -3381,6 +3388,9 @@ function applyViewVisibility(card) {
     /* Ветки — под главным товаром: отступ от начала товара в верхней
        строке (после «система · планета ·»), дальше по 1.1rem на уровень */
     let base = 0;
+    /* Кнопки уровней действуют только в раскрытых колониях (▸ у главного
+       товара); свёрнутая колония — одна строка */
+    let colonyOpen = false;
     const walk = (node, visible, depth) => {
         const line = node.querySelector(':scope > .uv-line');
         line.hidden = !visible;
@@ -3391,7 +3401,7 @@ function applyViewVisibility(card) {
         if (open) opened = true;
         let allKids = true;
         Array.from(kidsWrap.children).forEach((kid) => {
-            const kv = shown.has(kid.dataset.tier) || (visible && open);
+            const kv = (colonyOpen && shown.has(kid.dataset.tier)) || (visible && open);
             if (!kv) allKids = false;
             walk(kid, kv, depth + (visible ? 1 : 0));
         });
@@ -3401,6 +3411,7 @@ function applyViewVisibility(card) {
     view.querySelectorAll('.uv-colony > .uv-node').forEach((top) => {
         const where = top.querySelector(':scope > .uv-line > .uv-where');
         base = where ? where.offsetWidth + 6 : 0;
+        colonyOpen = top.dataset.open === '1';
         walk(top, true, 0);
     });
     view.querySelectorAll('[data-role="uv-tier"]').forEach((b) => {
@@ -3423,7 +3434,7 @@ function cardViewHtml(card) {
         const system = c.system || '';
         const key = [system, c.number].filter(Boolean).join(' ');
         // «DFTK-D II · Barren · ▸ [P4] Wetware Mainframe – 6» — одной строкой
-        const where = `<span class="uv-where">${c.planet ? `<span class="uv-icon uv-planet-icon"><img src="img/planets/${escapeHtml(c.planet.toLowerCase())}.png" alt="" width="24" height="24" loading="lazy" onerror="this.remove()"></span>` : ''}<span class="uv-sys">${escapeHtml([system || 'Система не выбрана', c.planet ? c.number : ''].filter(Boolean).join(' '))}</span><span class="uv-ptype">· ${escapeHtml(c.planet || 'планета не выбрана')}</span><span class="uv-sep">·</span></span>`;
+        const where = `<span class="uv-where">${c.planet ? `<span class="uv-icon uv-planet-icon"><img src="img/planets/${escapeHtml(c.planet.toLowerCase())}.png" alt="" width="24" height="24" loading="lazy" onerror="this.remove()"></span>` : ''}<span class="uv-sys">${escapeHtml([system || 'Система не выбрана', c.planet ? c.number : ''].filter(Boolean).join(' '))}</span><span class="uv-ptype">· ${escapeHtml(c.planet || 'планета не выбрана')}</span><span class="uv-stores" data-role="uv-stores"></span><span class="uv-sep">·</span></span>`;
         return `
             <div class="uv-colony" data-planet="${escapeHtml(key)}">
                 ${viewNodeHtml(c.prod, c.p0, where)}
@@ -3456,11 +3467,12 @@ const STORE_SVG = {
     sf: '<path d="M8 1.8 13.6 5v6.2L8 14.4 2.4 11.2V5Z M2.4 5 8 8.2 13.6 5 M8 8.2v6.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>',
     cc: '<circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2.3"/>'
 };
-function storeKindOf(typeId) {
+function storeKindOf(typeId, strict = false) {
     const name = String(esiTypeName(typeId) || '').toLowerCase();
     if (name.includes('launchpad')) return 'lp';
     if (name.includes('command')) return 'cc';
-    return 'sf';
+    if (name.includes('storage')) return 'sf';
+    return strict ? '' : 'sf';
 }
 const storeIconHtml = (typeId, title) => {
     const kind = storeKindOf(typeId);
@@ -3479,6 +3491,21 @@ function renderCardView(card) {
         if (!view.isConnected) return;
         view.querySelectorAll('.uv-colony').forEach((col) => {
             const data = stocks && stocks.get(col.dataset.planet);
+            /* Склады колонии кнопками у главного товара; пустой Launchpad
+               или Storage Facility подсвечен. Нажатие — что в нём лежит. */
+            const box = col.querySelector('[data-role="uv-stores"]');
+            if (box && data) {
+                box.innerHTML = data.stores.map((st, i) => {
+                    const kind = storeKindOf(st.typeId);
+                    const list = Array.from(st.items.entries()).filter(([, q]) => q >= 1)
+                        .sort((a, b) => piTierOf(b[0]) - piTierOf(a[0]) || a[0].localeCompare(b[0]));
+                    const empty = !list.length;
+                    const title = `${esiTypeName(st.typeId)}: ${empty ? 'пусто' : list.map(([n, q]) => `${n} ${Math.floor(q).toLocaleString('ru-RU')}`).join(', ')}`;
+                    return `<button type="button" class="uv-store uv-store-${kind} uv-store-btn${empty && kind !== 'cc' ? ' is-empty' : ''}" data-role="uv-store" data-i="${i}" title="${escapeHtml(title)}" aria-expanded="false"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${STORE_SVG[kind]}</svg></button>`;
+                }).join('');
+                col.storeData = data.stores;
+                applyViewVisibility(card);
+            }
             col.querySelectorAll('[data-qty]').forEach((el) => {
                 const item = el.dataset.qty;
                 const n = data ? Math.floor(data.stock.get(item) || 0) : null;
@@ -3529,6 +3556,11 @@ function handleViewClick(event) {
         if (shown.has(tier)) shown.delete(tier);
         else shown.add(tier);
         card.dataset.showTiers = Array.from(shown).join(',');
+        // ни одна колония не раскрыта — кнопка уровня раскрывает все
+        const tops = Array.from(card.querySelectorAll('.uv-colony > .uv-node'));
+        if (shown.size && !tops.some((n) => n.dataset.open === '1')) {
+            tops.forEach((n) => { if (n.querySelector(':scope > .uv-kids')) n.dataset.open = '1'; });
+        }
         applyViewVisibility(card);
         saveAccounts();
         return true;
@@ -3538,6 +3570,27 @@ function handleViewClick(event) {
         card.querySelectorAll('.uv-node[data-open]').forEach((n) => { delete n.dataset.open; });
         applyViewVisibility(card);
         saveAccounts();
+        return true;
+    }
+    const storeBtn = event.target.closest('[data-role="uv-store"]');
+    if (storeBtn) {
+        const col = storeBtn.closest('.uv-colony');
+        const old = col.querySelector('.uv-store-list');
+        const same = old && old.dataset.i === storeBtn.dataset.i;
+        if (old) old.remove();
+        col.querySelectorAll('[data-role="uv-store"]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+        if (same) return true;
+        const st = (col.storeData || [])[Number(storeBtn.dataset.i)];
+        if (!st) return true;
+        const list = Array.from(st.items.entries()).filter(([, q]) => q >= 1)
+            .sort((a, b) => piTierOf(b[0]) - piTierOf(a[0]) || a[0].localeCompare(b[0]));
+        col.querySelector('.uv-node > .uv-line').insertAdjacentHTML('afterend', `
+            <div class="uv-store-list" data-i="${storeBtn.dataset.i}">
+                <div class="uv-store-title">${escapeHtml(esiTypeName(st.typeId))}</div>
+                ${list.length ? list.map(([n, q]) => `<div class="uv-line">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${Math.floor(q).toLocaleString('ru-RU')}</span></div>`).join('')
+                    : '<div class="uv-empty">пусто</div>'}
+            </div>`);
+        storeBtn.setAttribute('aria-expanded', 'true');
         return true;
     }
     const toggle = event.target.closest('[data-role="uv-toggle"]');

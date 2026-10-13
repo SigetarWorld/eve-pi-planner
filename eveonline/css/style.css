@@ -4338,8 +4338,9 @@ input.chain-amount:focus {
 .uv-icon { flex: 0 0 auto; display: inline-flex; width: 1.4rem; height: 1.4rem; }
 .uv-icon img { width: 100%; height: 100%; }
 .uv-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.uv-node[data-tier="P4"] > .uv-line > .uv-name,
-.uv-colony > .uv-node > .uv-line > .uv-name { font-weight: 600; }
+/* товары и количество — обычным шрифтом */
+.uv-name,
+.uv-qty { font-weight: 400; }
 .uv-p0 { display: inline-flex; align-items: center; gap: 0.3rem; min-width: 0; }
 .uv-sep { flex: 0 0 auto; color: var(--text-faint); }
 .uv-qty { flex: 0 0 auto; color: var(--text); font-variant-numeric: tabular-nums; }
@@ -4557,3 +4558,28 @@ input.chain-amount:focus {
     color: var(--text-faint);
     white-space: nowrap;
 }
+
+
+/* Склады колонии у главного товара */
+.uv-stores { display: inline-flex; align-items: center; gap: 0.2rem; }
+.uv-stores:empty { display: none; }
+.uv-store-btn { padding: 0; font: inherit; cursor: pointer; }
+.uv-store-btn:hover,
+.uv-store-btn[aria-expanded="true"] { filter: brightness(1.35); box-shadow: 0 0 0 1px currentColor; }
+/* пустой склад — красная рамка и мигающая подсветка */
+.uv-store-btn.is-empty {
+    color: var(--red);
+    border-color: var(--red);
+    background: rgba(255, 107, 107, 0.15);
+    animation: uv-empty-pulse 1.6s ease-in-out infinite;
+}
+@keyframes uv-empty-pulse {
+    50% { box-shadow: 0 0 8px rgba(255, 107, 107, 0.7); }
+}
+.uv-store-list {
+    margin: 0.2rem 0 0.35rem 1.6rem;
+    padding: 0.3rem 0.5rem;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+}
+.uv-store-title { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 0.15rem; }
