@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 23:40';
+const APP_BUILD = '13.10.2026 23:50';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3204,9 +3204,9 @@ async function loadWarehouse(chars) {
     return list;
 }
 
-const whAvaHtml = (o) => (o.kind === 'char'
-    ? `<img class="wh-ava" src="${evePortrait(o.char.characterId)}" alt="" width="20" height="20">`
-    : `<img class="wh-ava" src="https://images.evetech.net/corporations/${o.corpId}/logo?size=32" alt="" width="20" height="20">`);
+const whAvaHtml = (o) => `<span class="wh-ico wh-ico-${o.kind}">${o.kind === 'char'
+    ? `<img src="${evePortrait(o.char.characterId)}" alt="" width="20" height="20">`
+    : `<img src="https://images.evetech.net/corporations/${o.corpId}/logo?size=32" alt="" width="20" height="20">`}</span>`;
 /* Безопасность системы, как в игре: округление до 0.1; от 0.5 — Hi,
    выше 0 — Low, иначе Null (J-системы — W-space). */
 function whSecHtml(place) {
@@ -3230,12 +3230,15 @@ const WH_SEG_SVG = {
 };
 function whPathHtml(segs) {
     return segs.map((g) => {
-        let icon = '';
+        /* значок — квадрат с рамкой, как [P1] и значки складов колонии;
+           цвет рамки — по виду шага */
+        let inner = '';
         if (g.typeId && (g.kind === 'box' || g.kind === 'ship')) {
-            icon = `<img class="wh-seg-img" src="https://images.evetech.net/types/${g.typeId}/icon?size=32" alt="" width="16" height="16" loading="lazy" onerror="this.remove()">`;
+            inner = `<img src="https://images.evetech.net/types/${g.typeId}/icon?size=32" alt="" width="16" height="16" loading="lazy" onerror="this.remove()">`;
         } else if (WH_SEG_SVG[g.kind]) {
-            icon = `<svg class="wh-seg-svg wh-seg-${g.kind}" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${WH_SEG_SVG[g.kind]}</svg>`;
+            inner = `<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${WH_SEG_SVG[g.kind]}</svg>`;
         }
+        const icon = inner ? `<span class="wh-ico wh-ico-${g.kind}">${inner}</span>` : '';
         return `<span class="wh-seg wh-seg-k-${g.kind}">${icon}<span>${escapeHtml(g.label)}</span></span>`;
     }).join('<span class="uv-sep">›</span>');
 }
@@ -3304,7 +3307,7 @@ function warehouseHtml(owners) {
         const own = list.filter((c) => c.owner === o)
             .sort((a, b) => placeKey(placeOf(a.top)).localeCompare(placeKey(placeOf(b.top))));
         return `<div class="wh-owner-col">
-                <div class="wh-owner-head"><span class="uv-icon">${whAvaHtml(o)}</span><h3 class="ct-pilot-name wh-owner-name" title="${escapeHtml(o.title)}">${escapeHtml(o.title)}</h3></div>
+                <div class="wh-owner-head">${whAvaHtml(o)}<h3 class="ct-pilot-name wh-owner-name" title="${escapeHtml(o.title)}">${escapeHtml(o.title)}</h3></div>
                 ${own.map(cardHtml).join('')}
             </div>`;
     }).join('');

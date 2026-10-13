@@ -4846,7 +4846,7 @@ input.chain-amount:focus {
 /* Окно «Склад»: планетарка по персонажам и корпорации */
 .wh-table .wh-col { white-space: nowrap; }
 .wh-table .wh-col > span { vertical-align: middle; }
-.wh-ava { width: 20px; height: 20px; margin-right: 0.3rem; border-radius: 2px; vertical-align: middle; }
+.wh-table .wh-col .wh-ico { margin-right: 0.3rem; vertical-align: middle; }
 .wh-table .wh-n { text-align: right; min-width: 3.5rem; color: var(--text); font-variant-numeric: tabular-nums; }
 .wh-table .wh-sum { font-weight: 700; color: var(--accent); }
 .wh-table .wh-tier th { text-align: left; background: rgba(255, 255, 255, 0.04); }
@@ -4861,7 +4861,6 @@ input.chain-amount:focus {
 .wh-where { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr)); align-items: start; gap: 0.8rem; }
 .wh-owner-col { min-width: 0; display: flex; flex-direction: column; gap: 0.5rem; }
 .wh-owner-head { display: flex; align-items: center; gap: 0.4rem; }
-.wh-owner-head .uv-icon .wh-ava { width: 100%; height: 100%; margin: 0; }
 .wh-owner-col .wh-owner-name { max-width: none; }
 .wh-card-head { padding: 0.35rem 0.6rem; }
 .wh-loc { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; font-size: 0.8rem; }
@@ -4883,11 +4882,33 @@ input.chain-amount:focus {
 .wh-path { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; padding: 0.15rem 32px 0.1rem 0; font-size: 0.78rem; color: var(--text-dim); }
 /* значки шагов пути: ангар, офис, трюм — рисунки; контейнер, корабль — иконки EVE */
 .wh-seg { display: inline-flex; align-items: center; gap: 0.25rem; }
-.wh-seg-img { width: 16px; height: 16px; border-radius: 2px; }
-.wh-seg-svg { width: 14px; height: 14px; flex: 0 0 auto; }
-.wh-seg-hangar { color: var(--green); }
-.wh-seg-office { color: #c9a7ff; }
-.wh-seg-hold { color: var(--cyan); }
+/* Новые значки «Склада» — общий вид, как [P1] и значки складов колонии:
+   квадрат 1.4rem, рамка и лёгкая заливка цвета вида */
+.wh-ico {
+    --ico: var(--text-dim);
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 1.4rem;
+    height: 1.4rem;
+    overflow: hidden;
+    color: var(--ico);
+    border: 1px solid color-mix(in srgb, var(--ico) 55%, transparent);
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--ico) 8%, transparent);
+}
+.wh-ico svg { width: 0.95rem; height: 0.95rem; }
+.wh-ico img { width: 1.05rem; height: 1.05rem; border-radius: 2px; }
+.wh-ico-hangar { --ico: var(--green); }
+.wh-ico-office { --ico: #c9a7ff; }
+.wh-ico-hold   { --ico: var(--cyan); }
+.wh-ico-box    { --ico: var(--accent); }
+.wh-ico-ship   { --ico: #7fb0ff; }
+.wh-ico-char,
+.wh-ico-corp   { --ico: var(--text-dim); }
+.wh-ico-char img, .wh-ico-corp img { width: 100%; height: 100%; border-radius: 0; }
 .wh-seg-k-box > span, .wh-seg-k-ship > span { color: var(--text); }
 .wh-items[hidden] { display: none; }
 .wh-line { padding-left: 0.6rem; }
