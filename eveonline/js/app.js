@@ -245,7 +245,6 @@ let reloadingAccounts = false;
 // Общий выбор персонажа — на месте прежнего «Аккаунта»
 const pilotNew = document.getElementById('pilot-new');
 const pilotNewAdd = document.getElementById('pilot-add');
-const pilotNewStatus = document.getElementById('pilot-status');
 const accountCounter = document.getElementById('account-counter');
 const statsBody = document.getElementById('stats-body');
 const cardsHint = document.getElementById('cards-hint');
@@ -1984,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 17:30';
+const APP_BUILD = '13.10.2026 17:45';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -4283,10 +4282,8 @@ function tryAddPilot() {
     pilotNewAdd.disabled = true;
     pilotNewAdd.dataset.busy = '1';
     pilotNew.disabled = true;
-    pilotNewStatus.textContent = 'Смотрю колонии в EVE…';
     pickCardForCharacter(char).then(({ level, saved, note, issues }) => {
         delete pilotNewAdd.dataset.busy;
-        pilotNewStatus.textContent = note;
         const line = lineWithRoom();
         if (addCard(line, name, saved, level)) {
             const card = line.querySelector('[data-role="cards"]').lastElementChild;
