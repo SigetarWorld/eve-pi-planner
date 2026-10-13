@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 22:35';
+const APP_BUILD = '13.10.2026 22:45';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3059,12 +3059,13 @@ const whPlaces = new Map();
 const whSystemNames = new Map();
 async function whPlaceOf(loc, char) {
     if (whPlaces.has(loc)) return whPlaces.get(loc);
-    const place = { station: '', system: '', region: '' };
+    const place = { station: '', system: '', region: '', typeId: 0 };
     let systemId = 0;
     try {
         if (loc >= 60000000 && loc < 64000000) {
             const st = await esiPublicJson(`/universe/stations/${loc}/`);
             place.station = st.name;
+            place.typeId = st.type_id || 0;
             systemId = st.system_id;
         } else if (loc >= 30000000 && loc < 33000000) {
             systemId = loc;
@@ -3072,6 +3073,7 @@ async function whPlaceOf(loc, char) {
         } else if (charScopes(char).includes(STRUCTURES_SCOPE)) {
             const st = await eveFetchJson(`${ESI_BASE}/universe/structures/${loc}/?datasource=tranquility`, {}, char.characterId);
             place.station = st.name;
+            place.typeId = st.type_id || 0;
             systemId = st.solar_system_id;
         }
     } catch (e) {
@@ -3178,6 +3180,8 @@ async function loadWarehouse(chars) {
     }
     // места: станция, система, регион
     await Promise.all(list.flatMap((o) => uniqValues(o.entries.map((e) => e.top)).map((loc) => whPlaceOf(loc, o.char))));
+    // названия типов станций (Astrahus, Amarr Trade Post…)
+    await esiNamesOf(Array.from(whPlaces.values()).map((p) => p.typeId).filter(Boolean));
     return list;
 }
 
@@ -3207,37 +3211,44 @@ function warehouseHtml(owners) {
             }).join('');
     }).join('');
 
-    // где лежит: регион › система › станция › место внутри станции
-    const stations = new Map();       // top -> { place, spots: Map(key -> { owner, path, items: Map }) }
+    /* Где лежит — карточка на аккаунт и станцию: в шапке аккаунт,
+       под ним «Регион › Система › Тип (Станция)»; внутри — места хранения
+       (путь внутри станции), под каждым товары. Аккаунт на одной станции
+       не повторяется. */
+    const cards = new Map();          // owner|top -> { owner, top, spots: Map(path -> Map(товар -> штук)) }
     owners.forEach((o) => o.entries.forEach((e) => {
-        if (!stations.has(e.top)) stations.set(e.top, { place: whPlaces.get(e.top) || {}, spots: new Map() });
-        const spots = stations.get(e.top).spots;
-        const key = `${o.kind}:${o.corpId || o.char.characterId}|${e.path}`;
-        if (!spots.has(key)) spots.set(key, { owner: o, path: e.path, items: new Map() });
-        const items = spots.get(key).items;
+        const key = `${o.kind}:${o.corpId || o.char.characterId}|${e.top}`;
+        if (!cards.has(key)) cards.set(key, { owner: o, top: e.top, spots: new Map() });
+        const spots = cards.get(key).spots;
+        if (!spots.has(e.path)) spots.set(e.path, new Map());
+        const items = spots.get(e.path);
         items.set(e.name, (items.get(e.name) || 0) + e.qty);
     }));
     const byTier = (a, b) => piTierOf(b[0]) - piTierOf(a[0]) || a[0].localeCompare(b[0]);
+    const placeOf = (top) => whPlaces.get(top) || {};
     const placeKey = (p) => `${p.region || 'я'}|${p.system || ''}|${p.station || ''}`;
-    /* Станция — карточка, как карточка персонажа: в шапке станция,
-       под ней регион › система; внутри — места хранения (владелец · где),
-       под каждым товары строками «[P2] значок Название – количество». */
-    const where = Array.from(stations.values())
-        .sort((a, b) => placeKey(a.place).localeCompare(placeKey(b.place)))
-        .map(({ place, spots }) => `
+    const ownerOrder = (o) => owners.indexOf(o);
+    const where = Array.from(cards.values())
+        .sort((a, b) => placeKey(placeOf(a.top)).localeCompare(placeKey(placeOf(b.top))) || ownerOrder(a.owner) - ownerOrder(b.owner))
+        .map(({ owner, top, spots }) => {
+            const place = placeOf(top);
+            const type = place.typeId ? esiTypeName(place.typeId) : '';
+            const station = type && !type.startsWith('#') ? `${type} (${place.station})` : place.station || '';
+            return `
             <div class="uv wh-card">
                 <div class="uv-head wh-card-head">
-                    <h3 class="ct-pilot-name wh-station" title="${escapeHtml(place.station || '')}">${escapeHtml(place.station || '')}</h3>
-                    <span class="wh-loc"><span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span><span class="uv-sys">${escapeHtml(place.system || 'Система ?')}</span></span>
+                    <span class="uv-icon">${whAvaHtml(owner)}</span>
+                    <h3 class="ct-pilot-name wh-owner-name" title="${escapeHtml(owner.title)}">${escapeHtml(owner.title)}</h3>
+                    <span class="wh-loc"><span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span><span class="uv-sys">${escapeHtml(place.system || 'Система ?')}</span><span class="uv-sep">›</span><span class="wh-station">${escapeHtml(station)}</span></span>
                 </div>
-                <div class="uv-body">${Array.from(spots.values()).map((sp) => `
+                <div class="uv-body">${Array.from(spots.entries()).map(([path, items]) => `
                     <div class="uv-colony wh-spot">
-                        <div class="uv-line wh-spot-head"><span class="uv-where"><span class="uv-icon">${whAvaHtml(sp.owner)}</span><span class="wh-owner">${escapeHtml(sp.owner.title)}</span></span></div>
-                        <div class="wh-path">${escapeHtml(sp.path)}</div>
-                        ${Array.from(sp.items.entries()).sort(byTier).map(([n, q]) => `<div class="uv-line wh-line">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${whFmt(q)}</span></div>`).join('')}
+                        <div class="wh-path">${escapeHtml(path)}</div>
+                        ${Array.from(items.entries()).sort(byTier).map(([n, q]) => `<div class="uv-line wh-line">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${whFmt(q)}</span></div>`).join('')}
                     </div>`).join('')}
                 </div>
-            </div>`).join('');
+            </div>`;
+        }).join('');
     return `<div class="st-scroll"><table class="stats-p1 wh-table">
             <thead><tr><th scope="col" class="st-name">Товар</th>${head}<th scope="col" class="wh-col">Всего</th></tr></thead>
             <tbody>${rows}</tbody></table></div>
