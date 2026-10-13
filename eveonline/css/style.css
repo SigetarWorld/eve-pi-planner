@@ -4722,3 +4722,4 @@ input.chain-amount:focus {
 /* «только планетарка» — прячем остальное, контейнеры с планетаркой внутри видны */
 .as-only-pi .as-item:not(.is-pi):not(:has(.is-pi)) { display: none; }
 .as-only-pi .as-loc:not(:has(.is-pi)) { display: none; }
+.as-box-name { color: var(--accent); }

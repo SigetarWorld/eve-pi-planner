@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 16:50';
+const APP_BUILD = '13.10.2026 17:00';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -2809,38 +2809,26 @@ async function loadCharAssets(char, corpId) {
         if (part.length < 1000) break;
     }
     const byItem = new Map(items.map((x) => [x.item_id, x]));
-    // Имена контейнеров и кораблей (то, во что что-то вложено, и собранные корабли)
-    // Имена — у всех собранных предметов (контейнеры, в т.ч. пустые, корабли),
-    // кроме самого офиса: у него имени нет
-    const named = items.filter((x) => x.is_singleton && x.location_flag !== 'OfficeFolder');
-    /* Если в пачке есть предмет, у которого имени быть не может, EVE
-       отвергает всю пачку — тогда делим её пополам, пока не пройдёт */
+    /* Имена — пока только у станционных контейнеров (Station Container,
+       Station Warehouse Container…): по одному запросу на 1000 штук. У этих
+       предметов имя есть всегда, поэтому EVE не отвергает пачку. */
+    await esiNamesOf(uniqValues(items.map((x) => x.type_id)));
     const names = new Map();
-    const askNames = async (ids, split = true) => {
-        if (!ids.length) return;
+    const boxes = items.filter((x) => x.is_singleton && /^Station .*Container$/i.test(esiTypeName(x.type_id)))
+        .map((x) => x.item_id);
+    for (let i = 0; i < boxes.length; i += 1000) {
         try {
+            // eslint-disable-next-line no-await-in-loop
             const list = await eveFetchJson(`${ESI_BASE}/${owner}/assets/names/?datasource=tranquility`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(ids)
+                body: JSON.stringify(boxes.slice(i, i + 1000))
             }, id);
             list.forEach((n) => { if (n.name && n.name !== 'None') names.set(n.item_id, n.name); });
         } catch (e) {
-            if (ids.length === 1 || !split) return;
-            const half = Math.ceil(ids.length / 2);
-            await askNames(ids.slice(0, half));
-            await askNames(ids.slice(half));
+            // без имён — покажем только тип
         }
-    };
-    await esiNamesOf(uniqValues(items.map((x) => x.type_id)));
-    // сначала контейнеры (их имена важнее всего), потом остальное собранное
-    const isBox = (x) => /Container|Warehouse|Secure|Freight/i.test(esiTypeName(x.type_id));
-    const boxes = named.filter(isBox).map((x) => x.item_id);
-    const rest = named.filter((x) => !isBox(x)).map((x) => x.item_id);
-    for (let i = 0; i < boxes.length; i += 1000) await askNames(boxes.slice(i, i + 1000)); // eslint-disable-line no-await-in-loop
-    // остальное (корабли и пр.) — одной попыткой на пачку, без деления: иначе
-    // сотни лишних запросов
-    for (let i = 0; i < rest.length; i += 1000) await askNames(rest.slice(i, i + 1000), false); // eslint-disable-line no-await-in-loop
+    }
     // Верхние места: станции, структуры, системы (то, что не предмет из списка)
     const tops = uniqValues(items.filter((x) => !byItem.has(x.location_id)).map((x) => x.location_id));
     const scopes = charScopes(char);
@@ -2889,8 +2877,9 @@ function assetsCharHtml(char, data, corp) {
         const type = esiTypeName(x.type_id);
         const pi = PI_COMMODITIES[type] ? `P${piTierOf(type)}` : '';
         const inner = kids.get(x.item_id) || [];
-        const label = `${pi ? tierBadgeHtml(pi) : ''}<span class="as-name" lang="en">${escapeHtml(data.names.get(x.item_id) || type)}</span>`
-            + (data.names.get(x.item_id) ? ` <span class="evt-dim">(${escapeHtml(type)})</span>` : '')
+        // «Station Container (Планетарка [P4])» — имя в скобках после типа
+        const label = `${pi ? tierBadgeHtml(pi) : ''}<span class="as-name" lang="en">${escapeHtml(type)}</span>`
+            + (data.names.get(x.item_id) ? ` <span class="as-box-name">(${escapeHtml(data.names.get(x.item_id))})</span>` : '')
             + ` <span class="as-qty">×${fmtN(x.quantity)}</span>`
             + ` <span class="evt-dim">${escapeHtml(/^CorpSAG/.test(x.location_flag || '') ? '' : (x.location_flag || ''))}</span>`;
         return inner.length
