@@ -4842,3 +4842,13 @@ input.chain-amount:focus {
 .eve-tip[data-fill="empty"] { --fill-c: var(--store-grey); }
 .eve-tip[data-fill="warn"]  { --fill-c: var(--yellow); }
 .eve-tip[data-fill="full"]  { --fill-c: var(--red); }
+
+/* Окно «Склад»: планетарка по персонажам и корпорации */
+.wh-table .wh-col { white-space: nowrap; }
+.wh-table .wh-col > span { vertical-align: middle; }
+.wh-table .wh-col.is-bad { color: var(--red); }
+.wh-ava { width: 20px; height: 20px; margin-right: 0.3rem; border-radius: 2px; vertical-align: middle; }
+.wh-table .wh-n { text-align: right; min-width: 3.5rem; color: var(--text); font-variant-numeric: tabular-nums; }
+.wh-table .wh-sum { font-weight: 700; color: var(--accent); }
+.wh-table .wh-tier th { text-align: left; background: rgba(255, 255, 255, 0.04); }
+.wh-errors { margin: 0.6rem 0 0; padding-left: 1.1rem; font-size: 0.78rem; }

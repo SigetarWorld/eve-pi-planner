@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=158">
+    <link rel="stylesheet" href="css/style.css?v=159">
 </head>
 <body>
     <header>
@@ -97,6 +97,10 @@
                 <div class="card-head stats-panel">
                     <button type="button" id="stats-open" class="btn card-add" aria-haspopup="dialog"
                             aria-controls="stats-modal">Статистика</button>
+                    <!-- Склад: планетарка P0–P4 всех персонажей и контейнеры [Sigetar]
+                         корпорации (app.js, раздел «Склад») -->
+                    <button type="button" id="wh-open" class="btn card-add" aria-haspopup="dialog"
+                            aria-controls="wh-modal">Склад</button>
                     <!-- Тест: всё, что EVE отдаёт по планетарке персонажей
                          Sigetar и CrazyJam (app.js, раздел «Тест EVE») -->
                     <button type="button" id="evetest-open" class="btn card-add" aria-haspopup="dialog"
@@ -114,6 +118,16 @@
                 <div class="ct-modal-box stats-modal-box">
                     <h3 id="stats-modal-title" class="ct-modal-title">Статистика</h3>
                     <div id="stats-body" class="stats-body"></div>
+                    <button type="button" class="ct-modal-close" aria-label="Закрыть">&times;</button>
+                </div>
+            </div>
+
+            <!-- Окно «Склад» — как «Статистика». Таблицу строит app.js (renderWarehouse) -->
+            <div id="wh-modal" class="ct-modal" role="dialog" aria-modal="true"
+                 aria-labelledby="wh-modal-title" hidden>
+                <div class="ct-modal-box stats-modal-box">
+                    <h3 id="wh-modal-title" class="ct-modal-title">Склад</h3>
+                    <div id="wh-body" class="stats-body"></div>
                     <button type="button" class="ct-modal-close" aria-label="Закрыть">&times;</button>
                 </div>
             </div>
@@ -209,7 +223,7 @@
     <script src="js/calculator.js?v=35"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=144"></script>
+    <script src="js/app.js?v=145"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
         if (location.protocol === "file:") {

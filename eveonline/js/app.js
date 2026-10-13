@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 21:55';
+const APP_BUILD = '13.10.2026 22:10';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -2808,12 +2808,12 @@ async function loadCharAssets(char, corpId) {
         if (part.length < 1000) break;
     }
     const byItem = new Map(items.map((x) => [x.item_id, x]));
-    /* Имена — пока только у станционных контейнеров (Station Container,
-       Station Warehouse Container…): по одному запросу на 1000 штук. У этих
-       предметов имя есть всегда, поэтому EVE не отвергает пачку. */
+    /* Имена — у контейнеров (Station Container, Station Warehouse Container,
+       Giant Secure Container…): по одному запросу на 1000 штук. Собранный
+       контейнер (is_singleton) имя имеет всегда, поэтому EVE не отвергает пачку. */
     await esiNamesOf(uniqValues(items.map((x) => x.type_id)));
     const names = new Map();
-    const boxes = items.filter((x) => x.is_singleton && /^Station .*Container$/i.test(esiTypeName(x.type_id)))
+    const boxes = items.filter((x) => x.is_singleton && /Container$/i.test(esiTypeName(x.type_id)))
         .map((x) => x.item_id);
     for (let i = 0; i < boxes.length; i += 1000) {
         try {
@@ -3007,6 +3007,171 @@ async function renderCorpAssets(body, chars) {
     });
     document.getElementById('evetest2-pi').addEventListener('change', (event) => {
         document.getElementById('evetest2-body').classList.toggle('as-only-pi', event.target.checked);
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !modal.hidden) close();
+    });
+}());
+
+/* ---- Склад: вся планетарка (P0–P4) подключённых персонажей ----
+   Личное имущество каждого персонажа — всё, где бы ни лежало (ангары,
+   контейнеры, корабли). С корпоративного склада — только содержимое
+   контейнеров, в имени которых есть тег [Sigetar] (вместе с вложенными).
+   Таблица: товары по уровням P4 → P0, столбец на персонажа, корпорацию
+   и итог. Данные — при каждом открытии окна. */
+const STORE_CORP_TAG = '[sigetar]';
+
+// Map(товар -> штук) из списка предметов
+function piTotalsOf(list) {
+    const out = new Map();
+    list.forEach((x) => {
+        const name = esiTypeName(x.type_id);
+        if (!PI_COMMODITIES[name]) return;
+        out.set(name, (out.get(name) || 0) + (x.quantity || 0));
+    });
+    return out;
+}
+
+// Корпоративные предметы: только внутри контейнеров с тегом [Sigetar]
+function taggedCorpItems(data) {
+    const kids = new Map();
+    data.items.forEach((x) => {
+        if (!kids.has(x.location_id)) kids.set(x.location_id, []);
+        kids.get(x.location_id).push(x);
+    });
+    const roots = data.items.filter((x) => (data.names.get(x.item_id) || '').toLowerCase().includes(STORE_CORP_TAG));
+    const out = [];
+    const seen = new Set();
+    const walk = (id) => (kids.get(id) || []).forEach((y) => {
+        if (seen.has(y.item_id)) return;
+        seen.add(y.item_id);
+        out.push(y);
+        walk(y.item_id);
+    });
+    roots.forEach((r) => walk(r.item_id));
+    return { items: out, boxes: roots.length };
+}
+
+// Колонки: персонажи, затем корпорации; у каждой — totals или ошибка
+async function loadWarehouse(chars) {
+    const cols = chars.map((c) => ({ kind: 'char', char: c, title: c.characterName }));
+    await Promise.all(cols.map(async (col) => {
+        if (!charScopes(col.char).includes(ASSETS_SCOPE)) {
+            col.error = 'нет права на имущество — подключите персонажа заново';
+            return;
+        }
+        try {
+            col.totals = piTotalsOf((await loadCharAssets(col.char)).items);
+        } catch (e) {
+            col.error = e.message;
+        }
+    }));
+    // корпорации персонажей (без NPC) — каждая один раз
+    const corps = new Map();
+    await Promise.all(chars.map(async (char) => {
+        try {
+            const info = await esiPublicJson(`/characters/${char.characterId}/`);
+            if (!info.corporation_id || info.corporation_id < 2000000) return;
+            if (!corps.has(info.corporation_id)) corps.set(info.corporation_id, []);
+            corps.get(info.corporation_id).push(char);
+        } catch (e) {
+            // без корпорации
+        }
+    }));
+    for (const [corpId, members] of corps) {
+        // eslint-disable-next-line no-await-in-loop
+        const name = await esiPublicJson(`/corporations/${corpId}/`).then((x) => x.name).catch(() => String(corpId));
+        const col = { kind: 'corp', corpId, title: name };
+        cols.push(col);
+        const able = members.filter((c) => charScopes(c).includes(CORP_ASSETS_SCOPE));
+        if (!able.length) {
+            col.error = 'нет права на имущество корпорации (нужен Director)';
+            continue;
+        }
+        const errors = [];
+        for (const char of able) {
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                const tagged = taggedCorpItems(await loadCharAssets(char, corpId));
+                col.totals = piTotalsOf(tagged.items);
+                col.boxes = tagged.boxes;
+                break;
+            } catch (e) {
+                errors.push(e.message);
+            }
+        }
+        if (!col.totals) col.error = errors.join('; ') || 'EVE не отдал имущество корпорации';
+    }
+    return cols;
+}
+
+function warehouseHtml(cols) {
+    const fmtN = (n) => (n ? Math.floor(n).toLocaleString('ru-RU') : '');
+    const ok = cols.filter((c) => c.totals);
+    const names = uniqValues(ok.flatMap((c) => Array.from(c.totals.keys())));
+    const head = cols.map((c) => {
+        const img = c.kind === 'char'
+            ? `<img class="wh-ava" src="${evePortrait(c.char.characterId)}" alt="" width="20" height="20">`
+            : `<img class="wh-ava" src="https://images.evetech.net/corporations/${c.corpId}/logo?size=32" alt="" width="20" height="20">`;
+        const hint = c.error ? `${c.title}\nОшибка: ${c.error}`
+            : c.kind === 'corp' ? `${c.title}\nКонтейнеров [Sigetar]: ${c.boxes}` : c.title;
+        return `<th scope="col" class="wh-col${c.error ? ' is-bad' : ''}" title="${escapeHtml(hint)}">${img}<span>${escapeHtml(c.kind === 'corp' ? `${c.title} [Sigetar]` : c.title)}</span>${c.error ? ' ⚠' : ''}</th>`;
+    }).join('');
+    const rows = [4, 3, 2, 1, 0].map((tier) => {
+        const list = names.filter((n) => piTierOf(n) === tier).sort((a, b) => a.localeCompare(b));
+        if (!list.length) return '';
+        return `<tr class="wh-tier"><th colspan="${cols.length + 2}" scope="rowgroup">${tierBadgeHtml(`P${tier}`)}</th></tr>`
+            + list.map((n) => {
+                let sum = 0;
+                const cells = cols.map((c) => {
+                    const q = c.totals ? c.totals.get(n) || 0 : 0;
+                    sum += q;
+                    return `<td class="wh-n">${fmtN(q)}</td>`;
+                }).join('');
+                return `<tr><th scope="row" class="st-name"><span class="st-name-inner">${iconFor(n) || ''}<span lang="en">${escapeHtml(n)}</span></span></th>${cells}<td class="wh-n wh-sum">${fmtN(sum)}</td></tr>`;
+            }).join('');
+    }).join('');
+    const errors = cols.filter((c) => c.error)
+        .map((c) => `<li><b>${escapeHtml(c.title)}</b> — ${escapeHtml(c.error)}</li>`).join('');
+    return `
+        ${rows ? `<div class="st-scroll"><table class="stats-p1 wh-table">
+            <thead><tr><th scope="col" class="st-name">Товар</th>${head}<th scope="col" class="wh-col">Всего</th></tr></thead>
+            <tbody>${rows}</tbody></table></div>` : '<p class="evt-dim">Планетарки на складах нет</p>'}
+        ${errors ? `<ul class="wh-errors evt-bad">${errors}</ul>` : ''}`;
+}
+
+async function renderWarehouse() {
+    const body = document.getElementById('wh-body');
+    const chars = typeof eveChars === 'function' ? eveChars() : [];
+    if (!chars.length) {
+        body.innerHTML = '<p class="evt-dim">Подключите персонажей через «LOG IN with EVE Online»</p>';
+        return;
+    }
+    body.innerHTML = '<p class="evt-dim">Загрузка складов из EVE…</p>';
+    try {
+        body.innerHTML = warehouseHtml(await loadWarehouse(chars));
+    } catch (e) {
+        body.innerHTML = `<p class="evt-bad">Ошибка: ${escapeHtml(e.message)}</p>`;
+    }
+}
+
+(function initWarehouse() {
+    const btn = document.getElementById('wh-open');
+    const modal = document.getElementById('wh-modal');
+    if (!btn || !modal) return;
+    document.body.appendChild(modal);
+    const close = () => {
+        modal.hidden = true;
+        btn.focus();
+    };
+    btn.addEventListener('click', () => {
+        modal.hidden = false;
+        modal.querySelector('.ct-modal-close').focus();
+        renderWarehouse();
+    });
+    modal.querySelector('.ct-modal-close').addEventListener('click', close);
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) close();
     });
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && !modal.hidden) close();
