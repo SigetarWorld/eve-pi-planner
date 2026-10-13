@@ -4583,3 +4583,31 @@ input.chain-amount:focus {
     border-radius: var(--radius-sm);
 }
 .uv-store-title { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 0.15rem; }
+
+
+/* ---------- Перетаскивание карточек ---------- */
+.card.is-view .uv-head { cursor: grab; }
+.card.is-dragging { opacity: 0.35; }
+.card-drop-ph {
+    flex: 0 1 calc(33.3333% - var(--card-gap) * 2 / 3);
+    min-width: 0;
+    border: 2px dashed var(--accent-line);
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+}
+.cards-drop-new {
+    margin-top: 0.6rem;
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+}
+.cards-drop-new.is-over {
+    color: var(--accent);
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+}
+.cards-drop-new[hidden] { display: none; }
+.account-line > .cards-row { margin-top: 0; }

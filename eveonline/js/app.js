@@ -242,8 +242,10 @@ const CARDS_KEY = 'evepi.cards';
 const accounts = document.getElementById('accounts');
 // true, пока вкладка «Планеты» пересобирается из хранилища (см. EVEPI_reloadAccounts)
 let reloadingAccounts = false;
-const accountInput = document.getElementById('account-new');
-const accountAdd = document.getElementById('account-add');
+// Общий выбор персонажа — на месте прежнего «Аккаунта»
+const pilotNew = document.getElementById('pilot-new');
+const pilotNewAdd = document.getElementById('pilot-add');
+const pilotNewStatus = document.getElementById('pilot-status');
 const accountCounter = document.getElementById('account-counter');
 const statsBody = document.getElementById('stats-body');
 const cardsHint = document.getElementById('cards-hint');
@@ -1492,16 +1494,16 @@ function initDefaults() {
    соседей нет, поэтому без подгонки он бы выступал правее. Копируем
    ширину поля при любом изменении размеров (окно, масштаб, шрифт). */
 function syncRegionWidth() {
-    if (!defRegion || !accountInput) return;
-    const width = accountInput.getBoundingClientRect().width;
+    if (!defRegion || !pilotNew) return;
+    const width = pilotNew.getBoundingClientRect().width;
     if (width > 0) {
         defRegion.style.flex = '0 0 auto';
         defRegion.style.width = `${width}px`;
     }
 }
 
-if (defRegion && accountInput && window.ResizeObserver) {
-    new ResizeObserver(syncRegionWidth).observe(accountInput);
+if (defRegion && pilotNew && window.ResizeObserver) {
+    new ResizeObserver(syncRegionWidth).observe(pilotNew);
 }
 window.addEventListener('load', syncRegionWidth);
 
@@ -1520,39 +1522,10 @@ initDefaults();
 let lineSeq = 0;
 
 function buildAccountLine(name) {
-    // Идентификаторы полей персонажа у каждой линии свои: иначе в
-    // документе окажется несколько полей с одним id, и подпись
-    // «Персонаж» перестанет указывать на своё поле.
-    const pilotId = `pilot-${++lineSeq}`;
-
-    // Имя аккаунта в линии — заголовок, а не поле: назвать аккаунт
-    // можно один раз, в общем блоке наверху страницы. Без имени
-    // заголовок был бы пустым, поэтому подставляем слово «Аккаунт».
-    const title = escapeHtml(name) || 'Аккаунт';
-
+    // Ряд — до трёх карточек; названий у рядов больше нет (имя храним
+    // только для совместимости со старыми сохранениями)
     return `
-        <section class="account-line" data-account="${title}">
-            <div class="account-bar">
-                <h3 class="account-name">${title}</h3>
-                <button type="button" class="account-del" data-role="account-del"
-                        title="Удалить линию аккаунта вместе с карточками"
-                        aria-label="Удалить линию аккаунта ${title}">&times;</button>
-            </div>
-
-            <div class="card-head">
-                <label class="card-pilot-label" for="${pilotId}">Персонаж</label>
-                <!-- Персонаж — из подключённых через EVE Online; кто уже с
-                     карточкой, в списке не показывается (refreshPilotSelects) -->
-                <select id="${pilotId}" class="ct-input card-new pilot-select" data-role="pilot"></select>
-                <button type="button" class="btn card-add" data-role="pilot-add">Добавить</button>
-                <span class="line-status" data-role="line-status" aria-live="polite"></span>
-                <span class="card-counter" data-role="line-counter" aria-live="polite">0 из ${CARDS_LIMIT}</span>
-            </div>
-
-            <div class="card-hint" data-role="line-hint">
-                Выберите персонажа и нажмите «Добавить» — появится карточка
-            </div>
-
+        <section class="account-line" data-account="${escapeHtml(name || '')}">
             <div class="cards-row" data-role="cards">
                 <!-- карточки создаются в app.js -->
             </div>
@@ -1718,29 +1691,27 @@ function handleCardClick(event) {
 
     const line = del.closest('.account-line');
     del.closest('.card').remove();
-    saveAccounts();
     refreshLine(line);
+    pruneEmptyLines();
+    saveAccounts();
 }
 
 // Счётчик, блокировка ввода и подсказка внутри одной линии
 function refreshLine(line) {
+    if (!line) return;
     const count = line.querySelector('[data-role="cards"]').children.length;
-    const full = count >= CARDS_LIMIT;
-
-    line.querySelector('[data-role="line-counter"]').textContent = `${count} из ${CARDS_LIMIT}`;
-    line.querySelector('[data-role="pilot"]').disabled = full;
-    line.querySelector('[data-role="pilot-add"]').disabled = full;
+    line.classList.toggle('is-full', count >= CARDS_LIMIT);
     refreshPilotSelects();
-    line.querySelector('[data-role="line-hint"]').hidden = count > 0;
-
-    // Три персонажа добавлены — панель добавления больше не нужна.
-    // Удалили карточку — панель возвращается.
-    line.querySelector('.card-head').hidden = full;
-    // Вместе с ней скрывается и заголовок линии с именем аккаунта.
-    // Берём только прямого потомка: у карточек своя шапка того же класса.
-    line.querySelector(':scope > .account-bar').hidden = full;
-    line.classList.toggle('is-full', full);
     updateStats();
+}
+
+// Пустые ряды убираем (после удаления, перетаскивания, отмены)
+function pruneEmptyLines() {
+    Array.from(accounts.children).forEach((line) => {
+        const cards = line.querySelector('[data-role="cards"]');
+        if (cards && !cards.children.length) line.remove();
+    });
+    refreshAccounts();
 }
 
 // Счётчик аккаунтов и общая подсказка, пока линий нет
@@ -1767,7 +1738,7 @@ function refreshPilotSelects() {
     // Почему выбрать некого — для всплывающей подсказки (showPilotPop)
     const reason = !chars.length ? 'none' : (free.length ? '' : 'used');
 
-    document.querySelectorAll('#accounts [data-role="pilot"]').forEach((select) => {
+    document.querySelectorAll('#pilot-new, #accounts [data-role="pilot"]').forEach((select) => {
         const line = select.closest('.account-line');
         const full = line && line.classList.contains('is-full');
         const keep = free.includes(select.value) ? select.value : '';
@@ -1776,8 +1747,8 @@ function refreshPilotSelects() {
         select.disabled = full || !free.length;
         if (reason && !full) select.dataset.empty = reason;
         else delete select.dataset.empty;
-        const add = line && line.querySelector('[data-role="pilot-add"]');
-        if (add) add.disabled = full || !free.length;
+        const add = line ? line.querySelector('[data-role="pilot-add"]') : pilotNewAdd;
+        if (add && !add.dataset.busy) add.disabled = full || !free.length;
     });
 }
 
@@ -2013,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 11:30';
+const APP_BUILD = '13.10.2026 12:00';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -2848,7 +2819,7 @@ function showPilotPop(select) {
 
 document.addEventListener('click', (event) => {
     if (event.target.closest('.pilot-pop')) return;
-    const head = event.target.closest('.account-line > .card-head');
+    const head = event.target.closest('.account-head');
     const select = head && head.querySelector('[data-role="pilot"]');
     // Список и «Добавить» выключены — щелчок проходит к строке целиком
     if (select && select.dataset.empty && (event.target === select
@@ -2865,8 +2836,8 @@ document.addEventListener('keydown', (event) => {
 });
 
 function refreshAccounts() {
-    const count = accounts.children.length;
-    accountCounter.textContent = `Аккаунтов: ${count}`;
+    const count = accounts.querySelectorAll('.card, .card-slot').length;
+    accountCounter.textContent = `Карточек: ${count}`;
     cardsHint.hidden = count > 0;
     updateStats();
 }
@@ -3079,7 +3050,8 @@ function saveAccounts() {
     if (cardEditor) return;
     store.set(ACCOUNTS_KEY, Array.from(accounts.children).map((line) => ({
         name: line.dataset.account,
-        cards: Array.from(line.querySelector('[data-role="cards"]').children).map(readCard)
+        cards: Array.from(line.querySelector('[data-role="cards"]').children)
+            .filter((el) => el.classList.contains('card')).map(readCard)
     })));
     // любое изменение в карточках — пересчёт статистики P1
     updateStats();
@@ -3743,6 +3715,7 @@ function closeCardEditor(save) {
     } else if (isNew) {
         card.remove();
         slot.remove();
+        pruneEmptyLines();
     } else {
         // Отмена: карточка заново из снимка на том же месте
         card.remove();
@@ -3925,60 +3898,6 @@ function showCardLevelChoice(onPick) {
 // контейнер: так линия ничего не знает о соседних.
 function initLine(line) {
     const cards = line.querySelector('[data-role="cards"]');
-    const pilot = line.querySelector('[data-role="pilot"]');
-
-    const tryAdd = () => {
-        const name = pilot.value.trim();
-        // Персонаж не выбран или уже с карточкой — подсвечиваем список
-        if (!name || cardNamesTaken().has(name.toLowerCase())) {
-            pilot.classList.add('ct-invalid');
-            pilot.focus();
-            refreshPilotSelects();
-            return;
-        }
-
-        /* Персонаж есть — тип карточки подбирается по его колониям в EVE
-           (pickCardForCharacter). Окно выбора типа (showCardLevelChoice)
-           пока скрыто. */
-        const add = line.querySelector('[data-role="pilot-add"]');
-        const status = line.querySelector('[data-role="line-status"]');
-        const char = (typeof eveChars === 'function' ? eveChars() : [])
-            .find((c) => (c.characterName || '').toLowerCase() === name.toLowerCase());
-        add.disabled = true;
-        pilot.disabled = true;
-        status.textContent = 'Смотрю колонии в EVE…';
-        pickCardForCharacter(char).then(({ level, saved, note, issues }) => {
-            status.textContent = note;
-            if (addCard(line, name, saved, level)) {
-                refreshPilotSelects();
-                /* Всё понятно — карточка сразу готовая (просмотр).
-                   Есть вопросы — окно редактирования с подсветкой. */
-                const card = line.querySelector('[data-role="cards"]').lastElementChild;
-                const all = (issues || (saved ? [] : [{ text: note }])).concat(cardFillIssues(card, saved));
-                if (isMixLevel(card.dataset.level)) {
-                    if (all.length) openCardEditor(card, all, { isNew: true });
-                    else {
-                        setCardView(card, true);
-                        saveAccounts();
-                    }
-                }
-            }
-            refreshLine(line);
-            if (!cardEditor) pilot.focus();
-        });
-    };
-
-    line.querySelector('[data-role="pilot-add"]').addEventListener('click', tryAdd);
-    pilot.addEventListener('change', () => pilot.classList.remove('ct-invalid'));
-
-    // Крестик убирает линию вместе со всеми её карточками
-    line.querySelector('[data-role="account-del"]')
-        .addEventListener('click', () => {
-            line.remove();
-            saveAccounts();
-            refreshAccounts();
-            refreshPilotSelects();
-        });
 
     cards.addEventListener('change', handleRowChange);
     cards.addEventListener('click', handleCardClick);
@@ -3991,24 +3910,151 @@ function initLine(line) {
     refreshLine(line);
 }
 
-accountAdd.addEventListener('click', () => {
-    if (accountInput.value.trim() && addAccount(accountInput.value)) {
-        accountInput.value = '';
-        accountInput.focus();
+/* ---- Добавление персонажа ----
+   Один общий выбор «Персонаж» наверху. Карточка встаёт в первый ряд, где
+   меньше трёх карточек; мест нет — появляется новый ряд. Тип карточки
+   подбирается по колониям в EVE (pickCardForCharacter): всё понятно —
+   сразу готовая, есть вопросы — окно редактирования с подсветкой. */
+function lineWithRoom() {
+    return Array.from(accounts.children).find((line) => {
+        const cards = line.querySelector('[data-role="cards"]');
+        return cards && cards.children.length < CARDS_LIMIT;
+    }) || addAccount('', false);
+}
+
+function tryAddPilot() {
+    const name = pilotNew.value.trim();
+    if (!name || cardNamesTaken().has(name.toLowerCase())) {
+        pilotNew.classList.add('ct-invalid');
+        pilotNew.focus();
+        refreshPilotSelects();
         return;
     }
+    const char = (typeof eveChars === 'function' ? eveChars() : [])
+        .find((c) => (c.characterName || '').toLowerCase() === name.toLowerCase());
+    pilotNewAdd.disabled = true;
+    pilotNewAdd.dataset.busy = '1';
+    pilotNew.disabled = true;
+    pilotNewStatus.textContent = 'Смотрю колонии в EVE…';
+    pickCardForCharacter(char).then(({ level, saved, note, issues }) => {
+        delete pilotNewAdd.dataset.busy;
+        pilotNewStatus.textContent = note;
+        const line = lineWithRoom();
+        if (addCard(line, name, saved, level)) {
+            const card = line.querySelector('[data-role="cards"]').lastElementChild;
+            const all = (issues || (saved ? [] : [{ text: note }])).concat(cardFillIssues(card, saved));
+            if (isMixLevel(card.dataset.level)) {
+                if (all.length) openCardEditor(card, all, { isNew: true });
+                else {
+                    setCardView(card, true);
+                    saveAccounts();
+                }
+            }
+        }
+        refreshLine(line);
+        refreshAccounts();
+        refreshPilotSelects();
+        if (!cardEditor) pilotNew.focus();
+    });
+}
 
-    accountInput.classList.add('ct-invalid');
-    accountInput.focus();
+pilotNewAdd.addEventListener('click', tryAddPilot);
+pilotNew.addEventListener('change', () => pilotNew.classList.remove('ct-invalid'));
+
+/* ---- Перетаскивание карточек ----
+   Карточку тянут за шапку. Бросить можно в любой ряд, где меньше трёх
+   карточек (или в свой же — поменять порядок), и в полосу под рядами —
+   тогда появится новый ряд. Опустевший ряд исчезает. */
+let dragCard = null;
+const dropPh = document.createElement('div');
+dropPh.className = 'card-drop-ph';
+const dropNew = document.createElement('div');
+dropNew.className = 'cards-drop-new';
+dropNew.textContent = 'Перетащите сюда — новый ряд';
+dropNew.hidden = true;
+accounts.after(dropNew);
+
+accounts.addEventListener('mousedown', (event) => {
+    const head = event.target.closest('.uv-head, .ct-system-inner');
+    const card = head && head.closest('.card');
+    if (!card || event.target.closest('button, select, input, textarea, a')) return;
+    card.draggable = true;
 });
-
-accountInput.addEventListener('input', () => accountInput.classList.remove('ct-invalid'));
-
-accountInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        accountAdd.click();
+document.addEventListener('mouseup', () => {
+    if (!dragCard) accounts.querySelectorAll('.card[draggable="true"]').forEach((c) => { c.draggable = false; });
+});
+accounts.addEventListener('dragstart', (event) => {
+    const card = event.target.closest && event.target.closest('.card');
+    if (!card || !card.draggable) return;
+    dragCard = card;
+    event.dataTransfer.effectAllowed = 'move';
+    try { event.dataTransfer.setData('text/plain', card.dataset.name || ''); } catch (e) { /* старые браузеры */ }
+    dropPh.style.height = `${Math.min(card.offsetHeight, 160)}px`;
+    requestAnimationFrame(() => card.classList.add('is-dragging'));
+    dropNew.hidden = false;
+});
+function dropTargetRow(event) {
+    const row = event.target.closest && event.target.closest('#accounts [data-role="cards"]');
+    if (!row || !dragCard) return null;
+    const others = Array.from(row.children).filter((el) => el !== dragCard && el !== dropPh);
+    if (dragCard.parentElement !== row && others.length >= CARDS_LIMIT) return null;
+    return { row, others };
+}
+accounts.addEventListener('dragover', (event) => {
+    const t = dropTargetRow(event);
+    if (!t) {
+        dropPh.remove();
+        return;
     }
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    const before = t.others.find((el) => {
+        const r = el.getBoundingClientRect();
+        return event.clientX < r.left + r.width / 2;
+    });
+    if (before) t.row.insertBefore(dropPh, before);
+    else t.row.appendChild(dropPh);
+});
+accounts.addEventListener('drop', (event) => {
+    if (!dragCard || !dropPh.parentElement) return;
+    event.preventDefault();
+    const from = dragCard.closest('.account-line');
+    dropPh.replaceWith(dragCard);
+    finishDrag(from);
+});
+dropNew.addEventListener('dragover', (event) => {
+    if (!dragCard) return;
+    event.preventDefault();
+    dropPh.remove();
+    dropNew.classList.add('is-over');
+});
+dropNew.addEventListener('dragleave', () => dropNew.classList.remove('is-over'));
+dropNew.addEventListener('drop', (event) => {
+    if (!dragCard) return;
+    event.preventDefault();
+    const from = dragCard.closest('.account-line');
+    const line = addAccount('', false);
+    line.querySelector('[data-role="cards"]').appendChild(dragCard);
+    finishDrag(from);
+});
+function finishDrag(from) {
+    const card = dragCard;
+    const to = card.closest('.account-line');
+    refreshLine(from);
+    refreshLine(to);
+    pruneEmptyLines();
+    saveAccounts();
+    if (card.classList.contains('is-view')) applyViewVisibility(card);
+}
+accounts.addEventListener('dragend', () => {
+    if (dragCard) {
+        dragCard.classList.remove('is-dragging');
+        dragCard.draggable = false;
+    }
+    dragCard = null;
+    dropPh.remove();
+    dropNew.hidden = true;
+    dropNew.classList.remove('is-over');
 });
 
 /* Восстанавливаем линии. Карточка в хранилище бывает двух видов:

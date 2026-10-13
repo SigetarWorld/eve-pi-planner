@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=140">
+    <link rel="stylesheet" href="css/style.css?v=141">
 </head>
 <body>
     <header>
@@ -68,15 +68,14 @@
                         </select>
                     </div>
 
-                    <!-- Выбор аккаунта — аналог выбора персонажа, стоит перед ним.
-                         Кнопка «Добавить» создаёт линию аккаунта, в линию кладётся
-                         до трёх карточек-персонажей. -->
+                    <!-- Выбор персонажа: карточка встаёт в первый ряд, где меньше
+                         трёх карточек. Ряды и порядок — перетаскиванием карточек. -->
                     <div class="card-head account-head">
-                        <label class="card-pilot-label" for="account-new">Аккаунт</label>
-                        <input type="text" id="account-new" class="ct-input card-new"
-                               placeholder="Название аккаунта" maxlength="32" autocomplete="off">
-                        <button type="button" id="account-add" class="btn card-add">Добавить</button>
-                        <span id="account-counter" class="card-counter" aria-live="polite">Аккаунтов: 0</span>
+                        <label class="card-pilot-label" for="pilot-new">Персонаж</label>
+                        <select id="pilot-new" class="ct-input card-new pilot-select"></select>
+                        <button type="button" id="pilot-add" class="btn card-add">Добавить</button>
+                        <span id="pilot-status" class="line-status" aria-live="polite"></span>
+                        <span id="account-counter" class="card-counter" aria-live="polite">Карточек: 0</span>
                     </div>
                 </div>
 
@@ -117,7 +116,7 @@
             </div>
 
             <div id="cards-hint" class="card-hint">
-                Введите название аккаунта и нажмите «Добавить» — появится линия для трёх персонажей
+                Выберите персонажа и нажмите «Добавить» — появится его карточка. Карточки можно перетаскивать за шапку: в ряду до трёх
             </div>
 
             <!-- Линии аккаунтов создаёт app.js. В каждой линии:
@@ -187,7 +186,7 @@
     <script src="js/calculator.js?v=35"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=115"></script>
+    <script src="js/app.js?v=116"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
         if (location.protocol === "file:") {
