@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 23:20';
+const APP_BUILD = '13.10.2026 23:30';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3069,7 +3069,7 @@ async function whPlaceOf(loc, char) {
         if (loc >= 60000000 && loc < 64000000) {
             const st = await esiPublicJson(`/universe/stations/${loc}/`);
             place.station = st.name;
-            place.typeId = st.type_id || 0;
+            // тип станции NPC — только модель здания, не показываем
             systemId = st.system_id;
         } else if (loc >= 30000000 && loc < 33000000) {
             systemId = loc;
@@ -3249,7 +3249,9 @@ function warehouseHtml(owners) {
     const placeKey = (p) => `${p.region || 'я'}|${p.system || ''}|${p.station || ''}`;
     const cardHtml = ({ owner, top, spots }) => {
         const place = placeOf(top);
-        const type = place.typeId ? esiTypeName(place.typeId) : '';
+        // тип — только у структур игроков (Astrahus, Fortizar…); у станций NPC
+        // тип означает лишь модель здания — его не показываем
+        const type = place.typeId && top > 1e12 ? esiTypeName(place.typeId) : '';
         const station = type && !type.startsWith('#') ? `${type} (${place.station})` : place.station || '';
         return `
             <div class="uv wh-card">
