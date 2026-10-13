@@ -4652,3 +4652,19 @@ input.chain-amount:focus {
     border-color: var(--border-lit);
     background: rgba(255, 255, 255, 0.05);
 }
+
+/* Код склада из игры — поле в списке склада */
+.uv-pin-code {
+    width: 6.5rem;
+    margin-left: 0.4rem;
+    padding: 0.1rem 0.3rem;
+    font: inherit;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+}
+.uv-pin-code:focus { outline: none; border-color: var(--accent-line); }

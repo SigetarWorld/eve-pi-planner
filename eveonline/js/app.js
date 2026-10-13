@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 13:00';
+const APP_BUILD = '13.10.2026 13:50';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3321,8 +3321,9 @@ const viewQtyHtml = (name) => `<span class="uv-qty" data-qty="${escapeHtml(name)
 function viewResHtml(name) {
     const tier = `P${piTierOf(name)}`;
     return tierBadgeHtml(tier)
+        // название стоит рядом — подсказка при наведении не нужна
         + `<span class="uv-icon">${iconFor(name) || BLANK_ICON}</span>`
-        + `<span class="uv-name" lang="en" title="${escapeHtml(name)} (${tier})">${escapeHtml(name)}</span>`;
+        + `<span class="uv-name" lang="en">${escapeHtml(name)}</span>`;
 }
 
 // Узел дерева: строка товара и ветки — входы рецепта (у P1 — его P0).
@@ -3458,6 +3459,42 @@ const STORE_SVG = {
     cc: '<circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2.3"/>'
 };
 const STORE_ORDER = { lp: 0, sf: 1, cc: 2, '': 3 };
+
+/* Код склада из игры («MN-XFG»). EVE его не отдаёт, а из номера постройки
+   он не вычисляется — вписывают один раз в списке склада, хранится в
+   браузере по номеру постройки (pin_id). */
+const PIN_CODES_KEY = 'evepi.pin.codes';
+const PIN_CODES_DEFAULT = {
+    1053122462642: 'MN-XFG',   // Sigetar · DFTK-D II · Launchpad
+    1053122462686: '1K-35G',   // Sigetar · DFTK-D II · Storage Facility
+    1053122454377: 'MD-U4G'    // Sigetar · DFTK-D II · Command Center
+};
+function pinCodeOf(pinId) {
+    const saved = store.get(PIN_CODES_KEY, {}) || {};
+    return saved[pinId] || PIN_CODES_DEFAULT[pinId] || '';
+}
+function setPinCode(pinId, code) {
+    const saved = store.get(PIN_CODES_KEY, {}) || {};
+    const clean = String(code || '').trim().toUpperCase();
+    if (clean) saved[pinId] = clean;
+    else delete saved[pinId];
+    store.set(PIN_CODES_KEY, saved);
+}
+const storeTitleOf = (st) => [esiTypeName(st.typeId), pinCodeOf(st.pinId)].filter(Boolean).join(' ');
+
+// Вписали код склада — запоминаем и обновляем подсказку его кнопки
+document.addEventListener('change', (event) => {
+    const input = event.target.closest && event.target.closest('[data-role="uv-pin-code"]');
+    if (!input) return;
+    setPinCode(input.dataset.pin, input.value);
+    input.value = pinCodeOf(input.dataset.pin);
+    const col = input.closest('.uv-colony');
+    (col && col.storeData ? col.storeData : []).forEach((st, i) => {
+        const btn = col.querySelector(`[data-role="uv-store"][data-i="${i}"]`);
+        if (!btn) return;
+        btn.title = btn.title.replace(/^[^:]*:/, `${storeTitleOf(st)}:`);
+    });
+});
 function storeKindOf(typeId, strict = false) {
     const name = String(esiTypeName(typeId) || '').toLowerCase();
     if (name.includes('launchpad')) return 'lp';
@@ -3491,7 +3528,7 @@ function renderCardView(card) {
                     const list = Array.from(st.items.entries()).filter(([, q]) => q >= 1)
                         .sort((a, b) => piTierOf(b[0]) - piTierOf(a[0]) || a[0].localeCompare(b[0]));
                     const empty = !list.length;
-                    const title = `${esiTypeName(st.typeId)}: ${empty ? 'пусто' : list.map(([n, q]) => `${n} ${Math.floor(q).toLocaleString('ru-RU')}`).join(', ')}`;
+                    const title = `${storeTitleOf(st)}: ${empty ? 'пусто' : list.map(([n, q]) => `${n} ${Math.floor(q).toLocaleString('ru-RU')}`).join(', ')}`;
                     return `<button type="button" class="uv-store uv-store-${kind} uv-store-btn${empty && kind !== 'cc' ? ' is-empty' : ''}" data-role="uv-store" data-i="${i}" title="${escapeHtml(title)}" aria-expanded="false"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${STORE_SVG[kind]}</svg></button>`;
                 }).join('');
                 col.storeData = data.stores;
@@ -3501,10 +3538,14 @@ function renderCardView(card) {
                 const item = el.dataset.qty;
                 const n = data ? Math.floor(data.stock.get(item) || 0) : null;
                 const stores = data && data.where.get(item);
+                const codeOfType = (t) => {
+                    const st = data.stores.find((x) => x.typeId === t);
+                    return st ? pinCodeOf(st.pinId) : '';
+                };
                 const icons = stores
                     ? Array.from(stores.entries())
                         .sort((a, b) => STORE_ORDER[storeKindOf(a[0])] - STORE_ORDER[storeKindOf(b[0])])
-                        .map(([t, q]) => storeIconHtml(t, `${esiTypeName(t)}: ${Math.floor(q).toLocaleString('ru-RU')}`)).join('')
+                        .map(([t, q]) => storeIconHtml(t, `${[esiTypeName(t), codeOfType(t)].filter(Boolean).join(' ')}: ${Math.floor(q).toLocaleString('ru-RU')}`)).join('')
                     : '';
                 el.innerHTML = icons + (n === null ? '—' : n.toLocaleString('ru-RU'));
                 el.classList.toggle('is-zero', n === 0);
@@ -3586,7 +3627,9 @@ function handleViewClick(event) {
             .sort((a, b) => piTierOf(b[0]) - piTierOf(a[0]) || a[0].localeCompare(b[0]));
         col.querySelector('.uv-node > .uv-line').insertAdjacentHTML('afterend', `
             <div class="uv-store-list" data-i="${storeBtn.dataset.i}">
-                <div class="uv-store-title">${escapeHtml(esiTypeName(st.typeId))}</div>
+                <div class="uv-store-title">${escapeHtml(esiTypeName(st.typeId))}
+                    <input class="uv-pin-code" data-role="uv-pin-code" data-pin="${st.pinId}" value="${escapeHtml(pinCodeOf(st.pinId))}"
+                           placeholder="код из игры" maxlength="12" spellcheck="false" title="Код склада из игры, например MN-XFG"></div>
                 ${list.length ? list.map(([n, q]) => `<div class="uv-line">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${Math.floor(q).toLocaleString('ru-RU')}</span></div>`).join('')
                     : '<div class="uv-empty">пусто</div>'}
             </div>`);
@@ -3602,7 +3645,11 @@ function handleViewClick(event) {
             delete top.dataset.open;
             delete top.dataset.auto;
             top.querySelectorAll('.uv-node[data-open]').forEach((n) => { delete n.dataset.open; });
-        } else top.dataset.open = '1';
+        } else {
+            // развернуть — до самого низа: включаются все уровни
+            top.dataset.open = '1';
+            card.dataset.showTiers = VIEW_TIERS.join(',');
+        }
         const tops = Array.from(card.querySelectorAll('.uv-colony > .uv-node'));
         if (!tops.some((n) => n.dataset.open === '1' || n.dataset.auto === '1')) card.dataset.showTiers = '';
         applyViewVisibility(card);
