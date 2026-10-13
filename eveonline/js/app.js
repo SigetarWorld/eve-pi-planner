@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 23:55';
+const APP_BUILD = '13.10.2026 23:58';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3245,27 +3245,149 @@ function whPathHtml(segs) {
 }
 const whFmt = (n) => (n ? Math.floor(n).toLocaleString('ru-RU') : '');
 
-function warehouseHtml(owners) {
-    if (!owners.length) return '<p class="evt-dim">Планетарки на складах нет</p>';
-    // итог: товар × владелец
+/* ---- Сводная таблица: фильтры, объём, график за 10 дней ----
+   Фильтры сверху: кнопки [P0]…[P4] (ни одна не нажата — все уровни) и
+   список «Все / персонаж / корпорация». Таблица: товары по уровням,
+   столбец на владельца, «Всего» и объём в м³ (у строки уровня — объём
+   всего уровня, внизу — итог). Справа — график занимаемого объёма за
+   10 дней по тем же фильтрам. История — срез раз в день: при каждом
+   открытии «Склада» сегодняшний срез перезаписывается (в браузере,
+   WH_HIST_KEY, хранится 30 дней). */
+const WH_HIST_KEY = 'evepi.wh.history';
+const whFilter = { tiers: new Set(), owner: '' };
+let whLast = [];
+const whOwnerKey = (o) => `${o.kind}:${o.corpId || o.char.characterId}`;
+const whDayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const whVolOf = (name, qty) => qty * (PI_TIER_VOLUME[piTierOf(name)] || 0);
+const whTierOn = (tier) => !whFilter.tiers.size || whFilter.tiers.has(tier);
+const whFmtM3 = (v) => `${Math.round(v).toLocaleString('ru-RU')} м³`;
+
+function whSaveHistory(owners) {
+    const hist = store.get(WH_HIST_KEY, {}) || {};
+    const day = {};
+    owners.forEach((o) => {
+        const items = {};
+        o.entries.forEach((e) => { items[e.name] = (items[e.name] || 0) + e.qty; });
+        day[whOwnerKey(o)] = { title: o.title, items };
+    });
+    hist[whDayKey(new Date())] = day;
+    const cut = whDayKey(new Date(Date.now() - 30 * 864e5));
+    Object.keys(hist).forEach((k) => { if (k < cut) delete hist[k]; });
+    store.set(WH_HIST_KEY, hist);
+}
+
+// Объём за день по фильтрам; null — среза за этот день нет
+function whDayVolume(day) {
+    if (!day) return null;
+    let v = 0;
+    Object.entries(day).forEach(([key, o]) => {
+        if (whFilter.owner && key !== whFilter.owner) return;
+        Object.entries(o.items || {}).forEach(([n, q]) => {
+            if (PI_COMMODITIES[n] && whTierOn(piTierOf(n))) v += whVolOf(n, q);
+        });
+    });
+    return v;
+}
+
+// График: одна линия — занимаемый объём, 10 последних дней
+function whChartHtml() {
+    const hist = store.get(WH_HIST_KEY, {}) || {};
+    const days = [];
+    for (let i = 9; i >= 0; i -= 1) {
+        const d = new Date(Date.now() - i * 864e5);
+        days.push({ key: whDayKey(d), label: `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`, v: whDayVolume(hist[whDayKey(d)]) });
+    }
+    const W = 420;
+    const H = 200;
+    const L = 56;
+    const R = 22;
+    const T = 12;
+    const B = 26;
+    const vals = days.map((d) => d.v).filter((v) => v !== null);
+    const max = Math.max(1, ...vals);
+    // «круглая» верхняя граница шкалы: 1, 2, 2.5, 5 × 10^n
+    const pow = 10 ** Math.floor(Math.log10(max));
+    const top = [1, 2, 2.5, 5, 10].map((k) => k * pow).find((x) => x >= max);
+    const x = (i) => L + (i * (W - L - R)) / 9;
+    const y = (v) => T + (H - T - B) * (1 - v / top);
+    const ticks = [0, 0.25, 0.5, 0.75, 1].map((k) => k * top);
+    const grid = ticks.map((t) => `<line class="wh-ch-grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/>`
+        + `<text class="wh-ch-ytick" x="${L - 6}" y="${y(t) + 3.5}">${Math.round(t).toLocaleString('ru-RU')}</text>`).join('');
+    const xl = days.map((d, i) => `<text class="wh-ch-xtick" x="${x(i)}" y="${H - 8}">${d.label}</text>`).join('');
+    // линия — отрезками по дням подряд, где срез есть
+    const runs = [];
+    let run = [];
+    days.forEach((d, i) => {
+        if (d.v === null) { if (run.length) runs.push(run); run = []; } else run.push([x(i), y(d.v)]);
+    });
+    if (run.length) runs.push(run);
+    const lines = runs.filter((r) => r.length > 1).map((r) => `<polyline class="wh-ch-line" points="${r.map((p) => p.join(',')).join(' ')}"/>`).join('');
+    const dots = days.map((d, i) => (d.v === null ? '' : `<circle class="wh-ch-dot" cx="${x(i)}" cy="${y(d.v)}" r="4"/>`)).join('');
+    // зоны наведения — шире точки, на всю высоту; подсказка — общая подсказка сайта
+    const hits = days.map((d, i) => `<rect class="wh-ch-hit" x="${x(i) - (W - L - R) / 18}" y="${T}" width="${(W - L - R) / 9}" height="${H - T - B}"
+        title="${d.label}${d.v === null ? '\nСреза нет' : `\nОбъём: ${whFmtM3(d.v)}`}"/>`).join('');
+    const note = vals.length < 2
+        ? '<p class="wh-ch-note">История копится: срез сохраняется раз в день, когда открываете «Склад».</p>' : '';
+    return `<figure class="wh-chart">
+            <figcaption class="wh-ch-title">Занимаемый объём, м³ · 10 дней</figcaption>
+            <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Занимаемый объём по дням">
+                ${grid}<line class="wh-ch-axis" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>${xl}${lines}${dots}${hits}
+            </svg>${note}
+        </figure>`;
+}
+
+function whSumInnerHtml() {
+    const all = whLast;
+    const owners = whFilter.owner ? all.filter((o) => whOwnerKey(o) === whFilter.owner) : all;
     const totals = owners.map((o) => {
         const m = new Map();
         o.entries.forEach((e) => m.set(e.name, (m.get(e.name) || 0) + e.qty));
         return m;
     });
     const names = uniqValues(owners.flatMap((o) => o.entries.map((e) => e.name)));
+    const many = owners.length > 1;
     const head = owners.map((o) => `<th scope="col" class="wh-col">${whAvaHtml(o)}<span>${escapeHtml(o.title)}</span></th>`).join('');
-    const rows = [4, 3, 2, 1, 0].map((tier) => {
+    let sumQty = 0;
+    let sumVol = 0;
+    const rows = [4, 3, 2, 1, 0].filter(whTierOn).map((tier) => {
         const list = names.filter((n) => piTierOf(n) === tier).sort((a, b) => a.localeCompare(b));
         if (!list.length) return '';
-        return `<tr class="wh-tier"><th colspan="${owners.length + 2}" scope="rowgroup">${tierBadgeHtml(`P${tier}`)}</th></tr>`
-            + list.map((n) => {
-                const qs = totals.map((m) => m.get(n) || 0);
-                return `<tr><th scope="row" class="st-name"><span class="st-name-inner">${iconFor(n) || ''}<span lang="en">${escapeHtml(n)}</span></span></th>`
-                    + `${qs.map((q) => `<td class="wh-n">${whFmt(q)}</td>`).join('')}<td class="wh-n wh-sum">${whFmt(qs.reduce((a, b) => a + b, 0))}</td></tr>`;
-            }).join('');
+        let tierVol = 0;
+        const body = list.map((n) => {
+            const qs = totals.map((m) => m.get(n) || 0);
+            const q = qs.reduce((a, b) => a + b, 0);
+            const v = whVolOf(n, q);
+            tierVol += v;
+            sumQty += q;
+            return `<tr><th scope="row" class="st-name"><span class="st-name-inner">${iconFor(n) || ''}<span lang="en">${escapeHtml(n)}</span></span></th>`
+                + qs.map((x) => `<td class="wh-n">${whFmt(x)}</td>`).join('')
+                + (many ? `<td class="wh-n wh-sum">${whFmt(q)}</td>` : '')
+                + `<td class="wh-n wh-vol">${whFmt(v)}</td></tr>`;
+        }).join('');
+        sumVol += tierVol;
+        return `<tr class="wh-tier"><th colspan="${owners.length + (many ? 2 : 1)}" scope="rowgroup">${tierBadgeHtml(`P${tier}`)}</th>`
+            + `<td class="wh-n wh-vol wh-tier-vol">${whFmtM3(tierVol)}</td></tr>${body}`;
     }).join('');
+    const tierBtns = [0, 1, 2, 3, 4].map((t) => `<button type="button" class="ct-tier ct-tier-p${t} uv-tier" data-role="wh-tier" data-tier="${t}"
+        aria-pressed="${whFilter.tiers.has(t)}" title="Показать P${t}">P${t}</button>`).join('');
+    const opts = [`<option value="">Все склады</option>`]
+        .concat(all.map((o) => `<option value="${escapeHtml(whOwnerKey(o))}"${whOwnerKey(o) === whFilter.owner ? ' selected' : ''}>${escapeHtml(o.kind === 'corp' ? `Корп. склад ${o.title}` : o.title)}</option>`)).join('');
+    return `<div class="wh-filters">
+            <span class="uv-tiers wh-tiers" role="group" aria-label="Уровни">${tierBtns}</span>
+            <select class="ct-input wh-owner-sel" data-role="wh-owner" aria-label="Склад">${opts}</select>
+        </div>
+        <div class="wh-sum-row">
+            <div class="st-scroll">${rows ? `<table class="stats-p1 wh-table">
+                <thead><tr><th scope="col" class="st-name">Товар</th>${head}${many ? '<th scope="col" class="wh-col">Всего</th>' : ''}<th scope="col" class="wh-col">м³</th></tr></thead>
+                <tbody>${rows}</tbody>
+                <tfoot><tr><th scope="row" class="st-name">Итого</th><td colspan="${owners.length + (many ? 1 : 0)}" class="wh-n">${whFmt(sumQty)}</td><td class="wh-n wh-vol">${whFmtM3(sumVol)}</td></tr></tfoot>
+            </table>` : '<p class="evt-dim">По этим фильтрам планетарки нет</p>'}</div>
+            ${whChartHtml()}
+        </div>`;
+}
 
+function warehouseHtml(owners) {
+    if (!owners.length) return '<p class="evt-dim">Планетарки на складах нет</p>';
     /* Где лежит — карточка на аккаунт и станцию: в шапке аккаунт,
        под ним «Регион › Система › Тип (Станция)»; внутри — места хранения
        (путь внутри станции), под каждым товары. Аккаунт на одной станции
@@ -3313,9 +3435,7 @@ function warehouseHtml(owners) {
             </div>`;
     }).join('');
     return `<div class="wh-layout">
-            <div class="st-scroll wh-sum-box"${whView === 'sum' ? '' : ' hidden'}><table class="stats-p1 wh-table">
-                <thead><tr><th scope="col" class="st-name">Товар</th>${head}<th scope="col" class="wh-col">Всего</th></tr></thead>
-                <tbody>${rows}</tbody></table></div>
+            <div class="uv wh-sum-box"${whView === 'sum' ? '' : ' hidden'}>${whSumInnerHtml()}</div>
             <section class="wh-where-box"${whView === 'where' ? '' : ' hidden'}>
                 <div class="wh-where">${where}</div></section>
         </div>`;
@@ -3330,7 +3450,10 @@ async function renderWarehouse() {
     }
     body.innerHTML = '<p class="evt-dim">Загрузка складов из EVE…</p>';
     try {
-        body.innerHTML = warehouseHtml(await loadWarehouse(chars));
+        whLast = await loadWarehouse(chars);
+        if (whLast.length) whSaveHistory(whLast);
+        if (whFilter.owner && !whLast.some((o) => whOwnerKey(o) === whFilter.owner)) whFilter.owner = '';
+        body.innerHTML = warehouseHtml(whLast);
     } catch (e) {
         body.innerHTML = `<p class="evt-bad">Ошибка: ${escapeHtml(e.message)}</p>`;
     }
@@ -3366,6 +3489,25 @@ async function renderWarehouse() {
         whView = t.dataset.view;
         showView();
     }));
+    // фильтры сводной: уровни и склад — перерисовываем только сводную
+    const redrawSum = () => {
+        const box = modal.querySelector('.wh-sum-box');
+        if (box) box.innerHTML = whSumInnerHtml();
+    };
+    modal.addEventListener('click', (event) => {
+        const t = event.target.closest('[data-role="wh-tier"]');
+        if (!t) return;
+        const tier = Number(t.dataset.tier);
+        if (whFilter.tiers.has(tier)) whFilter.tiers.delete(tier);
+        else whFilter.tiers.add(tier);
+        redrawSum();
+    });
+    modal.addEventListener('change', (event) => {
+        const sel = event.target.closest('[data-role="wh-owner"]');
+        if (!sel) return;
+        whFilter.owner = sel.value;
+        redrawSum();
+    });
     // круглая кнопка в шапке карточки станции — свернуть / развернуть её
     modal.addEventListener('click', (event) => {
         const fold = event.target.closest('[data-role="wh-fold"]');

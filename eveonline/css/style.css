@@ -4918,3 +4918,33 @@ input.chain-amount:focus {
 .wh-seg-k-box > span, .wh-seg-k-ship > span { color: var(--text); }
 .wh-line { padding-left: 0.6rem; }
 #wh-modal .stats-modal-box { width: min(1400px, calc(100vw - 2rem)); }
+
+/* Сводная «Склада»: фильтры сверху, таблица и график рядом.
+   Блок с классом .uv — ради тех же значков [P0]…[P4], что на карточках;
+   рамку и фон карточки у него снимаем. */
+.uv.wh-sum-box { background: none; border: 0; font-size: inherit; }
+.wh-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
+.wh-filters .wh-tiers { margin-left: 0; }
+.wh-filters .uv-tier { width: 1.8rem; height: 1.6rem; font-size: 0.68rem; }
+.wh-filters .uv-tier[aria-pressed="false"] { opacity: 0.45; }
+/* ни один уровень не выбран — показаны все, кнопки яркие */
+.wh-filters .wh-tiers:not(:has([aria-pressed="true"])) .uv-tier { opacity: 1; }
+.wh-owner-sel { min-width: 12rem; }
+.wh-sum-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1.2rem; }
+.wh-table .wh-vol { color: var(--text-dim); }
+.wh-table .wh-tier-vol { font-weight: 600; color: var(--text-dim); background: rgba(255, 255, 255, 0.04); }
+.wh-table tfoot .wh-vol { color: var(--accent); }
+/* График объёма */
+.wh-chart { margin: 0; padding: 0.5rem 0.6rem 0.4rem; background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.wh-ch-title { margin-bottom: 0.3rem; font-size: 0.8rem; color: var(--text-dim); }
+.wh-chart svg { display: block; max-width: 100%; height: auto; }
+.wh-ch-grid { stroke: var(--border); stroke-width: 1; }
+.wh-ch-axis { stroke: var(--border-lit); stroke-width: 1; }
+.wh-ch-ytick, .wh-ch-xtick { fill: var(--text-faint); font-size: 10px; font-variant-numeric: tabular-nums; }
+.wh-ch-ytick { text-anchor: end; }
+.wh-ch-xtick { text-anchor: middle; }
+.wh-ch-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.wh-ch-dot { fill: var(--accent); stroke: var(--bg-deep); stroke-width: 2; }
+.wh-ch-hit { fill: transparent; cursor: default; }
+.wh-ch-hit:hover { fill: rgba(255, 255, 255, 0.04); }
+.wh-ch-note { margin: 0.3rem 0 0; font-size: 0.74rem; color: var(--text-faint); max-width: 420px; }
