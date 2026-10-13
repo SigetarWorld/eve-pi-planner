@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 16:20';
+const APP_BUILD = '13.10.2026 16:30';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -2810,9 +2810,9 @@ async function loadCharAssets(char, corpId) {
     }
     const byItem = new Map(items.map((x) => [x.item_id, x]));
     // Имена контейнеров и кораблей (то, во что что-то вложено, и собранные корабли)
-    const parents = new Set(items.map((y) => y.location_id));
-    const named = items.filter((x) => x.is_singleton && x.location_flag !== 'OfficeFolder'
-        && (parents.has(x.item_id) || /Container|Ship/i.test(x.location_flag || '')));
+    // Имена — у всех собранных предметов (контейнеры, в т.ч. пустые, корабли),
+    // кроме самого офиса: у него имени нет
+    const named = items.filter((x) => x.is_singleton && x.location_flag !== 'OfficeFolder');
     const names = new Map();
     for (let i = 0; i < named.length; i += 1000) {
         try {
