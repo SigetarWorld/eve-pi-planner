@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 15:20';
+const APP_BUILD = '13.10.2026 15:30';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3652,7 +3652,7 @@ function handleViewClick(event) {
             card.dataset.showTiers = '';
         } else {
             card.querySelectorAll('.uv-colony > .uv-node').forEach((n) => {
-                if (n.querySelector(':scope > .uv-kids')) n.dataset.open = '1';
+                if (n.querySelector(':scope > .uv-kids')) n.dataset.auto = '1';
             });
             card.dataset.showTiers = VIEW_TIERS.join(',');
         }
@@ -3669,8 +3669,10 @@ function handleViewClick(event) {
             delete top.dataset.auto;
             top.querySelectorAll('.uv-node[data-open]').forEach((n) => { delete n.dataset.open; });
         } else {
-            // развернуть — до самого низа: включаются все уровни
-            top.dataset.open = '1';
+            /* развернуть — до самого низа: включаются все уровни. Колония
+               раскрыта «по уровням» (data-auto), поэтому кнопки P0–P4
+               потом прячут и показывают в ней любой уровень */
+            top.dataset.auto = '1';
             card.dataset.showTiers = VIEW_TIERS.join(',');
         }
         const tops = Array.from(card.querySelectorAll('.uv-colony > .uv-node'));
