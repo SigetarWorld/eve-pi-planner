@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 22:25';
+const APP_BUILD = '13.10.2026 22:35';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3185,7 +3185,6 @@ const whAvaHtml = (o) => (o.kind === 'char'
     ? `<img class="wh-ava" src="${evePortrait(o.char.characterId)}" alt="" width="20" height="20">`
     : `<img class="wh-ava" src="https://images.evetech.net/corporations/${o.corpId}/logo?size=32" alt="" width="20" height="20">`);
 const whFmt = (n) => (n ? Math.floor(n).toLocaleString('ru-RU') : '');
-const whResHtml = (n) => `${tierBadgeHtml(`P${piTierOf(n)}`)}<span class="st-name-inner">${iconFor(n) || ''}<span lang="en">${escapeHtml(n)}</span></span>`;
 
 function warehouseHtml(owners) {
     if (!owners.length) return '<p class="evt-dim">Планетарки на складах нет</p>';
@@ -3220,22 +3219,25 @@ function warehouseHtml(owners) {
     }));
     const byTier = (a, b) => piTierOf(b[0]) - piTierOf(a[0]) || a[0].localeCompare(b[0]);
     const placeKey = (p) => `${p.region || 'я'}|${p.system || ''}|${p.station || ''}`;
+    /* Станция — карточка, как карточка персонажа: в шапке станция,
+       под ней регион › система; внутри — места хранения (владелец · где),
+       под каждым товары строками «[P2] значок Название – количество». */
     const where = Array.from(stations.values())
         .sort((a, b) => placeKey(a.place).localeCompare(placeKey(b.place)))
-        .map(({ place, spots }) => {
-            const count = Array.from(spots.values()).reduce((n, sp) => n + sp.items.size, 0);
-            return `<details class="wh-st" open><summary>
-                    <span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span>
-                    <span class="wh-system">${escapeHtml(place.system || 'Система ?')}</span><span class="uv-sep">›</span>
-                    <b class="wh-station">${escapeHtml(place.station || '')}</b>
-                    <span class="evt-dim">· товаров ${count}</span></summary>
-                ${Array.from(spots.values()).map((sp) => `<div class="wh-spot">
-                    <div class="wh-spot-head">${whAvaHtml(sp.owner)}<span class="wh-owner">${escapeHtml(sp.owner.title)}</span>
-                        <span class="uv-sep">·</span><span class="wh-path">${escapeHtml(sp.path)}</span></div>
-                    ${Array.from(sp.items.entries()).sort(byTier).map(([n, q]) => `<div class="wh-line">${whResHtml(n)}<span class="wh-q">${whFmt(q)}</span></div>`).join('')}
-                </div>`).join('')}
-            </details>`;
-        }).join('');
+        .map(({ place, spots }) => `
+            <div class="uv wh-card">
+                <div class="uv-head wh-card-head">
+                    <h3 class="ct-pilot-name wh-station" title="${escapeHtml(place.station || '')}">${escapeHtml(place.station || '')}</h3>
+                    <span class="wh-loc"><span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span><span class="uv-sys">${escapeHtml(place.system || 'Система ?')}</span></span>
+                </div>
+                <div class="uv-body">${Array.from(spots.values()).map((sp) => `
+                    <div class="uv-colony wh-spot">
+                        <div class="uv-line wh-spot-head"><span class="uv-where"><span class="uv-icon">${whAvaHtml(sp.owner)}</span><span class="wh-owner">${escapeHtml(sp.owner.title)}</span></span></div>
+                        <div class="wh-path">${escapeHtml(sp.path)}</div>
+                        ${Array.from(sp.items.entries()).sort(byTier).map(([n, q]) => `<div class="uv-line wh-line">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${whFmt(q)}</span></div>`).join('')}
+                    </div>`).join('')}
+                </div>
+            </div>`).join('');
     return `<div class="st-scroll"><table class="stats-p1 wh-table">
             <thead><tr><th scope="col" class="st-name">Товар</th>${head}<th scope="col" class="wh-col">Всего</th></tr></thead>
             <tbody>${rows}</tbody></table></div>
