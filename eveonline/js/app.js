@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 22:45';
+const APP_BUILD = '13.10.2026 22:55';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3059,7 +3059,7 @@ const whPlaces = new Map();
 const whSystemNames = new Map();
 async function whPlaceOf(loc, char) {
     if (whPlaces.has(loc)) return whPlaces.get(loc);
-    const place = { station: '', system: '', region: '', typeId: 0 };
+    const place = { station: '', system: '', region: '', typeId: 0, sec: null };
     let systemId = 0;
     try {
         if (loc >= 60000000 && loc < 64000000) {
@@ -3082,9 +3082,11 @@ async function whPlaceOf(loc, char) {
     if (!place.station) place.station = loc > 1e12 ? `Структура ${loc}` : `Место ${loc}`;
     if (systemId) {
         if (!whSystemNames.has(systemId)) {
-            whSystemNames.set(systemId, await esiPublicJson(`/universe/systems/${systemId}/`).then((x) => x.name).catch(() => ''));
+            whSystemNames.set(systemId, await esiPublicJson(`/universe/systems/${systemId}/`)
+                .then((x) => ({ name: x.name, sec: x.security_status })).catch(() => ({ name: '', sec: null })));
         }
-        place.system = whSystemNames.get(systemId);
+        place.system = whSystemNames.get(systemId).name;
+        place.sec = whSystemNames.get(systemId).sec;
         place.region = whRegionOf(place.system);
     }
     // структура: «Система - Название» — система уже есть, оставляем название
@@ -3188,6 +3190,15 @@ async function loadWarehouse(chars) {
 const whAvaHtml = (o) => (o.kind === 'char'
     ? `<img class="wh-ava" src="${evePortrait(o.char.characterId)}" alt="" width="20" height="20">`
     : `<img class="wh-ava" src="https://images.evetech.net/corporations/${o.corpId}/logo?size=32" alt="" width="20" height="20">`);
+/* Безопасность системы, как в игре: округление до 0.1; от 0.5 — Hi,
+   выше 0 — Low, иначе Null (J-системы — W-space). */
+function whSecHtml(place) {
+    if (place.sec === null || place.sec === undefined) return '';
+    const v = Math.round(place.sec * 10) / 10;
+    const kind = /^J\d{6}$/.test(place.system || '') ? 'w' : v >= 0.5 ? 'hi' : v > 0 ? 'low' : 'null';
+    const label = { hi: 'Hi', low: 'Low', null: 'Null', w: 'W' }[kind];
+    return `<span class="wh-sec wh-sec-${kind}" title="Безопасность системы ${v.toFixed(1)}">${label} ${v.toFixed(1)}</span>`;
+}
 const whFmt = (n) => (n ? Math.floor(n).toLocaleString('ru-RU') : '');
 
 function warehouseHtml(owners) {
@@ -3227,33 +3238,41 @@ function warehouseHtml(owners) {
     const byTier = (a, b) => piTierOf(b[0]) - piTierOf(a[0]) || a[0].localeCompare(b[0]);
     const placeOf = (top) => whPlaces.get(top) || {};
     const placeKey = (p) => `${p.region || 'я'}|${p.system || ''}|${p.station || ''}`;
-    const ownerOrder = (o) => owners.indexOf(o);
-    const where = Array.from(cards.values())
-        .sort((a, b) => placeKey(placeOf(a.top)).localeCompare(placeKey(placeOf(b.top))) || ownerOrder(a.owner) - ownerOrder(b.owner))
-        .map(({ owner, top, spots }) => {
-            const place = placeOf(top);
-            const type = place.typeId ? esiTypeName(place.typeId) : '';
-            const station = type && !type.startsWith('#') ? `${type} (${place.station})` : place.station || '';
-            return `
+    const cardHtml = ({ owner, top, spots }) => {
+        const place = placeOf(top);
+        const type = place.typeId ? esiTypeName(place.typeId) : '';
+        const station = type && !type.startsWith('#') ? `${type} (${place.station})` : place.station || '';
+        return `
             <div class="uv wh-card">
                 <div class="uv-head wh-card-head">
-                    <span class="uv-icon">${whAvaHtml(owner)}</span>
-                    <h3 class="ct-pilot-name wh-owner-name" title="${escapeHtml(owner.title)}">${escapeHtml(owner.title)}</h3>
-                    <span class="wh-loc"><span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span><span class="uv-sys">${escapeHtml(place.system || 'Система ?')}</span><span class="uv-sep">›</span><span class="wh-station">${escapeHtml(station)}</span></span>
+                    <span class="wh-loc"><span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span><span class="uv-sys">${escapeHtml(place.system || 'Система ?')}</span>${whSecHtml(place)}<span class="uv-sep">›</span><span class="wh-station">${escapeHtml(station)}</span></span>
                 </div>
                 <div class="uv-body">${Array.from(spots.entries()).map(([path, items]) => `
                     <div class="uv-colony wh-spot">
                         <div class="wh-path">${escapeHtml(path)}</div>
-                        ${Array.from(items.entries()).sort(byTier).map(([n, q]) => `<div class="uv-line wh-line">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${whFmt(q)}</span></div>`).join('')}
+                        <div class="wh-items">${Array.from(items.entries()).sort(byTier).map(([n, q]) => `<div class="uv-line wh-line">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${whFmt(q)}</span></div>`).join('')}</div>
+                        <button type="button" class="uv-fold" data-role="wh-fold" aria-expanded="true" title="Свернуть" aria-label="Свернуть">−</button>
                     </div>`).join('')}
                 </div>
             </div>`;
-        }).join('');
-    return `<div class="st-scroll"><table class="stats-p1 wh-table">
-            <thead><tr><th scope="col" class="st-name">Товар</th>${head}<th scope="col" class="wh-col">Всего</th></tr></thead>
-            <tbody>${rows}</tbody></table></div>
-        <h4 class="wh-h">Где лежит</h4>
-        <div class="wh-where">${where}</div>`;
+    };
+    // колонка на владельца: сверху аккаунт, ниже его станции карточками
+    const list = Array.from(cards.values());
+    const where = owners.map((o) => {
+        const own = list.filter((c) => c.owner === o)
+            .sort((a, b) => placeKey(placeOf(a.top)).localeCompare(placeKey(placeOf(b.top))));
+        return `<div class="wh-owner-col">
+                <div class="wh-owner-head"><span class="uv-icon">${whAvaHtml(o)}</span><h3 class="ct-pilot-name wh-owner-name" title="${escapeHtml(o.title)}">${escapeHtml(o.title)}</h3></div>
+                ${own.map(cardHtml).join('')}
+            </div>`;
+    }).join('');
+    return `<div class="wh-layout">
+            <div class="st-scroll wh-sum-box"><table class="stats-p1 wh-table">
+                <thead><tr><th scope="col" class="st-name">Товар</th>${head}<th scope="col" class="wh-col">Всего</th></tr></thead>
+                <tbody>${rows}</tbody></table></div>
+            <section class="wh-where-box"><h4 class="wh-h">Где лежит</h4>
+                <div class="wh-where">${where}</div></section>
+        </div>`;
 }
 
 async function renderWarehouse() {
@@ -3284,6 +3303,17 @@ async function renderWarehouse() {
         modal.hidden = false;
         modal.querySelector('.ct-modal-close').focus();
         renderWarehouse();
+    });
+    // круглая кнопка у пути — свернуть / развернуть товары этого места
+    modal.addEventListener('click', (event) => {
+        const fold = event.target.closest('[data-role="wh-fold"]');
+        if (!fold) return;
+        const open = fold.getAttribute('aria-expanded') !== 'true';
+        fold.closest('.wh-spot').querySelector('.wh-items').hidden = !open;
+        fold.setAttribute('aria-expanded', String(open));
+        fold.textContent = open ? '−' : '+';
+        fold.title = open ? 'Свернуть' : 'Развернуть';
+        fold.setAttribute('aria-label', fold.title);
     });
     modal.querySelector('.ct-modal-close').addEventListener('click', close);
     modal.addEventListener('click', (event) => {

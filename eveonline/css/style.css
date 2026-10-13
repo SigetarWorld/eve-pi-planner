@@ -4850,14 +4850,28 @@ input.chain-amount:focus {
 .wh-table .wh-n { text-align: right; min-width: 3.5rem; color: var(--text); font-variant-numeric: tabular-nums; }
 .wh-table .wh-sum { font-weight: 700; color: var(--accent); }
 .wh-table .wh-tier th { text-align: left; background: rgba(255, 255, 255, 0.04); }
-/* Где лежит — карточки станций в стиле карточек персонажей */
-.wh-h { margin: 0.9rem 0 0.5rem; font-family: var(--font-heading); font-size: 0.9rem; color: var(--accent); }
-.wh-where { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 0.6rem; align-items: start; }
-.wh-card-head { flex-wrap: wrap; row-gap: 0.15rem; column-gap: 0.4rem; }
-.wh-card .wh-owner-name { flex: 1 1 auto; max-width: none; }
-.wh-card-head .uv-icon .wh-ava { width: 100%; height: 100%; margin: 0; }
-.wh-loc { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; font-size: 0.78rem; }
+/* Где лежит — справа от итоговой таблицы; колонка на владельца,
+   в ней карточки станций в стиле карточек персонажей */
+.wh-layout { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1rem; }
+.wh-sum-box { flex: 0 0 auto; }
+.wh-where-box { flex: 1 1 22rem; min-width: 0; }
+.wh-h { margin: 0 0 0.5rem; font-family: var(--font-heading); font-size: 0.9rem; color: var(--accent); }
+.wh-where { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0.6rem; }
+.wh-owner-col { flex: 1 1 20rem; max-width: 26rem; min-width: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.wh-owner-head { display: flex; align-items: center; gap: 0.4rem; }
+.wh-owner-head .uv-icon .wh-ava { width: 100%; height: 100%; margin: 0; }
+.wh-owner-col .wh-owner-name { max-width: none; }
+.wh-card-head { padding: 0.35rem 0.6rem; }
+.wh-loc { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; font-size: 0.8rem; }
 .wh-region { color: var(--text-dim); }
 .wh-station { color: var(--text); }
-.wh-path { padding: 0 0 0.1rem; font-size: 0.78rem; color: var(--text-dim); }
+.wh-sec { padding: 0 0.3rem; font-size: 0.7rem; font-weight: 700; border: 1px solid currentColor; border-radius: 3px; font-variant-numeric: tabular-nums; }
+.wh-sec-hi { color: var(--green); }
+.wh-sec-low { color: var(--yellow); }
+.wh-sec-null { color: var(--red); }
+.wh-sec-w { color: #c9a7ff; }
+.wh-spot { min-height: 30px; }
+.wh-path { padding: 0.15rem 0 0.1rem; font-size: 0.78rem; color: var(--text-dim); }
+.wh-items[hidden] { display: none; }
 .wh-line { padding-left: 0.6rem; }
+#wh-modal .stats-modal-box { width: min(1400px, calc(100vw - 2rem)); }
