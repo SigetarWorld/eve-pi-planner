@@ -1984,7 +1984,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '13.10.2026 15:05';
+const APP_BUILD = '13.10.2026 15:20';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -4397,6 +4397,29 @@ initEveAuth().finally(startEveAutoSnaps);
     document.body.append(line, box);
     let cur = null;
     let timer = 0;
+    /* Системная подсказка браузера не нужна нигде: любой title, где бы и
+       когда бы его ни поставили (списки, кнопки, карта), сразу переносим
+       в data-tip — иначе местами всплывали две подсказки. */
+    const adopt = (el) => {
+        const t = el.getAttribute('title');
+        el.removeAttribute('title');
+        if (!t) return;
+        el.dataset.tip = t;
+        if (!el.hasAttribute('aria-label') && !el.textContent.trim()) el.setAttribute('aria-label', t.replace(/\n/g, ', '));
+        if (el === cur && !box.hidden) fill(t);
+    };
+    document.querySelectorAll('[title]').forEach(adopt);
+    new MutationObserver((list) => list.forEach((m) => {
+        if (m.type === 'attributes') {
+            if (m.target.hasAttribute && m.target.hasAttribute('title')) adopt(m.target);
+        } else {
+            m.addedNodes.forEach((n) => {
+                if (n.nodeType !== 1) return;
+                if (n.hasAttribute('title')) adopt(n);
+                n.querySelectorAll('[title]').forEach(adopt);
+            });
+        }
+    })).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['title'] });
     const hide = () => {
         clearTimeout(timer);
         box.hidden = true;
@@ -4423,12 +4446,13 @@ initEveAuth().finally(startEveAutoSnaps);
         const dx = 22;                    // наискосок
         const run = 30;                   // и вбок
         const right = cx + dx + run + w < window.innerWidth - 6;
-        const down = cy + dx + h < window.innerHeight - 6;
+        // по умолчанию — над кнопкой; места сверху нет — под ней
+        const down = cy - dx - h < 6;
         const ex = cx + (right ? dx : -dx);
         const ey = cy + (down ? dx : -dx);
         const fx = ex + (right ? run : -run);
         const bx = right ? fx : fx - w;
-        const by = ey - 11;               // линия упирается в середину первой строки
+        const by = down ? ey - 11 : ey - h + 11;   // линия упирается в середину строки
         box.style.left = `${Math.round(bx)}px`;
         box.style.top = `${Math.round(by)}px`;
         const minX = Math.min(cx, fx) - 3;
@@ -4450,13 +4474,7 @@ initEveAuth().finally(startEveAutoSnaps);
     document.addEventListener('mouseover', (event) => {
         const el = event.target.closest && event.target.closest('[title], [data-tip]');
         if (!el || el === cur) return;
-        if (el.hasAttribute('title')) {
-            const t = el.getAttribute('title');
-            el.removeAttribute('title');
-            if (!t) return;
-            el.dataset.tip = t;
-            if (!el.hasAttribute('aria-label') && !el.textContent.trim()) el.setAttribute('aria-label', t.replace(/\n/g, ', '));
-        }
+        if (el.hasAttribute('title')) adopt(el);
         if (!el.dataset.tip) return;
         cur = el;
         clearTimeout(timer);
