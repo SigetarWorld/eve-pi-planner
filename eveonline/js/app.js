@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '18.10.2026 22:00';
+const APP_BUILD = '18.10.2026 22:05';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3351,12 +3351,13 @@ function whChartHtml(names, owners) {
         return WH_SERIES_COLORS[same.indexOf(n)] || WH_SERIES_OTHER;
     };
     const fmtTick = (t) => (t >= 1e6 ? `${(t / 1e6).toLocaleString('ru-RU')} млн` : t >= 1e3 ? `${(t / 1e3).toLocaleString('ru-RU')} тыс` : t.toLocaleString('ru-RU'));
-    const W = 460;
-    const H = 170;
-    const L = 52;
-    const R = 22;
-    const T = 10;
-    const B = 22;
+    // компактная карточка графика: три в ряд
+    const W = 340;
+    const H = 120;
+    const L = 58;
+    const R = 16;
+    const T = 8;
+    const B = 18;
     const x = (i) => L + (i * (W - L - R)) / 9;
     let sid = 0;
     const charts = [4, 3, 2, 1, 0].map((tier) => {
@@ -3369,7 +3370,7 @@ function whChartHtml(names, owners) {
         const y = (v) => T + (H - T - B) * (1 - v / top);
         const grid = [0, 0.25, 0.5, 0.75, 1].map((k) => k * top).map((t) => `<line class="wh-ch-gridline" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/>`
             + `<text class="wh-ch-ytick" x="${L - 6}" y="${y(t) + 3.5}">${fmtTick(t)}</text>`).join('');
-        const xl = days.map((d, i) => `<text class="wh-ch-xtick" x="${x(i)}" y="${H - 6}">${d.label}</text>`).join('');
+        const xl = days.map((d, i) => (i % 2 === 1 ? `<text class="wh-ch-xtick" x="${x(i)}" y="${H - 5}">${d.label}</text>` : '')).join('');
         const lines = series.map(({ n, c, vals, s: si }) => {
             const runs = [];
             let run = [];
@@ -3380,7 +3381,7 @@ function whChartHtml(names, owners) {
             const tip = `${n}\n${vals.map((v, i) => (v === null ? '' : `${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')}`)).filter(Boolean).join('\n')}`;
             return `<g class="wh-ch-series" data-s="${si}" style="--c:${c}">
                     ${runs.filter((r) => r.length > 1).map((r) => `<polyline class="wh-ch-line" points="${r.join(' ')}"/><polyline class="wh-ch-hitline" points="${r.join(' ')}" title="${escapeHtml(tip)}"/>`).join('')}
-                    ${vals.map((v, i) => (v === null ? '' : `<circle class="wh-ch-dot" cx="${x(i)}" cy="${y(v)}" r="3.5" title="${escapeHtml(`${n}\n${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')} шт`)}"/>`)).join('')}
+                    ${vals.map((v, i) => (v === null ? '' : `<circle class="wh-ch-dot" cx="${x(i)}" cy="${y(v)}" r="2.8" title="${escapeHtml(`${n}\n${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')} шт`)}"/>`)).join('')}
                 </g>`;
         }).join('');
         const legend = series.map(({ n, c, vals, s: si }) => {
@@ -3388,7 +3389,7 @@ function whChartHtml(names, owners) {
             return `<li class="wh-lg-item" data-s="${si}" style="--c:${c}"><span class="wh-lg-swatch"></span><span class="wh-lg-name" lang="en">${escapeHtml(n)}</span><span class="wh-lg-last">${last === undefined ? '—' : whFmt(last) || '0'}</span></li>`;
         }).join('');
         return `<figure class="wh-chart wh-chart-tier">
-                <figcaption class="wh-ch-title">${tierBadgeHtml(`P${tier}`)}<span>Количество, шт · 10 дней</span></figcaption>
+                <figcaption class="wh-ch-title">${tierBadgeHtml(`P${tier}`)}<span>шт · 10 дней</span></figcaption>
                 <svg class="wh-ch-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="P${tier}: количество по дням">
                     ${grid}<line class="wh-ch-axis" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>${xl}${lines}
                 </svg>

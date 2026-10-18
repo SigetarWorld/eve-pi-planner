@@ -4968,7 +4968,7 @@ input.chain-amount:focus {
 
 /* График справа — все ресурсы на одном графике, шкала логарифмическая */
 /* пять графиков по уровням — сеткой справа от таблицы */
-.uv.wh-sum-box .wh-charts { flex: 1 1 30rem; min-width: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 0.6rem; align-items: start; }
+.uv.wh-sum-box .wh-charts { flex: 1 1 30rem; min-width: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 0.6rem; align-items: start; }
 .wh-chart-tier .wh-ch-title { display: flex; align-items: center; gap: 0.4rem; }
 .wh-charts > .wh-ch-note { grid-column: 1 / -1; }
 .wh-ch-range { margin-left: 0.4rem; color: var(--text-faint); }
@@ -4990,3 +4990,10 @@ input.chain-amount:focus {
 .wh-lg-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
 .wh-lg-last { margin-left: auto; color: var(--text-dim); font-variant-numeric: tabular-nums; }
 .uv.wh-sum-box { flex: 1 1 100%; min-width: 0; }
+
+/* компактные карточки графиков по уровням */
+.wh-chart-tier { padding: 0.35rem 0.45rem 0.3rem; }
+.wh-chart-tier .wh-ch-title { margin-bottom: 0.15rem; font-size: 0.74rem; }
+.wh-chart-tier .wh-ch-svg { max-height: 120px; }
+.wh-chart-tier .wh-legend { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); margin-top: 0.2rem; font-size: 0.7rem; gap: 0.05rem 0.6rem; }
+.uv.wh-sum-box .wh-charts { gap: 0.45rem; }
