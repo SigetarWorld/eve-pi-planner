@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '18.10.2026 23:05';
+const APP_BUILD = '18.10.2026 23:10';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3188,12 +3188,14 @@ async function loadWarehouse(chars) {
                     divisions = await eveFetchJson(`${ESI_BASE}/corporations/${corpId}/divisions/?datasource=tranquility`, {}, char.characterId)
                         .then((d) => d.hangar || []).catch(() => []);
                 }
+                /* Имущество корпорации EVE может отдать персонажу, а имена
+                   контейнеров — нет (так у IskMen): тогда тег [Sigetar] не
+                   найти. Пустой результат — не конец: пробуем следующего. */
                 const entries = whEntriesOf(data, divisions, true);
-                if (entries.length) {
-                    // eslint-disable-next-line no-await-in-loop
-                    const title = await esiPublicJson(`/corporations/${corpId}/`).then((x) => x.name).catch(() => String(corpId));
-                    list.push({ kind: 'corp', corpId, char, title: `${title} [Sigetar]`, entries });
-                }
+                if (!entries.length) continue;
+                // eslint-disable-next-line no-await-in-loop
+                const title = await esiPublicJson(`/corporations/${corpId}/`).then((x) => x.name).catch(() => String(corpId));
+                list.push({ kind: 'corp', corpId, char, title: `${title} [Sigetar]`, entries });
                 break;
             } catch (e) {
                 // нет роли Director — пробуем следующего
