@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '14.10.2026 01:25';
+const APP_BUILD = '18.10.2026 22:00';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3320,12 +3320,15 @@ function whSaveHistory(owners) {
     store.set(WH_HIST_KEY, hist);
 }
 
-/* График справа — количество каждого ресурса за 10 дней, все на одном
-   графике. Количества отличаются в тысячи раз, поэтому шкала по
-   вертикали логарифмическая (1, 10, 100…). Цвет линии — уровень товара;
-   какая линия чья — в подсказке и в легенде (наведение выделяет линию).
-   Только видимое в таблице: открытые уровни и выбранные склады. */
-const WH_TIER_COLORS = ['#9aa6b8', '#ff9d2e', '#4ec9e0', '#7fb0ff', '#c9a7ff'];
+/* Графики справа — по одному на уровень ([P4]…[P0]), количество каждого
+   ресурса за 10 дней. Внутри уровня количества сопоставимы — шкала
+   обычная, от нуля. Цвета линий — восемь проверенных цветов по порядку
+   (палитра для тёмного фона); цвет закреплён за ресурсом: номер — по
+   алфавиту среди всех ресурсов уровня на складах, поэтому смена склада в
+   списке цвета не перекрашивает. С девятого ресурса — серый, его линию
+   находят по легенде и подсказке. Свёрнутые уровни графика не имеют. */
+const WH_SERIES_COLORS = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'];
+const WH_SERIES_OTHER = '#7d8796';
 function whChartHtml(names, owners) {
     const hist = store.get(WH_HIST_KEY, {}) || {};
     const keys = new Set(owners.map(whOwnerKey));
@@ -3341,50 +3344,60 @@ function whChartHtml(names, owners) {
         Object.entries(rec).forEach(([key, o]) => { if (keys.has(key)) q += (o.items || {})[name] || 0; });
         return q;
     };
-    const series = names.map((n) => ({ n, vals: days.map((d) => qtyOn(d.key, n)) }));
-    const all = series.flatMap((x) => x.vals).filter((v) => v !== null && v > 0);
-    const top = 10 ** Math.max(1, Math.ceil(Math.log10(Math.max(10, ...all))));
-    const W = 560;
-    const H = 260;
+    // все ресурсы на складах (без фильтра склада) — для постоянных цветов
+    const allNames = uniqValues(whLast.flatMap((o) => o.entries.map((e) => e.name)));
+    const colorOf = (n) => {
+        const same = allNames.filter((x2) => piTierOf(x2) === piTierOf(n)).sort((a, b) => a.localeCompare(b));
+        return WH_SERIES_COLORS[same.indexOf(n)] || WH_SERIES_OTHER;
+    };
+    const fmtTick = (t) => (t >= 1e6 ? `${(t / 1e6).toLocaleString('ru-RU')} млн` : t >= 1e3 ? `${(t / 1e3).toLocaleString('ru-RU')} тыс` : t.toLocaleString('ru-RU'));
+    const W = 460;
+    const H = 170;
     const L = 52;
     const R = 22;
     const T = 10;
-    const B = 24;
+    const B = 22;
     const x = (i) => L + (i * (W - L - R)) / 9;
-    const y = (v) => T + (H - T - B) * (1 - Math.log10(Math.max(1, v)) / Math.log10(top));
-    const ticks = [];
-    for (let t = 1; t <= top; t *= 10) ticks.push(t);
-    const grid = ticks.map((t) => `<line class="wh-ch-gridline" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/>`
-        + `<text class="wh-ch-ytick" x="${L - 6}" y="${y(t) + 3.5}">${t >= 1e6 ? `${t / 1e6} млн` : t >= 1e3 ? `${t / 1e3} тыс` : t}</text>`).join('');
-    const xl = days.map((d, i) => `<text class="wh-ch-xtick" x="${x(i)}" y="${H - 7}">${d.label}</text>`).join('');
-    const lines = series.map(({ n, vals }, si) => {
-        const color = WH_TIER_COLORS[piTierOf(n)];
-        const runs = [];
-        let run = [];
-        vals.forEach((v, i) => {
-            if (v === null) { if (run.length) runs.push(run); run = []; } else run.push(`${x(i)},${y(v)}`);
-        });
-        if (run.length) runs.push(run);
-        const last = vals.filter((v) => v !== null).pop();
-        const tip = `${n}\n${vals.map((v, i) => (v === null ? '' : `${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')}`)).filter(Boolean).join('\n')}`;
-        return `<g class="wh-ch-series" data-s="${si}" style="--c:${color}">
-                ${runs.filter((r) => r.length > 1).map((r) => `<polyline class="wh-ch-line" points="${r.join(' ')}"/><polyline class="wh-ch-hitline" points="${r.join(' ')}" title="${escapeHtml(tip)}"/>`).join('')}
-                ${vals.map((v, i) => (v === null ? '' : `<circle class="wh-ch-dot" cx="${x(i)}" cy="${y(v)}" r="3.5" title="${escapeHtml(`${n}\n${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')} шт`)}"/>`)).join('')}
-            </g>`;
-    }).join('');
-    const legend = series.map(({ n, vals }, si) => {
-        const last = vals.filter((v) => v !== null).pop();
-        return `<li class="wh-lg-item" data-s="${si}" style="--c:${WH_TIER_COLORS[piTierOf(n)]}"><span class="wh-lg-swatch"></span>${tierBadgeHtml(`P${piTierOf(n)}`)}<span class="wh-lg-name" lang="en">${escapeHtml(n)}</span><span class="wh-lg-last">${last === undefined ? '—' : whFmt(last) || '0'}</span></li>`;
+    let sid = 0;
+    const charts = [4, 3, 2, 1, 0].map((tier) => {
+        const list = names.filter((n) => piTierOf(n) === tier);
+        if (!list.length) return '';
+        const series = list.map((n) => ({ n, c: colorOf(n), vals: days.map((d) => qtyOn(d.key, n)), s: sid++ }));
+        const max = Math.max(1, ...series.flatMap((x2) => x2.vals).filter((v) => v !== null));
+        const pow = 10 ** Math.floor(Math.log10(max));
+        const top = [1, 2, 2.5, 5, 10].map((k) => k * pow).find((v) => v >= max);
+        const y = (v) => T + (H - T - B) * (1 - v / top);
+        const grid = [0, 0.25, 0.5, 0.75, 1].map((k) => k * top).map((t) => `<line class="wh-ch-gridline" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/>`
+            + `<text class="wh-ch-ytick" x="${L - 6}" y="${y(t) + 3.5}">${fmtTick(t)}</text>`).join('');
+        const xl = days.map((d, i) => `<text class="wh-ch-xtick" x="${x(i)}" y="${H - 6}">${d.label}</text>`).join('');
+        const lines = series.map(({ n, c, vals, s: si }) => {
+            const runs = [];
+            let run = [];
+            vals.forEach((v, i) => {
+                if (v === null) { if (run.length) runs.push(run); run = []; } else run.push(`${x(i)},${y(v)}`);
+            });
+            if (run.length) runs.push(run);
+            const tip = `${n}\n${vals.map((v, i) => (v === null ? '' : `${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')}`)).filter(Boolean).join('\n')}`;
+            return `<g class="wh-ch-series" data-s="${si}" style="--c:${c}">
+                    ${runs.filter((r) => r.length > 1).map((r) => `<polyline class="wh-ch-line" points="${r.join(' ')}"/><polyline class="wh-ch-hitline" points="${r.join(' ')}" title="${escapeHtml(tip)}"/>`).join('')}
+                    ${vals.map((v, i) => (v === null ? '' : `<circle class="wh-ch-dot" cx="${x(i)}" cy="${y(v)}" r="3.5" title="${escapeHtml(`${n}\n${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')} шт`)}"/>`)).join('')}
+                </g>`;
+        }).join('');
+        const legend = series.map(({ n, c, vals, s: si }) => {
+            const last = vals.filter((v) => v !== null).pop();
+            return `<li class="wh-lg-item" data-s="${si}" style="--c:${c}"><span class="wh-lg-swatch"></span><span class="wh-lg-name" lang="en">${escapeHtml(n)}</span><span class="wh-lg-last">${last === undefined ? '—' : whFmt(last) || '0'}</span></li>`;
+        }).join('');
+        return `<figure class="wh-chart wh-chart-tier">
+                <figcaption class="wh-ch-title">${tierBadgeHtml(`P${tier}`)}<span>Количество, шт · 10 дней</span></figcaption>
+                <svg class="wh-ch-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="P${tier}: количество по дням">
+                    ${grid}<line class="wh-ch-axis" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>${xl}${lines}
+                </svg>
+                <ul class="wh-legend">${legend}</ul>
+            </figure>`;
     }).join('');
     const filled = Object.keys(hist).filter((k) => k >= days[0].key).length;
     const note = filled < 2 ? '<p class="wh-ch-note">История копится: срез сохраняется раз в день, когда открываете «Склад».</p>' : '';
-    return `<figure class="wh-chart">
-            <figcaption class="wh-ch-title">Количество, шт · 10 дней <span class="wh-ch-range">шкала логарифмическая</span></figcaption>
-            ${series.length ? `<svg class="wh-ch-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Количество ресурсов по дням">
-                ${grid}<line class="wh-ch-axis" x1="${L}" x2="${W - R}" y1="${y(1)}" y2="${y(1)}"/>${xl}${lines}
-            </svg>
-            <ul class="wh-legend">${legend}</ul>` : '<p class="wh-ch-note">Нет открытых уровней</p>'}${note}
-        </figure>`;
+    return `<div class="wh-charts">${charts || '<p class="wh-ch-note">Нет открытых уровней</p>'}${note}</div>`;
 }
 
 /* Тренд за 2 недели: количество товара сейчас против самого раннего

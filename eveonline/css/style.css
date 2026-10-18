@@ -4967,9 +4967,12 @@ input.chain-amount:focus {
 .wh-table .wh-total .uv-sep { margin: 0 0.3rem; }
 
 /* График справа — все ресурсы на одном графике, шкала логарифмическая */
-.uv.wh-sum-box .wh-chart { flex: 1 1 30rem; min-width: 0; }
+/* пять графиков по уровням — сеткой справа от таблицы */
+.uv.wh-sum-box .wh-charts { flex: 1 1 30rem; min-width: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 0.6rem; align-items: start; }
+.wh-chart-tier .wh-ch-title { display: flex; align-items: center; gap: 0.4rem; }
+.wh-charts > .wh-ch-note { grid-column: 1 / -1; }
 .wh-ch-range { margin-left: 0.4rem; color: var(--text-faint); }
-.wh-ch-svg { display: block; width: 560px; max-width: 100%; height: auto; }
+.wh-ch-svg { display: block; width: 100%; height: auto; }
 .wh-ch-gridline { stroke: var(--border); stroke-width: 1; }
 .wh-ch-ytick, .wh-ch-xtick { fill: var(--text-faint); font-size: 10px; font-variant-numeric: tabular-nums; }
 .wh-ch-ytick { text-anchor: end; }
