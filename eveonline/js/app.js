@@ -2036,7 +2036,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '18.10.2026 23:40';
+const APP_BUILD = '19.10.2026 00:00';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -4408,7 +4408,22 @@ function viewStockOf(name) {
                 .map((p) => ({ pinId: p.pin_id, typeId: p.type_id, items: byPin.get(p.pin_id) || new Map() }))
                 // всегда в одном порядке: Launchpad, Storage Facility, Command Center
                 .sort((a, b) => STORE_ORDER[storeKindOf(a.typeId)] - STORE_ORDER[storeKindOf(b.typeId)] || a.pinId - b.pinId);
-            out.set(planet.name || String(col.planet_id), { stock, where, stores, from: col.last_update });
+            /* Факт для сравнения с планом: всё, что колония выпускает
+               (рецепты фабрик), и P1 из того, что добывают экстракторы */
+            const made = new Set();
+            pins.forEach((p) => {
+                const sid = (p.factory_details && p.factory_details.schematic_id) || p.schematic_id;
+                if (sid && schematics[sid]) made.add(schematics[sid]);
+                const ext = p.extractor_details && PI_NAME_BY_ID.get(p.extractor_details.product_type_id);
+                if (ext) {
+                    made.add(ext);
+                    const r = PI_RECIPES.find((x) => x.outQty === 20 && x.in[0][0] === ext);
+                    if (r && made.has(r.out)) made.add(r.out);
+                }
+            });
+            const tierMax = Math.max(0, ...Array.from(made).map(piTierOf));
+            const main = Array.from(made).filter((n) => piTierOf(n) === tierMax).sort();
+            out.set(planet.name || String(col.planet_id), { stock, where, stores, from: col.last_update, made, main, planetType: PLANET_TYPE_OF_ESI[col.planet_type] || '' });
         });
         return out;
     }).catch(() => {
@@ -4534,7 +4549,7 @@ function cardViewHtml(card) {
         // «DFTK-D II · Barren · ▸ [P4] Wetware Mainframe – 6» — одной строкой
         const where = `<span class="uv-where">${c.planet ? `<span class="uv-icon uv-planet-icon"><img src="img/planets/${escapeHtml(c.planet.toLowerCase())}.png" alt="" width="24" height="24" loading="lazy" onerror="this.remove()"></span>` : ''}<span class="uv-sys">${escapeHtml([system || 'Система не выбрана', c.planet ? c.number : ''].filter(Boolean).join(' '))}</span><span class="uv-ptype">· ${escapeHtml(c.planet || 'планета не выбрана')}</span><span class="uv-stores" data-role="uv-stores"></span><span class="uv-sep">·</span></span>`;
         return `
-            <div class="uv-colony" data-planet="${escapeHtml(key)}">
+            <div class="uv-colony" data-planet="${escapeHtml(key)}" data-prod="${escapeHtml(c.prod)}">
                 ${viewNodeHtml(c.prod, c.p0, where)}
                 <button type="button" class="uv-fold" data-role="uv-fold" aria-expanded="false"
                         title="Развернуть колонию" aria-label="Развернуть колонию">+</button>
@@ -4550,7 +4565,8 @@ function cardViewHtml(card) {
                     ${VIEW_TIERS.map((t) => `<button type="button" class="ct-tier ct-tier-${t.toLowerCase()} uv-tier" data-role="uv-tier" data-tier="${t}" aria-pressed="false" title="Показать все ${t}">${t}</button>`).join('')}
                 </span>
                 <button type="button" class="card-light" aria-pressed="${card.classList.contains('is-lit')}" title="Подсветить карточку" aria-label="Подсветить карточку">💡</button>
-                <button type="button" class="uv-edit" data-role="card-edit" title="Редактировать карточку" aria-label="Редактировать карточку">✎</button>
+                <button type="button" class="uv-edit uv-sync" data-role="card-sync" title="Восстановить из EVE: план карточки заменится тем, что сейчас в колониях (нажать дважды)" aria-label="Восстановить карточку из EVE">⟲</button>
+                <button type="button" class="uv-edit" data-role="card-edit" title="Редактировать план карточки" aria-label="Редактировать карточку">✎</button>
                 <button type="button" class="uv-fold uv-fold-all" data-role="uv-fold-all" title="Развернуть все колонии" aria-label="Развернуть все колонии">+</button>
                 <button type="button" class="account-del" data-role="card-del"
                         title="Удалить карточку" aria-label="Удалить карточку ${safe}">&times;</button>
@@ -4713,7 +4729,95 @@ function renderCardView(card) {
                 else el.title = stocks ? 'Колония не найдена в EVE у этого персонажа' : 'Персонаж не подключён к EVE';
             });
         });
+        if (stocks) planFactMark(view, stocks);
     });
+}
+
+/* ---- План и факт ----
+   То, что в карточке (её редактор), — план: что хочу сделать. Факт —
+   колонии персонажа в EVE. У каждой колонии плана значок:
+     ✓ — в EVE на этой планете так и есть;
+     ≠ — колония есть, но выпускает другое (в подсказке — что);
+     ✗ — колонии на этой планете в EVE ещё нет.
+   Колонии из EVE, которых в плане нет, — списком внизу карточки. */
+function planFactMark(view, stocks) {
+    const planned = new Set();
+    view.querySelectorAll('.uv-colony').forEach((col) => {
+        const key = col.dataset.planet;
+        const prod = col.dataset.prod || '';
+        planned.add(key);
+        const data = stocks.get(key);
+        let cls = 'is-miss';
+        let mark = '✗';
+        let tip = `План: ${prod}\nВ EVE колонии на ${key} ещё нет`;
+        if (data) {
+            if (data.made && data.made.has(prod)) {
+                cls = 'is-ok';
+                mark = '✓';
+                tip = `План: ${prod}\nВ EVE так и есть`;
+            } else {
+                cls = 'is-diff';
+                mark = '≠';
+                tip = `План: ${prod}\nВ EVE выпускает: ${(data.main && data.main.length ? data.main : Array.from(data.made || [])).join(', ') || 'ничего'}`;
+            }
+        }
+        const line = col.querySelector('.uv-node > .uv-line');
+        if (!line) return;
+        const old = line.querySelector('.uv-plan');
+        if (old) old.remove();
+        line.insertAdjacentHTML('afterbegin', `<span class="uv-plan ${cls}" title="${escapeHtml(tip)}">${mark}</span>`);
+    });
+    const body = view.querySelector('.uv-body');
+    if (!body) return;
+    const oldOff = body.querySelector('.uv-offplan');
+    if (oldOff) oldOff.remove();
+    const off = Array.from(stocks.entries()).filter(([key]) => !planned.has(key));
+    if (!off.length) return;
+    body.insertAdjacentHTML('beforeend', `<div class="uv-offplan">
+            <div class="uv-offplan-title" title="Колонии есть в EVE, но в плане карточки их нет">Вне плана</div>
+            ${off.map(([key, d]) => `<div class="uv-line">
+                ${d.planetType ? `<span class="uv-icon uv-planet-icon"><img src="img/planets/${escapeHtml(d.planetType.toLowerCase())}.png" alt="" width="24" height="24" loading="lazy" onerror="this.remove()"></span>` : ''}
+                <span class="uv-sys">${escapeHtml(key)}</span><span class="uv-sep">·</span>
+                ${(d.main && d.main.length ? d.main : []).map((n) => viewResHtml(n)).join('<span class="uv-sep">,</span>') || '<span class="evt-dim">ничего не выпускает</span>'}
+            </div>`).join('')}
+        </div>`);
+}
+
+/* «Восстановить из EVE» на карточке: план заменяется тем, что сейчас
+   в колониях персонажа (как при добавлении карточки). Нажать дважды —
+   первое нажатие только взводит кнопку. Прежний план уходит в корзину,
+   его возвращает «Восстановить карточку». */
+async function syncCardFromEve(card, btn) {
+    const name = card.dataset.name || '';
+    const char = (typeof eveChars === 'function' ? eveChars() : [])
+        .find((c) => (c.characterName || '').toLowerCase() === name.toLowerCase());
+    if (!char) {
+        btn.title = 'Персонаж не подключён к EVE — восстанавливать не из чего';
+        return;
+    }
+    btn.disabled = true;
+    btn.classList.add('is-busy');
+    const { level, saved, note } = await pickCardForCharacter(char);
+    btn.disabled = false;
+    btn.classList.remove('is-busy');
+    if (!saved) {
+        btn.title = note || 'EVE не отдал колонии';
+        return;
+    }
+    const line = card.closest('.account-line');
+    const cards = line.querySelector('[data-role="cards"]');
+    const index = Array.from(cards.children).indexOf(card);
+    cardTrashPush(line, card);
+    card.remove();
+    if (addCard(line, name, saved, level)) {
+        const fresh = cards.lastElementChild;
+        const ref = cards.children[index];
+        if (ref && ref !== fresh) cards.insertBefore(fresh, ref);
+        viewStockCache.delete(char.characterId);
+        setCardView(fresh, true);
+    }
+    refreshLine(line);
+    saveAccounts();
 }
 
 function setCardView(card, on) {
@@ -4736,6 +4840,24 @@ function handleViewClick(event) {
             setCardView(card, true);
             saveAccounts();
         }
+        return true;
+    }
+    const sync = event.target.closest('[data-role="card-sync"]');
+    if (sync) {
+        if (!sync.dataset.armed) {
+            sync.dataset.armed = '1';
+            sync.classList.add('is-armed');
+            sync.dataset.tip = 'Нажмите ещё раз: план карточки заменится тем, что сейчас в EVE (прежний — в корзину)';
+            setTimeout(() => {
+                delete sync.dataset.armed;
+                sync.classList.remove('is-armed');
+                sync.dataset.tip = 'Восстановить из EVE: план карточки заменится тем, что сейчас в колониях (нажать дважды)';
+            }, 4000);
+            return true;
+        }
+        delete sync.dataset.armed;
+        sync.classList.remove('is-armed');
+        syncCardFromEve(card, sync);
         return true;
     }
     if (event.target.closest('[data-role="card-edit"]')) {
