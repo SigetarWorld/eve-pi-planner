@@ -327,18 +327,20 @@
                     <label class="jm-field"><span>Персонаж</span><select class="ct-input" data-role="jm-char"></select></label>
                     <p class="jm-msg" data-role="jm-char-msg"></p>
                     <label class="jm-field"><span>Корабль</span><select class="ct-input" data-role="jm-ship">${shipOptions()}</select></label>
-                    <label class="jm-field"><span>Jump Drive Calibration</span><select class="ct-input jm-lvl" data-role="jm-jdc">${lvlOptions(st.jdc)}</select></label>
-                    <label class="jm-field"><span>Jump Fuel Conservation</span><select class="ct-input jm-lvl" data-role="jm-jfc">${lvlOptions(st.jfc)}</select></label>
-                    <label class="jm-field"><span>Jump Freighter</span><select class="ct-input jm-lvl" data-role="jm-jf">${lvlOptions(st.jf)}</select></label>
+                    <!-- навыки не выбираются — только подгружаются с персонажа -->
+                    <div class="jm-field"><span>Jump Drive Calibration</span><output class="jm-lvl-out" data-role="jm-jdc">${st.jdc}</output></div>
+                    <div class="jm-field"><span>Jump Fuel Conservation</span><output class="jm-lvl-out" data-role="jm-jfc">${st.jfc}</output></div>
+                    <div class="jm-field"><span>Jump Freighter</span><output class="jm-lvl-out" data-role="jm-jf">${st.jf}</output></div>
                     <label class="jm-check"><input type="checkbox" data-role="jm-stations"${st.preferStations ? ' checked' : ''}> Предпочитать системы со станциями</label>
                     <label class="jm-check"><input type="checkbox" data-role="jm-incursions"${st.avoidIncursions ? ' checked' : ''}> Обходить вторжения</label>
                     <div class="jm-row"><button type="button" class="btn card-add jm-btn" data-role="jm-char-load" title="Текущая система персонажа — в начало маршрута, его корабль — в «Корабль»">Система и корабль персонажа</button></div>
                 </section>
                 <section class="jm-panel">
                     <h3 class="jm-h">Обход систем и регионов</h3>
-                    <label class="jm-field"><span>Регион</span><select class="ct-input" data-role="jm-avoid-reg">${regionOptions(st.avoidRegion, '— выберите регион —')}</select></label>
-                    <label class="jm-field"><span>Система</span><select class="ct-input" data-role="jm-avoid-sys"${st.avoidRegion ? '' : ' disabled'}>${st.avoidRegion ? systemOptions(st.avoidRegion, '— весь регион —') : '<option value="">сначала регион</option>'}</select></label>
+                    <label class="jm-field"><span>Система или регион</span><input class="ct-input" data-role="jm-avoid" list="jm-avoid-list"
+                        placeholder="Начните вводить" autocomplete="off" spellcheck="false"></label>
                     <div class="jm-row"><button type="button" class="btn card-add jm-btn" data-role="jm-avoid-btn">Обходить</button></div>
+                    <p class="jm-msg" data-role="jm-avoid-msg"></p>
                     <h4 class="jm-h4">Список обхода</h4>
                     <ul class="jm-tags" data-role="jm-avoid-tags"></ul>
                 </section>
@@ -364,6 +366,12 @@
         </div>`;
     const $ = (role) => root.querySelector(`[data-role="${role}"]`);
 
+    // навыки — только показываем (берутся с персонажа)
+    function showSkills() {
+        $('jm-jdc').textContent = st.jdc;
+        $('jm-jfc').textContent = st.jfc;
+        $('jm-jf').textContent = st.jf;
+    }
     // ---- Отрисовка частей ----
     function renderWaypoints() {
         $('jm-wps').innerHTML = st.waypoints.map((n, i) => {
@@ -389,9 +397,32 @@
     }
     function renderChars() {
         const chars = typeof eveChars === 'function' ? eveChars() : [];
-        $('jm-char').innerHTML = `<option value="">— навыки вручную —</option>`
+        $('jm-char').innerHTML = `<option value="">— выберите персонажа —</option>`
             + chars.map((c) => `<option value="${c.characterId}"${String(c.characterId) === String(st.char) ? ' selected' : ''}>${esc(c.characterName)}</option>`).join('');
         $('jm-char-load').disabled = !st.char || !chars.some((c) => String(c.characterId) === String(st.char));
+    }
+
+    /* Звёздные врата — из данных планетарной карты (js/mapdata.js,
+       MAP_REGIONS: j — врата внутри региона, e — в соседние регионы).
+       Map(система -> [соседи по вратам]), строится один раз. */
+    let gateCache = null;
+    function gateLinks() {
+        if (gateCache) return gateCache;
+        gateCache = new Map();
+        if (typeof MAP_REGIONS !== 'object') return gateCache;
+        const link = (a, b) => {
+            if (!gateCache.has(a)) gateCache.set(a, []);
+            gateCache.get(a).push(b);
+        };
+        Object.values(MAP_REGIONS).forEach((reg) => {
+            const names = reg.s.map((x) => x[0]);
+            for (let i = 0; i + 1 < (reg.j || []).length; i += 2) {
+                link(names[reg.j[i]], names[reg.j[i + 1]]);
+                link(names[reg.j[i + 1]], names[reg.j[i]]);
+            }
+            (reg.e || []).forEach((e) => link(names[e[0]], e[1]));
+        });
+        return gateCache;
     }
 
     // Схема маршрута: вид сверху (x, −z), рядом — соседние системы
@@ -418,18 +449,42 @@
         const px = (s) => ox + (s.x - x0) * k;
         const pz = (s) => oz + (-s.z - z0) * k;
         const around = SYS.filter((s) => s.x >= x0 && s.x <= x1 && -s.z >= z0 && -s.z <= z1);
+        // связи систем — звёздные врата между системами в кадре (тонкие серые)
+        const inView = new Map(around.map((s) => [s.name, s]));
+        const gates = gateLinks();
+        const seen = new Set();
+        let gateLines = '';
+        around.forEach((a) => (gates.get(a.name) || []).forEach((bn) => {
+            const b = inView.get(bn);
+            if (!b) return;
+            const key = a.name < bn ? `${a.name}|${bn}` : `${bn}|${a.name}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            gateLines += `<line class="jm-gate" x1="${px(a).toFixed(1)}" y1="${pz(a).toFixed(1)}" x2="${px(b).toFixed(1)}" y2="${pz(b).toFixed(1)}"/>`;
+        }));
         const dots = around.map((s) => `<circle class="jm-dot jm-dot-${secClass(s.sec)}" cx="${px(s).toFixed(1)}" cy="${pz(s).toFixed(1)}" r="1.4" title="${esc(`${s.name} · ${s.region} · ${secText(s.sec)}`)}"/>`).join('');
         const legs = path.slice(1).map((s, i) => {
             const a = path[i];
             const mx = (px(a) + px(s)) / 2;
             const my = (pz(a) + pz(s)) / 2;
-            return `<line class="jm-leg" x1="${px(a)}" y1="${pz(a)}" x2="${px(s)}" y2="${pz(s)}"/>
-                <text class="jm-leg-ly" x="${mx}" y="${my - 4}">${fmt(dist(a, s), 2)}</text>`;
+            // перелёт — дуга (изгиб в сторону от прямой на 18 % длины), свой цвет
+            const ax = px(a);
+            const ay = pz(a);
+            const bx = px(s);
+            const by = pz(s);
+            const len = Math.hypot(bx - ax, by - ay) || 1;
+            const cx = mx - ((by - ay) / len) * len * 0.18;
+            const cy = my + ((bx - ax) / len) * len * 0.18;
+            const lx = (mx + cx) / 2;
+            const lyy = (my + cy) / 2;
+            return `<path class="jm-leg jm-arc" d="M${ax.toFixed(1)},${ay.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${bx.toFixed(1)},${by.toFixed(1)}"/>
+                <text class="jm-leg-ly" x="${lx.toFixed(1)}" y="${(lyy - 4).toFixed(1)}">${fmt(dist(a, s), 2)}</text>`;
         }).join('');
         const nodes = path.map((s, i) => `<g class="jm-node${isWp.has(s) ? ' is-wp' : ''}" title="${esc(`${s.name} · ${s.region} · ${secText(s.sec)}`)}">
                 <circle cx="${px(s)}" cy="${pz(s)}" r="${isWp.has(s) ? 6 : 4.5}" class="jm-node-c jm-dot-${secClass(s.sec)}"/>
                 <text x="${px(s) + 8}" y="${pz(s) + 4}" class="jm-node-t">${i + 1}. ${esc(s.name)}</text></g>`).join('');
-        box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Схема маршрута">${dots}${legs}${nodes}</svg>`;
+        box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Схема маршрута">${gateLines}${dots}${legs}${nodes}</svg>
+            <p class="jm-map-legend"><span class="jm-lg-gate"></span>звёздные врата<span class="jm-lg-arc"></span>прыжок</p>`;
     }
 
     let lastRoute = null;
@@ -534,7 +589,7 @@
             st.jdc = lvl(SKILL_IDS.jdc);
             st.jfc = lvl(SKILL_IDS.jfc);
             st.jf = lvl(SKILL_IDS.jf);
-            const notes = [`навыки ${st.jdc}/${st.jfc}/${st.jf}`];
+            const notes = [];
             const [loc, ship] = !withPlace ? [null, null] : await Promise.all([
                 eveFetchJson(`https://esi.evetech.net/latest/characters/${id}/location/?datasource=tranquility`, {}, id).catch(() => null),
                 eveFetchJson(`https://esi.evetech.net/latest/characters/${id}/ship/?datasource=tranquility`, {}, id).catch(() => null)
@@ -550,10 +605,9 @@
                 if (sh) { st.ship = sh.name; notes.push(`корабль ${sh.name}`); } else if (t) notes.push(`корабль ${t.name} — без прыжкового двигателя, оставлен ${st.ship}`);
             }
             $('jm-ship').value = st.ship;
-            $('jm-jdc').value = st.jdc;
-            $('jm-jfc').value = st.jfc;
-            $('jm-jf').value = st.jf;
-            msg.textContent = `С персонажа: ${notes.join(', ')}`;
+            showSkills();
+            // навыки видны в своих полях — в строке «С персонажа» их не повторяем
+            msg.textContent = notes.length ? `С персонажа: ${notes.join(', ')}` : '';
             persist();
             renderRoute();
         } catch (e) {
@@ -578,14 +632,18 @@
         inp.value = '';
         renderRoute();
     };
-    // система не выбрана — обходим весь регион
+    // Обход — как планировщик: одно поле с подсказками, система или регион
     const addAvoid = () => {
-        const r = $('jm-avoid-reg').value;
-        const s = byName.get(($('jm-avoid-sys').value || '').toLowerCase());
-        if (s) { if (!st.avoidSystems.includes(s.name)) st.avoidSystems.push(s.name); } else if (r && regionSet.has(r)) {
-            if (!st.avoidRegions.includes(r)) st.avoidRegions.push(r);
-        } else return;
-        $('jm-avoid-sys').value = '';
+        const inp = $('jm-avoid');
+        const v = (inp.value || '').trim();
+        const msg = $('jm-avoid-msg');
+        const s = byName.get(v.toLowerCase());
+        const r = Array.from(regionSet).find((x) => x.toLowerCase() === v.toLowerCase());
+        if (r) { if (!st.avoidRegions.includes(r)) st.avoidRegions.push(r); } else if (s) {
+            if (!st.avoidSystems.includes(s.name)) st.avoidSystems.push(s.name);
+        } else { msg.textContent = v ? `Нет системы или региона «${v}»` : 'Введите систему или регион'; return; }
+        msg.textContent = '';
+        inp.value = '';
         renderTags();
         renderRoute();
     };
@@ -648,9 +706,7 @@
             if (!r) return;
             Object.assign(st, r);
             $('jm-ship').value = st.ship;
-            $('jm-jdc').value = st.jdc;
-            $('jm-jfc').value = st.jfc;
-            $('jm-jf').value = st.jf;
+            showSkills();
             $('jm-stations').checked = st.preferStations;
             $('jm-incursions').checked = st.avoidIncursions;
             $('jm-beacons-only').checked = st.beaconsOnly;
@@ -674,9 +730,6 @@
     root.addEventListener('change', (e) => {
         const role = e.target.dataset.role;
         if (role === 'jm-ship') st.ship = e.target.value;
-        else if (role === 'jm-jdc') st.jdc = Number(e.target.value);
-        else if (role === 'jm-jfc') st.jfc = Number(e.target.value);
-        else if (role === 'jm-jf') st.jf = Number(e.target.value);
         else if (role === 'jm-stations') st.preferStations = e.target.checked;
         else if (role === 'jm-incursions') st.avoidIncursions = e.target.checked;
         else if (role === 'jm-beacons-only') st.beaconsOnly = e.target.checked;
@@ -685,14 +738,9 @@
             st.char = e.target.value;
             persist();
             renderChars();
-            if (st.char) loadFromChar(false); else $('jm-char-msg').textContent = 'Навыки — вручную';
+            if (st.char) loadFromChar(false); else $('jm-char-msg').textContent = 'Выберите персонажа — навыки подгрузятся с него';
             return;
-        } else if (role === 'jm-avoid-reg') {
-            st.avoidRegion = e.target.value;
-            fillSystems('jm-avoid-reg', 'jm-avoid-sys', st.avoidRegion, '— весь регион —');
-            persist();
-            return;
-        } else if (role === 'jm-add' || role === 'jm-avoid-sys') return;
+        } else if (role === 'jm-add' || role === 'jm-avoid') return;
         else return;
         renderRoute();
     });
@@ -718,7 +766,11 @@
 
     // Старт: ссылка #jump/... открывает вкладку «Карты» → «Прыжковая карта»
     const linked = fromHash();
+    // навыки берём только с персонажа: не выбран — берём первого подключённого
+    const allChars = typeof eveChars === 'function' ? eveChars() : [];
+    if ((!st.char || !allChars.some((c) => String(c.characterId) === String(st.char))) && allChars.length) st.char = String(allChars[0].characterId);
     renderChars();
+    if (st.char) loadFromChar(false);
     renderTags();
     renderRoute();
     window.addEventListener('eve-chars-changed', renderChars);
