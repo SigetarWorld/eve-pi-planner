@@ -5051,3 +5051,14 @@ input.chain-amount:focus {
 /* «Восстановить из EVE»: первое нажатие взводит кнопку */
 .uv-sync.is-armed { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 .uv-sync.is-busy { opacity: 0.5; cursor: progress; }
+
+/* Отступ слева у колоний карточки: цветная полоса заполненности
+   складов (3px) не должна наезжать на значок ✓/≠/✗ */
+.uv .uv-colony,
+.uv .uv-colony.has-store-empty,
+.uv .uv-colony.has-store-warn,
+.uv .uv-colony.has-store-full { padding-left: 0.55rem; }
+
+/* Масштаб карточек — справа в строке кнопок */
+.stats-panel .cards-zoom { margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+.stats-panel .cards-zoom select { width: auto; }

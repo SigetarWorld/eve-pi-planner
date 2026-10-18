@@ -1748,6 +1748,26 @@ document.addEventListener('click', (event) => {
     if (event.target.closest && event.target.closest('#card-restore')) restoreLastCard();
 });
 
+/* ---- Масштаб карточек ----
+   Список «Масштаб» справа в строке «Статистика · Склад · … · Тест2»:
+   100 / 90 / 80 %. Уменьшается вся область карточек персонажей (CSS
+   zoom), выбор помнит браузер. */
+const CARDS_ZOOM_KEY = 'evepi.cards.zoom';
+(function initCardsZoom() {
+    const sel = document.getElementById('cards-zoom');
+    if (!sel) return;
+    const apply = (v) => {
+        const z = ['100', '90', '80'].includes(String(v)) ? String(v) : '100';
+        sel.value = z;
+        accounts.style.zoom = z === '100' ? '' : String(Number(z) / 100);
+    };
+    apply(store.get(CARDS_ZOOM_KEY, '100'));
+    sel.addEventListener('change', () => {
+        apply(sel.value);
+        store.set(CARDS_ZOOM_KEY, sel.value);
+    });
+}());
+
 // Счётчик, блокировка ввода и подсказка внутри одной линии
 function refreshLine(line) {
     if (!line) return;
@@ -2036,7 +2056,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '19.10.2026 00:00';
+const APP_BUILD = '19.10.2026 00:05';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
