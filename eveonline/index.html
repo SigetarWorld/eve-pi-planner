@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=179">
+    <link rel="stylesheet" href="css/style.css?v=180">
 </head>
 <body>
     <header>
@@ -101,6 +101,8 @@
                          корпорации (app.js, раздел «Склад») -->
                     <button type="button" id="wh-open" class="btn card-add" aria-haspopup="dialog"
                             aria-controls="wh-modal">Склад</button>
+                    <!-- Вернуть последнюю удалённую карточку со всем планированием (app.js) -->
+                    <button type="button" id="card-restore" class="btn card-add" disabled>Восстановить карточку</button>
                     <!-- Тест: всё, что EVE отдаёт по планетарке персонажей
                          Sigetar и CrazyJam (app.js, раздел «Тест EVE») -->
                     <button type="button" id="evetest-open" class="btn card-add" aria-haspopup="dialog"
@@ -229,7 +231,7 @@
     <script src="js/calculator.js?v=35"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=170"></script>
+    <script src="js/app.js?v=171"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
         if (location.protocol === "file:") {

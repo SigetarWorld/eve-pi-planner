@@ -1689,11 +1689,64 @@ function handleCardClick(event) {
     if (!del) return;
 
     const line = del.closest('.account-line');
-    del.closest('.card').remove();
+    const card = del.closest('.card');
+    // в корзину — со всем планированием карточки, чтобы можно было вернуть
+    cardTrashPush(line, card);
+    card.remove();
     refreshLine(line);
     pruneEmptyLines();
     saveAccounts();
 }
+
+/* ---- Восстановление удалённых карточек ----
+   Удалённая карточка уходит в корзину (браузер, CARD_TRASH_KEY) целиком:
+   уровень, системы, планеты, товары, ряды — всё планирование, то же, что
+   сохраняется для страницы (readCard). Кнопка «Восстановить карточку»
+   возвращает последнюю удалённую в её ряд (ряда нет — создаёт новый).
+   Помним 10 последних. */
+const CARD_TRASH_KEY = 'evepi.cards.trash';
+const cardTrashOf = () => (store.get(CARD_TRASH_KEY, []) || []).filter((x) => x && x.card && x.card.name);
+function cardTrashPush(line, card) {
+    try {
+        const trash = cardTrashOf();
+        trash.push({ account: line ? line.dataset.account || '' : '', card: readCard(card), t: Date.now() });
+        store.set(CARD_TRASH_KEY, trash.slice(-10));
+    } catch (e) {
+        // без корзины удаление всё равно проходит
+    }
+    refreshRestoreBtn();
+}
+function refreshRestoreBtn() {
+    const btn = document.getElementById('card-restore');
+    if (!btn) return;
+    const trash = cardTrashOf();
+    const last = trash[trash.length - 1];
+    btn.disabled = !last;
+    btn.title = last ? `Вернуть удалённую карточку «${last.card.name}» со всем планированием${trash.length > 1 ? ` (в корзине ${trash.length})` : ''}` : 'Удалённых карточек нет';
+}
+function restoreLastCard() {
+    const trash = cardTrashOf();
+    const item = trash.pop();
+    if (!item) return;
+    const name = item.card.name;
+    store.set(CARD_TRASH_KEY, trash);
+    // у персонажа одна карточка на страницу — если уже есть, не дублируем
+    const exists = Array.from(document.querySelectorAll('.account-line .card'))
+        .some((c) => (c.dataset.name || '').toLowerCase() === name.toLowerCase());
+    if (!exists) {
+        let line = Array.from(accounts.children).find((l) => l.dataset.account === item.account
+            && l.querySelector('[data-role="cards"]').children.length < CARDS_LIMIT);
+        if (!line) line = addAccount(item.account || '', false);
+        addCard(line, name, item.card);
+        refreshLine(line);
+        refreshAccounts();
+        saveAccounts();
+    }
+    refreshRestoreBtn();
+}
+document.addEventListener('click', (event) => {
+    if (event.target.closest && event.target.closest('#card-restore')) restoreLastCard();
+});
 
 // Счётчик, блокировка ввода и подсказка внутри одной линии
 function refreshLine(line) {
@@ -1983,7 +2036,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '18.10.2026 23:15';
+const APP_BUILD = '18.10.2026 23:40';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -5306,6 +5359,7 @@ refreshAccounts();
 }
 
 loadAccountsFromStore();
+refreshRestoreBtn();
 
 /* Карта региона (js/calculator.js) пишет колонии прямо в карточки —
    в хранилище, — и просит пересобрать вкладку «Планеты» из него.
