@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '18.10.2026 23:10';
+const APP_BUILD = '18.10.2026 23:15';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3744,8 +3744,24 @@ async function renderWarehouse() {
             whWhere.picked.clear();
             modal.querySelectorAll('[data-role="wh-w-pick"]').forEach((c) => { c.checked = false; });
             whApplyWhere(modal);
+            // «Все ресурсы» — выбор сброшен, список закрываем
+            modal.querySelectorAll('.wh-picker[open]').forEach((d) => { d.open = false; });
         }
     });
+    // список «Ресурсы» закрывается щелчком мимо него и клавишей Esc
+    document.addEventListener('pointerdown', (event) => {
+        modal.querySelectorAll('.wh-picker[open]').forEach((d) => {
+            if (!d.contains(event.target)) d.open = false;
+        });
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        const open = modal.querySelector('.wh-picker[open]');
+        if (!open) return;
+        open.open = false;
+        // Esc закрывает только список, а не всё окно «Склада»
+        event.stopImmediatePropagation();
+    }, true);
     modal.addEventListener('change', (event) => {
         const c = event.target.closest && event.target.closest('[data-role="wh-w-pick"]');
         if (!c) return;
