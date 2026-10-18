@@ -152,12 +152,15 @@ async function eveChallengeOf(verifier) {
    чтобы его можно было сверить с тем, что вписано в приложении на
    developers.eveonline.com: расхождение хоть в одном символе
    заставит EVE отклонить возврат. */
-function eveAuthorizeUrl(state, challenge) {
+function eveAuthorizeUrl(state, challenge, extraScopes) {
     const url = new URL(EVE_AUTH.authorizeUrl);
     url.searchParams.set('response_type', 'code');
     url.searchParams.set('client_id', EVE_AUTH.clientId);
     url.searchParams.set('redirect_uri', eveRedirectUri());
-    url.searchParams.set('scope', EVE_AUTH.scope);
+    // extraScopes — права сверх обычных (прыжковая карта просит навыки
+    // и местоположение отдельной кнопкой, только когда они нужны)
+    const scopes = EVE_AUTH.scope.split(' ').concat(String(extraScopes || '').split(/\s+/)).filter(Boolean);
+    url.searchParams.set('scope', Array.from(new Set(scopes)).join(' '));
     url.searchParams.set('state', state);
     url.searchParams.set('code_challenge', challenge);
     url.searchParams.set('code_challenge_method', 'S256');
@@ -166,7 +169,7 @@ function eveAuthorizeUrl(state, challenge) {
 
 /* Перенаправляет на страницу входа EVE. state защищает от подделки
    адреса возврата, code_verifier — сам код подтверждения. */
-async function eveLogin() {
+async function eveLogin(extraScopes) {
     // Не на sigetar.ru/eveonline/ (диск, зеркало, http…) — сперва туда;
     // метка #eve-login в адресе сама начнёт вход после перехода
     if (!eveOnRedirectPage()) {
@@ -180,7 +183,7 @@ async function eveLogin() {
     // Живёт только в этой вкладке: возврат из EVE случится в ней же
     eveJsonSet(sessionStorage, EVE_AUTH.pendingKey, { state, verifier });
 
-    location.assign(eveAuthorizeUrl(state, await eveChallengeOf(verifier)));
+    location.assign(eveAuthorizeUrl(state, await eveChallengeOf(verifier), typeof extraScopes === 'string' ? extraScopes : ''));
 }
 
 /* Один запрос к tokenUrl: и обмен кода, и обновление токена идут

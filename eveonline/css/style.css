@@ -5064,3 +5064,86 @@ input.chain-amount:focus {
 .stats-panel .cards-zoom select { width: auto; }
 /* строка кнопок переносится, если не помещается (иначе «Масштаб» уезжает за край) */
 .card-head.stats-panel { flex-wrap: wrap; row-gap: 0.5rem; }
+
+/* ---------- Вкладка «Карты»: переключатель и прыжковая карта ---------- */
+.maps-views { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 0.9rem; }
+.maps-view-btn[aria-pressed="true"] { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+.maps-view-btn[aria-pressed="false"] { opacity: 0.6; }
+#map-planet[hidden], #map-jump[hidden] { display: none; }
+
+.jm-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 0.9rem; align-items: start; }
+@media (max-width: 1000px) { .jm-layout { grid-template-columns: 1fr; } }
+.jm-main, .jm-side { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; }
+.jm-panel { padding: 0.6rem 0.75rem 0.7rem; background: var(--bg-panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.jm-h { margin: 0 0 0.5rem; font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; letter-spacing: 0.06em; color: var(--accent); }
+.jm-h4 { margin: 0.6rem 0 0.35rem; font-family: var(--font-heading); font-size: 0.82rem; color: var(--text-dim); }
+.jm-sub { margin-left: 0.4rem; font-family: var(--font-body); font-size: 0.8rem; font-weight: 400; letter-spacing: 0; color: var(--text-dim); }
+.jm-row { display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.4rem; }
+.jm-row .ct-input { flex: 1 1 auto; min-width: 0; }
+.jm-btn { flex: 0 0 auto; padding: 0.35rem 0.6rem; font-size: 0.72rem; }
+.jm-btn-x { padding: 0.35rem 0.55rem; }
+.jm-field { display: grid; grid-template-columns: 1fr 9.5rem; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; font-size: 0.8rem; color: var(--text-dim); }
+.jm-field .jm-lvl { max-width: 4.5rem; justify-self: end; }
+.jm-field-title { display: block; margin: 0.5rem 0 0.3rem; font-size: 0.8rem; color: var(--text-dim); }
+.jm-check { display: flex; align-items: center; gap: 0.45rem; margin: 0.3rem 0; font-size: 0.8rem; color: var(--text); cursor: pointer; }
+.jm-msg { margin: 0.2rem 0 0; font-size: 0.76rem; color: var(--text-dim); }
+.jm-msg:empty { display: none; }
+.jm-hint { margin: 0.3rem 0 0; font-size: 0.72rem; color: var(--text-faint); }
+.jm-empty { list-style: none; font-size: 0.78rem; color: var(--text-faint); }
+.jm-x { flex: 0 0 auto; width: 20px; height: 20px; padding: 0; margin-left: auto; font: inherit; line-height: 1; color: var(--text-faint); background: none; border: 1px solid var(--border); border-radius: 50%; cursor: pointer; }
+.jm-x:hover { color: var(--red); border-color: var(--red); }
+
+.jm-wps { margin: 0; padding: 0; list-style: none; counter-reset: wp; }
+.jm-wp { display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.4rem; margin-bottom: 0.25rem; font-size: 0.82rem;
+    background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: grab; counter-increment: wp; }
+.jm-wp::before { content: counter(wp) "."; width: 1.2rem; color: var(--text-faint); font-size: 0.74rem; }
+.jm-wp-name { font-weight: 600; color: var(--text); }
+.jm-wp-reg { font-size: 0.74rem; color: var(--text-dim); }
+
+.jm-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.3rem 0 0; padding: 0; list-style: none; }
+.jm-tag { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.15rem 0.25rem 0.15rem 0.5rem; font-size: 0.78rem;
+    background: var(--bg-deep); border: 1px solid var(--border); border-radius: 999px; }
+.jm-tag-kind { font-size: 0.68rem; color: var(--text-faint); }
+.jm-tag .jm-x { width: 18px; height: 18px; margin-left: 0.1rem; }
+
+/* значок безопасности — как [P1] */
+.jm .ct-tier.jm-sec { display: inline-flex; align-items: center; justify-content: center; min-width: 1.9rem; height: 1.25rem; padding: 0 0.2rem;
+    font-size: 0.66rem; font-weight: 700; border: 1px solid currentColor; border-radius: 3px; font-variant-numeric: tabular-nums; }
+.jm-sec-hi { color: var(--green); background: rgba(79, 209, 139, 0.08); }
+.jm-sec-low { color: var(--yellow); background: rgba(255, 210, 63, 0.08); }
+.jm-sec-null { color: var(--red); background: rgba(255, 107, 107, 0.08); }
+
+.jm-table { width: 100%; }
+.jm-table td, .jm-table th { text-align: left; }
+.jm-table .jm-n { color: var(--text-faint); width: 2rem; }
+.jm-table .jm-name { font-weight: 700; color: var(--text); }
+.jm-table .jm-holder { color: var(--text-dim); }
+.jm-table .jm-num { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-dim); }
+.jm-table tr.is-wp .jm-name { color: var(--accent); }
+.jm-table .jm-leg-row td { padding-top: 0.1rem; padding-bottom: 0.1rem; font-size: 0.76rem; color: var(--text-dim); background: rgba(255, 255, 255, 0.02); }
+.jm-table .jm-leg-row b { color: var(--text); font-variant-numeric: tabular-nums; }
+.jm-st { color: var(--cyan); font-size: 0.7rem; }
+.jm-alt { margin-left: 0.4rem; padding: 0 0.35rem; font: inherit; color: var(--accent); background: none; border: 1px solid var(--accent-line); border-radius: 3px; cursor: pointer; }
+.jm-alt-pop { display: flex; flex-direction: column; gap: 0.15rem; margin-top: 0.3rem; padding: 0.35rem; max-height: 260px; overflow: auto;
+    background: var(--bg-panel); border: 1px solid var(--border-lit); border-radius: var(--radius-sm); }
+.jm-alt-pick { display: flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.3rem; font: inherit; font-size: 0.78rem; text-align: left;
+    color: var(--text); background: none; border: 0; border-radius: 3px; cursor: pointer; }
+.jm-alt-pick:hover { background: var(--bg-hover); }
+.jm-total { display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 0.9rem; margin: 0.7rem 0 0; font-size: 0.82rem; }
+.jm-total dt { color: var(--text-dim); }
+.jm-total dd { margin: 0; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.jm-warn { margin: 0 0 0.5rem; font-size: 0.8rem; }
+
+/* Jump Map — схема маршрута */
+.jm-map { background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.jm-map > p { margin: 0; padding: 1.2rem; }
+.jm-svg { display: block; width: 100%; height: auto; }
+.jm-dot { opacity: 0.55; }
+.jm-dot-hi { fill: var(--green); }
+.jm-dot-low { fill: var(--yellow); }
+.jm-dot-null { fill: var(--red); }
+.jm-leg { stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+.jm-leg-ly { fill: var(--text-dim); font-size: 10px; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.jm-node-c { stroke: var(--bg-deep); stroke-width: 2; }
+.jm-node.is-wp .jm-node-c { stroke: var(--accent); stroke-width: 2; }
+.jm-node-t { fill: var(--text); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--bg-deep); stroke-width: 3px; }
