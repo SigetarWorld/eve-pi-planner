@@ -102,7 +102,6 @@
         avoidRegions: Array.isArray(saved.avoidRegions) ? saved.avoidRegions : [],
         beacons: Array.isArray(saved.beacons) ? saved.beacons : [],
         char: saved.char || '',
-        addRegion: saved.addRegion || '',
         avoidRegion: saved.avoidRegion || ''
     };
     const persist = () => ls.set(LS_KEY, st);
@@ -295,6 +294,8 @@
             .map((s) => `<option value="${esc(s.name)}">${esc(s.name)} · ${secText(s.sec)}${highsec(s) ? ' (хайсек)' : ''}</option>`).join('');
     const lvlOptions = (v) => [0, 1, 2, 3, 4, 5].map((n) => `<option value="${n}"${n === v ? ' selected' : ''}>${n}</option>`).join('');
     root.innerHTML = `
+        <!-- планировщик: только системы, куда можно прыгнуть (лоу, нули; без хайсека и закрытых регионов) -->
+        <datalist id="jm-jumpable">${SYS.filter(canEnter).sort((a, b) => a.name.localeCompare(b.name)).map((s) => `<option value="${esc(s.name)}">${esc(s.region)} · ${secText(s.sec)}</option>`).join('')}</datalist>
         <datalist id="jm-systems">${SYS.map((s) => `<option value="${esc(s.name)}">${esc(s.region)} · ${secText(s.sec)}</option>`).join('')}</datalist>
         <datalist id="jm-avoid-list">${JUMP_REGIONS.map((r) => `<option value="${esc(r)}">регион</option>`).join('')}${SYS.map((s) => `<option value="${esc(s.name)}">${esc(s.region)}</option>`).join('')}</datalist>
         <div class="jm-layout">
@@ -311,8 +312,8 @@
             <aside class="jm-side">
                 <section class="jm-panel">
                     <h3 class="jm-h">Планировщик</h3>
-                    <label class="jm-field"><span>Регион</span><select class="ct-input" data-role="jm-add-reg">${regionOptions(st.addRegion, '— выберите регион —')}</select></label>
-                    <label class="jm-field"><span>Система</span><select class="ct-input" data-role="jm-add-sys"${st.addRegion ? '' : ' disabled'}>${st.addRegion ? systemOptions(st.addRegion, '— выберите систему —') : '<option value="">сначала регион</option>'}</select></label>
+                    <label class="jm-field"><span>Система</span><input class="ct-input" data-role="jm-add" list="jm-jumpable"
+                        placeholder="Начните вводить систему" autocomplete="off" spellcheck="false"></label>
                     <div class="jm-row"><button type="button" class="btn card-add jm-btn" data-role="jm-add-btn">Добавить в маршрут</button></div>
                     <p class="jm-msg" data-role="jm-add-msg"></p>
                 </section>
@@ -561,13 +562,20 @@
     }
 
     // ---- События ----
+    /* Планировщик: система — вводом с подсказками (без списка регионов);
+       подсказки и проверка — только системы, куда можно прыгнуть */
     const addSystem = () => {
-        const s = byName.get(($('jm-add-sys').value || '').toLowerCase());
+        const inp = $('jm-add');
+        const s = byName.get((inp.value || '').trim().toLowerCase());
         const msg = $('jm-add-msg');
-        if (!s) { msg.textContent = st.addRegion ? 'Выберите систему' : 'Сначала выберите регион'; return; }
-        msg.textContent = !canEnter(s) && st.waypoints.length ? `${s.name}: ${highsec(s) ? 'хайсек' : s.region} — сюда прыгнуть нельзя` : '';
+        if (!s) { msg.textContent = inp.value.trim() ? `Системы «${inp.value.trim()}» нет` : 'Введите систему'; return; }
+        if (!canEnter(s)) {
+            msg.textContent = `${s.name}: ${highsec(s) ? `хайсек ${secText(s.sec)}` : s.region} — сюда прыгнуть нельзя`;
+            return;
+        }
+        msg.textContent = '';
         st.waypoints.push(s.name);
-        $('jm-add-sys').value = '';
+        inp.value = '';
         renderRoute();
     };
     // система не выбрана — обходим весь регион
@@ -679,17 +687,12 @@
             renderChars();
             if (st.char) loadFromChar(false); else $('jm-char-msg').textContent = 'Навыки — вручную';
             return;
-        } else if (role === 'jm-add-reg') {
-            st.addRegion = e.target.value;
-            fillSystems('jm-add-reg', 'jm-add-sys', st.addRegion, '— выберите систему —');
-            persist();
-            return;
         } else if (role === 'jm-avoid-reg') {
             st.avoidRegion = e.target.value;
             fillSystems('jm-avoid-reg', 'jm-avoid-sys', st.avoidRegion, '— весь регион —');
             persist();
             return;
-        } else if (role === 'jm-add-sys' || role === 'jm-avoid-sys') return;
+        } else if (role === 'jm-add' || role === 'jm-avoid-sys') return;
         else return;
         renderRoute();
     });

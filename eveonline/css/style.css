@@ -5151,3 +5151,6 @@ input.chain-amount:focus {
 .jm-node-c { stroke: var(--bg-deep); stroke-width: 2; }
 .jm-node.is-wp .jm-node-c { stroke: var(--accent); stroke-width: 2; }
 .jm-node-t { fill: var(--text); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--bg-deep); stroke-width: 3px; }
+/* планировщик: поле системы — на всю ширину панели */
+.jm-field:has([data-role="jm-add"]) { grid-template-columns: auto 1fr; }
+.jm-field [data-role="jm-add"] { width: 100%; min-width: 0; }
