@@ -5071,7 +5071,11 @@ input.chain-amount:focus {
 .maps-view-btn[aria-pressed="false"] { opacity: 0.6; }
 #map-planet[hidden], #map-jump[hidden] { display: none; }
 
-.jm-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 0.9rem; align-items: start; }
+.jm-layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 0.9rem; align-items: start; }
+/* панели (планировщик, точки, параметры…) — слева, карта и маршрут — справа */
+.jm-layout > .jm-side { grid-column: 1; grid-row: 1; }
+.jm-layout > .jm-main { grid-column: 2; grid-row: 1; }
+@media (max-width: 1000px) { .jm-layout > .jm-side, .jm-layout > .jm-main { grid-column: 1; grid-row: auto; } }
 @media (max-width: 1000px) { .jm-layout { grid-template-columns: 1fr; } }
 .jm-main, .jm-side { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; }
 .jm-panel { padding: 0.6rem 0.75rem 0.7rem; background: var(--bg-panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }

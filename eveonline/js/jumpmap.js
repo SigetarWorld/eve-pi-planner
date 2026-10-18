@@ -15,7 +15,7 @@
    расстояние; «Предпочитать системы со станциями» — среди маршрутов с
    тем же числом прыжков берём промежуточные системы со станциями NPC.
 
-   Части экрана (названия — как у Dotlan):
+   Части экрана (по образцу Dotlan, названия на русском; панели — слева):
      Jump Map — схема маршрута сверху (оси x и z галактики);
      Jump Route — таблица: регион, система, безопасность, владелец (sov),
        убийства и прыжки за час (ESI), между системами — расстояние и
@@ -289,28 +289,28 @@
         <div class="jm-layout">
             <div class="jm-main">
                 <section class="jm-panel jm-map-panel">
-                    <h3 class="jm-h">Jump Map <span class="jm-sub" data-role="jm-map-title"></span></h3>
+                    <h3 class="jm-h">Карта прыжков <span class="jm-sub" data-role="jm-map-title"></span></h3>
                     <div class="jm-map" data-role="jm-map"><p class="evt-dim">Добавьте две системы — здесь появится схема маршрута</p></div>
                 </section>
                 <section class="jm-panel">
-                    <h3 class="jm-h">Jump Route <span class="jm-sub" data-role="jm-route-title"></span></h3>
+                    <h3 class="jm-h">Маршрут прыжков <span class="jm-sub" data-role="jm-route-title"></span></h3>
                     <div data-role="jm-route"></div>
                 </section>
             </div>
             <aside class="jm-side">
                 <section class="jm-panel">
-                    <h3 class="jm-h">Jump Planner</h3>
+                    <h3 class="jm-h">Планировщик</h3>
                     <div class="jm-row"><input class="ct-input" data-role="jm-add" list="jm-systems" placeholder="Система, например EX-GBT" autocomplete="off">
                         <button type="button" class="btn card-add jm-btn" data-role="jm-add-btn">Добавить</button></div>
                     <p class="jm-msg" data-role="jm-add-msg"></p>
                 </section>
                 <section class="jm-panel">
-                    <h3 class="jm-h">Waypoints</h3>
+                    <h3 class="jm-h">Точки маршрута</h3>
                     <ol class="jm-wps" data-role="jm-wps"></ol>
                     <p class="jm-hint">Перетащите, чтобы поменять порядок</p>
                 </section>
                 <section class="jm-panel">
-                    <h3 class="jm-h">Jump Options</h3>
+                    <h3 class="jm-h">Параметры прыжка</h3>
                     <label class="jm-field"><span>Корабль</span><select class="ct-input" data-role="jm-ship">${shipOptions()}</select></label>
                     <label class="jm-field"><span>Jump Drive Calibration</span><select class="ct-input jm-lvl" data-role="jm-jdc">${lvlOptions(st.jdc)}</select></label>
                     <label class="jm-field"><span>Jump Fuel Conservation</span><select class="ct-input jm-lvl" data-role="jm-jfc">${lvlOptions(st.jfc)}</select></label>
@@ -325,21 +325,21 @@
                     </div>
                 </section>
                 <section class="jm-panel">
-                    <h3 class="jm-h">Avoid System/Region</h3>
+                    <h3 class="jm-h">Обход систем и регионов</h3>
                     <div class="jm-row"><input class="ct-input" data-role="jm-avoid" list="jm-avoid-list" placeholder="Система или регион" autocomplete="off">
                         <button type="button" class="btn card-add jm-btn" data-role="jm-avoid-btn">Обходить</button></div>
-                    <h4 class="jm-h4">Avoid Region/System List</h4>
+                    <h4 class="jm-h4">Список обхода</h4>
                     <ul class="jm-tags" data-role="jm-avoid-tags"></ul>
                 </section>
                 <section class="jm-panel">
-                    <h3 class="jm-h">Jump Beacon Network</h3>
+                    <h3 class="jm-h">Сеть маяков</h3>
                     <div class="jm-row"><input class="ct-input" data-role="jm-beacon" list="jm-systems" placeholder="Система с маяком" autocomplete="off">
                         <button type="button" class="btn card-add jm-btn" data-role="jm-beacon-btn">Добавить</button></div>
                     <label class="jm-check"><input type="checkbox" data-role="jm-beacons-only"${st.beaconsOnly ? ' checked' : ''}> Прыгать только по маякам</label>
                     <ul class="jm-tags" data-role="jm-beacon-tags"></ul>
                 </section>
                 <section class="jm-panel">
-                    <h3 class="jm-h">Load/Save Route</h3>
+                    <h3 class="jm-h">Загрузка и сохранение маршрута</h3>
                     <div class="jm-row"><input class="ct-input" data-role="jm-route-name" placeholder="Название маршрута">
                         <button type="button" class="btn card-add jm-btn" data-role="jm-save">Сохранить</button></div>
                     <div class="jm-row"><select class="ct-input" data-role="jm-routes"></select>
@@ -360,7 +360,7 @@
             return `<li class="jm-wp" draggable="true" data-i="${i}">${s ? secBadge(s) : ''}<span class="jm-wp-name">${esc(n)}</span>
                 <span class="jm-wp-reg">${s ? esc(s.region) : ''}</span>
                 <button type="button" class="jm-x" data-role="jm-wp-del" data-i="${i}" title="Убрать из маршрута" aria-label="Убрать ${esc(n)}">×</button></li>`;
-        }).join('') || '<li class="jm-empty">Пока пусто — добавьте систему в Jump Planner</li>';
+        }).join('') || '<li class="jm-empty">Пока пусто — добавьте систему в «Планировщике»</li>';
     }
     function renderTags() {
         const tag = (kind, v) => `<li class="jm-tag"><span class="jm-tag-kind">${kind === 'r' ? 'регион' : 'система'}</span>${esc(v)}
@@ -435,7 +435,7 @@
         $('jm-route-title').textContent = title;
         if (!r.path) {
             renderMap(null);
-            out.innerHTML = r.error ? `<p class="evt-bad">${esc(r.error)}</p>` : '<p class="evt-dim">Маршрут появится, когда в Waypoints будет хотя бы две системы</p>';
+            out.innerHTML = r.error ? `<p class="evt-bad">${esc(r.error)}</p>` : '<p class="evt-dim">Маршрут появится, когда в «Точках маршрута» будет хотя бы две системы</p>';
             return;
         }
         renderMap(r.path, r.isWp);
