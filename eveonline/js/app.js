@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '18.10.2026 22:35';
+const APP_BUILD = '18.10.2026 22:45';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3263,6 +3263,26 @@ const WH_DAYS_OPTIONS = [7, 10, 14, 21, 30];
 const whFilter = { tiers: new Set(), owner: '', days: WH_DAYS_OPTIONS.includes(store.get(WH_DAYS_KEY, 10)) ? store.get(WH_DAYS_KEY, 10) : 10 };
 let whLast = [];
 let whRedrawSum = () => {};
+// Графики — той же ширины, что таблица (ширину таблицы задаёт её содержимое)
+let whChartW = 620;
+function whFitCharts() {
+    const box = document.querySelector('#wh-modal .wh-sum-box');
+    if (!box || box.hidden) return;
+    const table = box.querySelector('.wh-table');
+    const charts = box.querySelector('.wh-charts');
+    if (!table || !charts) return;
+    const w = Math.max(320, table.offsetWidth);
+    charts.style.width = `${w}px`;
+    // график рисуем сразу под эту ширину (минус поля карточки), чтобы
+    // подписи не мельчали; перерисовка — только если ширина поменялась
+    const inner = Math.round(w - 16);
+    if (Math.abs(inner - whChartW) > 2) {
+        whChartW = inner;
+        box.innerHTML = whSumInnerHtml();
+        const c2 = box.querySelector('.wh-charts');
+        if (c2) c2.style.width = `${w}px`;
+    }
+}
 const whOwnerKey = (o) => `${o.kind}:${o.corpId || o.char.characterId}`;
 const whDayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const whVolOf = (name, qty) => qty * (PI_TIER_VOLUME[piTierOf(name)] || 0);
@@ -3355,8 +3375,8 @@ function whChartHtml(names, owners) {
         return WH_SERIES_COLORS[same.indexOf(n)] || WH_SERIES_OTHER;
     };
     const fmtTick = (t) => (t >= 1e6 ? `${(t / 1e6).toLocaleString('ru-RU')} млн` : t >= 1e3 ? `${(t / 1e3).toLocaleString('ru-RU')} тыс` : t.toLocaleString('ru-RU'));
-    // графики друг под другом, компактные по высоте
-    const W = 620;
+    // графики друг под другом; ширина — как у таблицы (whChartW, в пикселях)
+    const W = whChartW;
     const H = 130;
     const L = 58;
     const R = 18;
@@ -3447,7 +3467,8 @@ function whSumInnerHtml() {
     const many = owners.length > 1;
     const cols = owners.length + (many ? 1 : 0) + 2;            // товар, владельцы, всего, тренд
     const trendOf = whTrendFn(owners);
-    const head = owners.map((o) => `<th scope="col" class="wh-col">${whAvaHtml(o)}<span>${escapeHtml(o.title)}</span></th>`).join('');
+    // заголовок столбца: картинка, под ней имя
+    const head = owners.map((o) => `<th scope="col" class="wh-col wh-col-owner"><span class="wh-col-in">${whAvaHtml(o)}<span class="wh-col-name">${escapeHtml(o.title)}</span></span></th>`).join('');
     let sumVol = 0;
     let sumIsk = 0;
     let pricePending = false;
@@ -3608,6 +3629,7 @@ async function renderWarehouse() {
         const where = modal.querySelector('.wh-where-box');
         if (sum) sum.hidden = whView !== 'sum';
         if (where) where.hidden = whView !== 'where';
+        whFitCharts();
     };
     tabs.forEach((t) => t.addEventListener('click', () => {
         whView = t.dataset.view;
@@ -3631,6 +3653,7 @@ async function renderWarehouse() {
     const redrawSum = () => {
         const box = modal.querySelector('.wh-sum-box');
         if (box) box.innerHTML = whSumInnerHtml();
+        whFitCharts();
     };
     // цены для товаров на складах — по хабу; пришли — перерисовываем
     whRedrawSum = () => {
