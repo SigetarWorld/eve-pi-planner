@@ -5062,3 +5062,5 @@ input.chain-amount:focus {
 /* Масштаб карточек — справа в строке кнопок */
 .stats-panel .cards-zoom { margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
 .stats-panel .cards-zoom select { width: auto; }
+/* строка кнопок переносится, если не помещается (иначе «Масштаб» уезжает за край) */
+.card-head.stats-panel { flex-wrap: wrap; row-gap: 0.5rem; }
