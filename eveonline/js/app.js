@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '18.10.2026 22:05';
+const APP_BUILD = '18.10.2026 22:35';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3258,7 +3258,9 @@ const whFmt = (n) => (n ? Math.floor(n).toLocaleString('ru-RU') : '');
    WH_HIST_KEY, хранится 30 дней). */
 const WH_HIST_KEY = 'evepi.wh.history';
 // tiers — свёрнутые уровни (их строки скрыты, заголовок уровня остаётся)
-const whFilter = { tiers: new Set(), owner: '' };
+const WH_DAYS_KEY = 'evepi.wh.days';
+const WH_DAYS_OPTIONS = [7, 10, 14, 21, 30];
+const whFilter = { tiers: new Set(), owner: '', days: WH_DAYS_OPTIONS.includes(store.get(WH_DAYS_KEY, 10)) ? store.get(WH_DAYS_KEY, 10) : 10 };
 let whLast = [];
 let whRedrawSum = () => {};
 const whOwnerKey = (o) => `${o.kind}:${o.corpId || o.char.characterId}`;
@@ -3332,8 +3334,10 @@ const WH_SERIES_OTHER = '#7d8796';
 function whChartHtml(names, owners) {
     const hist = store.get(WH_HIST_KEY, {}) || {};
     const keys = new Set(owners.map(whOwnerKey));
+    // период — из выпадающего списка (7…30 дней; история хранится 30 дней)
+    const N = whFilter.days;
     const days = [];
-    for (let i = 9; i >= 0; i -= 1) {
+    for (let i = N - 1; i >= 0; i -= 1) {
         const d = new Date(Date.now() - i * 864e5);
         days.push({ key: whDayKey(d), label: `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}` });
     }
@@ -3351,14 +3355,15 @@ function whChartHtml(names, owners) {
         return WH_SERIES_COLORS[same.indexOf(n)] || WH_SERIES_OTHER;
     };
     const fmtTick = (t) => (t >= 1e6 ? `${(t / 1e6).toLocaleString('ru-RU')} млн` : t >= 1e3 ? `${(t / 1e3).toLocaleString('ru-RU')} тыс` : t.toLocaleString('ru-RU'));
-    // компактная карточка графика: три в ряд
-    const W = 340;
-    const H = 120;
+    // графики друг под другом, компактные по высоте
+    const W = 620;
+    const H = 130;
     const L = 58;
-    const R = 16;
+    const R = 18;
     const T = 8;
     const B = 18;
-    const x = (i) => L + (i * (W - L - R)) / 9;
+    const x = (i) => L + (i * (W - L - R)) / Math.max(1, N - 1);
+    const step = Math.ceil(N / 8);                  // подписи дат — не больше 8
     let sid = 0;
     const charts = [4, 3, 2, 1, 0].map((tier) => {
         const list = names.filter((n) => piTierOf(n) === tier);
@@ -3370,7 +3375,7 @@ function whChartHtml(names, owners) {
         const y = (v) => T + (H - T - B) * (1 - v / top);
         const grid = [0, 0.25, 0.5, 0.75, 1].map((k) => k * top).map((t) => `<line class="wh-ch-gridline" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/>`
             + `<text class="wh-ch-ytick" x="${L - 6}" y="${y(t) + 3.5}">${fmtTick(t)}</text>`).join('');
-        const xl = days.map((d, i) => (i % 2 === 1 ? `<text class="wh-ch-xtick" x="${x(i)}" y="${H - 5}">${d.label}</text>` : '')).join('');
+        const xl = days.map((d, i) => ((N - 1 - i) % step === 0 ? `<text class="wh-ch-xtick" x="${x(i)}" y="${H - 5}">${d.label}</text>` : '')).join('');
         const lines = series.map(({ n, c, vals, s: si }) => {
             const runs = [];
             let run = [];
@@ -3381,7 +3386,7 @@ function whChartHtml(names, owners) {
             const tip = `${n}\n${vals.map((v, i) => (v === null ? '' : `${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')}`)).filter(Boolean).join('\n')}`;
             return `<g class="wh-ch-series" data-s="${si}" style="--c:${c}">
                     ${runs.filter((r) => r.length > 1).map((r) => `<polyline class="wh-ch-line" points="${r.join(' ')}"/><polyline class="wh-ch-hitline" points="${r.join(' ')}" title="${escapeHtml(tip)}"/>`).join('')}
-                    ${vals.map((v, i) => (v === null ? '' : `<circle class="wh-ch-dot" cx="${x(i)}" cy="${y(v)}" r="2.8" title="${escapeHtml(`${n}\n${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')} шт`)}"/>`)).join('')}
+                    ${vals.map((v, i) => (v === null ? '' : `<circle class="wh-ch-dot" cx="${x(i)}" cy="${y(v)}" r="${N > 14 ? 2.2 : 2.8}" title="${escapeHtml(`${n}\n${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')} шт`)}"/>`)).join('')}
                 </g>`;
         }).join('');
         const legend = series.map(({ n, c, vals, s: si }) => {
@@ -3389,7 +3394,7 @@ function whChartHtml(names, owners) {
             return `<li class="wh-lg-item" data-s="${si}" style="--c:${c}"><span class="wh-lg-swatch"></span><span class="wh-lg-name" lang="en">${escapeHtml(n)}</span><span class="wh-lg-last">${last === undefined ? '—' : whFmt(last) || '0'}</span></li>`;
         }).join('');
         return `<figure class="wh-chart wh-chart-tier">
-                <figcaption class="wh-ch-title">${tierBadgeHtml(`P${tier}`)}<span>шт · 10 дней</span></figcaption>
+                <figcaption class="wh-ch-title">${tierBadgeHtml(`P${tier}`)}<span>шт · ${N} дн.</span></figcaption>
                 <svg class="wh-ch-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="P${tier}: количество по дням">
                     ${grid}<line class="wh-ch-axis" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}"/>${xl}${lines}
                 </svg>
@@ -3490,6 +3495,8 @@ function whSumInnerHtml() {
     return `<div class="wh-filters">
             <span class="uv-tiers wh-tiers" role="group" aria-label="Уровни">${tierBtns}</span>
             <select class="ct-input wh-owner-sel" data-role="wh-owner" aria-label="Склад">${opts}</select>
+            <label class="wh-hub"><span class="chain-bar-label">Период</span>
+                <select class="ct-input wh-hub-sel" data-role="wh-days" aria-label="Период графиков">${WH_DAYS_OPTIONS.map((d) => `<option value="${d}"${d === whFilter.days ? ' selected' : ''}>${d} дней</option>`).join('')}</select></label>
             ${hubSel}
         </div>
         <div class="wh-sum-row">
@@ -3646,6 +3653,13 @@ async function renderWarehouse() {
         if (hubSel) {
             try { localStorage.setItem(typeof PI_HUB_STORAGE !== 'undefined' ? PI_HUB_STORAGE : 'eve-pi-hub', hubSel.value); } catch (e) { /* без памяти */ }
             whRedrawSum();
+            return;
+        }
+        const daysSel = event.target.closest('[data-role="wh-days"]');
+        if (daysSel) {
+            whFilter.days = Number(daysSel.value) || 10;
+            store.set(WH_DAYS_KEY, whFilter.days);
+            redrawSum();
             return;
         }
         const sel = event.target.closest('[data-role="wh-owner"]');

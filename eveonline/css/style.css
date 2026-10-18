@@ -4968,7 +4968,7 @@ input.chain-amount:focus {
 
 /* График справа — все ресурсы на одном графике, шкала логарифмическая */
 /* пять графиков по уровням — сеткой справа от таблицы */
-.uv.wh-sum-box .wh-charts { flex: 1 1 30rem; min-width: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 0.6rem; align-items: start; }
+.uv.wh-sum-box .wh-charts { flex: 1 1 30rem; min-width: 0; display: grid; grid-template-columns: 1fr; max-width: 680px; gap: 0.6rem; align-items: start; }
 .wh-chart-tier .wh-ch-title { display: flex; align-items: center; gap: 0.4rem; }
 .wh-charts > .wh-ch-note { grid-column: 1 / -1; }
 .wh-ch-range { margin-left: 0.4rem; color: var(--text-faint); }
@@ -4994,6 +4994,6 @@ input.chain-amount:focus {
 /* компактные карточки графиков по уровням */
 .wh-chart-tier { padding: 0.35rem 0.45rem 0.3rem; }
 .wh-chart-tier .wh-ch-title { margin-bottom: 0.15rem; font-size: 0.74rem; }
-.wh-chart-tier .wh-ch-svg { max-height: 120px; }
-.wh-chart-tier .wh-legend { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); margin-top: 0.2rem; font-size: 0.7rem; gap: 0.05rem 0.6rem; }
+.wh-chart-tier .wh-ch-svg { max-height: 150px; }
+.wh-chart-tier .wh-legend { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); margin-top: 0.2rem; font-size: 0.7rem; gap: 0.05rem 0.6rem; }
 .uv.wh-sum-box .wh-charts { gap: 0.45rem; }
