@@ -1983,7 +1983,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '18.10.2026 22:45';
+const APP_BUILD = '18.10.2026 23:05';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -3397,12 +3397,10 @@ function whChartHtml(names, owners) {
             + `<text class="wh-ch-ytick" x="${L - 6}" y="${y(t) + 3.5}">${fmtTick(t)}</text>`).join('');
         const xl = days.map((d, i) => ((N - 1 - i) % step === 0 ? `<text class="wh-ch-xtick" x="${x(i)}" y="${H - 5}">${d.label}</text>` : '')).join('');
         const lines = series.map(({ n, c, vals, s: si }) => {
-            const runs = [];
-            let run = [];
-            vals.forEach((v, i) => {
-                if (v === null) { if (run.length) runs.push(run); run = []; } else run.push(`${x(i)},${y(v)}`);
-            });
-            if (run.length) runs.push(run);
+            // дни без среза пропускаем: линия соединяет соседние известные дни
+            const run = [];
+            vals.forEach((v, i) => { if (v !== null) run.push(`${x(i)},${y(v)}`); });
+            const runs = [run];
             const tip = `${n}\n${vals.map((v, i) => (v === null ? '' : `${days[i].label}: ${Math.round(v).toLocaleString('ru-RU')}`)).filter(Boolean).join('\n')}`;
             return `<g class="wh-ch-series" data-s="${si}" style="--c:${c}">
                     ${runs.filter((r) => r.length > 1).map((r) => `<polyline class="wh-ch-line" points="${r.join(' ')}"/><polyline class="wh-ch-hitline" points="${r.join(' ')}" title="${escapeHtml(tip)}"/>`).join('')}
@@ -3530,6 +3528,78 @@ function whSumInnerHtml() {
         </div>`;
 }
 
+/* «Планетарное имущество»: поиск и фильтры.
+   Поиск — по названию ресурса, а также по станции, системе, региону и
+   пути внутри станции (контейнер, корабль). Кнопки [P0]…[P4] скрывают
+   уровень; «Ресурсы» — выбор отдельных ресурсов (ничего не выбрано —
+   все). Пустые места, станции и аккаунты прячутся. */
+const whWhere = { q: '', tiers: new Set(), picked: new Set() };
+function whWhereBarHtml(owners) {
+    const names = uniqValues(owners.flatMap((o) => o.entries.map((e) => e.name)));
+    const tierBtns = [0, 1, 2, 3, 4].map((t) => `<button type="button" class="ct-tier ct-tier-p${t} uv-tier" data-role="wh-w-tier" data-tier="${t}"
+        aria-pressed="${!whWhere.tiers.has(t)}" title="${whWhere.tiers.has(t) ? 'Показать' : 'Скрыть'} P${t}">P${t}</button>`).join('');
+    const groups = [4, 3, 2, 1, 0].map((t) => {
+        const list = names.filter((n) => piTierOf(n) === t).sort((a, b) => a.localeCompare(b));
+        if (!list.length) return '';
+        return `<div class="wh-pick-group">${tierBadgeHtml(`P${t}`)}${list.map((n) => `<label class="wh-pick">
+                <input type="checkbox" data-role="wh-w-pick" value="${escapeHtml(n)}"${whWhere.picked.has(n) ? ' checked' : ''}>
+                <span class="uv-icon">${iconFor(n) || ''}</span><span lang="en">${escapeHtml(n)}</span></label>`).join('')}</div>`;
+    }).join('');
+    const label = whWhere.picked.size ? `Ресурсы: ${whWhere.picked.size}` : 'Ресурсы: все';
+    return `<div class="uv wh-filters wh-where-bar">
+            <input type="search" class="ct-input wh-search" data-role="wh-w-q" value="${escapeHtml(whWhere.q)}"
+                   placeholder="Поиск: ресурс, станция, система, контейнер" aria-label="Поиск по имуществу">
+            <span class="uv-tiers wh-tiers" role="group" aria-label="Уровни">${tierBtns}</span>
+            <details class="wh-picker">
+                <summary class="ct-input wh-picker-btn">${label}</summary>
+                <div class="wh-picker-panel">
+                    <div class="wh-picker-actions"><button type="button" class="btn card-add" data-role="wh-w-pick-none">Все ресурсы</button></div>
+                    ${groups}
+                </div>
+            </details>
+        </div>`;
+}
+function whApplyWhere(root) {
+    const box = root.querySelector('.wh-where-box');
+    if (!box) return;
+    const q = whWhere.q.trim().toLowerCase();
+    let any = false;
+    box.querySelectorAll('.wh-owner-col').forEach((col) => {
+        let colAny = false;
+        col.querySelectorAll('.wh-card').forEach((card) => {
+            const cardHit = q && card.dataset.find.includes(q);
+            let cardAny = false;
+            card.querySelectorAll('.wh-spot').forEach((spot) => {
+                const spotHit = cardHit || (q && spot.dataset.find.includes(q));
+                let spotAny = false;
+                spot.querySelectorAll('.wh-line').forEach((line) => {
+                    const n = line.dataset.res;
+                    const ok = !whWhere.tiers.has(Number(line.dataset.tier))
+                        && (!whWhere.picked.size || whWhere.picked.has(n))
+                        && (!q || spotHit || n.toLowerCase().includes(q));
+                    line.hidden = !ok;
+                    if (ok) spotAny = true;
+                });
+                spot.hidden = !spotAny;
+                if (spotAny) cardAny = true;
+            });
+            card.hidden = !cardAny;
+            if (cardAny) colAny = true;
+        });
+        col.hidden = !colAny;
+        if (colAny) any = true;
+    });
+    const empty = box.querySelector('.wh-where-empty');
+    if (empty) empty.hidden = any;
+    const sum = box.querySelector('.wh-picker-btn');
+    if (sum) sum.textContent = whWhere.picked.size ? `Ресурсы: ${whWhere.picked.size}` : 'Ресурсы: все';
+    box.querySelectorAll('[data-role="wh-w-tier"]').forEach((b) => {
+        const off = whWhere.tiers.has(Number(b.dataset.tier));
+        b.setAttribute('aria-pressed', String(!off));
+        b.title = `${off ? 'Показать' : 'Скрыть'} P${b.dataset.tier}`;
+    });
+}
+
 function warehouseHtml(owners) {
     if (!owners.length) return '<p class="evt-dim">Планетарки на складах нет</p>';
     /* Где лежит — карточка на аккаунт и станцию: в шапке аккаунт,
@@ -3555,15 +3625,15 @@ function warehouseHtml(owners) {
         const type = place.typeId && top > 1e12 ? esiTypeName(place.typeId) : '';
         const station = type && !type.startsWith('#') ? `${type} (${place.station})` : place.station || '';
         return `
-            <div class="uv wh-card">
+            <div class="uv wh-card" data-find="${escapeHtml([place.region, place.system, station].join(' ').toLowerCase())}">
                 <div class="uv-head wh-card-head">
                     <button type="button" class="uv-fold uv-fold-all wh-fold" data-role="wh-fold" aria-expanded="true" title="Свернуть" aria-label="Свернуть">−</button>
                     <span class="wh-loc">${whSecHtml(place)}<span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span><span class="uv-sys">${escapeHtml(place.system || 'Система ?')}</span><span class="uv-sep">›</span><span class="wh-station">${escapeHtml(station)}</span></span>
                 </div>
                 <div class="uv-body">${Array.from(spots.values()).map(({ segs, items }) => `
-                    <div class="uv-colony wh-spot">
+                    <div class="uv-colony wh-spot" data-find="${escapeHtml(segs.map((g) => g.label).join(' ').toLowerCase())}">
                         <div class="wh-path">${whPathHtml(segs)}</div>
-                        ${Array.from(items.entries()).sort(byTier).map(([n, q]) => `<div class="uv-line wh-line">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${whFmt(q)}</span></div>`).join('')}
+                        ${Array.from(items.entries()).sort(byTier).map(([n, q]) => `<div class="uv-line wh-line" data-res="${escapeHtml(n)}" data-tier="${piTierOf(n)}">${viewResHtml(n)}<span class="uv-sep">–</span><span class="uv-qty">${whFmt(q)}</span></div>`).join('')}
                     </div>`).join('')}
                 </div>
             </div>`;
@@ -3581,7 +3651,9 @@ function warehouseHtml(owners) {
     return `<div class="wh-layout">
             <div class="uv wh-sum-box"${whView === 'sum' ? '' : ' hidden'}>${whSumInnerHtml()}</div>
             <section class="wh-where-box"${whView === 'where' ? '' : ' hidden'}>
-                <div class="wh-where">${where}</div></section>
+                ${whWhereBarHtml(owners)}
+                <div class="wh-where">${where}</div>
+                <p class="evt-dim wh-where-empty" hidden>По этому поиску и фильтрам ничего не найдено</p></section>
         </div>`;
 }
 
@@ -3598,6 +3670,7 @@ async function renderWarehouse() {
         if (whLast.length) whSaveHistory(whLast);
         if (whFilter.owner && !whLast.some((o) => whOwnerKey(o) === whFilter.owner)) whFilter.owner = '';
         body.innerHTML = warehouseHtml(whLast);
+        whApplyWhere(body);
         whRedrawSum();
     } catch (e) {
         body.innerHTML = `<p class="evt-bad">Ошибка: ${escapeHtml(e.message)}</p>`;
@@ -3648,6 +3721,35 @@ async function renderWarehouse() {
         const chart = event.target.closest && event.target.closest('.wh-chart');
         if (!chart || (event.relatedTarget && chart.contains(event.relatedTarget))) return;
         chart.classList.remove('has-hl');
+    });
+    // имущество: поиск, уровни, выбор ресурсов
+    modal.addEventListener('input', (event) => {
+        const q = event.target.closest && event.target.closest('[data-role="wh-w-q"]');
+        if (!q) return;
+        whWhere.q = q.value;
+        whApplyWhere(modal);
+    });
+    modal.addEventListener('click', (event) => {
+        const t = event.target.closest('[data-role="wh-w-tier"]');
+        if (t) {
+            const tier = Number(t.dataset.tier);
+            if (whWhere.tiers.has(tier)) whWhere.tiers.delete(tier);
+            else whWhere.tiers.add(tier);
+            whApplyWhere(modal);
+            return;
+        }
+        if (event.target.closest('[data-role="wh-w-pick-none"]')) {
+            whWhere.picked.clear();
+            modal.querySelectorAll('[data-role="wh-w-pick"]').forEach((c) => { c.checked = false; });
+            whApplyWhere(modal);
+        }
+    });
+    modal.addEventListener('change', (event) => {
+        const c = event.target.closest && event.target.closest('[data-role="wh-w-pick"]');
+        if (!c) return;
+        if (c.checked) whWhere.picked.add(c.value);
+        else whWhere.picked.delete(c.value);
+        whApplyWhere(modal);
     });
     // фильтры сводной: уровни и склад — перерисовываем только сводную
     const redrawSum = () => {
