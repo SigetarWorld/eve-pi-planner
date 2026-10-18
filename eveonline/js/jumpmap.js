@@ -101,7 +101,9 @@
         avoidSystems: Array.isArray(saved.avoidSystems) ? saved.avoidSystems : [],
         avoidRegions: Array.isArray(saved.avoidRegions) ? saved.avoidRegions : [],
         beacons: Array.isArray(saved.beacons) ? saved.beacons : [],
-        char: saved.char || ''
+        char: saved.char || '',
+        addRegion: saved.addRegion || '',
+        avoidRegion: saved.avoidRegion || ''
     };
     const persist = () => ls.set(LS_KEY, st);
 
@@ -282,6 +284,15 @@
     // ---- Разметка ----
     const shipOptions = () => Array.from(new Set(SHIPS.map((s) => s.group))).map((g) => `<optgroup label="${esc(g)}">${SHIPS.filter((s) => s.group === g)
         .map((s) => `<option${s.name === st.ship ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</optgroup>`).join('');
+    /* Регион → система, как на вкладке «Планеты»: сначала регион, затем
+       только его системы (зависимый список). Регионы — где есть системы
+       k-space; у систем — безопасность, хайсек и закрытые регионы помечены. */
+    const REGIONS = Array.from(new Set(SYS.map((s) => s.region))).sort((a, b) => a.localeCompare(b));
+    const regionOptions = (sel, first) => `<option value="">${first}</option>`
+        + REGIONS.map((r) => `<option value="${esc(r)}"${r === sel ? ' selected' : ''}>${esc(r)}${NO_JUMP_REGIONS.has(r) ? ' — прыжки нельзя' : ''}</option>`).join('');
+    const systemOptions = (region, first) => `<option value="">${first}</option>`
+        + SYS.filter((s) => s.region === region).sort((a, b) => a.name.localeCompare(b.name))
+            .map((s) => `<option value="${esc(s.name)}">${esc(s.name)} · ${secText(s.sec)}${highsec(s) ? ' (хайсек)' : ''}</option>`).join('');
     const lvlOptions = (v) => [0, 1, 2, 3, 4, 5].map((n) => `<option value="${n}"${n === v ? ' selected' : ''}>${n}</option>`).join('');
     root.innerHTML = `
         <datalist id="jm-systems">${SYS.map((s) => `<option value="${esc(s.name)}">${esc(s.region)} · ${secText(s.sec)}</option>`).join('')}</datalist>
@@ -300,8 +311,9 @@
             <aside class="jm-side">
                 <section class="jm-panel">
                     <h3 class="jm-h">Планировщик</h3>
-                    <div class="jm-row"><input class="ct-input" data-role="jm-add" list="jm-systems" placeholder="Система, например EX-GBT" autocomplete="off">
-                        <button type="button" class="btn card-add jm-btn" data-role="jm-add-btn">Добавить</button></div>
+                    <label class="jm-field"><span>Регион</span><select class="ct-input" data-role="jm-add-reg">${regionOptions(st.addRegion, '— выберите регион —')}</select></label>
+                    <label class="jm-field"><span>Система</span><select class="ct-input" data-role="jm-add-sys"${st.addRegion ? '' : ' disabled'}>${st.addRegion ? systemOptions(st.addRegion, '— выберите систему —') : '<option value="">сначала регион</option>'}</select></label>
+                    <div class="jm-row"><button type="button" class="btn card-add jm-btn" data-role="jm-add-btn">Добавить в маршрут</button></div>
                     <p class="jm-msg" data-role="jm-add-msg"></p>
                 </section>
                 <section class="jm-panel">
@@ -311,23 +323,21 @@
                 </section>
                 <section class="jm-panel">
                     <h3 class="jm-h">Параметры прыжка</h3>
+                    <label class="jm-field"><span>Персонаж</span><select class="ct-input" data-role="jm-char"></select></label>
+                    <p class="jm-msg" data-role="jm-char-msg"></p>
                     <label class="jm-field"><span>Корабль</span><select class="ct-input" data-role="jm-ship">${shipOptions()}</select></label>
                     <label class="jm-field"><span>Jump Drive Calibration</span><select class="ct-input jm-lvl" data-role="jm-jdc">${lvlOptions(st.jdc)}</select></label>
                     <label class="jm-field"><span>Jump Fuel Conservation</span><select class="ct-input jm-lvl" data-role="jm-jfc">${lvlOptions(st.jfc)}</select></label>
                     <label class="jm-field"><span>Jump Freighter</span><select class="ct-input jm-lvl" data-role="jm-jf">${lvlOptions(st.jf)}</select></label>
                     <label class="jm-check"><input type="checkbox" data-role="jm-stations"${st.preferStations ? ' checked' : ''}> Предпочитать системы со станциями</label>
                     <label class="jm-check"><input type="checkbox" data-role="jm-incursions"${st.avoidIncursions ? ' checked' : ''}> Обходить вторжения</label>
-                    <div class="jm-char">
-                        <span class="jm-field-title">С персонажа</span>
-                        <div class="jm-row"><select class="ct-input" data-role="jm-char"></select>
-                            <button type="button" class="btn card-add jm-btn" data-role="jm-char-load" title="Навыки прыжков, текущая система и корабль персонажа">Взять</button></div>
-                        <p class="jm-msg" data-role="jm-char-msg"></p>
-                    </div>
+                    <div class="jm-row"><button type="button" class="btn card-add jm-btn" data-role="jm-char-load" title="Текущая система персонажа — в начало маршрута, его корабль — в «Корабль»">Система и корабль персонажа</button></div>
                 </section>
                 <section class="jm-panel">
                     <h3 class="jm-h">Обход систем и регионов</h3>
-                    <div class="jm-row"><input class="ct-input" data-role="jm-avoid" list="jm-avoid-list" placeholder="Система или регион" autocomplete="off">
-                        <button type="button" class="btn card-add jm-btn" data-role="jm-avoid-btn">Обходить</button></div>
+                    <label class="jm-field"><span>Регион</span><select class="ct-input" data-role="jm-avoid-reg">${regionOptions(st.avoidRegion, '— выберите регион —')}</select></label>
+                    <label class="jm-field"><span>Система</span><select class="ct-input" data-role="jm-avoid-sys"${st.avoidRegion ? '' : ' disabled'}>${st.avoidRegion ? systemOptions(st.avoidRegion, '— весь регион —') : '<option value="">сначала регион</option>'}</select></label>
+                    <div class="jm-row"><button type="button" class="btn card-add jm-btn" data-role="jm-avoid-btn">Обходить</button></div>
                     <h4 class="jm-h4">Список обхода</h4>
                     <ul class="jm-tags" data-role="jm-avoid-tags"></ul>
                 </section>
@@ -378,10 +388,9 @@
     }
     function renderChars() {
         const chars = typeof eveChars === 'function' ? eveChars() : [];
-        $('jm-char').innerHTML = chars.length
-            ? chars.map((c) => `<option value="${c.characterId}"${String(c.characterId) === String(st.char) ? ' selected' : ''}>${esc(c.characterName)}</option>`).join('')
-            : '<option value="">нет подключённых персонажей</option>';
-        $('jm-char-load').disabled = !chars.length;
+        $('jm-char').innerHTML = `<option value="">— навыки вручную —</option>`
+            + chars.map((c) => `<option value="${c.characterId}"${String(c.characterId) === String(st.char) ? ' selected' : ''}>${esc(c.characterName)}</option>`).join('');
+        $('jm-char-load').disabled = !st.char || !chars.some((c) => String(c.characterId) === String(st.char));
     }
 
     // Схема маршрута: вид сверху (x, −z), рядом — соседние системы
@@ -504,7 +513,7 @@
     }
 
     // Навыки, система и корабль с персонажа (нужны права EVE на навыки и местоположение)
-    async function loadFromChar() {
+    async function loadFromChar(withPlace) {
         const msg = $('jm-char-msg');
         const id = Number($('jm-char').value);
         const char = (typeof eveChars === 'function' ? eveChars() : []).find((c) => c.characterId === id);
@@ -525,7 +534,7 @@
             st.jfc = lvl(SKILL_IDS.jfc);
             st.jf = lvl(SKILL_IDS.jf);
             const notes = [`навыки ${st.jdc}/${st.jfc}/${st.jf}`];
-            const [loc, ship] = await Promise.all([
+            const [loc, ship] = !withPlace ? [null, null] : await Promise.all([
                 eveFetchJson(`https://esi.evetech.net/latest/characters/${id}/location/?datasource=tranquility`, {}, id).catch(() => null),
                 eveFetchJson(`https://esi.evetech.net/latest/characters/${id}/ship/?datasource=tranquility`, {}, id).catch(() => null)
             ]);
@@ -543,7 +552,8 @@
             $('jm-jdc').value = st.jdc;
             $('jm-jfc').value = st.jfc;
             $('jm-jf').value = st.jf;
-            msg.textContent = `Взято с персонажа: ${notes.join(', ')}`;
+            msg.textContent = `С персонажа: ${notes.join(', ')}`;
+            persist();
             renderRoute();
         } catch (e) {
             msg.textContent = `EVE не отдал данные: ${e.message}`;
@@ -552,26 +562,30 @@
 
     // ---- События ----
     const addSystem = () => {
-        const inp = $('jm-add');
-        const s = byName.get(inp.value.trim().toLowerCase());
+        const s = byName.get(($('jm-add-sys').value || '').toLowerCase());
         const msg = $('jm-add-msg');
-        if (!s) { msg.textContent = inp.value.trim() ? 'Нет такой системы (J-space, Zarzakh и Exordium не входят)' : ''; return; }
+        if (!s) { msg.textContent = st.addRegion ? 'Выберите систему' : 'Сначала выберите регион'; return; }
         msg.textContent = !canEnter(s) && st.waypoints.length ? `${s.name}: ${highsec(s) ? 'хайсек' : s.region} — сюда прыгнуть нельзя` : '';
         st.waypoints.push(s.name);
-        inp.value = '';
+        $('jm-add-sys').value = '';
         renderRoute();
     };
+    // система не выбрана — обходим весь регион
     const addAvoid = () => {
-        const inp = $('jm-avoid');
-        const v = inp.value.trim();
-        if (regionSet.has(v)) { if (!st.avoidRegions.includes(v)) st.avoidRegions.push(v); } else {
-            const s = byName.get(v.toLowerCase());
-            if (!s) return;
-            if (!st.avoidSystems.includes(s.name)) st.avoidSystems.push(s.name);
-        }
-        inp.value = '';
+        const r = $('jm-avoid-reg').value;
+        const s = byName.get(($('jm-avoid-sys').value || '').toLowerCase());
+        if (s) { if (!st.avoidSystems.includes(s.name)) st.avoidSystems.push(s.name); } else if (r && regionSet.has(r)) {
+            if (!st.avoidRegions.includes(r)) st.avoidRegions.push(r);
+        } else return;
+        $('jm-avoid-sys').value = '';
         renderTags();
         renderRoute();
+    };
+    // регион выбран — список систем только этого региона
+    const fillSystems = (regRole, sysRole, region, first) => {
+        const sel = $(sysRole);
+        sel.innerHTML = region ? systemOptions(region, first) : '<option value="">сначала регион</option>';
+        sel.disabled = !region;
     };
     const addBeacon = () => {
         const inp = $('jm-beacon');
@@ -609,7 +623,7 @@
         } else if (role === 'jm-beacon-del') { st.beacons.splice(st.beacons.indexOf(t.dataset.v), 1); renderTags(); renderRoute(); }
         else if (role === 'jm-alt') showAlternatives(t);
         else if (role === 'jm-alt-pick') pickAlternative(Number(t.dataset.i), t.dataset.name);
-        else if (role === 'jm-char-load') loadFromChar();
+        else if (role === 'jm-char-load') loadFromChar(true);
         else if (role === 'jm-grant') { persist(); if (typeof eveLogin === 'function') eveLogin(EXTRA_SCOPES); }
         else if (role === 'jm-save') {
             const name = $('jm-route-name').value.trim() || `${st.waypoints[0] || '?'} → ${st.waypoints[st.waypoints.length - 1] || '?'}`;
@@ -658,7 +672,24 @@
         else if (role === 'jm-stations') st.preferStations = e.target.checked;
         else if (role === 'jm-incursions') st.avoidIncursions = e.target.checked;
         else if (role === 'jm-beacons-only') st.beaconsOnly = e.target.checked;
-        else if (role === 'jm-char') { st.char = e.target.value; persist(); return; }
+        else if (role === 'jm-char') {
+            // персонаж выбран — сразу берём его навыки прыжков
+            st.char = e.target.value;
+            persist();
+            renderChars();
+            if (st.char) loadFromChar(false); else $('jm-char-msg').textContent = 'Навыки — вручную';
+            return;
+        } else if (role === 'jm-add-reg') {
+            st.addRegion = e.target.value;
+            fillSystems('jm-add-reg', 'jm-add-sys', st.addRegion, '— выберите систему —');
+            persist();
+            return;
+        } else if (role === 'jm-avoid-reg') {
+            st.avoidRegion = e.target.value;
+            fillSystems('jm-avoid-reg', 'jm-avoid-sys', st.avoidRegion, '— весь регион —');
+            persist();
+            return;
+        } else if (role === 'jm-add-sys' || role === 'jm-avoid-sys') return;
         else return;
         renderRoute();
     });
