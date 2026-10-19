@@ -5197,12 +5197,22 @@ input.chain-amount:focus {
 .jm-reg-t { fill: var(--text-dim); opacity: 0.35; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
 
 /* ---------- Карты → «Карта планирования» (js/planmap.js) ---------- */
-.pm-layout { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.8rem; align-items: start; }
-.pm-side { display: flex; flex-direction: column; gap: 0.45rem; max-height: calc(100vh - var(--header-h) - 9rem); overflow-y: auto; padding-right: 0.2rem; }
 .pm-side-head { display: flex; align-items: center; gap: 0.6rem; }
-.pm-side-title { margin: 0.3rem 0 0; font-family: var(--font-heading); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+.pm-side-title { margin: 0 0 0.4rem; font-family: var(--font-heading); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+.pm-side-head .pm-side-title { margin: 0; }
 .pm-clear { margin-left: auto; padding: 0.2rem 0.55rem; font-size: 0.72rem; color: var(--text-faint); background: transparent; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; }
 .pm-clear:hover { color: var(--red); border-color: var(--red); }
+/* Кнопки таблиц плана и панели под строкой кнопок — без прокрутки */
+.pm-panel-btns { display: flex; gap: 0.3rem; }
+.pm-panel-btn { height: 32px; padding: 0 0.7rem; font-size: 0.78rem; color: var(--text-dim); background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
+.pm-panel-btn:hover { color: var(--accent); border-color: var(--accent); }
+.pm-panel-btn[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.pm-panel-btn b { margin-left: 0.2rem; color: var(--accent); }
+.pm-panels { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0.8rem; }
+.pm-panels:has(.pm-panel:not([hidden])) { margin-top: 0.6rem; }
+.pm-panel { padding: 0.6rem 0.7rem; background: var(--bg-panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.pm-panel[hidden] { display: none; }
+.pm-panel[data-panel="pilots"] { flex: 1 1 320px; }
 .pm-table tbody tr.is-zero { opacity: 0.55; }
 .pm-table tbody tr.is-hl { background: rgba(255, 157, 46, 0.14); opacity: 1; }
 .pm-table .st-name-inner { cursor: pointer; }
@@ -5213,11 +5223,17 @@ input.chain-amount:focus {
 .pm-table .pm-in.is-ok b { color: #5fd38d; }
 .pm-table .pm-in.is-missing { background: rgba(255, 80, 80, 0.16); }
 .pm-table .pm-in.is-missing b { color: var(--red); }
-.pm-pilots { display: flex; flex-wrap: wrap; gap: 0.3rem; font-size: 0.78rem; }
-.pm-pilot { padding: 0.15rem 0.5rem; color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: 999px; }
-.pm-pilot b { color: var(--accent); }
-.pm-pilot.is-over { border-color: var(--red); }
-.pm-pilot.is-over b { color: var(--red); }
+/* Персонажи: карточка на каждого — планет из 6 и что на них */
+.pm-pilots { display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.78rem; }
+.pm-pilot { min-width: 200px; padding: 0.35rem 0.5rem; background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; }
+.pm-pilot-head { display: flex; gap: 0.5rem; justify-content: space-between; margin-bottom: 0.25rem; }
+.pm-pilot-head b { color: var(--text); }
+.pm-pilot-head span { font-weight: 700; color: var(--accent); }
+.pm-pilot.is-full { border-color: rgba(255, 157, 46, 0.6); }
+.pm-pilot ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.pm-pilot li { display: flex; align-items: center; gap: 0.35rem; color: var(--text-dim); }
+.pm-pilot li .res-icon { width: 16px; height: 16px; margin: 0; }
+.pm-pilot li small { margin-left: auto; color: var(--text-faint); }
 .pm-pilot-none { color: var(--text-faint); }
 .pm-tiers { display: flex; gap: 0.3rem; }
 .pm-tiers button { display: inline-flex; align-items: center; height: 32px; padding: 0 0.45rem; background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; opacity: 0.6; }
@@ -5226,25 +5242,28 @@ input.chain-amount:focus {
 .pm .ct-tier { display: inline-flex; align-items: center; justify-content: center; min-width: 1.7rem; height: 1.25rem; padding: 0 0.25rem; font-size: 0.7rem; font-weight: 700; line-height: 1; color: var(--accent); border: 1px solid rgba(255, 157, 46, 0.55); border-radius: 3px; background: rgba(255, 157, 46, 0.08); }
 .pm .ct-tier-p0 { color: var(--text-dim); border-color: var(--border); background: rgba(255, 255, 255, 0.04); }
 .pm .ct-tier-p2 { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 55%, transparent); background: color-mix(in srgb, var(--cyan) 8%, transparent); }
+/* Карта: ветки к планетам, тонкие линии к значкам, имена персонажей */
 .pm-view { height: calc(100vh - var(--header-h) - 12rem); }
-.pm-block { fill: rgba(11, 18, 32, 0.88); stroke: rgba(150, 185, 230, 0.28); stroke-width: 1; }
-.pm-num { font-size: 9px; font-weight: 700; fill: var(--text-dim); }
-.pm-planet.is-empty { opacity: 0.4; }
+.pm-branch { stroke-width: 1.4; opacity: 0.55; }
+.pm-twig { stroke: rgba(150, 185, 230, 0.35); stroke-width: 1; }
+.pm-planet-body { cursor: grab; }
+.pm-num { font-size: 8.5px; font-weight: 700; fill: var(--text-dim); paint-order: stroke; stroke: #0b1220; stroke-width: 2.5px; }
+.pm-planet.is-empty .pm-planet-body { opacity: 0.4; }
 .pm-planet.is-plan .pm-num { fill: #ff9d2e; }
 .pm-res { cursor: pointer; }
-.pm-res-box { fill: #0b1220; stroke: rgba(150, 185, 230, 0.35); stroke-width: 1; }
+.pm-res-box { fill: #0b1220; stroke: rgba(150, 185, 230, 0.4); stroke-width: 1; }
 .pm-res:hover .pm-res-box, .pm-res:focus-visible .pm-res-box { stroke: var(--accent); stroke-width: 1.5; }
 .pm-res:focus { outline: none; }
 .pm-res.is-plan .pm-res-box { stroke: #ff9d2e; stroke-width: 2; fill: rgba(255, 157, 46, 0.18); }
 .pm-res.is-hl .pm-res-box { stroke: #5fd38d; stroke-width: 2.2; }
-.pm-res-count { fill: #ff9d2e; }
-.pm-res-count-text { font-size: 7.5px; font-weight: 700; fill: #10131a; }
+.pm-who { font-size: 9px; font-weight: 700; fill: #ffb45c; paint-order: stroke; stroke: #0b1220; stroke-width: 3px; pointer-events: none; }
 .pm-pop-res { display: inline-flex; align-items: center; gap: 0.35rem; }
 .pm-pop-res .res-icon { width: 20px; height: 20px; margin: 0; }
 .pm-pop-sub { font-size: 0.75rem; color: var(--text-faint); }
 .pm-pop-planet { font-size: 0.78rem; color: var(--text-dim); }
 .pm-pop-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.2rem; }
 .pm-pop-list li { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--text); }
+.pm-pop-cnt { font-size: 0.72rem; color: var(--text-faint); }
 .pm-pop-list li button { margin-left: auto; width: 22px; height: 22px; padding: 0; color: var(--text-faint); background: transparent; border: 1px solid var(--border); border-radius: 50%; cursor: pointer; }
 .pm-pop-list li button:hover { color: var(--red); border-color: var(--red); }
 .pm-pop-list .pm-pop-none { color: var(--text-faint); }
@@ -5252,10 +5271,8 @@ input.chain-amount:focus {
 .pm-pop-add .btn { flex: none; padding: 0.3rem 0.6rem; }
 .pm-pop-quick { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.4rem; }
 .pm-pop-quick button { padding: 0.15rem 0.5rem; font-size: 0.75rem; color: var(--text-dim); background: var(--bg-deep); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
-.pm-pop-quick button:hover { color: var(--accent); border-color: var(--accent); }
+.pm-pop-quick button small { color: var(--text-faint); }
+.pm-pop-quick button:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.pm-pop-quick button:disabled { opacity: 0.4; cursor: not-allowed; }
 .pm-pop-note { margin: 0.4rem 0 0; font-size: 0.74rem; color: #ff9d2e; }
 .pm-pop-note:empty { display: none; }
-@media (max-width: 1100px) {
-    .pm-layout { grid-template-columns: minmax(0, 1fr); }
-    .pm-side { max-height: none; }
-}
