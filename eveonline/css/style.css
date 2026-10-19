@@ -5160,13 +5160,26 @@ input.chain-amount:focus {
 .jm-lg-gate { background: #3f5677; }
 .jm-lg-arc { margin-left: 0.6rem; background: var(--cyan); }
 
-/* Прыжковая карта: панели в два столбца, справа — компактная карта.
+/* Прыжковая карта: три столбца одной ширины — два с панелями и карта.
    Пары по строкам: планировщик — точки, параметры — обход и маяки,
-   загрузка — маршрут. Правый столбец шире (точки, маршрут). */
-.jm-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 540px); gap: 0.9rem; align-items: start; }
-.jm-grid { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 0.7rem; align-items: start; }
+   загрузка — маршрут; панели одной строки — одной высоты. Карта —
+   от верха первой строки до низа последней, не ниже маршрута. */
+.jm-layout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.7rem; align-items: stretch; }
+.jm-grid { grid-column: span 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; align-items: stretch; }
 .jm-cell { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; }
-.jm-main { position: sticky; top: calc(var(--header-h) + 0.5rem); }
-@media (max-width: 1250px) { .jm-layout { grid-template-columns: 1fr; } .jm-main { position: static; order: -1; max-width: 640px; } }
+.jm-cell > .jm-panel { flex: 1 1 auto; }
+.jm-main { display: flex; flex-direction: column; min-width: 0; }
+.jm-main > .jm-map-panel { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.jm-map-panel .jm-map { position: relative; flex: 1 1 auto; min-height: 260px; overflow: hidden; }
+.jm-map-panel .jm-map > svg { position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 26px); }
+.jm-map-panel .jm-map > .jm-map-legend { position: absolute; left: 0.6rem; bottom: 0.3rem; margin: 0; }
+@media (max-width: 1200px) {
+    .jm-layout { grid-template-columns: 1fr; }
+    .jm-grid { grid-column: auto; }
+    .jm-main { order: -1; }
+    .jm-map-panel .jm-map { height: 340px; flex: none; }
+}
 @media (max-width: 760px) { .jm-grid { grid-template-columns: 1fr; } }
 .jm-sys-t { fill: var(--text-faint); font-size: 7px; pointer-events: none; }
+/* таблица маршрута в узком столбце — прокрутка вбок, а не обрезка */
+.jm-cell [data-role="jm-route"] { overflow-x: auto; }

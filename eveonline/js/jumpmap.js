@@ -440,15 +440,34 @@
     }
 
     // Схема маршрута: вид сверху (x, −z), рядом — соседние системы
+    /* Карта занимает свою клетку целиком: от верха «Планировщика» до низа
+       «Маршрута прыжков». Размер рисунка — по размеру клетки; клетка
+       поменялась (маршрут стал длиннее, окно шире) — перерисовываем. */
+    let lastMap = null;
+    let mapRO = null;
     function renderMap(path, isWp) {
         const box = $('jm-map');
+        lastMap = path ? { path, isWp } : null;
+        if (!mapRO && typeof ResizeObserver === 'function') {
+            let raf = 0;
+            mapRO = new ResizeObserver(() => {
+                cancelAnimationFrame(raf);
+                raf = requestAnimationFrame(() => {
+                    const svg = box.querySelector('svg');
+                    if (!lastMap || !svg) return;
+                    const w = Number(svg.getAttribute('width'));
+                    const h = Number(svg.getAttribute('height'));
+                    if (Math.abs(box.clientWidth - w) > 4 || Math.abs(box.clientHeight - 26 - h) > 4) renderMap(lastMap.path, lastMap.isWp);
+                });
+            });
+            mapRO.observe(box);
+        }
         if (!path) {
             box.innerHTML = '<p class="evt-dim">Добавьте две системы — здесь появится схема маршрута</p>';
             return;
         }
-        // карта компактная, справа от панелей
-        const W = 520;
-        const H = 320;
+        const W = Math.max(280, Math.round(box.clientWidth || 520));
+        const H = Math.max(220, Math.round((box.clientHeight || 346) - 26));
         const pad = 40;
         const xs = path.map((s) => s.x);
         const zs = path.map((s) => -s.z);
@@ -513,7 +532,7 @@
         const nodes = path.map((s, i) => `<g class="jm-node${isWp.has(s) ? ' is-wp' : ''}" title="${esc(`${s.name} · ${s.region} · ${secText(s.sec)}`)}">
                 <circle cx="${px(s)}" cy="${pz(s)}" r="${isWp.has(s) ? 6 : 4.5}" class="jm-node-c jm-dot-${secClass(s.sec)}"/>
                 <text x="${px(s) + 8}" y="${pz(s) + 4}" class="jm-node-t">${i + 1}. ${esc(s.name)}</text></g>`).join('');
-        box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Схема маршрута">${gateLines}${dots}${labels}${legs}${nodes}</svg>
+        box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Схема маршрута">${gateLines}${dots}${labels}${legs}${nodes}</svg>
             <p class="jm-map-legend"><span class="jm-lg-gate"></span>звёздные врата<span class="jm-lg-arc"></span>прыжок</p>`;
     }
 
