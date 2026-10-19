@@ -499,6 +499,18 @@
             gateLines += `<line class="jm-gate" x1="${px(a).toFixed(1)}" y1="${pz(a).toFixed(1)}" x2="${px(b).toFixed(1)}" y2="${pz(b).toFixed(1)}"/>`;
         }));
         const dots = around.map((s) => `<circle class="jm-dot jm-dot-${secClass(s.sec)}" cx="${px(s).toFixed(1)}" cy="${pz(s).toFixed(1)}" r="1.4" title="${esc(`${s.name} · ${s.region} · ${secText(s.sec)}`)}"/>`).join('');
+        /* подписи регионов — по центру систем региона в кадре, крупно и
+           бледно, под всем остальным (не мешают системам и маршруту) */
+        const byRegion = new Map();
+        around.forEach((s) => {
+            if (!byRegion.has(s.region)) byRegion.set(s.region, []);
+            byRegion.get(s.region).push(s);
+        });
+        const regionLabels = Array.from(byRegion.entries()).filter(([, list]) => list.length >= 3).map(([name, list]) => {
+            const cx = list.reduce((t, s) => t + px(s), 0) / list.length;
+            const cy = list.reduce((t, s) => t + pz(s), 0) / list.length;
+            return `<text class="jm-reg-t" x="${cx.toFixed(1)}" y="${cy.toFixed(1)}">${esc(name)}</text>`;
+        }).join('');
         // подписи систем вокруг маршрута (системы маршрута подписаны крупнее отдельно)
         const onPath = new Set(path.map((s) => s.name));
         /* подпись ставим, только если не налезает на уже поставленные; ближние
@@ -534,7 +546,7 @@
         const nodes = path.map((s, i) => `<g class="jm-node${isWp.has(s) ? ' is-wp' : ''}" title="${esc(`${s.name} · ${s.region} · ${secText(s.sec)}`)}">
                 <circle cx="${px(s)}" cy="${pz(s)}" r="${isWp.has(s) ? 6 : 4.5}" class="jm-node-c jm-dot-${secClass(s.sec)}"/>
                 <text x="${px(s) + 8}" y="${pz(s) + 4}" class="jm-node-t">${i + 1}. ${esc(s.name)}</text></g>`).join('');
-        box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Схема маршрута">${gateLines}${dots}${labels}${legs}${nodes}</svg>
+        box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Схема маршрута">${regionLabels}${gateLines}${dots}${labels}${legs}${nodes}</svg>
             <p class="jm-map-legend"><span class="jm-lg-gate"></span>звёздные врата<span class="jm-lg-arc"></span>прыжок</p>`;
     }
 
