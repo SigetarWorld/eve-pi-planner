@@ -439,8 +439,11 @@
                         ? `\nПерсонажи: ${ic.who.join(', ')}` : '\nНажмите, чтобы выбрать персонажа'}\nПеретащите, чтобы передвинуть значок`;
                     el('rect', { class: 'pm-res-box', x: -ICON / 2, y: -ICON / 2, width: ICON, height: ICON, rx: 3 }, rg);
                     if (RESOURCE_ICONS[ic.res]) el('image', { href: RESOURCE_ICONS[ic.res], x: -ICON / 2 + 1, y: -ICON / 2 + 1, width: ICON - 2, height: ICON - 2 }, rg);
-                    // значок уровня [P0] / [P1] / [P2] — под картинкой ресурса
-                    const badge = el('text', { class: `pm-tier-badge pm-tier-p${tier}`, y: ICON / 2 + 8, 'text-anchor': 'middle' }, rg);
+                    // значок уровня [P0] / [P1] / [P2] — квадратик под картинкой ресурса, как на планетарной карте
+                    const TB = 12;
+                    const tbY = ICON / 2 + 2;
+                    el('rect', { class: `pm-tier-sq pm-tier-sq-p${tier}`, x: -TB / 2, y: tbY, width: TB, height: TB, rx: 2 }, rg);
+                    const badge = el('text', { class: 'pm-tier-sq-text', x: 0, y: tbY + TB / 2, 'text-anchor': 'middle', dy: '0.35em' }, rg);
                     badge.textContent = `P${tier}`;
                     if (ic.who.length) {
                         const t = el('text', {
