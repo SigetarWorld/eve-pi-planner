@@ -325,9 +325,7 @@
                 // имя — с внешней стороны значка (по горизонтали от системы)
                 const right = pl.x + ix >= 0;
                 const nameW = who.length ? who.join(', ').length * NAME_CHAR + 6 : 0;
-                // квадратик уровня слева от ресурса (+2 зазор)
-                const tierShift = ICON + 2;
-                const box = { x1: pl.x + ix - ICON / 2 - tierShift - 1, y1: pl.y + iy - ICON / 2 - 1, x2: pl.x + ix + ICON / 2 + 1, y2: pl.y + iy + ICON / 2 + 1 };
+                const box = { x1: pl.x + ix - ICON / 2 - 1, y1: pl.y + iy - ICON / 2 - 8, x2: pl.x + ix + ICON / 2 + 8, y2: pl.y + iy + ICON / 2 + 1 };
                 if (right) box.x2 += nameW; else box.x1 -= nameW;
                 parts.push(box);
                 return { res, x: ix, y: iy, who, right };
@@ -441,10 +439,12 @@
                         ? `\nПерсонажи: ${ic.who.join(', ')}` : '\nНажмите, чтобы выбрать персонажа'}\nПеретащите, чтобы передвинуть значок`;
                     el('rect', { class: 'pm-res-box', x: -ICON / 2, y: -ICON / 2, width: ICON, height: ICON, rx: 3 }, rg);
                     if (RESOURCE_ICONS[ic.res]) el('image', { href: RESOURCE_ICONS[ic.res], x: -ICON / 2 + 1, y: -ICON / 2 + 1, width: ICON - 2, height: ICON - 2 }, rg);
-                    // значок уровня [P0] / [P1] / [P2] — квадратик слева от ресурса, размер как ресурс
-                    const tbX = -ICON / 2 - 2 - ICON;  // слева от ресурса с зазором 2
-                    el('rect', { class: `pm-tier-sq pm-tier-sq-p${tier}`, x: tbX, y: -ICON / 2, width: ICON, height: ICON, rx: 3 }, rg);
-                    const badge = el('text', { class: 'pm-tier-sq-text', x: tbX + ICON / 2, y: 0, 'text-anchor': 'middle', dy: '0.35em' }, rg);
+                    // значок уровня [P0] / [P1] / [P2] — бейдж в правом верхнем углу ресурса
+                    const TB = 14;
+                    const tbX = ICON / 2 - TB / 2 + 2;
+                    const tbY = -ICON / 2 - TB / 2 + 1;
+                    el('rect', { class: `pm-tier-sq pm-tier-sq-p${tier}`, x: tbX, y: tbY, width: TB, height: TB, rx: 4 }, rg);
+                    const badge = el('text', { class: 'pm-tier-sq-text', x: tbX + TB / 2, y: tbY + TB / 2, 'text-anchor': 'middle', dy: '0.35em' }, rg);
                     badge.textContent = `P${tier}`;
                     if (ic.who.length) {
                         const t = el('text', {
