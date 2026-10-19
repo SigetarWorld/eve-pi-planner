@@ -5268,7 +5268,7 @@ input.chain-amount:focus {
 .pm-tier-sq { fill: rgba(255, 157, 46, 0.14); stroke: rgba(255, 157, 46, 0.45); stroke-width: 0.7; pointer-events: none; }
 .pm-tier-sq-p0 { fill: rgba(255, 255, 255, 0.07); stroke: var(--border); }
 .pm-tier-sq-p2 { fill: color-mix(in srgb, var(--cyan) 14%, #0b1220); stroke: color-mix(in srgb, var(--cyan) 45%, transparent); }
-.pm-tier-sq-text { font-size: 6.4px; font-weight: 700; fill: #ff9d2e; pointer-events: none; }
+.pm-tier-sq-text { font-size: 8px; font-weight: 700; fill: #ff9d2e; pointer-events: none; }
 .pm-tier-sq-p0 + .pm-tier-sq-text { fill: var(--text-dim); }
 .pm-tier-sq-p2 + .pm-tier-sq-text { fill: var(--cyan); }
 .pm-who { font-size: 9px; font-weight: 700; fill: #ffb45c; paint-order: stroke; stroke: #0b1220; stroke-width: 3px; pointer-events: none; }
