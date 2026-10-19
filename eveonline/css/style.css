@@ -5264,11 +5264,13 @@ input.chain-amount:focus {
 .pm-res:focus { outline: none; }
 .pm-res.is-plan .pm-res-box { stroke: #ff9d2e; stroke-width: 2; fill: rgba(255, 157, 46, 0.18); }
 .pm-res.is-hl .pm-res-box { stroke: #5fd38d; stroke-width: 2.2; }
-/* бейдж уровня P0/P1/P2 — в правом верхнем углу ресурса */
-.pm-tier-sq { fill: rgba(255, 157, 46, 0.85); stroke: rgba(255, 157, 46, 0.9); stroke-width: 0.8; pointer-events: none; }
-.pm-tier-sq-p0 { fill: rgba(120, 120, 140, 0.75); stroke: rgba(160, 160, 180, 0.6); }
-.pm-tier-sq-p2 { fill: rgba(30, 160, 150, 0.85); stroke: rgba(79, 209, 197, 0.9); }
-.pm-tier-sq-text { font-size: 8px; font-weight: 700; fill: #fff; pointer-events: none; }
+/* бейдж уровня P0/P1/P2 — в правом верхнем углу ресурса, стиль как mm-tier на планетарной карте */
+.pm-tier-sq { fill: rgba(255, 157, 46, 0.14); stroke: rgba(255, 157, 46, 0.8); stroke-width: 0.8; pointer-events: none; }
+.pm-tier-sq-p0 { fill: rgba(255, 255, 255, 0.07); stroke: rgba(150, 185, 230, 0.55); }
+.pm-tier-sq-p2 { fill: color-mix(in srgb, var(--cyan) 14%, #0b1220); stroke: color-mix(in srgb, var(--cyan) 80%, transparent); }
+.pm-tier-sq-text { font-size: 8px; font-weight: 700; fill: var(--accent); pointer-events: none; }
+.pm-tier-sq-p0 + .pm-tier-sq-text { fill: var(--text-dim); }
+.pm-tier-sq-p2 + .pm-tier-sq-text { fill: var(--cyan); }
 .pm-who { font-size: 9px; font-weight: 700; fill: #ffb45c; paint-order: stroke; stroke: #0b1220; stroke-width: 3px; pointer-events: none; }
 .pm-pop-res { display: inline-flex; align-items: center; gap: 0.35rem; }
 .pm-pop-res .res-icon { width: 20px; height: 20px; margin: 0; }
