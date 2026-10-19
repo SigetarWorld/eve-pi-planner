@@ -343,13 +343,6 @@
                     <h4 class="jm-h4">Список обхода</h4>
                     <ul class="jm-tags" data-role="jm-avoid-tags"></ul>
                 </section>
-                <section class="jm-panel">
-                    <h3 class="jm-h">Сеть маяков</h3>
-                    <div class="jm-row"><input class="ct-input" data-role="jm-beacon" list="jm-systems" placeholder="Система с маяком" autocomplete="off">
-                        <button type="button" class="btn card-add jm-btn" data-role="jm-beacon-btn">Добавить</button></div>
-                    <label class="jm-check"><input type="checkbox" data-role="jm-beacons-only"${st.beaconsOnly ? ' checked' : ''}> Прыгать только по маякам</label>
-                    <ul class="jm-tags" data-role="jm-beacon-tags"></ul>
-                </section>
                 </div>
                 <div class="jm-cell">
                 <section class="jm-panel">
@@ -365,6 +358,15 @@
                 </section>
                 </div>
                 <div class="jm-cell">
+                <section class="jm-panel">
+                    <h3 class="jm-h">Сеть маяков</h3>
+                    <div class="jm-row"><input class="ct-input" data-role="jm-beacon" list="jm-systems" placeholder="Система с маяком" autocomplete="off">
+                        <button type="button" class="btn card-add jm-btn" data-role="jm-beacon-btn">Добавить</button></div>
+                    <label class="jm-check"><input type="checkbox" data-role="jm-beacons-only"${st.beaconsOnly ? ' checked' : ''}> Прыгать только по маякам</label>
+                    <ul class="jm-tags" data-role="jm-beacon-tags"></ul>
+                </section>
+                </div>
+                <div class="jm-cell jm-cell-wide">
                 <section class="jm-panel">
                     <h3 class="jm-h">Маршрут прыжков <span class="jm-sub" data-role="jm-route-title"></span></h3>
                     <div data-role="jm-route"></div>
