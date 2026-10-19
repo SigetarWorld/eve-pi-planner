@@ -5202,17 +5202,20 @@ input.chain-amount:focus {
 .pm-side-head .pm-side-title { margin: 0; }
 .pm-clear { margin-left: auto; padding: 0.2rem 0.55rem; font-size: 0.72rem; color: var(--text-faint); background: transparent; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; }
 .pm-clear:hover { color: var(--red); border-color: var(--red); }
-/* Кнопки таблиц плана и панели под строкой кнопок — без прокрутки */
+/* Кнопки таблиц плана */
 .pm-panel-btns { display: flex; gap: 0.3rem; }
 .pm-panel-btn { height: 32px; padding: 0 0.7rem; font-size: 0.78rem; color: var(--text-dim); background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
 .pm-panel-btn:hover { color: var(--accent); border-color: var(--accent); }
 .pm-panel-btn[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 .pm-panel-btn b { margin-left: 0.2rem; color: var(--accent); }
-.pm-panels { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0.8rem; }
-.pm-panels:has(.pm-panel:not([hidden])) { margin-top: 0.6rem; }
-.pm-panel { padding: 0.6rem 0.7rem; background: var(--bg-panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+/* .pm-body: таблицы слева, карта справа */
+.pm-body { display: flex; align-items: stretch; gap: 0; flex: 1 1 auto; min-height: 0; }
+.pm-panels { flex: 0 0 auto; display: flex; flex-direction: column; gap: 0.5rem; max-height: calc(100vh - var(--header-h) - 6rem); overflow-y: auto; scrollbar-width: thin; }
+.pm-panels:has(.pm-panel:not([hidden])) { padding: 0.5rem 0.5rem 0.5rem 0; }
+.pm-panels:not(:has(.pm-panel:not([hidden]))) { display: none; }
+.pm-panel { padding: 0.5rem 0.6rem; background: var(--bg-panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .pm-panel[hidden] { display: none; }
-.pm-panel[data-panel="pilots"] { flex: 1 1 320px; }
+.pm-table { font-size: 0.72rem; }
 .pm-table tbody tr.is-zero { opacity: 0.55; }
 .pm-table tbody tr.is-hl { background: rgba(255, 157, 46, 0.14); opacity: 1; }
 .pm-table .st-name-inner { cursor: pointer; }
@@ -5223,7 +5226,10 @@ input.chain-amount:focus {
 .pm-table .pm-in.is-ok b { color: #5fd38d; }
 .pm-table .pm-in.is-missing { background: rgba(255, 80, 80, 0.16); }
 .pm-table .pm-in.is-missing b { color: var(--red); }
-/* Персонажи: карточка на каждого — планет из 6 и что на них */
+/* Модалка персонажей — как «Склад» */
+.pm-modal { align-items: flex-start; padding-top: 2rem; }
+.pm-modal-box { width: min(900px, calc(100vw - 2rem)); max-height: calc(100vh - 4rem); overflow-y: auto; scrollbar-width: thin; }
+.pm-modal .pm-side-head { margin-bottom: 0.5rem; }
 .pm-pilots { display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.78rem; }
 .pm-pilot { min-width: 200px; padding: 0.35rem 0.5rem; background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; }
 .pm-pilot-head { display: flex; gap: 0.5rem; justify-content: space-between; margin-bottom: 0.25rem; }
@@ -5242,8 +5248,10 @@ input.chain-amount:focus {
 .pm .ct-tier { display: inline-flex; align-items: center; justify-content: center; min-width: 1.7rem; height: 1.25rem; padding: 0 0.25rem; font-size: 0.7rem; font-weight: 700; line-height: 1; color: var(--accent); border: 1px solid rgba(255, 157, 46, 0.55); border-radius: 3px; background: rgba(255, 157, 46, 0.08); }
 .pm .ct-tier-p0 { color: var(--text-dim); border-color: var(--border); background: rgba(255, 255, 255, 0.04); }
 .pm .ct-tier-p2 { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 55%, transparent); background: color-mix(in srgb, var(--cyan) 8%, transparent); }
+/* Кнопка «Скрыть пустые» */
+.pm-hide-btn { font-size: 0.72rem; }
 /* Карта: ветки к планетам, тонкие линии к значкам, имена персонажей */
-.pm-view { height: calc(100vh - var(--header-h) - 12rem); }
+.pm-view { flex: 1 1 0%; height: calc(100vh - var(--header-h) - 6rem); min-width: 0; }
 .pm-branch { stroke-width: 1.4; opacity: 0.55; }
 .pm-twig { stroke: rgba(150, 185, 230, 0.35); stroke-width: 1; }
 .pm-planet-body { cursor: grab; }
@@ -5256,6 +5264,11 @@ input.chain-amount:focus {
 .pm-res:focus { outline: none; }
 .pm-res.is-plan .pm-res-box { stroke: #ff9d2e; stroke-width: 2; fill: rgba(255, 157, 46, 0.18); }
 .pm-res.is-hl .pm-res-box { stroke: #5fd38d; stroke-width: 2.2; }
+/* значок уровня P0/P1/P2 под картинкой ресурса на SVG-карте */
+.pm-tier-badge { font-size: 6.5px; font-weight: 700; paint-order: stroke; stroke: #0b1220; stroke-width: 2px; pointer-events: none; }
+.pm-tier-p0 { fill: var(--text-dim); }
+.pm-tier-p1 { fill: #ff9d2e; }
+.pm-tier-p2 { fill: #4fd1c5; }
 .pm-who { font-size: 9px; font-weight: 700; fill: #ffb45c; paint-order: stroke; stroke: #0b1220; stroke-width: 3px; pointer-events: none; }
 .pm-pop-res { display: inline-flex; align-items: center; gap: 0.35rem; }
 .pm-pop-res .res-icon { width: 20px; height: 20px; margin: 0; }

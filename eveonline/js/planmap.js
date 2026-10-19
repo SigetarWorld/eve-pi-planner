@@ -44,6 +44,7 @@
     const PM_TIER_KEY = 'evepi.plan.tier';
     const PM_POS_KEY = 'evepi.plan.pos';
     const PM_PANELS_KEY = 'evepi.plan.panels';
+    const PM_HIDE_KEY = 'evepi.plan.hideUnused';
     const MAX_PLANETS = 6;  // планет у одного персонажа (Interplanetary Consolidation V)
 
     const PLANET_IMAGES = {
@@ -108,6 +109,7 @@
     let tier = Number(load(PM_TIER_KEY, 1));
     if (![0, 1, 2].includes(tier)) tier = 1;
     let highlight = '';  // ресурс, подсвеченный из таблицы
+    let hideUnused = Boolean(load(PM_HIDE_KEY, false));
     const savePlan = () => save(PM_PLAN_KEY, plan);
     const lower = (s) => String(s || '').toLowerCase();
     // Планеты персонажа в плане: набор «система номер»
@@ -137,6 +139,7 @@
                 <button type="button" class="pm-panel-btn" data-pm-panel="p2" aria-pressed="false">Таблица P2</button>
                 <button type="button" class="pm-panel-btn" data-pm-panel="pilots" aria-pressed="false">Персонажи <b data-pm="pilot-count">0</b></button>
             </div>
+            <button type="button" class="pm-panel-btn pm-hide-btn" data-pm-hide aria-pressed="${hideUnused}" title="Скрыть планеты и ресурсы без плана">Скрыть пустые</button>
             <span class="mm-info" data-pm="info"></span>
             <div class="mm-zoom">
                 <button type="button" data-pm-zoom="in" title="Приблизить" aria-label="Приблизить">+</button>
@@ -145,27 +148,32 @@
                 <button type="button" data-pm-zoom="reset" title="Вернуть планеты и значки региона на места по умолчанию" aria-label="Сбросить места">↺</button>
             </div>
         </div>
-        <div class="pm-panels" data-pm="panels">
-            <section class="pm-panel" data-panel="p1" hidden>
-                <h3 class="pm-side-title">План: P1</h3>
-                <div data-pm="p1"></div>
-            </section>
-            <section class="pm-panel" data-panel="p2" hidden>
-                <h3 class="pm-side-title">План: P2</h3>
-                <div data-pm="p2"></div>
-            </section>
-            <section class="pm-panel" data-panel="pilots" hidden>
+        <div class="pm-body">
+            <div class="pm-panels" data-pm="panels">
+                <section class="pm-panel" data-panel="p1" hidden>
+                    <h3 class="pm-side-title">План: P1</h3>
+                    <div data-pm="p1"></div>
+                </section>
+                <section class="pm-panel" data-panel="p2" hidden>
+                    <h3 class="pm-side-title">План: P2</h3>
+                    <div data-pm="p2"></div>
+                </section>
+            </div>
+            <div class="mm-view pm-view is-empty" data-pm="view">
+                <svg class="mm-svg" data-pm="svg" role="img" aria-label="Карта планирования"></svg>
+                <p class="mm-empty">Выберите регион — здесь появятся его системы, планеты и ресурсы</p>
+                <div class="mm-pop pm-pop" data-pm="pop" hidden></div>
+            </div>
+        </div>
+        <div class="ct-modal pm-modal" data-pm="modal" hidden>
+            <div class="ct-modal-box pm-modal-box">
                 <div class="pm-side-head">
-                    <h3 class="pm-side-title">Персонажи</h3>
+                    <h3 class="ct-modal-title">Персонажи</h3>
                     <button type="button" class="pm-clear" data-pm="clear" title="Удалить весь план">Очистить план</button>
                 </div>
                 <div class="pm-pilots" data-pm="pilots"></div>
-            </section>
-        </div>
-        <div class="mm-view pm-view is-empty" data-pm="view">
-            <svg class="mm-svg" data-pm="svg" role="img" aria-label="Карта планирования"></svg>
-            <p class="mm-empty">Выберите регион — здесь появятся его системы, планеты и ресурсы</p>
-            <div class="mm-pop pm-pop" data-pm="pop" hidden></div>
+                <button type="button" class="ct-modal-close" data-pm="modal-close" aria-label="Закрыть">×</button>
+            </div>
         </div>`;
     const $ = (name) => root.querySelector(`[data-pm="${name}"]`);
     const regionSelect = root.querySelector('#pm-region');
@@ -176,16 +184,33 @@
     /* ---- Кнопки таблиц: каждая открывает/закрывает свою панель ---- */
     let panels = load(PM_PANELS_KEY, []);
     if (!Array.isArray(panels)) panels = [];
+    const modal = $('modal');
     function showPanels() {
-        root.querySelectorAll('[data-pm-panel]').forEach((b) => b.setAttribute('aria-pressed', String(panels.includes(b.dataset.pmPanel))));
+        root.querySelectorAll('[data-pm-panel]').forEach((b) => {
+            if (b.dataset.pmPanel === 'pilots') return;  // модалка, а не панель
+            b.setAttribute('aria-pressed', String(panels.includes(b.dataset.pmPanel)));
+        });
         root.querySelectorAll('.pm-panel').forEach((p) => { p.hidden = !panels.includes(p.dataset.panel); });
     }
     root.querySelectorAll('[data-pm-panel]').forEach((b) => b.addEventListener('click', () => {
         const k = b.dataset.pmPanel;
+        if (k === 'pilots') { modal.hidden = !modal.hidden; return; }
         panels = panels.includes(k) ? panels.filter((x) => x !== k) : panels.concat(k);
         save(PM_PANELS_KEY, panels);
         showPanels();
     }));
+    // Закрытие модалки
+    root.querySelector('[data-pm="modal-close"]').addEventListener('click', () => { modal.hidden = true; });
+    modal.addEventListener('click', (event) => { if (event.target === modal) modal.hidden = true; });
+
+    /* ---- Кнопка «Скрыть пустые» ---- */
+    const hideBtn = root.querySelector('[data-pm-hide]');
+    hideBtn.addEventListener('click', () => {
+        hideUnused = !hideUnused;
+        save(PM_HIDE_KEY, hideUnused);
+        hideBtn.setAttribute('aria-pressed', String(hideUnused));
+        draw();
+    });
 
     /* ---- Камера ---- */
     const camera = { x: 0, y: 0, k: 1 };
@@ -270,7 +295,16 @@
         const pillW = pillWidth(name);
         const list = [...(letters || '')].map((code, k) => {
             const type = PLANET_TYPE_CODES[code] || code;
-            return { type, num: ROMAN(k + 1), res: (RES_BY_TYPE[type] || {})[tier] || [] };
+            const allRes = (RES_BY_TYPE[type] || {})[tier] || [];
+            // Скрыть пустые: оставляем только ресурсы, у которых есть записи в плане
+            const res = hideUnused
+                ? allRes.filter((r) => plan.some((e) => e.sys === name && e.num === ROMAN(k + 1) && e.res === r))
+                : allRes;
+            return { type, num: ROMAN(k + 1), res, allRes };
+        }).filter((pl) => {
+            if (!hideUnused) return true;
+            // скрыть планету, если у неё нет записей в плане вообще (любой тир)
+            return plan.some((e) => e.sys === name && e.num === pl.num);
         });
         const ringR = Math.max(pillW / 2 + 46, (list.length * SLOT) / (2 * Math.PI));
         const angles = planetAngles(list.length, busy);
@@ -405,6 +439,9 @@
                         ? `\nПерсонажи: ${ic.who.join(', ')}` : '\nНажмите, чтобы выбрать персонажа'}\nПеретащите, чтобы передвинуть значок`;
                     el('rect', { class: 'pm-res-box', x: -ICON / 2, y: -ICON / 2, width: ICON, height: ICON, rx: 3 }, rg);
                     if (RESOURCE_ICONS[ic.res]) el('image', { href: RESOURCE_ICONS[ic.res], x: -ICON / 2 + 1, y: -ICON / 2 + 1, width: ICON - 2, height: ICON - 2 }, rg);
+                    // значок уровня [P0] / [P1] / [P2] — под картинкой ресурса
+                    const badge = el('text', { class: `pm-tier-badge pm-tier-p${tier}`, y: ICON / 2 + 8, 'text-anchor': 'middle' }, rg);
+                    badge.textContent = `P${tier}`;
                     if (ic.who.length) {
                         const t = el('text', {
                             class: 'pm-who', x: ic.right ? ICON / 2 + 4 : -ICON / 2 - 4, dy: '0.35em',
@@ -752,12 +789,14 @@
         save(PM_MANUAL_KEY, manual);
         updateTables();
     });
-    // Нажатие на название ресурса — подсветить его значки на карте
-    root.querySelector('.pm-panels').addEventListener('click', (event) => {
+    // Очистить план — кнопка в модалке персонажей
+    modal.addEventListener('click', (event) => {
         if (event.target.closest('[data-pm="clear"]')) {
             if (plan.length && window.confirm('Удалить весь план колоний?')) { plan = []; savePlan(); changed(); }
-            return;
         }
+    });
+    // Нажатие на название ресурса — подсветить его значки на карте
+    root.querySelector('.pm-panels').addEventListener('click', (event) => {
         const name = event.target.closest('.st-name-inner');
         if (!name) return;
         const res = name.closest('tr').dataset.res;
