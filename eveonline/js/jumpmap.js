@@ -27,12 +27,18 @@
      Jump Beacon Network — свои маяки (цино-маяки): «только по маякам»;
      Load/Save Route — сохранённые маршруты и ссылка на маршрут.
    Настройки и маршруты хранятся в браузере (localStorage). */
-/* Вкладка «Карты»: две кнопки — «Планетарная карта» (майнд-карта
-   региона, js/calculator.js) и «Прыжковая карта» (ниже). Выбор
+/* Вкладка «Карты»: три кнопки — «Планетарная карта» (майнд-карта
+   региона, js/calculator.js), «Карта планирования» (js/planmap.js)
+   и «Прыжковая карта» (ниже). Выбор
    запоминается в браузере. */
 (function mapsViews() {
     const KEY = 'evepi.maps.view';
-    const views = { planet: document.getElementById('map-planet'), jump: document.getElementById('map-jump') };
+    const views = {
+        planet: document.getElementById('map-planet'),
+        plan: document.getElementById('map-plan'),
+        jump: document.getElementById('map-jump')
+    };
+    if (!views.plan) delete views.plan;
     const btns = Array.from(document.querySelectorAll('[data-role="maps-view"]'));
     if (!views.planet || !views.jump || !btns.length) return;
     const show = (v, openTab) => {

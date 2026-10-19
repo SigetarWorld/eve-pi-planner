@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=191">
+    <link rel="stylesheet" href="css/style.css?v=192">
 </head>
 <body>
     <header>
@@ -199,6 +199,7 @@
             <h2>Карты</h2>
             <div class="maps-views" role="group" aria-label="Карта">
                 <button type="button" class="btn card-add maps-view-btn" data-role="maps-view" data-view="planet" aria-pressed="true">Планетарная карта</button>
+                <button type="button" class="btn card-add maps-view-btn" data-role="maps-view" data-view="plan" aria-pressed="false">Карта планирования</button>
                 <button type="button" class="btn card-add maps-view-btn" data-role="maps-view" data-view="jump" aria-pressed="false">Прыжковая карта</button>
             </div>
             <div id="map-planet">
@@ -229,6 +230,8 @@
                 <p class="mm-empty">Выберите регион — здесь появится карта его систем и планет</p>
             </div>
             </div>
+            <!-- Карта планирования: план колоний по ресурсам P0–P2 (js/planmap.js) -->
+            <div id="map-plan" class="pm" hidden></div>
             <div id="map-jump" class="jm" hidden></div>
         </section>
 
@@ -245,12 +248,13 @@
     <script src="js/planets.js?v=2"></script>
     <script src="js/eveauth.js?v=9"></script>
     <script src="js/mapdata.js?v=4"></script>
-    <script src="js/calculator.js?v=35"></script>
+    <script src="js/calculator.js?v=36"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=178"></script>
+    <script src="js/app.js?v=179"></script>
     <script src="js/jumpdata.js?v=1"></script>
-    <script src="js/jumpmap.js?v=9"></script>
+    <script src="js/jumpmap.js?v=10"></script>
+    <script src="js/planmap.js?v=1"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
         if (location.protocol === "file:") {

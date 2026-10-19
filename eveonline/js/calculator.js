@@ -58,7 +58,7 @@
 
     // Геометрия раскладки
     const LAYOUT = {
-        cell: 72,         // шаг сетки 2D-карты игры; соседние системы в игре
+        cell: 56,         // шаг сетки 2D-карты игры; соседние системы в игре
                           // стоят через 3 клетки по прямой или 2 по диагонали
         spacing: 180,     // для запасной раскладки по кругу
         branch: 52,       // длина ветки от центра системы до планеты
@@ -334,18 +334,41 @@
     let cellSize = LAYOUT.cell;
     const gridPoint = (x, y) => ({ x: x * cellSize, y: y * cellSize });
 
-    /* Подписи планет занимают место: каждая система — круг радиусом
-       radii[i] (ветки + картинки + подписи). Если у каких-то двух систем
-       круги при обычном шаге сетки налезают друг на друга, шаг сетки
+    /* Подписи планет занимают место: у каждой системы — рамка её
+       «облака» (таблетка, ветки, картинки, подписи). Рамкам соседей
+       достаточно разойтись по одной из осей. Если какие-то две рамки
+       при обычном шаге сетки налезают друг на друга, шаг сетки
        увеличивается для всего региона — форма как в игре сохраняется,
        регион просто растягивается, пока ни одна пара не перекрывается. */
-    function geoLayout(data, radii) {
+    function geoLayout(data, radii, boxes) {
         cellSize = LAYOUT.cell;
         const s = data.s;
+        const GAP = 8;
         for (let a = 0; a < s.length; a++) {
             for (let b = a + 1; b < s.length; b++) {
-                const grid = Math.hypot(s[a][1] - s[b][1], s[a][2] - s[b][2]);
-                if (grid > 0) cellSize = Math.max(cellSize, (radii[a] + radii[b] + 10) / grid);
+                const dx = s[b][1] - s[a][1];
+                const dy = s[b][2] - s[a][2];
+                const A = boxes && boxes[a];
+                const B = boxes && boxes[b];
+                if (!A || !B) {
+                    const grid = Math.hypot(dx, dy);
+                    if (grid > 0) cellSize = Math.max(cellSize, (radii[a] + radii[b] + 10) / grid);
+                    continue;
+                }
+                // при каком шаге рамки P и Q расходятся (хватает одной оси)
+                const apart = (P, Q) => Math.min(
+                    dx > 0 ? (P.x2 - Q.x1 + GAP) / dx : dx < 0 ? (Q.x2 - P.x1 + GAP) / -dx : Infinity,
+                    dy > 0 ? (P.y2 - Q.y1 + GAP) / dy : dy < 0 ? (Q.y2 - P.y1 + GAP) / -dy : Infinity);
+                // общие рамки «облаков» уже не мешают — пару можно не считать
+                if (!(apart(A.bbox, B.bbox) > cellSize)) continue;
+                // «облака» круглые: углы рамок пустые, поэтому сверяем
+                // каждую планету (и таблетку) одной системы с каждой другой
+                let need = 0;
+                A.parts.forEach((P) => B.parts.forEach((Q) => {
+                    const v = apart(P, Q);
+                    if (Number.isFinite(v) && v > need) need = v;
+                }));
+                cellSize = Math.max(cellSize, need);
             }
         }
         return s.map(([, x, y]) => gridPoint(x, y));
@@ -367,11 +390,19 @@
     // Радиус «облака» системы: ветки, картинка планеты и самая длинная подпись
     // Оценка заранее: раскладываем планеты как при отрисовке (углы — ровно
     // по кругу, настоящий поворот станет известен позже) и берём запас 8%.
+    // Рамки «облаков» систем (для шага сетки) — заполняет clusterRadius
+    let clusterBoxes = [];
     function clusterRadius(planets, pillW, system) {
-        if (!planets.length) return pillW / 2 + 6;
+        if (!planets.length) {
+            const b = { x1: -pillW / 2 - 6, y1: -16, x2: pillW / 2 + 6, y2: 16 };
+            clusterBoxes.push({ bbox: b, parts: [b] });
+            return pillW / 2 + 6;
+        }
         const n = planets.length;
         const angles = Array.from({ length: n }, (_, k) => (2 * Math.PI * k) / n);
-        return placePlanets(planets, angles, pillW, [], system).extent * 1.08 + 6;
+        const res = placePlanets(planets, angles, pillW, [], system);
+        clusterBoxes.push({ bbox: res.bbox, parts: res.parts });
+        return res.extent * 1.08 + 6;
     }
 
     /* Колонии справа от планеты, по блоку на персонажа: сверху имя
@@ -510,6 +541,8 @@
         const hits = (b) => boxes.some((o) => b.x1 < o.x2 && o.x1 < b.x2 && b.y1 < o.y2 && o.y1 < b.y2)
             || segs.some((sg) => segmentHitsBox(sg, b));
         let extent = 0;
+        // рамка всего «облака» системы: таблетка и все планеты с подписями
+        const bbox = { x1: -pillW / 2 - 3, y1: -14, x2: pillW / 2 + 3, y2: 14 };
 
         // Рамка планеты: картинка, плашка снизу и строки колоний справа
         const info = planets.map((pl) => {
@@ -531,6 +564,8 @@
         const keep = (b, countExtent = true) => {
             boxes.push(b);
             if (!countExtent) return;
+            bbox.x1 = Math.min(bbox.x1, b.x1); bbox.y1 = Math.min(bbox.y1, b.y1);
+            bbox.x2 = Math.max(bbox.x2, b.x2); bbox.y2 = Math.max(bbox.y2, b.y2);
             extent = Math.max(extent, ...[[b.x1, b.y1], [b.x2, b.y1], [b.x1, b.y2], [b.x2, b.y2]]
                 .map(([x, y]) => Math.hypot(x, y)));
         };
@@ -566,7 +601,7 @@
             const [bx, by] = saved;
             spots[j] = { bx, by, w: info[j].w, angle: Math.atan2(by, bx), moved: true };
         });
-        return { spots, extent };
+        return { spots, extent, bbox, parts: boxes.slice() };
     }
 
     // Запасная раскладка по кругу — для региона без данных о вратах
@@ -621,8 +656,9 @@
         const secs = data ? data.s.map((row) => row[3]) : null;
         const planetLists = names.map((system, i) => planetsOf(data, i, system));
         const pillWidth = (system) => Math.max(44, system.length * 6.6 + 14) + (secs ? 24 : 0);
+        clusterBoxes = [];
         const radii = names.map((system, i) => clusterRadius(planetLists[i], pillWidth(system), system));
-        const pts = data ? geoLayout(data, radii) : ringLayout(names.length);
+        const pts = data ? geoLayout(data, radii, clusterBoxes) : ringLayout(names.length);
 
         if (!opts.keepMenu) closePlanetMenu();
         svg.innerHTML = '';
