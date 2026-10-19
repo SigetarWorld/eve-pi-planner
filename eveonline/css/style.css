@@ -5071,12 +5071,7 @@ input.chain-amount:focus {
 .maps-view-btn[aria-pressed="false"] { opacity: 0.6; }
 #map-planet[hidden], #map-jump[hidden] { display: none; }
 
-.jm-layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 0.9rem; align-items: start; }
 /* панели (планировщик, точки, параметры…) — слева, карта и маршрут — справа */
-.jm-layout > .jm-side { grid-column: 1; grid-row: 1; }
-.jm-layout > .jm-main { grid-column: 2; grid-row: 1; }
-@media (max-width: 1000px) { .jm-layout > .jm-side, .jm-layout > .jm-main { grid-column: 1; grid-row: auto; } }
-@media (max-width: 1000px) { .jm-layout { grid-template-columns: 1fr; } }
 .jm-main, .jm-side { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; }
 .jm-panel { padding: 0.6rem 0.75rem 0.7rem; background: var(--bg-panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .jm-h { margin: 0 0 0.5rem; font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; letter-spacing: 0.06em; color: var(--accent); }
@@ -5164,3 +5159,14 @@ input.chain-amount:focus {
 .jm-lg-gate, .jm-lg-arc { display: inline-block; width: 18px; height: 2px; border-radius: 1px; }
 .jm-lg-gate { background: #3f5677; }
 .jm-lg-arc { margin-left: 0.6rem; background: var(--cyan); }
+
+/* Прыжковая карта: панели в два столбца, справа — компактная карта.
+   Пары по строкам: планировщик — точки, параметры — обход и маяки,
+   загрузка — маршрут. Правый столбец шире (точки, маршрут). */
+.jm-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 540px); gap: 0.9rem; align-items: start; }
+.jm-grid { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 0.7rem; align-items: start; }
+.jm-cell { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; }
+.jm-main { position: sticky; top: calc(var(--header-h) + 0.5rem); }
+@media (max-width: 1250px) { .jm-layout { grid-template-columns: 1fr; } .jm-main { position: static; order: -1; max-width: 640px; } }
+@media (max-width: 760px) { .jm-grid { grid-template-columns: 1fr; } }
+.jm-sys-t { fill: var(--text-faint); font-size: 7px; pointer-events: none; }
