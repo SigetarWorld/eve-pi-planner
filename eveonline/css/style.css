@@ -5397,7 +5397,6 @@ input.chain-amount:focus {
 }
 .prod-tg-body {
     display: none;
-    padding-left: 0.6rem;
 }
 .prod-tg.is-open > .prod-tg-body { display: block; }
 .prod-tg-loading {

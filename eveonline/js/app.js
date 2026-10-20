@@ -2056,7 +2056,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '20.10.2026 21:30';
+const APP_BUILD = '20.10.2026 21:51';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -6016,23 +6016,25 @@ initEveAuth().finally(startEveAutoSnaps);
 
     /* ==========================================================
        Дерево чертежей и реакций (левая панель).
-       Категория 9 = Blueprint в ESI. Группы внутри неё —
-       папки дерева; типы внутри группы — листья.
-       Данные кэшируются в localStorage ('prodTreeCache').
+       Источник — рыночные группы ESI (/markets/groups/).
+       Строим иерархическое дерево по parent_group_id, находим
+       корень «Blueprints & Reactions» и показываем только его.
+       Всё дерево кэшируется в localStorage на 30 дней.
        ========================================================== */
     const treeEl    = document.getElementById('prod-tree-list');
     const treeInput = document.getElementById('prod-tree-search');
 
-    /* ESI category IDs: 9 = Blueprint (включает и реакционные формулы) */
-    const BP_CATEGORY_ID = 9;
+    const TREE_CACHE_KEY = 'prodMarketTree2';
+    const TREE_CACHE_TTL = 30 * 24 * 3600 * 1000;  // 30 дней
 
-    /* Кэш: { groups: [{id, name, types: [{id, name}]}], ts } */
-    const TREE_CACHE_KEY = 'prodTreeCache';
-    const TREE_CACHE_TTL = 7 * 24 * 3600 * 1000;   // 7 дней
-
-    let treeGroups = [];  // [{id, name, typeCount, types: null | [{id, name}]}]
+    /*  Узел дерева:
+        { id, name, parentId, children: [...node], types: [{id, name}] | null }
+        types заполняются лениво при раскрытии листовых групп. */
+    let treeRoot = null;           // корневой узел «Blueprints & Reactions»
+    let treeNodeMap = new Map();   // id → node
     let treeLoaded = false;
 
+    /* --- Кэш --- */
     function treeCacheGet() {
         try {
             const raw = JSON.parse(localStorage.getItem(TREE_CACHE_KEY));
@@ -6042,56 +6044,112 @@ initEveAuth().finally(startEveAutoSnaps);
     }
     function treeCacheSave() {
         try {
-            localStorage.setItem(TREE_CACHE_KEY, JSON.stringify({
-                groups: treeGroups, ts: Date.now()
-            }));
+            const data = { root: treeSerialize(treeRoot), ts: Date.now() };
+            localStorage.setItem(TREE_CACHE_KEY, JSON.stringify(data));
         } catch { /* quota */ }
     }
+    function treeSerialize(node) {
+        if (!node) return null;
+        return {
+            id: node.id, name: node.name, parentId: node.parentId,
+            types: node.types,
+            children: node.children.map(treeSerialize)
+        };
+    }
+    function treeDeserialize(obj) {
+        if (!obj) return null;
+        const node = { id: obj.id, name: obj.name, parentId: obj.parentId,
+                       types: obj.types || null, children: [] };
+        treeNodeMap.set(node.id, node);
+        node.children = (obj.children || []).map(treeDeserialize);
+        return node;
+    }
 
-    /* --- Загрузка списка групп (1 запрос к категории) --- */
-    async function loadTreeGroups() {
+    /* --- Загрузка всех market groups и построение дерева --- */
+    async function loadMarketTree() {
         if (treeLoaded) return;
         if (!treeEl) return;
-        treeEl.innerHTML = '<div class="prod-tg-loading">Загрузка дерева…</div>';
+        treeEl.innerHTML = '<div class="prod-tg-loading">Загрузка дерева рынка…</div>';
 
-        /* Попытка из кэша */
+        /* Из кэша? */
         const cached = treeCacheGet();
-        if (cached && cached.groups && cached.groups.length) {
-            treeGroups = cached.groups;
+        if (cached && cached.root) {
+            treeNodeMap.clear();
+            treeRoot = treeDeserialize(cached.root);
             treeLoaded = true;
             renderTree();
             return;
         }
 
         try {
-            /* 1. Получаем ID всех групп в категории Blueprint */
-            const cat = await esiPublicJson(`/universe/categories/${BP_CATEGORY_ID}/`);
-            const groupIds = cat.groups || [];
+            /* 1. Все ID market groups */
+            const allIds = await esiPublicJson('/markets/groups/');
 
-            /* 2. Резолвим имена групп пачками по 900 */
-            const groupMap = new Map();
-            for (let i = 0; i < groupIds.length; i += 900) {
-                const batch = groupIds.slice(i, i + 900);
-                try {
-                    const res = await fetch(`${ESI_BASE}/universe/names/?datasource=tranquility`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(batch)
-                    });
-                    if (res.ok) {
-                        const list = await res.json();
-                        list.forEach((x) => groupMap.set(x.id, x.name));
+            /* 2. Загружаем детали каждой группы (пачками по 30 параллельно) */
+            const groupData = new Map();   // id → {name, parentId, typeIds[]}
+            const BATCH = 30;
+            for (let i = 0; i < allIds.length; i += BATCH) {
+                const batch = allIds.slice(i, i + BATCH);
+                const results = await Promise.allSettled(
+                    batch.map((id) => esiPublicJson(`/markets/groups/${id}/`))
+                );
+                results.forEach((r, j) => {
+                    if (r.status === 'fulfilled' && r.value) {
+                        const g = r.value;
+                        groupData.set(g.market_group_id, {
+                            name: g.name || `#${g.market_group_id}`,
+                            parentId: g.parent_group_id ?? null,
+                            typeIds: g.types || []
+                        });
                     }
-                } catch { /* пропускаем */ }
+                });
+                /* Прогресс */
+                const pct = Math.min(100, Math.round((i + BATCH) / allIds.length * 100));
+                treeEl.innerHTML = `<div class="prod-tg-loading">Загрузка дерева… ${pct}%</div>`;
             }
 
-            /* 3. Собираем и сортируем */
-            treeGroups = groupIds.map((id) => ({
-                id,
-                name: groupMap.get(id) || `Group #${id}`,
-                typeCount: null,
-                types: null
-            })).sort((a, b) => a.name.localeCompare(b.name));
+            /* 3. Строим дерево */
+            treeNodeMap.clear();
+            const nodes = new Map();
+            groupData.forEach((d, id) => {
+                const node = { id, name: d.name, parentId: d.parentId,
+                               types: null, typeIds: d.typeIds, children: [] };
+                nodes.set(id, node);
+                treeNodeMap.set(id, node);
+            });
+            /* Связываем parent → children */
+            nodes.forEach((node) => {
+                if (node.parentId != null) {
+                    const parent = nodes.get(node.parentId);
+                    if (parent) parent.children.push(node);
+                }
+            });
+            /* Сортируем children по имени */
+            nodes.forEach((node) => {
+                node.children.sort((a, b) => a.name.localeCompare(b.name));
+            });
+
+            /* 4. Находим корень: группа без родителя, имя содержит "Blueprint" */
+            treeRoot = null;
+            nodes.forEach((node) => {
+                if (node.parentId == null && /blueprint/i.test(node.name)) {
+                    treeRoot = node;
+                }
+            });
+            /* Запасной вариант: первая корневая группа */
+            if (!treeRoot) {
+                nodes.forEach((node) => {
+                    if (node.parentId == null && !treeRoot) treeRoot = node;
+                });
+            }
+
+            /* Убираем typeIds из узлов-папок (у которых есть дети) для экономии кэша.
+               typeIds сохраняем только у листовых (без детей) — они лениво резолвят имена. */
+            nodes.forEach((node) => {
+                if (node.children.length) {
+                    delete node.typeIds;
+                }
+            });
 
             treeLoaded = true;
             treeCacheSave();
@@ -6101,122 +6159,132 @@ initEveAuth().finally(startEveAutoSnaps);
         }
     }
 
-    /* --- Загрузка типов внутри группы (ленивая, по клику) --- */
-    async function loadGroupTypes(group) {
-        if (group.types) return;
-        try {
-            const data = await esiPublicJson(`/universe/groups/${group.id}/`);
-            const typeIds = data.types || [];
-            group.typeCount = typeIds.length;
-
-            /* Резолвим имена типов */
-            const nameMap = new Map();
-            for (let i = 0; i < typeIds.length; i += 900) {
-                const batch = typeIds.slice(i, i + 900);
-                try {
-                    const res = await fetch(`${ESI_BASE}/universe/names/?datasource=tranquility`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(batch)
-                    });
-                    if (res.ok) {
-                        const list = await res.json();
-                        list.forEach((x) => nameMap.set(x.id, x.name));
-                    }
-                } catch { /* */ }
-            }
-            group.types = typeIds.map((id) => ({
-                id, name: nameMap.get(id) || `#${id}`
-            })).sort((a, b) => a.name.localeCompare(b.name));
-
-            treeCacheSave();
-        } catch {
-            group.types = [];
+    /* --- Ленивая загрузка типов (имён) для листовой группы --- */
+    async function loadNodeTypes(node) {
+        if (node.types) return;
+        const ids = node.typeIds || [];
+        if (!ids.length) { node.types = []; return; }
+        const nameMap = new Map();
+        for (let i = 0; i < ids.length; i += 900) {
+            const batch = ids.slice(i, i + 900);
+            try {
+                const res = await fetch(`${ESI_BASE}/universe/names/?datasource=tranquility`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(batch)
+                });
+                if (res.ok) {
+                    const list = await res.json();
+                    list.forEach((x) => nameMap.set(x.id, x.name));
+                }
+            } catch { /* */ }
         }
+        node.types = ids.map((id) => ({ id, name: nameMap.get(id) || `#${id}` }))
+                        .sort((a, b) => a.name.localeCompare(b.name));
+        treeCacheSave();
     }
 
-    /* --- Рендер дерева --- */
+    /* --- Рендер дерева (рекурсивный) --- */
     function renderTree(filter) {
-        if (!treeEl) return;
+        if (!treeEl || !treeRoot) return;
         const q = (filter || '').trim().toLowerCase();
-
         let html = '';
-        let matched = 0;
 
-        treeGroups.forEach((g, gi) => {
-            /* Если есть фильтр и группа уже загружена — фильтруем по типам */
-            let items = g.types;
-            let groupMatch = !q || g.name.toLowerCase().includes(q);
-            let filteredItems = null;
+        function renderNode(node, depth) {
+            const isLeaf = !node.children.length;
+            const nameMatch = q && node.name.toLowerCase().includes(q);
 
-            if (q && items) {
-                filteredItems = items.filter((t) => t.name.toLowerCase().includes(q));
-                if (!filteredItems.length && !groupMatch) return;
-                matched += filteredItems.length || 1;
-            } else if (q && !items) {
-                /* Типы не загружены — показываем группу если имя совпадает */
-                if (!groupMatch) return;
-                matched++;
-            } else {
-                matched++;
-            }
+            if (isLeaf && node.types) {
+                /* Листовая группа с загруженными типами */
+                const filtered = q
+                    ? node.types.filter((t) => t.name.toLowerCase().includes(q))
+                    : node.types;
+                if (q && !filtered.length && !nameMatch) return false;
 
-            const isOpen = q && (filteredItems && filteredItems.length > 0);
-            const showItems = filteredItems || items;
-            const cnt = g.typeCount != null ? g.typeCount : (items ? items.length : '');
-
-            html += `<div class="prod-tg${isOpen ? ' is-open' : ''}" data-gidx="${gi}">`;
-            html += `<div class="prod-tg-head"><span class="prod-tg-arrow">▶</span>${escapeHtml(g.name)}`;
-            if (cnt !== '') html += `<span class="prod-tg-count">${cnt}</span>`;
-            html += '</div>';
-            html += '<div class="prod-tg-body">';
-
-            if (showItems) {
-                showItems.forEach((t) => {
+                html += `<div class="prod-tg${q && filtered.length ? ' is-open' : ''}" data-nid="${node.id}">`;
+                html += `<div class="prod-tg-head" style="padding-left:${0.5 + depth * 0.8}rem">`
+                    + `<span class="prod-tg-arrow">▶</span>${escapeHtml(node.name)}`
+                    + `<span class="prod-tg-count">${node.types.length}</span></div>`;
+                html += '<div class="prod-tg-body">';
+                (q ? filtered : node.types).forEach((t) => {
                     const hi = q && t.name.toLowerCase().includes(q) ? ' is-match' : '';
-                    html += `<div class="prod-ti${hi}" data-tid="${t.id}" title="${escapeHtml(t.name)}">`
+                    html += `<div class="prod-ti${hi}" data-tid="${t.id}" title="${escapeHtml(t.name)}" style="padding-left:${1.4 + depth * 0.8}rem">`
                         + `<img src="https://images.evetech.net/types/${t.id}/icon?size=32" alt="" loading="lazy">`
                         + `<span class="prod-ti-name">${escapeHtml(t.name)}</span></div>`;
                 });
-            } else if (!isOpen) {
-                html += '<div class="prod-tg-loading">Нажмите чтобы загрузить…</div>';
+                html += '</div></div>';
+                return true;
             }
-            html += '</div></div>';
-        });
 
-        if (!matched) {
-            html = '<div class="prod-tree-no-match">Ничего не найдено</div>';
+            if (isLeaf && !node.types) {
+                /* Типы ещё не загружены */
+                if (q && !nameMatch) return false;
+                html += `<div class="prod-tg" data-nid="${node.id}">`;
+                html += `<div class="prod-tg-head" style="padding-left:${0.5 + depth * 0.8}rem">`
+                    + `<span class="prod-tg-arrow">▶</span>${escapeHtml(node.name)}`
+                    + `${node.typeIds ? `<span class="prod-tg-count">${node.typeIds.length}</span>` : ''}</div>`;
+                html += '<div class="prod-tg-body"><div class="prod-tg-loading">Нажмите для загрузки…</div></div></div>';
+                return true;
+            }
+
+            /* Папка — рекурсивно рендерим детей */
+            let childHtml = '';
+            const prevLen = html.length;
+            const savedHtml = html;
+            html = '';
+            let anyChild = false;
+            node.children.forEach((ch) => {
+                if (renderNode(ch, depth + 1)) anyChild = true;
+            });
+            const inner = html;
+            html = savedHtml;
+
+            if (q && !anyChild && !nameMatch) return false;
+
+            const autoOpen = q && anyChild;
+            html += `<div class="prod-tg${autoOpen ? ' is-open' : ''}" data-nid="${node.id}">`;
+            html += `<div class="prod-tg-head" style="padding-left:${0.5 + depth * 0.8}rem">`
+                + `<span class="prod-tg-arrow">▶</span>${escapeHtml(node.name)}`
+                + `<span class="prod-tg-count">${node.children.length}</span></div>`;
+            html += '<div class="prod-tg-body">' + inner + '</div></div>';
+            return true;
         }
+
+        /* Рендерим детей корня (сам корень не показываем) */
+        treeRoot.children.forEach((ch) => renderNode(ch, 0));
+
+        if (!html) html = '<div class="prod-tree-no-match">Ничего не найдено</div>';
         treeEl.innerHTML = html;
     }
 
-    /* --- Клик по группе — раскрыть / свернуть --- */
+    /* --- Клик — раскрыть/свернуть, ленивая загрузка типов --- */
     if (treeEl) treeEl.addEventListener('click', async (e) => {
         const head = e.target.closest('.prod-tg-head');
         if (!head) return;
         const tg = head.parentElement;
-        const gi = Number(tg.dataset.gidx);
-        const group = treeGroups[gi];
-        if (!group) return;
+        const nid = Number(tg.dataset.nid);
+        const node = treeNodeMap.get(nid);
+        if (!node) return;
 
-        if (!group.types) {
+        /* Листовая группа без типов — подгрузить */
+        if (!node.children.length && !node.types) {
             tg.querySelector('.prod-tg-body').innerHTML = '<div class="prod-tg-loading">Загрузка…</div>';
             tg.classList.add('is-open');
-            await loadGroupTypes(group);
-            /* Обновляем счётчик */
-            const cnt = tg.querySelector('.prod-tg-count');
-            if (cnt) cnt.textContent = group.types.length;
-            /* Рендерим типы в этой группе */
+            await loadNodeTypes(node);
+            /* Перерендерить ветку */
             const bodyEl = tg.querySelector('.prod-tg-body');
-            let ih = '';
             const q = (treeInput?.value || '').trim().toLowerCase();
-            group.types.forEach((t) => {
+            let ih = '';
+            const items = q ? node.types.filter((t) => t.name.toLowerCase().includes(q)) : node.types;
+            items.forEach((t) => {
                 const hi = q && t.name.toLowerCase().includes(q) ? ' is-match' : '';
                 ih += `<div class="prod-ti${hi}" data-tid="${t.id}" title="${escapeHtml(t.name)}">`
                     + `<img src="https://images.evetech.net/types/${t.id}/icon?size=32" alt="" loading="lazy">`
                     + `<span class="prod-ti-name">${escapeHtml(t.name)}</span></div>`;
             });
             bodyEl.innerHTML = ih;
+            const cnt = tg.querySelector('.prod-tg-count');
+            if (cnt) cnt.textContent = node.types.length;
         } else {
             tg.classList.toggle('is-open');
         }
@@ -6227,30 +6295,31 @@ initEveAuth().finally(startEveAutoSnaps);
     if (treeInput) treeInput.addEventListener('input', () => {
         clearTimeout(searchTimer);
         searchTimer = setTimeout(() => {
-            /* Если ищем — нужно загрузить типы всех групп для точного поиска.
-               Для быстрого отклика: сначала фильтруем по тому что есть,
-               потом догружаем остальные группы в фоне. */
             const q = treeInput.value.trim().toLowerCase();
             renderTree(q);
-            if (q.length >= 2) loadAllTypesForSearch(q);
+            /* При поиске ≥2 символов — фоновая подгрузка листьев для полного охвата */
+            if (q.length >= 2) loadAllLeavesForSearch();
         }, 300);
     });
 
-    /* Фоновая загрузка всех типов для полного поиска */
-    let allTypesLoading = false;
-    async function loadAllTypesForSearch(q) {
-        if (allTypesLoading) return;
-        const unloaded = treeGroups.filter((g) => !g.types);
-        if (!unloaded.length) return;
-        allTypesLoading = true;
-        /* Грузим пачками по 5 групп параллельно */
-        for (let i = 0; i < unloaded.length; i += 5) {
-            const batch = unloaded.slice(i, i + 5);
-            await Promise.all(batch.map((g) => loadGroupTypes(g)));
-            /* Перерисовываем с текущим фильтром */
+    let leavesLoading = false;
+    async function loadAllLeavesForSearch() {
+        if (leavesLoading) return;
+        /* Собираем все листовые узлы без загруженных типов */
+        const leaves = [];
+        function collect(node) {
+            if (!node.children.length && !node.types) leaves.push(node);
+            node.children.forEach(collect);
+        }
+        if (treeRoot) treeRoot.children.forEach(collect);
+        if (!leaves.length) return;
+        leavesLoading = true;
+        for (let i = 0; i < leaves.length; i += 8) {
+            const batch = leaves.slice(i, i + 8);
+            await Promise.all(batch.map((n) => loadNodeTypes(n)));
             if (treeInput) renderTree(treeInput.value);
         }
-        allTypesLoading = false;
+        leavesLoading = false;
     }
 
     /* ---------- Инициализация при переключении на вкладку ---------- */
@@ -6258,14 +6327,14 @@ initEveAuth().finally(startEveAutoSnaps);
     document.querySelectorAll('nav button').forEach((btn) => {
         if (btn.dataset.tab === 'production') {
             btn.addEventListener('click', () => {
-                if (!inited) { populateChars(); loadTreeGroups(); inited = true; }
+                if (!inited) { populateChars(); loadMarketTree(); inited = true; }
             });
         }
     });
     /* Если открыта с хэшем или кнопка уже нажата */
     if (document.getElementById('production')?.classList.contains('active')) {
         populateChars();
-        loadTreeGroups();
+        loadMarketTree();
         inited = true;
     }
 }());
