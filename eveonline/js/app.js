@@ -2056,7 +2056,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '20.10.2026 21:51';
+const APP_BUILD = '20.10.2026 21:56';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -6321,6 +6321,169 @@ initEveAuth().finally(startEveAutoSnaps);
         }
         leavesLoading = false;
     }
+
+    /* ==========================================================
+       Клик по чертежу → отображение материалов для производства
+       Источник: EVE Ref SDE API (ref-data.everef.net/blueprints/)
+       ========================================================== */
+    const EVEREF_BASE = 'https://ref-data.everef.net';
+    const bpCache = new Map();        // blueprintTypeId → data
+
+    async function fetchBlueprintData(typeId) {
+        if (bpCache.has(typeId)) return bpCache.get(typeId);
+        const res = await fetch(`${EVEREF_BASE}/blueprints/${typeId}`);
+        if (!res.ok) return null;
+        const data = await res.json();
+        bpCache.set(typeId, data);
+        return data;
+    }
+
+    /* Группировка видов активности */
+    const ACT_LABEL = {
+        manufacturing: 'Производство',
+        reaction: 'Реакции',
+        research_material: 'Исследование ME',
+        research_time: 'Исследование TE',
+        copying: 'Копирование',
+        invention: 'Изобретение'
+    };
+
+    /* Отображение материалов для выбранного чертежа */
+    async function showBlueprintDetail(typeId, typeName) {
+        if (!body) return;
+
+        /* Подсветка выбранного элемента в дереве */
+        treeEl.querySelectorAll('.prod-ti.is-selected').forEach((el) => el.classList.remove('is-selected'));
+        const sel = treeEl.querySelector(`.prod-ti[data-tid="${typeId}"]`);
+        if (sel) sel.classList.add('is-selected');
+
+        body.innerHTML = `<div class="bp-detail">
+            <div class="bp-detail-head">
+                <img class="bp-detail-icon" src="https://images.evetech.net/types/${typeId}/icon?size=64" alt="">
+                <div class="bp-detail-info">
+                    <h3 class="bp-detail-name">${escapeHtml(typeName)}</h3>
+                    <span class="bp-detail-id">Type ID: ${typeId}</span>
+                </div>
+            </div>
+            <div class="bp-detail-loading">Загрузка данных чертежа…</div>
+        </div>`;
+
+        try {
+            const bp = await fetchBlueprintData(typeId);
+            if (!bp || !bp.activities) {
+                body.querySelector('.bp-detail-loading').innerHTML =
+                    '<span class="prod-empty">Нет данных по этому чертежу</span>';
+                return;
+            }
+
+            /* Собираем все typeID из всех активностей для резолва имён */
+            const allTypeIds = new Set();
+            for (const [act, info] of Object.entries(bp.activities)) {
+                if (info.materials) info.materials.forEach((m) => allTypeIds.add(m.type_id));
+                if (info.products) info.products.forEach((p) => allTypeIds.add(p.type_id));
+            }
+
+            /* Резолвим имена */
+            const ids = [...allTypeIds];
+            const nameMap = new Map();
+            for (let i = 0; i < ids.length; i += 900) {
+                const batch = ids.slice(i, i + 900);
+                try {
+                    const res = await fetch(`${ESI_BASE}/universe/names/?datasource=tranquility`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(batch)
+                    });
+                    if (res.ok) {
+                        const list = await res.json();
+                        list.forEach((x) => nameMap.set(x.id, x.name));
+                    }
+                } catch { /* */ }
+            }
+
+            /* Рендерим активности */
+            let html = '';
+            for (const [act, label] of Object.entries(ACT_LABEL)) {
+                const info = bp.activities[act];
+                if (!info) continue;
+
+                html += `<div class="bp-act-section">`;
+                html += `<h4 class="bp-act-title">${label}</h4>`;
+
+                /* Продукт */
+                if (info.products && info.products.length) {
+                    html += '<div class="bp-products">';
+                    info.products.forEach((p) => {
+                        const nm = nameMap.get(p.type_id) || `#${p.type_id}`;
+                        html += `<div class="bp-product-row">`
+                            + `<img src="https://images.evetech.net/types/${p.type_id}/icon?size=32" alt="" loading="lazy">`
+                            + `<span class="bp-mat-name">${escapeHtml(nm)}</span>`
+                            + `<span class="bp-mat-qty">× ${p.quantity.toLocaleString('ru')}</span>`
+                            + `</div>`;
+                    });
+                    html += '</div>';
+                }
+
+                /* Время */
+                if (info.time) {
+                    const sec = info.time;
+                    const h = Math.floor(sec / 3600);
+                    const m = Math.floor((sec % 3600) / 60);
+                    const s = sec % 60;
+                    let timeStr = '';
+                    if (h) timeStr += `${h}ч `;
+                    if (m) timeStr += `${m}мин `;
+                    if (s && !h) timeStr += `${s}с`;
+                    html += `<div class="bp-time">⏱ ${timeStr.trim()}</div>`;
+                }
+
+                /* Материалы */
+                if (info.materials && info.materials.length) {
+                    html += '<table class="bp-mat-table">';
+                    html += '<thead><tr><th></th><th>Материал</th><th>Кол-во</th></tr></thead>';
+                    html += '<tbody>';
+                    info.materials.forEach((m) => {
+                        const nm = nameMap.get(m.type_id) || `#${m.type_id}`;
+                        html += `<tr>`
+                            + `<td><img src="https://images.evetech.net/types/${m.type_id}/icon?size=32" alt="" loading="lazy"></td>`
+                            + `<td class="bp-mat-name">${escapeHtml(nm)}</td>`
+                            + `<td class="bp-mat-qty">${m.quantity.toLocaleString('ru')}</td>`
+                            + `</tr>`;
+                    });
+                    html += '</tbody></table>';
+                }
+
+                /* Навыки */
+                if (info.skills && info.skills.length) {
+                    html += '<div class="bp-skills">';
+                    info.skills.forEach((sk) => {
+                        const skName = nameMap.get(sk.type_id) || `#${sk.type_id}`;
+                        html += `<span class="bp-skill">${escapeHtml(skName)} ${sk.level}</span>`;
+                    });
+                    html += '</div>';
+                }
+
+                html += '</div>';
+            }
+
+            if (!html) html = '<span class="prod-empty">У чертежа нет активностей</span>';
+
+            body.querySelector('.bp-detail-loading').outerHTML = html;
+        } catch (e) {
+            body.querySelector('.bp-detail-loading').innerHTML =
+                `<span class="prod-empty">Ошибка: ${escapeHtml(e.message)}</span>`;
+        }
+    }
+
+    /* Клик по элементу дерева (чертеж) */
+    if (treeEl) treeEl.addEventListener('click', (e) => {
+        const ti = e.target.closest('.prod-ti');
+        if (!ti) return;
+        const typeId = Number(ti.dataset.tid);
+        if (!typeId) return;
+        const typeName = ti.title || ti.querySelector('.prod-ti-name')?.textContent || `#${typeId}`;
+        showBlueprintDetail(typeId, typeName);
+    });
 
     /* ---------- Инициализация при переключении на вкладку ---------- */
     let inited = false;

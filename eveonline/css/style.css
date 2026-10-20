@@ -5427,6 +5427,133 @@ input.chain-amount:focus {
 .prod-ti-name { overflow: hidden; text-overflow: ellipsis; }
 /* Совпадение при поиске */
 .prod-ti.is-match { color: var(--accent); font-weight: 500; }
+.prod-ti.is-selected {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+    font-weight: 500;
+}
+
+/* ---------- Blueprint detail (правая панель) ---------- */
+.bp-detail { padding: 0.2rem 0; }
+.bp-detail-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.75rem;
+}
+.bp-detail-icon {
+    width: 48px; height: 48px;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.2);
+    flex-shrink: 0;
+}
+.bp-detail-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+}
+.bp-detail-id {
+    font-size: 0.72rem;
+    color: var(--text-faint);
+}
+.bp-detail-loading {
+    padding: 1rem 0;
+    color: var(--text-faint);
+    font-size: 0.85rem;
+}
+
+/* Секция активности */
+.bp-act-section {
+    margin-bottom: 1rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+.bp-act-title {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.bp-time {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+}
+
+/* Продукт */
+.bp-products { margin-bottom: 0.5rem; }
+.bp-product-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0;
+}
+.bp-product-row img {
+    width: 24px; height: 24px;
+    border-radius: 3px;
+    background: rgba(0,0,0,0.2);
+}
+
+/* Таблица материалов */
+.bp-mat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+.bp-mat-table thead th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--text-faint);
+    padding: 0.2rem 0.4rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.bp-mat-table thead th:first-child { width: 28px; }
+.bp-mat-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.bp-mat-table td {
+    padding: 0.3rem 0.4rem;
+    vertical-align: middle;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+}
+.bp-mat-table img {
+    width: 24px; height: 24px;
+    border-radius: 3px;
+    background: rgba(0,0,0,0.2);
+    display: block;
+}
+.bp-mat-name { color: var(--text); }
+.bp-mat-qty {
+    font-weight: 500;
+    color: var(--text-dim);
+    white-space: nowrap;
+    text-align: right;
+}
+.bp-mat-table td:last-child { text-align: right; }
+
+/* Навыки */
+.bp-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.4rem;
+}
+.bp-skill {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border-radius: 4px;
+    color: var(--text-dim);
+}
+
 .prod-tree-no-match {
     padding: 1rem 0.5rem;
     text-align: center;
