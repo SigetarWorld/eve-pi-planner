@@ -50,7 +50,7 @@
                 <h3 class="log-date"><time datetime="2026-10-20">20:10:2026</time></h3>
                 <ul class="log-list">
                     <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Новая вкладка «Производство» вместо «Мои колонии»: задания по чертежам (manufacturing, research, copying, invention) для выбранного персонажа через ESI industry/jobs. Таблица с продуктом, типом, прогонами, статусом, оставшимся временем и стоимостью; сводка по статусам; кнопка «Тест» с сырым JSON из ESI. Добавлен scope esi-industry.read_character_jobs.v1 — нужен повторный вход. (v183 · css v201, eveauth.js v10)</li>
-                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Производство: дерево чертежей переделано на рыночные группы ESI; при клике на чертёж справа отображаются компоненты для производства (материалы, продукт, время, навыки) из EVE Ref SDE API. Иконки чертежей в дереве, подсветка выбранного. (v187 · css v204)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Производство: дерево чертежей переделано на рыночные группы ESI; при клике на чертёж справа отображаются компоненты для производства (материалы, продукт, время, навыки) из EVE Ref SDE API. Иконки чертежей (bp) в дереве, подсветка выбранного. Исправлена ошибка «materials.forEach is not a function» — everef возвращает объект, а не массив. (v188 · css v204)</li>
                 </ul>
             </section>
 

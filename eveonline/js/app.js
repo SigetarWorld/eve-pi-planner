@@ -2056,7 +2056,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '20.10.2026 21:56';
+const APP_BUILD = '20.10.2026 22:11';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -6209,7 +6209,7 @@ initEveAuth().finally(startEveAutoSnaps);
                 (q ? filtered : node.types).forEach((t) => {
                     const hi = q && t.name.toLowerCase().includes(q) ? ' is-match' : '';
                     html += `<div class="prod-ti${hi}" data-tid="${t.id}" title="${escapeHtml(t.name)}" style="padding-left:${1.4 + depth * 0.8}rem">`
-                        + `<img src="https://images.evetech.net/types/${t.id}/icon?size=32" alt="" loading="lazy">`
+                        + `<img src="https://images.evetech.net/types/${t.id}/bp?size=32" alt="" loading="lazy">`
                         + `<span class="prod-ti-name">${escapeHtml(t.name)}</span></div>`;
                 });
                 html += '</div></div>';
@@ -6279,7 +6279,7 @@ initEveAuth().finally(startEveAutoSnaps);
             items.forEach((t) => {
                 const hi = q && t.name.toLowerCase().includes(q) ? ' is-match' : '';
                 ih += `<div class="prod-ti${hi}" data-tid="${t.id}" title="${escapeHtml(t.name)}">`
-                    + `<img src="https://images.evetech.net/types/${t.id}/icon?size=32" alt="" loading="lazy">`
+                    + `<img src="https://images.evetech.net/types/${t.id}/bp?size=32" alt="" loading="lazy">`
                     + `<span class="prod-ti-name">${escapeHtml(t.name)}</span></div>`;
             });
             bodyEl.innerHTML = ih;
@@ -6348,6 +6348,15 @@ initEveAuth().finally(startEveAutoSnaps);
         invention: 'Изобретение'
     };
 
+    /* Everef возвращает materials/products/skills как объект { "typeId": {...} },
+       а не массив. Универсальный хелпер: если массив — вернём как есть,
+       если объект — Object.values(), иначе [] */
+    function toArr(v) {
+        if (Array.isArray(v)) return v;
+        if (v && typeof v === 'object') return Object.values(v);
+        return [];
+    }
+
     /* Отображение материалов для выбранного чертежа */
     async function showBlueprintDetail(typeId, typeName) {
         if (!body) return;
@@ -6359,7 +6368,7 @@ initEveAuth().finally(startEveAutoSnaps);
 
         body.innerHTML = `<div class="bp-detail">
             <div class="bp-detail-head">
-                <img class="bp-detail-icon" src="https://images.evetech.net/types/${typeId}/icon?size=64" alt="">
+                <img class="bp-detail-icon" src="https://images.evetech.net/types/${typeId}/bp?size=64" alt="">
                 <div class="bp-detail-info">
                     <h3 class="bp-detail-name">${escapeHtml(typeName)}</h3>
                     <span class="bp-detail-id">Type ID: ${typeId}</span>
@@ -6379,8 +6388,9 @@ initEveAuth().finally(startEveAutoSnaps);
             /* Собираем все typeID из всех активностей для резолва имён */
             const allTypeIds = new Set();
             for (const [act, info] of Object.entries(bp.activities)) {
-                if (info.materials) info.materials.forEach((m) => allTypeIds.add(m.type_id));
-                if (info.products) info.products.forEach((p) => allTypeIds.add(p.type_id));
+                toArr(info.materials).forEach((m) => allTypeIds.add(m.type_id));
+                toArr(info.products).forEach((p) => allTypeIds.add(p.type_id));
+                toArr(info.skills).forEach((s) => allTypeIds.add(s.type_id));
             }
 
             /* Резолвим имена */
@@ -6407,18 +6417,22 @@ initEveAuth().finally(startEveAutoSnaps);
                 const info = bp.activities[act];
                 if (!info) continue;
 
+                const mats = toArr(info.materials);
+                const prods = toArr(info.products);
+                const skills = toArr(info.skills);
+
                 html += `<div class="bp-act-section">`;
                 html += `<h4 class="bp-act-title">${label}</h4>`;
 
                 /* Продукт */
-                if (info.products && info.products.length) {
+                if (prods.length) {
                     html += '<div class="bp-products">';
-                    info.products.forEach((p) => {
+                    prods.forEach((p) => {
                         const nm = nameMap.get(p.type_id) || `#${p.type_id}`;
                         html += `<div class="bp-product-row">`
                             + `<img src="https://images.evetech.net/types/${p.type_id}/icon?size=32" alt="" loading="lazy">`
                             + `<span class="bp-mat-name">${escapeHtml(nm)}</span>`
-                            + `<span class="bp-mat-qty">× ${p.quantity.toLocaleString('ru')}</span>`
+                            + `<span class="bp-mat-qty">× ${(p.quantity || 1).toLocaleString('ru')}</span>`
                             + `</div>`;
                     });
                     html += '</div>';
@@ -6438,27 +6452,27 @@ initEveAuth().finally(startEveAutoSnaps);
                 }
 
                 /* Материалы */
-                if (info.materials && info.materials.length) {
+                if (mats.length) {
                     html += '<table class="bp-mat-table">';
                     html += '<thead><tr><th></th><th>Материал</th><th>Кол-во</th></tr></thead>';
                     html += '<tbody>';
-                    info.materials.forEach((m) => {
+                    mats.forEach((m) => {
                         const nm = nameMap.get(m.type_id) || `#${m.type_id}`;
                         html += `<tr>`
                             + `<td><img src="https://images.evetech.net/types/${m.type_id}/icon?size=32" alt="" loading="lazy"></td>`
                             + `<td class="bp-mat-name">${escapeHtml(nm)}</td>`
-                            + `<td class="bp-mat-qty">${m.quantity.toLocaleString('ru')}</td>`
+                            + `<td class="bp-mat-qty">${(m.quantity || 0).toLocaleString('ru')}</td>`
                             + `</tr>`;
                     });
                     html += '</tbody></table>';
                 }
 
                 /* Навыки */
-                if (info.skills && info.skills.length) {
+                if (skills.length) {
                     html += '<div class="bp-skills">';
-                    info.skills.forEach((sk) => {
+                    skills.forEach((sk) => {
                         const skName = nameMap.get(sk.type_id) || `#${sk.type_id}`;
-                        html += `<span class="bp-skill">${escapeHtml(skName)} ${sk.level}</span>`;
+                        html += `<span class="bp-skill">${escapeHtml(skName)} ${sk.level || ''}</span>`;
                     });
                     html += '</div>';
                 }
