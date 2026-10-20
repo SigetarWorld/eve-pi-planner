@@ -2056,7 +2056,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '20.10.2026 20:50';
+const APP_BUILD = '20.10.2026 21:12';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -5867,7 +5867,7 @@ initEveAuth().finally(startEveAutoSnaps);
     let lastCharId = null;
 
     async function loadJobs() {
-        const charId = charSel.value;
+        const charId = Number(charSel.value) || 0;
         if (!charId) {
             body.innerHTML = '<p class="prod-empty">Выберите персонажа — здесь появятся его задания на производство</p>';
             return;
