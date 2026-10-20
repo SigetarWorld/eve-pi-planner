@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=201">
+    <link rel="stylesheet" href="css/style.css?v=202">
 </head>
 <body>
     <header>
@@ -244,8 +244,16 @@
                 <button type="button" id="prod-refresh" class="btn card-add" title="Обновить данные производства">Обновить</button>
                 <button type="button" id="prod-test" class="btn card-add" aria-haspopup="dialog" title="Тест: сырые данные ESI по производству">Тест</button>
             </div>
-            <div id="prod-body" class="prod-body">
-                <p class="prod-empty">Выберите персонажа — здесь появятся его задания на производство</p>
+            <div class="prod-layout">
+                <aside class="prod-tree" id="prod-tree">
+                    <div class="prod-tree-head">
+                        <input type="search" id="prod-tree-search" class="ct-input prod-tree-input" placeholder="Поиск чертежа…">
+                    </div>
+                    <div id="prod-tree-list" class="prod-tree-list"></div>
+                </aside>
+                <div id="prod-body" class="prod-body">
+                    <p class="prod-empty">Выберите персонажа — здесь появятся его задания на производство</p>
+                </div>
             </div>
             <!-- Модалка «Тест» для сырых данных -->
             <div id="prod-test-modal" class="ct-modal" role="dialog" aria-modal="true" hidden>
@@ -266,7 +274,7 @@
     <script src="js/calculator.js?v=36"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=184"></script>
+    <script src="js/app.js?v=185"></script>
     <script src="js/jumpdata.js?v=1"></script>
     <script src="js/jumpmap.js?v=10"></script>
     <script src="js/planmap.js?v=5"></script>
