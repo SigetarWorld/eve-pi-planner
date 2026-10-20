@@ -315,7 +315,8 @@
             pl.x = saved ? saved[0] : ringR * Math.cos(a);
             pl.y = saved ? saved[1] : ringR * Math.sin(a);
             const out = Math.atan2(pl.y, pl.x);  // наружу от системы
-            parts.push({ x1: pl.x - 13, y1: pl.y - 13, x2: pl.x + 13, y2: pl.y + 24 });
+            const labelHalf = Math.max(13, pl.type.length * 2.8);
+            parts.push({ x1: pl.x - labelHalf, y1: pl.y - 13, x2: pl.x + labelHalf, y2: pl.y + 30 });
             pl.icons = pl.res.map((res, k) => {
                 const ia = out + (k - (pl.res.length - 1) / 2) * FAN_STEP;
                 const s = pos[resKey(name, pl.num, res)];
@@ -427,6 +428,8 @@
                 }
                 const num = el('text', { class: 'pm-num', y: PLANET_R + 9, 'text-anchor': 'middle' }, body);
                 num.textContent = pl.num;
+                const lbl = el('text', { class: 'pm-type-label', y: PLANET_R + 18, 'text-anchor': 'middle' }, body);
+                lbl.textContent = pl.type;
 
                 pl.icons.forEach((ic) => {
                     const hl = highlight && (highlight === ic.res || p1OfP0(ic.res, pl.type) === highlight);
@@ -465,7 +468,9 @@
         });
 
         const inRegion = plan.filter((e) => names.includes(e.sys)).length;
-        $('info').textContent = `Систем: ${sys.length}, планет: ${planetCount}, в плане здесь: ${inRegion}`;
+        const jumpCount = data.j.length / 2;
+        const exitCount = data.e ? data.e.length : 0;
+        $('info').textContent = `Систем: ${sys.length}, планет: ${planetCount}, врат: ${jumpCount}, выходов: ${exitCount}, в плане: ${inRegion}`;
         if (opts.keepView) { applyCamera(); return; }
         if (view.clientWidth) { view.dataset.fitted = '1'; fit(); } else delete view.dataset.fitted;
     }
