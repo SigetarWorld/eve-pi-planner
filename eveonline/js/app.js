@@ -2056,7 +2056,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '20.10.2026 16:16';
+const APP_BUILD = '20.10.2026 20:50';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -5819,4 +5819,213 @@ initEveAuth().finally(startEveAutoSnaps);
         if (event.target === cur || cur.contains(event.target)) hide();
     });
     ['mousedown', 'scroll', 'keydown'].forEach((type) => window.addEventListener(type, hide, true));
+}());
+
+/* ===================================================================
+   Вкладка «Производство» — задания по чертежам (ESI industry/jobs).
+   Показывает активные, готовые и завершённые задания персонажа:
+   что производит, исследует, копирует, изобретает.
+   =================================================================== */
+(function initProduction() {
+    const charSel  = document.getElementById('prod-char');
+    const body     = document.getElementById('prod-body');
+    const btnRefr  = document.getElementById('prod-refresh');
+    const btnTest  = document.getElementById('prod-test');
+    const testMod  = document.getElementById('prod-test-modal');
+    const testBody = document.getElementById('prod-test-body');
+    if (!charSel || !body) return;
+
+    /* Названия типов активности */
+    const ACTIVITY = {
+        1: 'Производство', 3: 'Исследование TE', 4: 'Исследование ME',
+        5: 'Копирование', 8: 'Изобретение', 9: 'Реакции', 11: 'Обратный инжиниринг'
+    };
+    const STATUS_RU = {
+        active: 'В работе', ready: 'Готово', delivered: 'Завершено',
+        paused: 'Пауза', cancelled: 'Отменено'
+    };
+
+    /* ---------- Заполнение списка персонажей ---------- */
+    function populateChars() {
+        const chars = eveChars();
+        charSel.innerHTML = '<option value="">— выберите —</option>';
+        chars.forEach((c) => {
+            const opt = document.createElement('option');
+            opt.value = c.characterId;
+            opt.textContent = c.characterName || c.characterId;
+            charSel.appendChild(opt);
+        });
+        /* Если один персонаж — выбираем сразу */
+        if (chars.length === 1) {
+            charSel.value = chars[0].characterId;
+            loadJobs();
+        }
+    }
+
+    /* ---------- Загрузка заданий из ESI ---------- */
+    let lastJobs = null;          // кэш для кнопки «Тест»
+    let lastCharId = null;
+
+    async function loadJobs() {
+        const charId = charSel.value;
+        if (!charId) {
+            body.innerHTML = '<p class="prod-empty">Выберите персонажа — здесь появятся его задания на производство</p>';
+            return;
+        }
+        lastCharId = charId;
+
+        /* Проверяем наличие scope */
+        const char = eveChars().find((c) => String(c.characterId) === String(charId));
+        if (char && char.scopes && !char.scopes.includes('esi-industry.read_character_jobs.v1')) {
+            body.innerHTML = '<div class="prod-scope-warn">У этого персонажа нет права '
+                + '<b>esi-industry.read_character_jobs.v1</b>. Выйдите и войдите заново через «LOG IN», '
+                + 'чтобы получить расширенные права.</div>';
+            return;
+        }
+
+        body.innerHTML = '<p class="prod-loading">Загрузка заданий…</p>';
+
+        try {
+            const url = `${ESI_BASE}/characters/${charId}/industry/jobs/?datasource=tranquility&include_completed=true`;
+            const jobs = await eveFetchJson(url, {}, charId);
+            lastJobs = jobs;
+
+            if (!jobs || !jobs.length) {
+                body.innerHTML = '<p class="prod-none">Нет заданий на производство</p>';
+                return;
+            }
+
+            /* Собираем все уникальные type_id для резолва имён */
+            const typeIds = new Set();
+            jobs.forEach((j) => {
+                if (j.blueprint_type_id) typeIds.add(j.blueprint_type_id);
+                if (j.product_type_id) typeIds.add(j.product_type_id);
+            });
+            await esiNamesOf([...typeIds]);
+
+            renderJobs(jobs);
+        } catch (e) {
+            body.innerHTML = `<div class="prod-error">Ошибка загрузки: ${escapeHtml(e.message)}</div>`;
+        }
+    }
+
+    /* ---------- Рендер таблицы заданий ---------- */
+    function renderJobs(jobs) {
+        /* Сортировка: active → ready → paused → delivered → cancelled;
+           внутри статуса — по end_date (ближайшие сверху) */
+        const order = { active: 0, ready: 1, paused: 2, delivered: 3, cancelled: 4 };
+        const sorted = [...jobs].sort((a, b) => {
+            const sa = order[a.status] ?? 9, sb = order[b.status] ?? 9;
+            if (sa !== sb) return sa - sb;
+            return new Date(a.end_date || 0) - new Date(b.end_date || 0);
+        });
+
+        /* Сводка */
+        const counts = {};
+        sorted.forEach((j) => {
+            const st = j.status || 'unknown';
+            counts[st] = (counts[st] || 0) + 1;
+        });
+        let summaryHtml = '<div class="prod-summary">';
+        summaryHtml += `<span class="prod-stat">Всего: <b>${sorted.length}</b></span>`;
+        Object.entries(counts).forEach(([st, n]) => {
+            summaryHtml += `<span class="prod-stat">${escapeHtml(STATUS_RU[st] || st)}: <b>${n}</b></span>`;
+        });
+        summaryHtml += '</div>';
+
+        /* Таблица */
+        let html = summaryHtml;
+        html += '<table class="prod-table"><thead><tr>'
+            + '<th>Продукт</th><th>Тип</th><th>Прогонов</th>'
+            + '<th>Статус</th><th>Оставшееся время</th>'
+            + '<th>Начало</th><th>Окончание</th><th>Стоимость</th>'
+            + '</tr></thead><tbody>';
+
+        sorted.forEach((j) => {
+            const productId = j.product_type_id || j.blueprint_type_id;
+            const productName = esiTypeName(productId);
+            const actId = j.activity_id || 0;
+            const actName = ACTIVITY[actId] || `#${actId}`;
+            const st = j.status || 'unknown';
+            const stRu = STATUS_RU[st] || st;
+
+            /* Иконка предмета из image.evetech.net */
+            const imgUrl = productId
+                ? `https://images.evetech.net/types/${productId}/icon?size=32`
+                : '';
+            const imgTag = imgUrl
+                ? `<img src="${imgUrl}" alt="" loading="lazy">`
+                : '';
+
+            /* Оставшееся время */
+            let timeLeft = '';
+            if (st === 'active' && j.end_date) {
+                timeLeft = fmtLeft(j.end_date);
+            } else if (st === 'ready') {
+                timeLeft = '<span class="evt-ok">готово</span>';
+            }
+
+            /* Прогоны */
+            const runs = j.runs || 1;
+            const successRuns = j.successful_runs != null ? j.successful_runs : '';
+            const runsText = successRuns !== '' ? `${runs} (✓${successRuns})` : `${runs}`;
+
+            /* Стоимость */
+            const cost = j.cost ? Number(j.cost).toLocaleString('ru-RU', { maximumFractionDigits: 0 }) + ' ISK' : '';
+
+            html += '<tr>'
+                + `<td><span class="prod-product">${imgTag}${escapeHtml(productName)}</span></td>`
+                + `<td><span class="prod-activity prod-act-${actId}">${escapeHtml(actName)}</span></td>`
+                + `<td class="prod-runs">${runsText}</td>`
+                + `<td><span class="prod-status prod-st-${st}">${escapeHtml(stRu)}</span></td>`
+                + `<td class="prod-time-left">${timeLeft}</td>`
+                + `<td>${fmtDate(j.start_date)}</td>`
+                + `<td>${fmtDate(j.end_date)}</td>`
+                + `<td class="prod-cost">${cost}</td>`
+                + '</tr>';
+        });
+        html += '</tbody></table>';
+        body.innerHTML = html;
+    }
+
+    /* ---------- Кнопка «Обновить» ---------- */
+    if (btnRefr) btnRefr.addEventListener('click', loadJobs);
+
+    /* ---------- Выбор персонажа ---------- */
+    charSel.addEventListener('change', loadJobs);
+
+    /* ---------- Модалка «Тест» ---------- */
+    if (btnTest && testMod) {
+        document.body.appendChild(testMod);
+        const closeTest = () => { testMod.hidden = true; btnTest.focus(); };
+        btnTest.addEventListener('click', () => {
+            testMod.hidden = false;
+            testMod.querySelector('.ct-modal-close').focus();
+            if (lastJobs) {
+                testBody.innerHTML = `<h4>Персонаж: ${escapeHtml(lastCharId || '—')} · заданий: ${lastJobs.length}</h4>`
+                    + `<pre style="max-height:70vh;overflow:auto;font-size:0.75rem;white-space:pre-wrap">`
+                    + escapeHtml(JSON.stringify(lastJobs, null, 2)) + '</pre>';
+            } else {
+                testBody.innerHTML = '<p class="prod-empty">Сначала выберите персонажа и загрузите данные</p>';
+            }
+        });
+        testMod.querySelector('.ct-modal-close').addEventListener('click', closeTest);
+        testMod.addEventListener('click', (e) => { if (e.target === testMod) closeTest(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !testMod.hidden) closeTest(); });
+    }
+
+    /* ---------- Инициализация при переключении на вкладку ---------- */
+    let inited = false;
+    document.querySelectorAll('nav button').forEach((btn) => {
+        if (btn.dataset.tab === 'production') {
+            btn.addEventListener('click', () => {
+                if (!inited) { populateChars(); inited = true; }
+            });
+        }
+    });
+    /* Если открыта с хэшем или кнопка уже нажата */
+    if (document.getElementById('production')?.classList.contains('active')) {
+        populateChars();
+        inited = true;
+    }
 }());

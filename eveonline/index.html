@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=200">
+    <link rel="stylesheet" href="css/style.css?v=201">
 </head>
 <body>
     <header>
@@ -41,7 +41,7 @@
                 <button data-tab="planets">Планеты</button>
                 <button data-tab="chains">Цепочки производства</button>
                 <button data-tab="calculator">Карты</button>
-                <button data-tab="colonies">Мои колонии</button>
+                <button data-tab="production">Производство</button>
             </nav>
         </div>
     </header>
@@ -235,23 +235,38 @@
             <div id="map-jump" class="jm" hidden></div>
         </section>
 
-        <!-- Вкладка: сохранённые колонии -->
-        <section id="colonies" class="tab-content">
-            <h2>Мои колонии</h2>
-            <button id="add-colony">+ Добавить колонию</button>
-            <div id="colonies-list"></div>
+        <!-- Вкладка: производство по чертежам -->
+        <section id="production" class="tab-content">
+            <div class="prod-bar">
+                <h2 class="prod-title">Производство</h2>
+                <label class="prod-char-label" for="prod-char">Персонаж</label>
+                <select id="prod-char" class="ct-input prod-char-select"></select>
+                <button type="button" id="prod-refresh" class="btn card-add" title="Обновить данные производства">Обновить</button>
+                <button type="button" id="prod-test" class="btn card-add" aria-haspopup="dialog" title="Тест: сырые данные ESI по производству">Тест</button>
+            </div>
+            <div id="prod-body" class="prod-body">
+                <p class="prod-empty">Выберите персонажа — здесь появятся его задания на производство</p>
+            </div>
+            <!-- Модалка «Тест» для сырых данных -->
+            <div id="prod-test-modal" class="ct-modal" role="dialog" aria-modal="true" hidden>
+                <div class="ct-modal-box evetest-box">
+                    <h3 class="ct-modal-title">Тест: производство (ESI industry/jobs)</h3>
+                    <div id="prod-test-body" class="evetest-body"></div>
+                    <button type="button" class="ct-modal-close" aria-label="Закрыть">×</button>
+                </div>
+            </div>
         </section>
     </main>
 
     <script src="js/data.js?v=2"></script>
     <script src="js/systems.js?v=2"></script>
     <script src="js/planets.js?v=2"></script>
-    <script src="js/eveauth.js?v=9"></script>
+    <script src="js/eveauth.js?v=10"></script>
     <script src="js/mapdata.js?v=4"></script>
     <script src="js/calculator.js?v=36"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=19"></script>
-    <script src="js/app.js?v=182"></script>
+    <script src="js/app.js?v=183"></script>
     <script src="js/jumpdata.js?v=1"></script>
     <script src="js/jumpmap.js?v=10"></script>
     <script src="js/planmap.js?v=5"></script>

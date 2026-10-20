@@ -232,9 +232,7 @@ nav button:focus-visible {
 
 /* ---------- Основная область ---------- */
 /* Шапка теперь фиксированная, сверху у main — её высота.
-   «Планеты» и «Цепочки производства» — на всю ширину экрана,
-   «Калькулятор» (карта региона) — тоже на всю ширину; «Мои колонии»
-   центрированы (см. #colonies). */
+   Все вкладки — на всю ширину экрана. */
 main {
     position: relative;
     z-index: 1;
@@ -243,12 +241,8 @@ main {
     padding: calc(var(--header-h) + 1.25rem) clamp(0.75rem, 2vw, 1.5rem) 4rem;
 }
 
-/* Вкладки, которые не просили растягивать, остаются в аккуратном
-   центрированном окне — как в шапке (.container) */
-#colonies {
-    max-width: 1600px;
-    margin: 0 auto;
-}
+/* Производство — на всю ширину */
+#production { max-width: none; }
 
 .tab-content {
     position: relative;
@@ -5309,3 +5303,146 @@ input.chain-amount:focus {
 .pm-pop-quick button:disabled { opacity: 0.4; cursor: not-allowed; }
 .pm-pop-note { margin: 0.4rem 0 0; font-size: 0.74rem; color: #ff9d2e; }
 .pm-pop-note:empty { display: none; }
+
+/* ---------- Вкладка «Производство» ---------- */
+#production { max-width: none; }
+
+.prod-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+    padding: 0.8rem 1rem;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+}
+.prod-title {
+    margin: 0;
+    font-family: var(--font-head);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+}
+.prod-char-label {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+}
+.prod-char-select {
+    min-width: 180px;
+    max-width: 280px;
+}
+.prod-body {
+    padding: 1rem;
+}
+.prod-empty {
+    color: var(--text-faint);
+    font-size: 0.9rem;
+}
+.prod-loading {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+}
+
+/* Сводка по типам заданий */
+.prod-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+.prod-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.82rem;
+    color: var(--text);
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+.prod-stat b { color: var(--accent); }
+
+/* Таблица заданий */
+.prod-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+.prod-table th {
+    position: sticky;
+    top: 0;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-align: left;
+    background: var(--bg-deep);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+.prod-table td {
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+    vertical-align: middle;
+}
+.prod-table tr:hover td {
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.prod-product {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 500;
+}
+.prod-product img {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    background: rgba(0,0,0,0.25);
+}
+.prod-activity {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.prod-act-1 { background: rgba(80,180,120,0.18); color: #5fd38d; }  /* Manufacturing */
+.prod-act-3 { background: rgba(100,160,255,0.15); color: #7ab8ff; } /* TE Research */
+.prod-act-4 { background: rgba(100,160,255,0.15); color: #7ab8ff; } /* ME Research */
+.prod-act-5 { background: rgba(200,160,60,0.15); color: #ddb94e; }  /* Copying */
+.prod-act-8 { background: rgba(180,100,220,0.15); color: #c78ef0; } /* Invention */
+.prod-act-9 { background: rgba(180,100,220,0.15); color: #c78ef0; } /* Reactions */
+.prod-act-11 { background: rgba(180,100,220,0.15); color: #c78ef0; } /* Reverse Eng. */
+
+.prod-status {
+    display: inline-block;
+    padding: 0.12rem 0.45rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.prod-st-active   { background: rgba(80,180,120,0.18); color: #5fd38d; }
+.prod-st-ready    { background: rgba(255,180,40,0.18); color: #ffb428; }
+.prod-st-paused   { background: rgba(200,160,60,0.15); color: #ddb94e; }
+.prod-st-delivered { background: rgba(100,160,255,0.12); color: #7ab8ff; }
+.prod-st-cancelled { background: rgba(255,100,100,0.12); color: #ff7a6b; }
+
+.prod-time-left { font-size: 0.8rem; }
+.prod-cost { font-size: 0.8rem; color: var(--text-dim); white-space: nowrap; }
+.prod-runs { white-space: nowrap; }
+.prod-none { padding: 2rem; text-align: center; color: var(--text-faint); }
+.prod-error { padding: 1rem; color: #ff7a6b; }
+.prod-scope-warn {
+    padding: 0.6rem 1rem;
+    margin-bottom: 0.8rem;
+    font-size: 0.84rem;
+    color: #ffb428;
+    background: rgba(255,180,40,0.08);
+    border: 1px solid rgba(255,180,40,0.25);
+    border-radius: var(--radius-sm);
+}
