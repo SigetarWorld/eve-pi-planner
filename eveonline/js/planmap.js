@@ -86,6 +86,10 @@
         new Set(TYPES.filter((t) => PLANET_RESOURCES[t].some((r) => r.P1 === p1)))]));
     const P2_RECIPE = new Map(PI_RECIPES.filter((r) => r.outQty === 5).map((r) => [r.out, r]));
     const P2_LIST = [...P2_RECIPE.keys()].sort();
+    const P3_RECIPE = new Map(PI_RECIPES.filter((r) => r.outQty === 3).map((r) => [r.out, r]));
+    const P3_LIST = [...P3_RECIPE.keys()].sort();
+    const P4_RECIPE = new Map(PI_RECIPES.filter((r) => r.outQty === 1).map((r) => [r.out, r]));
+    const P4_LIST = [...P4_RECIPE.keys()].sort();
     // Что показывать у планеты этого типа на каждом уровне
     const RES_BY_TYPE = {};
     Object.keys(PLANET_COLORS).forEach((t) => {
@@ -137,6 +141,7 @@
             <div class="pm-panel-btns" role="group" aria-label="Подсчёт плана">
                 <button type="button" class="pm-panel-btn" data-pm-panel="p1" aria-pressed="false">Таблица P1</button>
                 <button type="button" class="pm-panel-btn" data-pm-panel="p2" aria-pressed="false">Таблица P2</button>
+                <button type="button" class="pm-panel-btn" data-pm-panel="chains" aria-pressed="false">Цепочки P3/P4</button>
                 <button type="button" class="pm-panel-btn" data-pm-panel="pilots" aria-pressed="false">Персонажи <b data-pm="pilot-count">0</b></button>
             </div>
             <button type="button" class="pm-panel-btn pm-hide-btn" data-pm-hide aria-pressed="${hideUnused}" title="Скрыть планеты и ресурсы без плана">Скрыть пустые</button>
@@ -157,6 +162,10 @@
                 <section class="pm-panel" data-panel="p2" hidden>
                     <h3 class="pm-side-title">План: P2</h3>
                     <div data-pm="p2"></div>
+                </section>
+                <section class="pm-panel" data-panel="chains" hidden>
+                    <h3 class="pm-side-title">Доступные цепочки P3 / P4</h3>
+                    <div data-pm="chains"></div>
                 </section>
             </div>
             <div class="mm-view pm-view is-empty" data-pm="view">
@@ -785,6 +794,61 @@
                 </div>`;
             }).join('')
             : '<span class="pm-pilot-none">План пуст: выберите ресурс на карте и персонажа</span>';
+
+        /* Цепочки P3/P4: какие продукты можно произвести из имеющихся P2/P3 с Кол > 0 */
+        const p2avail = new Set();
+        p2.forEach((v, k) => { if (v > 0) p2avail.add(k); });
+        // Учитываем и ручной ввод в P2
+        if (manual.p2) Object.entries(manual.p2).forEach(([k, v]) => { if (v > 0) p2avail.add(k); });
+
+        // Доступные P3: все входы (P2) имеются
+        const p3avail = new Map();
+        P3_LIST.forEach((name) => {
+            const r = P3_RECIPE.get(name);
+            const ok = r.in.every(([n]) => p2avail.has(n));
+            if (ok) p3avail.set(name, r);
+        });
+
+        // Доступные P4: все входы (P3, иногда P1) имеются
+        const p1avail = new Set();
+        p1.forEach((v, k) => { if (v > 0) p1avail.add(k); });
+        if (manual.p1) Object.entries(manual.p1).forEach(([k, v]) => { if (v > 0) p1avail.add(k); });
+
+        const p4avail = new Map();
+        P4_LIST.forEach((name) => {
+            const r = P4_RECIPE.get(name);
+            const ok = r.in.every(([n]) => {
+                // вход может быть P3, P1 или P0 (Bacteria и т.д.)
+                if (p3avail.has(n)) return true;
+                if (p1avail.has(n)) return true;
+                return false;
+            });
+            if (ok) p4avail.set(name, r);
+        });
+
+        const chainRow = (name, recipe, tierClass, tierLabel) => {
+            const inputs = recipe.in.map(([n]) => {
+                const lvl = PI_COMMODITIES[n] ? PI_COMMODITIES[n][1] : 0;
+                const tCls = `ct-tier-p${lvl}`;
+                return `<span class="pm-chain-in">${icon(n, 16)}<span>${esc(n)}</span><span class="ct-tier ${tCls}">P${lvl}</span></span>`;
+            }).join('<span class="pm-chain-plus">+</span>');
+            return `<div class="pm-chain-row">
+                <div class="pm-chain-out">${icon(name, 20)}<b>${esc(name)}</b><span class="ct-tier ${tierClass}">${tierLabel}</span><small>×${recipe.outQty}</small></div>
+                <div class="pm-chain-inputs">← ${inputs}</div>
+            </div>`;
+        };
+
+        let chainsHtml = '';
+        if (p3avail.size) {
+            chainsHtml += `<h4 class="pm-chain-head"><span class="ct-tier ct-tier-p3">P3</span> Доступно: ${p3avail.size} из ${P3_LIST.length}</h4>`;
+            p3avail.forEach((r, name) => { chainsHtml += chainRow(name, r, 'ct-tier-p3', 'P3'); });
+        }
+        if (p4avail.size) {
+            chainsHtml += `<h4 class="pm-chain-head"><span class="ct-tier ct-tier-p4">P4</span> Доступно: ${p4avail.size} из ${P4_LIST.length}</h4>`;
+            p4avail.forEach((r, name) => { chainsHtml += chainRow(name, r, 'ct-tier-p4', 'P4'); });
+        }
+        if (!chainsHtml) chainsHtml = '<span class="pm-chain-none">Нет доступных цепочек — добавьте P2 ресурсы в план (Кол&gt;0)</span>';
+        $('chains').innerHTML = chainsHtml;
     }
 
     root.querySelector('.pm-panels').addEventListener('input', (event) => {

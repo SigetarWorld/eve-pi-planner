@@ -5241,6 +5241,21 @@ input.chain-amount:focus {
 .pm-pilot li .res-icon { width: 16px; height: 16px; margin: 0; }
 .pm-pilot li small { margin-left: auto; color: var(--text-faint); }
 .pm-pilot-none { color: var(--text-faint); }
+/* Цепочки P3/P4 */
+.pm-chain-head { display: flex; align-items: center; gap: 0.4rem; margin: 0.6rem 0 0.35rem; font-size: 0.82rem; font-weight: 700; color: var(--text); }
+.pm-chain-head:first-child { margin-top: 0; }
+.pm-chain-row { padding: 0.3rem 0.4rem; border-bottom: 1px solid var(--border); }
+.pm-chain-row:last-child { border-bottom: none; }
+.pm-chain-out { display: flex; align-items: center; gap: 0.3rem; font-size: 0.82rem; }
+.pm-chain-out b { color: var(--text); }
+.pm-chain-out small { color: var(--text-faint); font-size: 0.72rem; font-weight: 400; }
+.pm-chain-out .res-icon { width: 20px; height: 20px; }
+.pm-chain-inputs { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem; margin-top: 0.2rem; padding-left: 1.4rem; font-size: 0.75rem; color: var(--text-dim); }
+.pm-chain-in { display: inline-flex; align-items: center; gap: 0.2rem; padding: 0.1rem 0.3rem; border-radius: 4px; background: rgba(255, 255, 255, 0.04); }
+.pm-chain-in .res-icon { width: 16px; height: 16px; }
+.pm-chain-in .ct-tier { font-size: 0.6rem; min-width: 1.4rem; height: 1rem; padding: 0 0.15rem; }
+.pm-chain-plus { color: var(--text-faint); font-size: 0.7rem; }
+.pm-chain-none { color: var(--text-faint); font-size: 0.8rem; display: block; padding: 0.5rem 0; }
 .pm-tiers { display: flex; gap: 0.3rem; }
 .pm-tiers button { display: inline-flex; align-items: center; height: 32px; padding: 0 0.45rem; background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; opacity: 0.6; }
 .pm-tiers button:hover { opacity: 1; }
@@ -5248,6 +5263,8 @@ input.chain-amount:focus {
 .pm .ct-tier { display: inline-flex; align-items: center; justify-content: center; min-width: 1.7rem; height: 1.25rem; padding: 0 0.25rem; font-size: 0.7rem; font-weight: 700; line-height: 1; color: var(--accent); border: 1px solid rgba(255, 157, 46, 0.55); border-radius: 3px; background: rgba(255, 157, 46, 0.08); }
 .pm .ct-tier-p0 { color: var(--text-dim); border-color: var(--border); background: rgba(255, 255, 255, 0.04); }
 .pm .ct-tier-p2 { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 55%, transparent); background: color-mix(in srgb, var(--cyan) 8%, transparent); }
+.pm .ct-tier-p3 { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 55%, transparent); background: color-mix(in srgb, var(--cyan) 8%, transparent); }
+.pm .ct-tier-p4 { color: #c9a7ff; border-color: rgba(201, 167, 255, 0.55); background: rgba(201, 167, 255, 0.08); }
 /* Кнопка «Скрыть пустые» */
 .pm-hide-btn { font-size: 0.72rem; }
 /* Карта: ветки к планетам, тонкие линии к значкам, имена персонажей */
