@@ -431,6 +431,8 @@ if (chainBox) {
     const piPriceNodes = new Map();
     // Считаемый объём колонки: уровень -> элемент в подписи колонки.
     const piVolumeNodes = new Map();
+    // Сумма стоимости колонки: уровень -> элемент span в подписи.
+    const piSumNodes = new Map();
 
     // Подсказка на плитке: она же возвращается в title после копии.
     const PI_COPY_HINT = 'Клик — скопировать ячейку';
@@ -589,6 +591,31 @@ if (chainBox) {
         // Цена и сумма под названием: количество изменилось — сумма
         // (цена × количество) изменилась вместе с ним.
         piPriceNodes.forEach((node) => piRenderPrice(node));
+
+        // Сумма стоимости по колонке: sum(цена × расчётное количество)
+        // для всех товаров уровня. Показываем только если piWanted не пуст.
+        const hasAny = piWanted.size > 0;
+        const colSums = [0, 0, 0, 0, 0];
+        if (hasAny) {
+            piPriceNodes.forEach((node, name) => {
+                const price = Number(node.dataset.isk) || 0;
+                const qty = piTotals.get(name) || 0;
+                if (price > 0 && qty > 0) {
+                    const info = PI_COMMODITIES[name];
+                    if (info) colSums[info[1]] += price * qty;
+                }
+            });
+        }
+        piSumNodes.forEach((node, level) => {
+            if (!hasAny || colSums[level] <= 0) {
+                node.textContent = '';
+            } else {
+                const formatted = typeof EVE_PRICES !== 'undefined'
+                    ? EVE_PRICES.formatIsk(colSums[level])
+                    : piCompact(colSums[level]);
+                node.textContent = 'Сумма: ' + formatted + ' ISK';
+            }
+        });
     }
 
     /* Число длиннее отведённого места не обрезаем, а ужимаем: место под
@@ -723,6 +750,10 @@ if (chainBox) {
             volume.textContent = piVolumeLine(0);
             piVolumeNodes.set(level, volume);
             note.append(volume);
+            const colSum = document.createElement('span');
+            colSum.className = 'chain-col-sum';
+            piSumNodes.set(level, colSum);
+            note.append(colSum);
         }
         col.append(note);
         // Плитки кладём в отдельный контейнер: он заполняет оставшуюся

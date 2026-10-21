@@ -3319,6 +3319,14 @@ form button:focus-visible,
     display: block;
     color: var(--text-dim);
 }
+.chain-col-sum {
+    display: block;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.82rem;
+    margin-top: 0.15rem;
+}
+.chain-col-sum:empty { display: none; }
 
 /* Строка товара: плитка, а справа от неё поле ввода (у P1..P4).
    Посчитанный итог живёт внутри плитки, у правого края. Ширину
