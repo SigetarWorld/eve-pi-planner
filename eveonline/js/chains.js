@@ -511,12 +511,7 @@ if (chainBox) {
                 const value = Number(entry.value);
                 if (entry.value === '' || !isFinite(value) || value <= 0) piWanted.delete(name);
                 else piWanted.set(name, value);
-                piRecalcAmounts();
-                // Ширины колонок здесь не пересчитываем: место под итог
-                // в плитке зарезервировано (см. .chain-total), поэтому
-                // ни число, ни ввод не меняют вёрстку. Раньше стоял
-                // вызов relayout() — из-за него при расчёте колонки
-                // разъезжались вбок.
+                piRecalcDeferred();
             };
 
             entry.addEventListener('input', apply);
@@ -532,7 +527,13 @@ if (chainBox) {
             // обрабатываем сразу, не дожидаясь ухода курсора.
             const snap = () => {
                 if (level === 3) entry.value = piSnapStep3(entry.value);
-                apply();
+                // Финальный ввод: округляем и пересчитываем сразу,
+                // без дебаунса — человек закончил набирать.
+                const value = Number(entry.value);
+                if (entry.value === '' || !isFinite(value) || value <= 0) piWanted.delete(name);
+                else piWanted.set(name, value);
+                clearTimeout(piRecalcTimer);
+                piRecalcAmounts();
             };
             entry.addEventListener('blur', snap);
             entry.addEventListener('keydown', (event) => {
@@ -542,6 +543,15 @@ if (chainBox) {
         }
         return item;
     };
+
+    // Дебаунс: при быстром наборе цифр piRecalcAmounts запускается один
+    // раз после паузы, а не на каждый символ. 80 мс — меньше порога
+    // «залип», но достаточно, чтобы собрать несколько keydown подряд.
+    let piRecalcTimer = 0;
+    function piRecalcDeferred() {
+        clearTimeout(piRecalcTimer);
+        piRecalcTimer = setTimeout(piRecalcAmounts, 80);
+    }
 
     // Сколько чего нужно набрать. Раскладываем вверх по цепочке, от P4
     // к P0: рецепты в SDE берут сырьё уровнем ниже изделия, поэтому
@@ -626,23 +636,34 @@ if (chainBox) {
        показываем округлённое значение со знаком «≈»: иначе последние
        цифры просто не поместились бы и число читалось бы неверно. */
     let totalFontPx = 0;
+    let fitCtx = null;
     function piFitTotals(items) {
         if (!items.length) return;
         if (!totalFontPx) {
             totalFontPx = parseFloat(getComputedStyle(items[0].node).fontSize) || 11;
         }
-        items.forEach(({ node, value }) => {
-            const room = node.clientWidth;
+        if (!fitCtx) fitCtx = document.createElement('canvas').getContext('2d');
+        // Один раз читаем font-family — он одинаковый у всех итогов.
+        const family = getComputedStyle(items[0].node).fontFamily;
+        // Фаза 1: читаем clientWidth у всех узлов (одна пачка чтений).
+        const widths = items.map(({ node }) => node.clientWidth);
+        // Фаза 2: подбираем кегль через canvas.measureText — ни одного
+        // промежуточного чтения DOM, layout thrashing исключён.
+        items.forEach(({ node, value }, i) => {
+            const room = widths[i];
             if (!room) return;
-            // Шаг 0.5px и порог снизу 7px: мельче уже не прочесть.
+            const text = node.textContent;
             let size = totalFontPx;
-            while (node.scrollWidth > room && size > 7) {
+            fitCtx.font = size + 'px ' + family;
+            while (fitCtx.measureText(text).width > room && size > 7) {
                 size -= 0.5;
-                node.style.fontSize = size + 'px';
+                fitCtx.font = size + 'px ' + family;
             }
-            if (node.scrollWidth > room) {
-                node.textContent = '\u2248' + piCompact(value);
+            if (fitCtx.measureText(text).width > room) {
+                node.textContent = '≈' + piCompact(value);
                 node.style.fontSize = '';
+            } else if (size < totalFontPx) {
+                node.style.fontSize = size + 'px';
             }
         });
     }
@@ -664,15 +685,18 @@ if (chainBox) {
         }
         const room = node.clientWidth;
         if (!room) return true;
-        // Шаг 0.5px, потолок снизу — 7px: вычитываем, только если после
-        // вычитания останется не меньше семи, иначе последний шаг
-        // увёл бы кегль ниже того, что ещё читается.
+        // Canvas-замер вместо цикла scrollWidth → fontSize (layout thrashing).
+        if (!fitCtx) fitCtx = document.createElement('canvas').getContext('2d');
+        const family = getComputedStyle(node).fontFamily;
+        const text = node.textContent;
         let size = priceFontPx;
-        while (node.scrollWidth > room && size - 0.5 >= 7) {
+        fitCtx.font = size + 'px ' + family;
+        while (fitCtx.measureText(text).width > room && size - 0.5 >= 7) {
             size -= 0.5;
-            node.style.fontSize = size + 'px';
+            fitCtx.font = size + 'px ' + family;
         }
-        return node.scrollWidth <= room;
+        if (size < priceFontPx) node.style.fontSize = size + 'px';
+        return fitCtx.measureText(text).width <= room;
     }
 
     /* Вторая половина строки цены: во сколько обойдётся расчётное
