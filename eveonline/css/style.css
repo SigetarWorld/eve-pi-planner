@@ -4791,7 +4791,7 @@ input.chain-amount:focus {
     letter-spacing: 0.04em;
     border-radius: 3px;
     background: var(--accent);
-    color: var(--bg);
+    color: var(--bg-deep);
     vertical-align: baseline;
     flex: 0 0 auto;
 }
