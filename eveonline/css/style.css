@@ -4800,6 +4800,30 @@ input.chain-amount:focus {
 }
 .eve-isk-daily.is-positive .eve-isk-badge { background: #2ecc40; }
 .eve-isk-daily.is-negative .eve-isk-badge { background: #e74c3c; }
+.eve-isk-plex {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: var(--text-dim);
+}
+.eve-isk-plex .eve-isk-badge { background: #e8a33d; }
+.eve-plex-input {
+    width: 4.5rem;
+    padding: 0.1em 0.3em;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border, #1a2b4d);
+    border-radius: 3px;
+    text-align: right;
+    -moz-appearance: textfield;
+}
+.eve-plex-input::-webkit-inner-spin-button,
+.eve-plex-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.eve-plex-input:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
 
 /* Галочка суточной суммы в меню персонажей */
 .eve-char-check {

@@ -2056,7 +2056,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '26.10.2026 15:13';
+const APP_BUILD = '26.10.2026 15:15';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -5722,6 +5722,16 @@ if (eveCharsBox) {
 
 /* Обновляем ISK каждые 5 минут, если вкладка видна */
 setInterval(() => { if (!document.hidden) eveIskRefresh(); }, 5 * 60 * 1000);
+
+/* ---- PLEX: ручной ввод, хранится в localStorage ---- */
+const evePlexInput = document.getElementById('eve-plex-input');
+const EVE_PLEX_KEY = 'evepi.plexCount';
+if (evePlexInput) {
+    try { const v = localStorage.getItem(EVE_PLEX_KEY); if (v) evePlexInput.value = v; } catch {}
+    evePlexInput.addEventListener('input', () => {
+        try { localStorage.setItem(EVE_PLEX_KEY, evePlexInput.value); } catch {}
+    });
+}
 
 /* ---- Статистика сервера EVE Online ----
    В шапке рядом со входом: игроков онлайн на Tranquility и с какого
