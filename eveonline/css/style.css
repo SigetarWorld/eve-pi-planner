@@ -4810,10 +4810,12 @@ input.chain-amount:focus {
 }
 .eve-isk-plex .eve-isk-badge { background: #e8a33d; }
 .eve-plex-input {
-    width: 4.5rem;
-    padding: 0.1em 0.3em;
-    font-size: 0.74rem;
+    width: 3rem;
+    height: 1.25em;
+    padding: 0 0.2em;
+    font-size: 0.7rem;
     font-weight: 600;
+    line-height: 1.25;
     color: var(--text);
     background: var(--bg-panel-2);
     border: 1px solid var(--border, #1a2b4d);
