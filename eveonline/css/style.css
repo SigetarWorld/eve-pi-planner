@@ -4809,7 +4809,7 @@ input.chain-amount:focus {
     color: var(--text-dim);
 }
 .eve-isk-plex .eve-isk-badge { background: #e8a33d; }
-.eve-plex-input {
+input.eve-plex-input {
     box-sizing: border-box;
     width: 5ch;
     min-width: 0;
