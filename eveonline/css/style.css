@@ -4800,16 +4800,6 @@ input.chain-amount:focus {
 }
 .eve-isk-daily.is-positive .eve-isk-badge { background: #2ecc40; }
 .eve-isk-daily.is-negative .eve-isk-badge { background: #e74c3c; }
-.eve-isk-plex {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.74rem;
-    font-weight: 500;
-    color: var(--text-dim);
-    letter-spacing: 0.01em;
-}
-.eve-isk-plex .eve-isk-badge { background: #e8a33d; }
 
 /* Галочка суточной суммы в меню персонажей */
 .eve-char-check {
