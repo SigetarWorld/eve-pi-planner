@@ -2056,7 +2056,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '26.10.2026 14:54';
+const APP_BUILD = '26.10.2026 15:04';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -5596,6 +5596,7 @@ function closeEveChars() {
 const eveIskBox = document.getElementById('eve-isk-box');
 const eveIskTotalEl = document.getElementById('eve-isk-total');
 const eveIskDailyEl = document.getElementById('eve-isk-daily');
+const eveIskPlexEl = document.getElementById('eve-isk-plex');
 
 const EVE_ISK_DAILY_KEY = 'evepi.iskDailyChars';
 
@@ -5653,6 +5654,28 @@ async function eveWalletJournal24h(charId) {
     return total;
 }
 
+/* Количество PLEX у персонажа (type_id 44992) — через assets API */
+const PLEX_TYPE_ID = 44992;
+async function eveCharPlex(charId) {
+    let total = 0;
+    let page = 1;
+    for (;;) {
+        let assets;
+        try {
+            assets = await eveFetchJson(
+                `${ESI_BASE}/characters/${charId}/assets/?datasource=tranquility&page=${page}`, {}, charId);
+        } catch { break; }
+        if (!Array.isArray(assets) || !assets.length) break;
+        for (const a of assets) {
+            if (a.type_id === PLEX_TYPE_ID) total += (a.quantity || 0);
+        }
+        if (assets.length < 1000) break;
+        page++;
+        if (page > 20) break;
+    }
+    return total;
+}
+
 /* Обновление отображения ISK */
 let eveIskBusy = false;
 async function eveIskRefresh() {
@@ -5663,20 +5686,37 @@ async function eveIskRefresh() {
     eveIskBox.hidden = false;
     eveIskTotalEl.innerHTML = '<span class="eve-isk-badge">ISK</span> …';
     eveIskDailyEl.textContent = '';
+    if (eveIskPlexEl) eveIskPlexEl.textContent = '';
 
     if (eveIskBusy) return;
     eveIskBusy = true;
     try {
-        // 1) Балансы всех персонажей
-        const balances = await Promise.allSettled(
-            chars.map((c) => eveWalletBalance(c.characterId))
-        );
+        // 1) Балансы всех персонажей + PLEX параллельно
+        const [balances, plexCounts] = await Promise.all([
+            Promise.allSettled(chars.map((c) => eveWalletBalance(c.characterId))),
+            Promise.allSettled(chars.map((c) => eveCharPlex(c.characterId)))
+        ]);
         let totalIsk = 0;
         balances.forEach((r) => {
             if (r.status === 'fulfilled' && typeof r.value === 'number') totalIsk += r.value;
         });
         eveIskTotalEl.innerHTML = '<span class="eve-isk-badge">ISK</span> ' + escapeHtml(eveIskFmt(totalIsk));
         eveIskTotalEl.title = 'Общий баланс: ' + Math.round(totalIsk).toLocaleString('ru-RU') + ' ISK';
+
+        // PLEX
+        if (eveIskPlexEl) {
+            let totalPlex = 0;
+            plexCounts.forEach((r) => {
+                if (r.status === 'fulfilled') totalPlex += r.value;
+            });
+            if (totalPlex > 0) {
+                eveIskPlexEl.innerHTML = '<span class="eve-isk-badge">PLEX</span> '
+                    + escapeHtml(totalPlex.toLocaleString('ru-RU'));
+                eveIskPlexEl.title = 'Всего PLEX на всех аккаунтах: ' + totalPlex.toLocaleString('ru-RU');
+            } else {
+                eveIskPlexEl.textContent = '';
+            }
+        }
 
         // 2) Суточное изменение только для отмеченных
         const dailySet = eveIskDailyChars();
