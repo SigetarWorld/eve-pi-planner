@@ -2056,7 +2056,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '26.10.2026 15:04';
+const APP_BUILD = '26.10.2026 15:10';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -5659,13 +5659,12 @@ const PLEX_TYPE_ID = 44992;
 async function eveCharPlex(charId) {
     let total = 0;
     let page = 1;
+    let gotData = false;
     for (;;) {
-        let assets;
-        try {
-            assets = await eveFetchJson(
-                `${ESI_BASE}/characters/${charId}/assets/?datasource=tranquility&page=${page}`, {}, charId);
-        } catch { break; }
+        const assets = await eveFetchJson(
+            `${ESI_BASE}/characters/${charId}/assets/?datasource=tranquility&page=${page}`, {}, charId);
         if (!Array.isArray(assets) || !assets.length) break;
+        gotData = true;
         for (const a of assets) {
             if (a.type_id === PLEX_TYPE_ID) total += (a.quantity || 0);
         }
@@ -5673,7 +5672,7 @@ async function eveCharPlex(charId) {
         page++;
         if (page > 20) break;
     }
-    return total;
+    return { plex: total, ok: gotData };
 }
 
 /* Обновление отображения ISK */
@@ -5686,7 +5685,7 @@ async function eveIskRefresh() {
     eveIskBox.hidden = false;
     eveIskTotalEl.innerHTML = '<span class="eve-isk-badge">ISK</span> …';
     eveIskDailyEl.textContent = '';
-    if (eveIskPlexEl) eveIskPlexEl.textContent = '';
+    if (eveIskPlexEl) eveIskPlexEl.innerHTML = '<span class="eve-isk-badge">PLEX</span> …';
 
     if (eveIskBusy) return;
     eveIskBusy = true;
@@ -5706,16 +5705,18 @@ async function eveIskRefresh() {
         // PLEX
         if (eveIskPlexEl) {
             let totalPlex = 0;
+            let anyOk = false;
             plexCounts.forEach((r) => {
-                if (r.status === 'fulfilled') totalPlex += r.value;
+                if (r.status === 'fulfilled' && r.value) {
+                    totalPlex += r.value.plex;
+                    if (r.value.ok) anyOk = true;
+                }
             });
-            if (totalPlex > 0) {
-                eveIskPlexEl.innerHTML = '<span class="eve-isk-badge">PLEX</span> '
-                    + escapeHtml(totalPlex.toLocaleString('ru-RU'));
-                eveIskPlexEl.title = 'Всего PLEX на всех аккаунтах: ' + totalPlex.toLocaleString('ru-RU');
-            } else {
-                eveIskPlexEl.textContent = '';
-            }
+            const plexStr = anyOk ? totalPlex.toLocaleString('ru-RU') : '—';
+            eveIskPlexEl.innerHTML = '<span class="eve-isk-badge">PLEX</span> ' + escapeHtml(plexStr);
+            eveIskPlexEl.title = anyOk
+                ? 'Всего PLEX на всех аккаунтах: ' + totalPlex.toLocaleString('ru-RU')
+                : 'Не удалось получить данные assets';
         }
 
         // 2) Суточное изменение только для отмеченных
