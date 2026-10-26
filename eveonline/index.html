@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=205">
+    <link rel="stylesheet" href="css/style.css?v=206">
 </head>
 <body>
     <header>
@@ -91,6 +91,11 @@
                     </div>
                     <!-- портреты подключённых персонажей, в два ряда (renderEveRoster) -->
                     <div id="eve-roster-list" class="eve-roster-list"></div>
+                    <!-- Сумма ISK: общая по всем персонажам + суточная по отмеченным -->
+                    <div id="eve-isk-box" class="eve-isk-box" hidden>
+                        <span id="eve-isk-total" class="eve-isk-total" title="Общий баланс всех персонажей"></span>
+                        <span id="eve-isk-daily" class="eve-isk-daily" title="Изменение за 24 ч (отмеченные персонажи)"></span>
+                    </div>
                 </div>
 
                 <!-- Таблицу подсчёта P1 строит и заполняет app.js (updateStats) -->
@@ -269,12 +274,12 @@
     <script src="js/data.js?v=2"></script>
     <script src="js/systems.js?v=2"></script>
     <script src="js/planets.js?v=2"></script>
-    <script src="js/eveauth.js?v=10"></script>
+    <script src="js/eveauth.js?v=11"></script>
     <script src="js/mapdata.js?v=4"></script>
     <script src="js/calculator.js?v=36"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=21"></script>
-    <script src="js/app.js?v=190"></script>
+    <script src="js/app.js?v=191"></script>
     <script src="js/jumpdata.js?v=1"></script>
     <script src="js/jumpmap.js?v=10"></script>
     <script src="js/planmap.js?v=5"></script>

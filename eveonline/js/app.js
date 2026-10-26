@@ -2056,7 +2056,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '21.10.2026 12:23';
+const APP_BUILD = '26.10.2026 14:41';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
@@ -5545,18 +5545,26 @@ function renderEveAuth(message) {
     eveCharsBtn.textContent = `Персонажи: ${list.length}`;
     eveCharsBtn.setAttribute('aria-label', `Персонажи: ${list.length}`);
     if (!list.length) closeEveChars();
-    eveCharsBox.innerHTML = list.map((c) => `
+    eveCharsBox.innerHTML = list.map((c) => {
+        const cid = escapeHtml(String(c.characterId));
+        const checked = eveIskDailyChars().has(Number(c.characterId)) ? ' checked' : '';
+        return `
         <div class="eve-char">
             ${c.characterId ? `<img class="eve-char-img" src="${evePortrait(c.characterId)}" alt="" width="24" height="24">` : ''}
             <span class="eve-char-name">${escapeHtml(c.characterName || 'Персонаж')}</span>
-            <button type="button" class="eve-char-drop" data-eve-drop="${escapeHtml(String(c.characterId))}"
+            <button type="button" class="eve-char-drop" data-eve-drop="${cid}"
                     title="Отключить персонажа" aria-label="Отключить ${escapeHtml(c.characterName || 'персонажа')}">&times;</button>
-        </div>`).join('')
+            <input type="checkbox" class="eve-char-check" data-eve-check="${cid}"
+                   title="Участвует в суточной сумме ISK"${checked}>
+        </div>`;
+    }).join('')
+        + `<p class="eve-char-check-label">☑ — участвует в сумме ISK за 24 ч</p>`
         + `<p class="eve-chars-note">Ещё персонаж — снова «LOG IN with EVE Online». Персонаж с другого
            аккаунта: на странице EVE смените аккаунт перед выбором персонажа.</p>`;
     eveHint.textContent = message || '';
     renderEveRoster(list);
     refreshPilotSelects();
+    eveIskRefresh();
 }
 
 /* Блок «Персонажи» внизу — список-меню (кнопка eve-chars-btn и окно
@@ -5577,6 +5585,143 @@ function closeEveChars() {
     eveCharsBox.hidden = true;
     eveCharsBtn.setAttribute('aria-expanded', 'false');
 }
+
+/* ---- Сумма ISK: общий баланс + суточное изменение ----
+   Баланс — GET /characters/{id}/wallet/ (число ISK, scope wallet).
+   Суточное изменение — GET /characters/{id}/wallet/journal/?page=1,
+   берём записи за последние 24 часа и суммируем amount.
+
+   Галочки в меню «Персонажи» хранятся в localStorage: какие персонажи
+   участвуют в суточной сумме. По умолчанию все включены. */
+const eveIskBox = document.getElementById('eve-isk-box');
+const eveIskTotalEl = document.getElementById('eve-isk-total');
+const eveIskDailyEl = document.getElementById('eve-isk-daily');
+
+const EVE_ISK_DAILY_KEY = 'evepi.iskDailyChars';
+
+function eveIskDailyChars() {
+    try {
+        const raw = localStorage.getItem(EVE_ISK_DAILY_KEY);
+        if (raw) return new Set(JSON.parse(raw));
+    } catch { /* пусто */ }
+    // по умолчанию все включены
+    const all = typeof eveChars === 'function' ? eveChars() : [];
+    return new Set(all.map((c) => c.characterId));
+}
+
+function eveIskDailyCharsSave(charSet) {
+    try { localStorage.setItem(EVE_ISK_DAILY_KEY, JSON.stringify([...charSet])); } catch { /* */ }
+}
+
+/* Формат ISK: «1 234 567 890 ISK» или «1,23 млрд ISK» */
+function eveIskFmt(v) {
+    if (v == null || !isFinite(v)) return '…';
+    const abs = Math.abs(v);
+    if (abs >= 1e12) return (v / 1e12).toFixed(2).replace('.', ',') + ' трлн ISK';
+    if (abs >= 1e9)  return (v / 1e9).toFixed(2).replace('.', ',') + ' млрд ISK';
+    if (abs >= 1e6)  return (v / 1e6).toFixed(1).replace('.', ',') + ' млн ISK';
+    return Math.round(v).toLocaleString('ru-RU') + ' ISK';
+}
+
+/* Запрос баланса одного персонажа */
+async function eveWalletBalance(charId) {
+    return eveFetchJson(`${ESI_BASE}/characters/${charId}/wallet/?datasource=tranquility`, {}, charId);
+}
+
+/* Журнал кошелька за последние 24 ч: постранично до старых записей */
+async function eveWalletJournal24h(charId) {
+    const cutoff = Date.now() - 24 * 3600 * 1000;
+    let total = 0;
+    let page = 1;
+    for (;;) {
+        let entries;
+        try {
+            entries = await eveFetchJson(
+                `${ESI_BASE}/characters/${charId}/wallet/journal/?datasource=tranquility&page=${page}`, {}, charId);
+        } catch { break; }
+        if (!Array.isArray(entries) || !entries.length) break;
+        let anyOld = false;
+        for (const e of entries) {
+            const t = new Date(e.date).getTime();
+            if (t < cutoff) { anyOld = true; continue; }
+            total += Number(e.amount) || 0;
+        }
+        if (anyOld || entries.length < 2500) break;
+        page++;
+        if (page > 10) break; // защита от бесконечного цикла
+    }
+    return total;
+}
+
+/* Обновление отображения ISK */
+let eveIskBusy = false;
+async function eveIskRefresh() {
+    if (!eveIskBox || !eveIskTotalEl || !eveIskDailyEl) return;
+    const chars = typeof eveChars === 'function' && eveConfigured() ? eveChars() : [];
+    if (!chars.length) { eveIskBox.hidden = true; return; }
+
+    eveIskBox.hidden = false;
+    eveIskTotalEl.textContent = '⏳ …';
+    eveIskDailyEl.textContent = '';
+
+    if (eveIskBusy) return;
+    eveIskBusy = true;
+    try {
+        // 1) Балансы всех персонажей
+        const balances = await Promise.allSettled(
+            chars.map((c) => eveWalletBalance(c.characterId))
+        );
+        let totalIsk = 0;
+        balances.forEach((r) => {
+            if (r.status === 'fulfilled' && typeof r.value === 'number') totalIsk += r.value;
+        });
+        eveIskTotalEl.textContent = '💰 ' + eveIskFmt(totalIsk);
+        eveIskTotalEl.title = 'Общий баланс: ' + Math.round(totalIsk).toLocaleString('ru-RU') + ' ISK';
+
+        // 2) Суточное изменение только для отмеченных
+        const dailySet = eveIskDailyChars();
+        const dailyChars = chars.filter((c) => dailySet.has(c.characterId));
+        if (!dailyChars.length) {
+            eveIskDailyEl.textContent = '';
+            return;
+        }
+        eveIskDailyEl.textContent = '⏳ 24ч …';
+        const journals = await Promise.allSettled(
+            dailyChars.map((c) => eveWalletJournal24h(c.characterId))
+        );
+        let dailyIsk = 0;
+        journals.forEach((r) => {
+            if (r.status === 'fulfilled') dailyIsk += r.value;
+        });
+        const sign = dailyIsk >= 0 ? '+' : '';
+        eveIskDailyEl.textContent = `24ч: ${sign}${eveIskFmt(dailyIsk)}`;
+        eveIskDailyEl.className = 'eve-isk-daily' + (dailyIsk > 0 ? ' is-positive' : dailyIsk < 0 ? ' is-negative' : '');
+        eveIskDailyEl.title = `Изменение за 24 ч: ${sign}${Math.round(dailyIsk).toLocaleString('ru-RU')} ISK`
+            + `\nПерсонажи: ${dailyChars.map((c) => c.characterName).join(', ')}`;
+    } catch (e) {
+        eveIskTotalEl.textContent = '💰 ошибка';
+        eveIskTotalEl.title = String(e);
+    } finally {
+        eveIskBusy = false;
+    }
+}
+
+/* Обработка галочек в меню «Персонажи» — живые, не перерисовывают */
+if (eveCharsBox) {
+    eveCharsBox.addEventListener('change', (event) => {
+        const cb = event.target.closest('.eve-char-check');
+        if (!cb) return;
+        const charSet = eveIskDailyChars();
+        const id = Number(cb.dataset.eveCheck);
+        if (cb.checked) charSet.add(id);
+        else charSet.delete(id);
+        eveIskDailyCharsSave(charSet);
+        eveIskRefresh();
+    });
+}
+
+/* Обновляем ISK каждые 5 минут, если вкладка видна */
+setInterval(() => { if (!document.hidden) eveIskRefresh(); }, 5 * 60 * 1000);
 
 /* ---- Статистика сервера EVE Online ----
    В шапке рядом со входом: игроков онлайн на Tranquility и с какого
