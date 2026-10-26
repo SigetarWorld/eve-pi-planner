@@ -4803,14 +4803,13 @@ input.chain-amount:focus {
 }
 .eve-isk-daily.is-positive .eve-isk-badge { background: #2ecc40; }
 .eve-isk-daily.is-negative .eve-isk-badge { background: #e74c3c; }
-.eve-isk-plex { flex: 1; }
+.eve-isk-plex {}
 .eve-isk-plex .eve-isk-badge { background: #e8a33d; }
 input.eve-plex-input {
     box-sizing: border-box;
-    flex: 1;
-    width: auto;
+    width: 6ch;
     min-width: 0;
-    max-width: none;
+    max-width: 6ch;
     height: 1.3rem;
     padding: 0 0.25em;
     font-size: 0.74rem;
