@@ -4810,9 +4810,12 @@ input.chain-amount:focus {
 }
 .eve-isk-plex .eve-isk-badge { background: #e8a33d; }
 .eve-plex-input {
-    width: 2.2rem;
+    box-sizing: border-box;
+    width: 5ch;
+    min-width: 0;
+    max-width: 5ch;
     height: 1.25em;
-    padding: 0 0.2em;
+    padding: 0 0.15em;
     font-size: 0.7rem;
     font-weight: 600;
     line-height: 1.25;
@@ -4822,6 +4825,7 @@ input.chain-amount:focus {
     border-radius: 3px;
     text-align: right;
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 .eve-plex-input::-webkit-inner-spin-button,
 .eve-plex-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
