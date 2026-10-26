@@ -4764,18 +4764,42 @@ input.chain-amount:focus {
     white-space: nowrap;
     flex: 0 0 auto;
 }
-.eve-isk-total {
-    font-size: 0.88rem;
+.eve-isk-total,
+.eve-isk-daily {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
     font-weight: 600;
     color: var(--accent);
     letter-spacing: 0.01em;
 }
 .eve-isk-daily {
-    font-size: 0.76rem;
+    font-size: 0.74rem;
+    font-weight: 500;
     color: var(--text-dim);
 }
 .eve-isk-daily.is-positive { color: #2ecc40; }
 .eve-isk-daily.is-negative { color: #e74c3c; }
+/* Бейджи-иконки [ISK] [24ч] в стиле тегов уровней P0–P4 */
+.eve-isk-badge {
+    display: inline-block;
+    padding: 0.08em 0.35em;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: 0.04em;
+    border-radius: 3px;
+    background: var(--accent);
+    color: var(--bg);
+    vertical-align: baseline;
+    flex: 0 0 auto;
+}
+.eve-isk-daily .eve-isk-badge {
+    background: var(--text-dim);
+}
+.eve-isk-daily.is-positive .eve-isk-badge { background: #2ecc40; }
+.eve-isk-daily.is-negative .eve-isk-badge { background: #e74c3c; }
 
 /* Галочка суточной суммы в меню персонажей */
 .eve-char-check {

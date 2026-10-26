@@ -5661,7 +5661,7 @@ async function eveIskRefresh() {
     if (!chars.length) { eveIskBox.hidden = true; return; }
 
     eveIskBox.hidden = false;
-    eveIskTotalEl.textContent = '⏳ …';
+    eveIskTotalEl.innerHTML = '<span class="eve-isk-badge">ISK</span> …';
     eveIskDailyEl.textContent = '';
 
     if (eveIskBusy) return;
@@ -5675,7 +5675,7 @@ async function eveIskRefresh() {
         balances.forEach((r) => {
             if (r.status === 'fulfilled' && typeof r.value === 'number') totalIsk += r.value;
         });
-        eveIskTotalEl.textContent = '💰 ' + eveIskFmt(totalIsk);
+        eveIskTotalEl.innerHTML = '<span class="eve-isk-badge">ISK</span> ' + escapeHtml(eveIskFmt(totalIsk));
         eveIskTotalEl.title = 'Общий баланс: ' + Math.round(totalIsk).toLocaleString('ru-RU') + ' ISK';
 
         // 2) Суточное изменение только для отмеченных
@@ -5685,7 +5685,7 @@ async function eveIskRefresh() {
             eveIskDailyEl.textContent = '';
             return;
         }
-        eveIskDailyEl.textContent = '⏳ 24ч …';
+        eveIskDailyEl.innerHTML = '<span class="eve-isk-badge">24ч</span> …';
         const journals = await Promise.allSettled(
             dailyChars.map((c) => eveWalletJournal24h(c.characterId))
         );
@@ -5694,12 +5694,12 @@ async function eveIskRefresh() {
             if (r.status === 'fulfilled') dailyIsk += r.value;
         });
         const sign = dailyIsk >= 0 ? '+' : '';
-        eveIskDailyEl.textContent = `24ч: ${sign}${eveIskFmt(dailyIsk)}`;
         eveIskDailyEl.className = 'eve-isk-daily' + (dailyIsk > 0 ? ' is-positive' : dailyIsk < 0 ? ' is-negative' : '');
+        eveIskDailyEl.innerHTML = `<span class="eve-isk-badge">24ч</span> ${escapeHtml(sign + eveIskFmt(dailyIsk))}`;
         eveIskDailyEl.title = `Изменение за 24 ч: ${sign}${Math.round(dailyIsk).toLocaleString('ru-RU')} ISK`
             + `\nПерсонажи: ${dailyChars.map((c) => c.characterName).join(', ')}`;
     } catch (e) {
-        eveIskTotalEl.textContent = '💰 ошибка';
+        eveIskTotalEl.innerHTML = '<span class="eve-isk-badge">ISK</span> ошибка';
         eveIskTotalEl.title = String(e);
     } finally {
         eveIskBusy = false;
