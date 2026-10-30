@@ -5785,20 +5785,14 @@ input.eve-plex-input {
    Планеты2 — облегчённый вид карточек: мелкий шрифт, без жирного,
    без рамок у картинок, уменьшенные иконки.
    ================================================================ */
-.p2-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.6rem;
-    padding: 0.5rem 0;
-}
 .p2-card {
-    min-width: 0;
     background: var(--bg-panel);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     font-size: 10px;
     font-weight: 400;
     line-height: 1.4;
+    margin-bottom: 0.6rem;
 }
 
 /* Всё внутри — без жирного */
@@ -5820,9 +5814,18 @@ input.eve-plex-input {
     white-space: nowrap;
 }
 
-/* Тело */
-#planets2 .uv-body { padding: 0.1rem 0.45rem 0.2rem; }
-#planets2 .uv-colony { padding: 0.12rem 0; }
+/* Тело — колонии 3 в ряд */
+#planets2 .uv-body {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+    padding: 0.3rem 0.45rem;
+}
+#planets2 .uv-colony {
+    padding: 0.12rem 0.2rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+}
 #planets2 .uv-colony + .uv-colony { border-top: 1px solid var(--border); }
 
 /* Строки данных */

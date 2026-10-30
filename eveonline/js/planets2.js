@@ -16,19 +16,11 @@
         const cards = src.querySelectorAll('.card > .uv');
         if (!cards.length) { dst.innerHTML = '<p style="color:var(--text-dim);padding:1rem;">Карточек нет — откройте «Планеты» и добавьте.</p>'; return; }
 
-        // Собираем каждую колонию как отдельную карточку (3 в ряд)
-        let html = '<div class="p2-grid">';
+        // 1 персонаж = 1 карточка, колонии внутри 3 в ряд
+        let html = '';
         cards.forEach(function (uv) {
-            var headHtml = '';
-            var head = uv.querySelector('.uv-head');
-            if (head) headHtml = head.outerHTML;
-
-            var colonies = uv.querySelectorAll('.uv-colony');
-            colonies.forEach(function (col) {
-                html += '<div class="p2-card">' + headHtml + '<div class="uv-body">' + col.outerHTML + '</div></div>';
-            });
+            html += '<div class="p2-card">' + uv.innerHTML + '</div>';
         });
-        html += '</div>';
         dst.innerHTML = html;
 
         // Убираем интерактивные элементы
