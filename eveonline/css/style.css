@@ -5786,19 +5786,17 @@ input.eve-plex-input {
    без рамок у картинок, уменьшенные иконки.
    ================================================================ */
 .p2-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.6rem;
     padding: 0.5rem 0;
 }
 .p2-card {
-    flex: 0 1 auto;
     min-width: 0;
-    max-width: 100%;
     background: var(--bg-panel);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 400;
     line-height: 1.4;
 }
@@ -5834,7 +5832,7 @@ input.eve-plex-input {
     gap: 0.2rem;
     min-height: 1rem;
     white-space: nowrap;
-    font-size: 9px;
+    font-size: 10px;
 }
 
 /* Все картинки: без рамки, маленькие */
@@ -5879,7 +5877,7 @@ input.eve-plex-input {
 #planets2 .uv-qty,
 #planets2 .uv-ptype,
 #planets2 .uv-sys,
-#planets2 .uv-sep { font-size: 9px; }
+#planets2 .uv-sep { font-size: 10px; }
 
 /* Вложенные дочерние ноды */
 #planets2 .uv-kids { padding-left: 0.6rem; }
