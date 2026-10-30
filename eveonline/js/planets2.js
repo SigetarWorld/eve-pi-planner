@@ -27,6 +27,11 @@
         dst.querySelectorAll('button, .uv-edit, .account-del, .uv-sync, .card-light, .uv-fold, .uv-fold-all, .uv-top, .uv-tier').forEach(function (el) {
             el.remove();
         });
+
+        // Убираем всё ниже P3: оставляем только P4 и P3
+        dst.querySelectorAll('.uv-node[data-tier="P2"], .uv-node[data-tier="P1"], .uv-node[data-tier="P0"]').forEach(function (el) {
+            el.remove();
+        });
     }
 
     // Слушаем переключение на вкладку
