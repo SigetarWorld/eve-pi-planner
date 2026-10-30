@@ -28,9 +28,11 @@
             el.remove();
         });
 
-        // Убираем всё ниже P3: оставляем только P4 и P3
-        dst.querySelectorAll('.uv-node[data-tier="P2"], .uv-node[data-tier="P1"], .uv-node[data-tier="P0"]').forEach(function (el) {
-            el.remove();
+        // Убираем P2/P1/P0 только внутри P4-нод (остальные карточки не трогаем)
+        dst.querySelectorAll('.uv-node[data-tier="P4"]').forEach(function (p4) {
+            p4.querySelectorAll('.uv-node[data-tier="P2"], .uv-node[data-tier="P1"], .uv-node[data-tier="P0"]').forEach(function (el) {
+                el.remove();
+            });
         });
     }
 
