@@ -16,14 +16,22 @@
         const cards = src.querySelectorAll('.card > .uv');
         if (!cards.length) { dst.innerHTML = '<p style="color:var(--text-dim);padding:1rem;">Карточек нет — откройте «Планеты» и добавьте.</p>'; return; }
 
+        // Собираем каждую колонию как отдельную карточку (3 в ряд)
         let html = '<div class="p2-grid">';
         cards.forEach(function (uv) {
-            html += '<div class="p2-card">' + uv.innerHTML + '</div>';
+            var headHtml = '';
+            var head = uv.querySelector('.uv-head');
+            if (head) headHtml = head.outerHTML;
+
+            var colonies = uv.querySelectorAll('.uv-colony');
+            colonies.forEach(function (col) {
+                html += '<div class="p2-card">' + headHtml + '<div class="uv-body">' + col.outerHTML + '</div></div>';
+            });
         });
         html += '</div>';
         dst.innerHTML = html;
 
-        // Убираем интерактивные элементы (кнопки редактирования, удаления и т.д.)
+        // Убираем интерактивные элементы
         dst.querySelectorAll('button, .uv-edit, .account-del, .uv-sync, .card-light, .uv-fold, .uv-fold-all, .uv-top, .uv-tier').forEach(function (el) {
             el.remove();
         });
