@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=218">
+    <link rel="stylesheet" href="css/style.css?v=219">
 </head>
 <body>
     <header>
@@ -39,6 +39,7 @@
             </div>
             <nav class="tabs">
                 <button data-tab="planets">Планеты</button>
+                <button data-tab="planets2">Планеты2</button>
                 <button data-tab="chains">Цепочки производства</button>
                 <button data-tab="calculator">Карты</button>
                 <button data-tab="production">Производство</button>
@@ -193,6 +194,14 @@
             </div>
         </section>
 
+        <!-- Вкладка «Планеты2» — облегчённая копия карточек персонажей.
+             Не взаимодействует с другими вкладками: при открытии клонирует
+             текущее содержимое карточек из «Планеты» и показывает статично.
+             Стили: мелкий шрифт, без жирного, без рамок у картинок. -->
+        <section id="planets2" class="tab-content">
+            <div id="planets2-cards"></div>
+        </section>
+
         <!-- Вкладка: цепочки P0->P4. Схему целиком рисует js/chains.js:
              рецепты из planetSchematics.yaml, уровни из ESI. -->
         <section id="chains" class="tab-content">
@@ -284,10 +293,11 @@
     <script src="js/calculator.js?v=36"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=21"></script>
-    <script src="js/app.js?v=200"></script>
+    <script src="js/app.js?v=201"></script>
     <script src="js/jumpdata.js?v=1"></script>
     <script src="js/jumpmap.js?v=10"></script>
     <script src="js/planmap.js?v=5"></script>
+    <script src="js/planets2.js?v=1"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
         if (location.protocol === "file:") {

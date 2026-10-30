@@ -5780,3 +5780,107 @@ input.eve-plex-input {
     border: 1px solid rgba(255,180,40,0.25);
     border-radius: var(--radius-sm);
 }
+
+/* ================================================================
+   Планеты2 — облегчённый вид карточек: мелкий шрифт, без жирного,
+   без рамок у картинок, уменьшенные иконки.
+   ================================================================ */
+.p2-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    padding: 0.5rem 0;
+}
+.p2-card {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 9px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+/* Всё внутри — без жирного */
+#planets2 * { font-weight: 400 !important; }
+
+/* Заголовок карточки */
+#planets2 .uv-head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.45rem;
+    border-bottom: 1px solid var(--border);
+}
+#planets2 .ct-pilot-name {
+    margin: 0;
+    font-size: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Тело */
+#planets2 .uv-body { padding: 0.1rem 0.45rem 0.2rem; }
+#planets2 .uv-colony { padding: 0.12rem 0; }
+#planets2 .uv-colony + .uv-colony { border-top: 1px solid var(--border); }
+
+/* Строки данных */
+#planets2 .uv-line {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    min-height: 1rem;
+    white-space: nowrap;
+    font-size: 9px;
+}
+
+/* Все картинки: без рамки, маленькие */
+#planets2 img {
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+#planets2 .uv-icon {
+    width: 0.85rem;
+    height: 0.85rem;
+    flex: 0 0 auto;
+    display: inline-flex;
+}
+#planets2 .uv-icon img {
+    width: 100%;
+    height: 100%;
+}
+#planets2 .uv-planet-icon img { border-radius: 0 !important; }
+
+/* Бейджи тиров */
+#planets2 .ct-tier {
+    width: 0.9rem;
+    height: 0.9rem;
+    font-size: 7px;
+    border-radius: 2px;
+}
+
+/* Склады */
+#planets2 .uv-store {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+#planets2 .uv-store svg { width: 0.6rem; height: 0.6rem; }
+
+/* Тиры в заголовке */
+#planets2 .uv-tiers { display: none; }
+
+/* Количество и текст */
+#planets2 .uv-name,
+#planets2 .uv-qty,
+#planets2 .uv-ptype,
+#planets2 .uv-sys,
+#planets2 .uv-sep { font-size: 9px; }
+
+/* Вложенные дочерние ноды */
+#planets2 .uv-kids { padding-left: 0.6rem; }
+#planets2 .uv-toggle-gap { width: 0; }

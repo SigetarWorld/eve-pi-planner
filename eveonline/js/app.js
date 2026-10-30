@@ -2056,7 +2056,7 @@ const EVE_TEST_PILOTS = ['Sigetar', 'CrazyJam'];
 /* Версия страницы — в заголовке окна «Тест»: по ней видно, дошло ли
    обновление сайта до браузера. APP_BUILD меняется при каждой правке
    app.js; версии файлов берутся из адресов скриптов и стилей (?v=). */
-const APP_BUILD = '31.10.2026 04:11';
+const APP_BUILD = '31.10.2026 04:22';
 // Версия — и под кнопкой «← Sigetar.ru» в шапке
 (function showHeaderVersion() {
     const el = document.getElementById('app-version');
