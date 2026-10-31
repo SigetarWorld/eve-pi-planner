@@ -5844,6 +5844,8 @@ input.eve-plex-input {
 #planets2 .uv-icon img {
     width: 100%;
     height: 100%;
+    border: 1px solid var(--border);
+    border-radius: 3px;
 }
 /* Бейджи тиров */
 #planets2 .ct-tier {
