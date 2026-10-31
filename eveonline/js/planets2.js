@@ -24,7 +24,7 @@
         dst.innerHTML = html;
 
         // Убираем интерактивные элементы, галочки плана и блок «Вне плана»
-        dst.querySelectorAll('button, .uv-edit, .account-del, .uv-sync, .card-light, .uv-fold, .uv-fold-all, .uv-top, .uv-tier, .uv-plan, .uv-offplan').forEach(function (el) {
+        dst.querySelectorAll('button, .uv-edit, .account-del, .uv-sync, .card-light, .uv-fold, .uv-fold-all, .uv-top, .uv-tier, .uv-plan, .uv-offplan, .uv-store, .uv-stores').forEach(function (el) {
             el.remove();
         });
 
