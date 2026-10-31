@@ -23,8 +23,8 @@
         });
         dst.innerHTML = html;
 
-        // Убираем интерактивные элементы
-        dst.querySelectorAll('button, .uv-edit, .account-del, .uv-sync, .card-light, .uv-fold, .uv-fold-all, .uv-top, .uv-tier').forEach(function (el) {
+        // Убираем интерактивные элементы, галочки плана и блок «Вне плана»
+        dst.querySelectorAll('button, .uv-edit, .account-del, .uv-sync, .card-light, .uv-fold, .uv-fold-all, .uv-top, .uv-tier, .uv-plan, .uv-offplan').forEach(function (el) {
             el.remove();
         });
 
