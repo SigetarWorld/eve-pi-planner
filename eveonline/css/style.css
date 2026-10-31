@@ -5822,7 +5822,7 @@ input.eve-plex-input {
 }
 
 /* Тело — колонии списком вниз */
-#planets2 .uv-body { padding: 0.1rem 0.45rem 0.2rem; }
+#planets2 .uv-body { padding: 0.1rem 0.45rem 0.2rem 0.7rem; }
 #planets2 .uv-colony { padding: 0.12rem 0; }
 #planets2 .uv-colony + .uv-colony { border-top: 1px solid var(--border); }
 
