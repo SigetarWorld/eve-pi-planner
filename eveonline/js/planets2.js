@@ -24,13 +24,24 @@
         dst.innerHTML = html;
 
         // Убираем интерактивные элементы, галочки плана и блок «Вне плана»
-        dst.querySelectorAll('button, .uv-edit, .account-del, .uv-sync, .card-light, .uv-fold, .uv-fold-all, .uv-top, .uv-tier, .uv-plan, .uv-offplan').forEach(function (el) {
+        // (кнопки складов .uv-store-btn оставляем)
+        dst.querySelectorAll('button:not(.uv-store-btn), .uv-edit, .account-del, .uv-sync, .card-light, .uv-fold, .uv-fold-all, .uv-top, .uv-tier, .uv-plan, .uv-offplan').forEach(function (el) {
             el.remove();
         });
 
         // Оставляем только топовую добычу — убираем все дочерние ноды
         dst.querySelectorAll('.uv-kids').forEach(function (el) {
             el.remove();
+        });
+
+        // Градиент переполнения: помечаем колонии с is-warn / is-full
+        dst.querySelectorAll('.uv-store-btn.is-full').forEach(function (btn) {
+            var col = btn.closest('.uv-colony');
+            if (col) col.classList.add('p2-full');
+        });
+        dst.querySelectorAll('.uv-store-btn.is-warn').forEach(function (btn) {
+            var col = btn.closest('.uv-colony');
+            if (col && !col.classList.contains('p2-full')) col.classList.add('p2-warn');
         });
     }
 

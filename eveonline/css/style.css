@@ -5866,9 +5866,19 @@ input.eve-plex-input {
 #planets2 .ct-tier-p3 { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 55%, transparent); background: color-mix(in srgb, var(--cyan) 8%, transparent); }
 #planets2 .ct-tier-p4 { color: #c9a7ff; border-color: rgba(201, 167, 255, 0.55); background: rgba(201, 167, 255, 0.08); }
 
-/* Склады — скрываем (наезжают на иконки) */
-#planets2 .uv-store,
-#planets2 .uv-stores { display: none; }
+/* Склады — компактные иконки */
+#planets2 .uv-stores { display: inline-flex; align-items: center; gap: 1px; margin-left: 0.15rem; }
+#planets2 .uv-store {
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    pointer-events: none;
+}
+#planets2 .uv-store svg { width: 0.5rem; height: 0.5rem; }
+/* Градиент переполнения — слева до середины */
+#planets2 .uv-colony.p2-warn { background: linear-gradient(to right, rgba(255,210,63,0.18), transparent 50%); }
+#planets2 .uv-colony.p2-full { background: linear-gradient(to right, rgba(255,107,107,0.22), transparent 50%); }
 
 /* Тиры в заголовке */
 #planets2 .uv-tiers { display: none; }
