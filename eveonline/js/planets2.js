@@ -143,6 +143,44 @@
         } else {
             html += '<div class="uv-empty">пусто</div>';
         }
+
+        /* --- Дефицит P4: показываем под складом с P2/P3 --- */
+        var hasP2P3 = items.some(function (it) { var t = tierOf(it.name); return t >= 2 && t <= 3; });
+        var prod = col.dataset.prod || '';
+        if (hasP2P3 && prod && typeof PI_RECIPE_OF !== 'undefined') {
+            var recipe = PI_RECIPE_OF.get(prod);
+            if (recipe) {
+                // Сумма всех предметов по всем 3 складам колонии
+                var allItems = {};
+                (col.storeData || []).forEach(function (s) {
+                    s.items.forEach(function (q, name) {
+                        if (q >= 1) allItems[name] = (allItems[name] || 0) + Math.floor(q);
+                    });
+                });
+
+                var defRows = '';
+                var allOk = true;
+                recipe.in.forEach(function (ing) {
+                    var iName = ing[0], iNeed = ing[1];
+                    var iHave = allItems[iName] || 0;
+                    var short = iHave < iNeed;
+                    if (short) allOk = false;
+                    defRows += '<div class="uv-line' + (short ? ' p2-short' : ' p2-enough') + '">' +
+                        '<span class="uv-name">' + escHtml(iName) + '</span>' +
+                        '<span class="uv-sep">–</span>' +
+                        '<span class="uv-qty">' + iHave.toLocaleString('ru-RU') + ' / ' + iNeed + '</span>' +
+                        (short ? '<span class="p2-deficit-n">−' + (iNeed - iHave) + '</span>' : '') +
+                        '</div>';
+                });
+
+                html += '<div class="p2-deficit">';
+                html += '<div class="p2-deficit-title">' + escHtml(prod) +
+                    (allOk ? ' <span class="p2-ok-mark">✓</span>' : '') + '</div>';
+                html += defRows;
+                html += '</div>';
+            }
+        }
+
         html += '</div>';
 
         var line = col.querySelector('.uv-node > .uv-line');
