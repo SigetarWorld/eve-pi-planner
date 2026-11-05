@@ -20,13 +20,13 @@
     /* piTierOf из app.js — определяем уровень товара по названию */
     function tierOf(name) {
         var n = String(name).toLowerCase();
-        // P4: содержит «mainframe», «broadcast», «wetware», «nano», «organic», «gel», «ukomi»
-        if (/mainframe|broadcast|wetware|nano-|organic mortar|gel-matrix|ukomi/.test(n)) return 4;
-        // P3: содержит заметные подстроки уровня 3
-        if (/condensate|camera|guidance|hermetic|transcranium|planetary vehicle|robotics|smartfab|supercomputer|synthetic oil|vaccines|cryoprotectant|biotech|fertilizer|polytextile|silicate|transmitter|datacore|hazmat|high-tech|industrial explosive/i.test(n)) return 3;
-        // P2: содержит подстроки уровня 2
-        if (/biocell|construction|consumer|genetically|livestock|luxury|mechanical|miniature|nanite|oxides|polyaramid|rocket fuel|silicate glass|superconductors|supertensile|test cultures|transmitter|viral agent|water-cooled cpu|enriched uranium|polytextiles/i.test(n)) return 2;
-        // P1: содержит подстроки
+        // P4: только 8 финальных продуктов
+        if (/mainframe|broadcast node|wetware|nano-factory|organic mortar|self-harmonizing|recursive computing|sterile conduit|integrity response/.test(n)) return 4;
+        // P3
+        if (/condensate|camera|guidance|hermetic|transcranium|transcranial|planetary vehicle|robotics|smartfab|supercomputer|synthetic oil|synthetic synapse|vaccines|cryoprotectant|biotech|fertilizer|polytextile|silicate|transmitter|datacore|data chip|hazmat|high-tech|industrial explosive|neocom|nuclear reactor|gel-matrix|ukomi/i.test(n)) return 3;
+        // P2
+        if (/biocell|construction|consumer|genetically|livestock|luxury|mechanical|miniature|nanite|oxides|polyaramid|rocket fuel|silicate glass|superconductors|supertensile|test cultures|viral agent|water-cooled cpu|enriched uranium|polytextiles|microfiber shielding/i.test(n)) return 2;
+        // P1
         if (/bacteria|biofuels|biomass|chiral|electrolytes|industrial fibers|oxidizing|oxygen|plasmoids|precious metals|proteins|reactive metals|silicon|toxic metals|water$/i.test(n)) return 1;
         return 0;
     }
