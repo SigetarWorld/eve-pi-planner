@@ -5891,13 +5891,16 @@ input.eve-plex-input {
 /* Вложенные дочерние ноды */
 #planets2 .uv-kids { padding-left: 0.6rem; }
 #planets2 .uv-toggle-gap { width: 0; }
-/* Дефицит P4 */
+/* Дефицит P4 — цепочка P3→P2→P1 */
 #planets2 .p2-deficit { border-top: 1px dashed var(--border); margin-top: 0.3rem; padding-top: 0.3rem; }
 #planets2 .p2-deficit-title { color: var(--accent); font-size: 11px; font-weight: 600 !important; margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #planets2 .p2-deficit .uv-qty { font-size: 11px; }
-#planets2 .p2-short .uv-name { color: var(--red); }
-#planets2 .p2-short .uv-qty  { color: var(--red); }
-#planets2 .p2-enough .uv-name { color: var(--green); }
-#planets2 .p2-enough .uv-qty  { color: var(--green); }
-#planets2 .p2-deficit-n { color: var(--red); font-size: 10px; margin-left: 0.3rem; }
-#planets2 .p2-ok-mark { color: var(--green); }
+#planets2 .p2-def-row .uv-name { color: var(--red); }
+#planets2 .p2-def-row .uv-qty  { color: var(--red); }
+#planets2 .p2-chain-2 { padding-left: 1.2rem; }
+#planets2 .p2-chain-1 { padding-left: 2.4rem; }
+#planets2 .p2-chain-2 .uv-name,
+#planets2 .p2-chain-2 .uv-qty  { color: var(--cyan); }
+#planets2 .p2-chain-1 .uv-name,
+#planets2 .p2-chain-1 .uv-qty  { color: var(--text-dim); }
+#planets2 .p2-deficit .res-icon { width: 1rem; height: 1rem; margin: 0 0.15rem; vertical-align: middle; }

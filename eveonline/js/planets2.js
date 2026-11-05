@@ -49,6 +49,16 @@
         return used;
     }
 
+    /* Иконка + бейдж тира + имя ресурса */
+    function resHtml(name) {
+        var t = tierOf(name);
+        var icon = (typeof RESOURCE_ICONS !== 'undefined' && RESOURCE_ICONS[name])
+            ? '<img class="res-icon" src="' + RESOURCE_ICONS[name] + '" loading="lazy" width="16" height="16">'
+            : '';
+        var badge = '<span class="ct-tier ct-tier-p' + t + '">P' + t + '</span>';
+        return badge + icon + '<span class="uv-name">' + escHtml(name) + '</span>';
+    }
+
     /* ---------- Клонирование ---------- */
     function refreshPlanets2() {
         var src = document.getElementById('accounts');
@@ -158,26 +168,60 @@
                     });
                 });
 
-                var defRows = '';
-                var allOk = true;
+                // Макс. циклов P4, которые может дать любой ингредиент
+                var maxCyc = 0;
                 recipe.in.forEach(function (ing) {
-                    var iName = ing[0], iNeed = ing[1];
-                    var iHave = allItems[iName] || 0;
-                    var short = iHave < iNeed;
-                    if (short) allOk = false;
-                    defRows += '<div class="uv-line' + (short ? ' p2-short' : ' p2-enough') + '">' +
-                        '<span class="uv-name">' + escHtml(iName) + '</span>' +
-                        '<span class="uv-sep">–</span>' +
-                        '<span class="uv-qty">' + iHave.toLocaleString('ru-RU') + ' / ' + iNeed + '</span>' +
-                        (short ? '<span class="p2-deficit-n">−' + (iNeed - iHave) + '</span>' : '') +
-                        '</div>';
+                    var c = Math.floor((allItems[ing[0]] || 0) / ing[1]);
+                    if (c > maxCyc) maxCyc = c;
                 });
 
-                html += '<div class="p2-deficit">';
-                html += '<div class="p2-deficit-title">' + escHtml(prod) +
-                    (allOk ? ' <span class="p2-ok-mark">✓</span>' : '') + '</div>';
-                html += defRows;
-                html += '</div>';
+                // Собираем ингредиенты с дефицитом (have < target)
+                var defs = [];
+                recipe.in.forEach(function (ing) {
+                    var iName = ing[0], iPerCyc = ing[1];
+                    var iHave = allItems[iName] || 0;
+                    var target = maxCyc * iPerCyc;
+                    if (iHave < target) defs.push({ name: iName, deficit: target - iHave, tier: tierOf(iName) });
+                });
+
+                if (defs.length) {
+                    html += '<div class="p2-deficit">';
+                    html += '<div class="p2-deficit-title">' + escHtml(prod) + ' — не хватает:</div>';
+
+                    defs.forEach(function (d) {
+                        // Строка P3 (или P1 если рецепт P4 содержит P1 напрямую)
+                        html += '<div class="uv-line p2-def-row">' + resHtml(d.name) +
+                            '<span class="uv-sep">×</span><span class="uv-qty">' +
+                            d.deficit.toLocaleString('ru-RU') + '</span></div>';
+
+                        // Если P3 — разворачиваем цепочку P2→P1
+                        if (d.tier === 3) {
+                            var p3r = PI_RECIPE_OF.get(d.name);
+                            if (p3r) {
+                                var p3cyc = Math.ceil(d.deficit / p3r.outQty);
+                                p3r.in.forEach(function (p2ing) {
+                                    var p2name = p2ing[0], p2need = p3cyc * p2ing[1];
+                                    html += '<div class="uv-line p2-chain-2">' + resHtml(p2name) +
+                                        '<span class="uv-sep">×</span><span class="uv-qty">' +
+                                        p2need.toLocaleString('ru-RU') + '</span></div>';
+
+                                    // P1 для этого P2
+                                    var p2r = PI_RECIPE_OF.get(p2name);
+                                    if (p2r && tierOf(p2name) === 2) {
+                                        var p2cyc = Math.ceil(p2need / p2r.outQty);
+                                        p2r.in.forEach(function (p1ing) {
+                                            var p1need = p2cyc * p1ing[1];
+                                            html += '<div class="uv-line p2-chain-1">' + resHtml(p1ing[0]) +
+                                                '<span class="uv-sep">×</span><span class="uv-qty">' +
+                                                p1need.toLocaleString('ru-RU') + '</span></div>';
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    });
+                    html += '</div>';
+                }
             }
         }
 
