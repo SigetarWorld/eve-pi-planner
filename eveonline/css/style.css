@@ -5923,17 +5923,12 @@ input.eve-plex-input {
 .esc-region-name { color: var(--cyan); font-weight: 600; }
 .esc-faction-name { font-weight: 600; }
 
-/* Строка пилота с кнопкой ⚙ */
-.esc-pilot-row { display: flex; align-items: flex-end; gap: 0.3rem; }
-.esc-label-grow { flex: 1; min-width: 0; }
-.esc-gear-btn { flex-shrink: 0; width: 28px; height: 28px; padding: 0; font-size: 14px; line-height: 28px; text-align: center; margin-bottom: 0.35rem; }
-
-/* Редактор пилотов */
-.esc-pilot-editor { background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; margin-top: 0.3rem; }
-.esc-editor-title { color: var(--accent); font-size: 11px; font-weight: 600; margin-bottom: 0.3rem; text-transform: uppercase; }
-.esc-editor-row { display: block; font-size: 12px; color: var(--text-main); padding: 0.15rem 0; cursor: pointer; }
-.esc-editor-cb { accent-color: var(--accent); margin-right: 0.3rem; cursor: pointer; }
-.esc-save-btn { width: 100%; margin-top: 0.4rem; font-size: 11px; }
+/* Блок персонажей с чекбоксами */
+.esc-chars-block { margin-top: 0.25rem; }
+.esc-chars-title { color: var(--accent); font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 0.2rem; }
+.esc-chars-list { display: flex; flex-wrap: wrap; gap: 0.15rem 0.6rem; }
+.esc-char-row { display: flex; align-items: center; font-size: 12px; color: var(--text-main); cursor: pointer; white-space: nowrap; }
+.esc-char-cb { accent-color: var(--accent); margin-right: 0.25rem; cursor: pointer; }
 
 /* Список эскалаций */
 .esc-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.3rem; }
@@ -5946,14 +5941,19 @@ input.eve-plex-input {
     padding: 0.5rem 0.6rem;
     transition: opacity 0.3s, border-color 0.3s;
 }
-.esc-item.esc-new   { border-color: #00cc66; }
-.esc-item.esc-expired { opacity: 0.4; }
-.esc-item.esc-prio  { border-left: 3px solid var(--accent); }
-.esc-item.esc-warning { border-color: var(--red); }
+/* Цвет по оставшемуся времени */
+.esc-item.esc-time-green  { border-left: 3px solid #40c060; }
+.esc-item.esc-time-yellow { border-left: 3px solid #c0a020; }
+.esc-item.esc-time-red    { border-left: 3px solid #e04040; }
+.esc-item.esc-time-grey   { border-left: 3px solid #555; opacity: 0.4; }
+.esc-item.esc-sold        { background: var(--bg-deep); }
+
+.esc-time-green .esc-timer  { color: #40c060; }
+.esc-time-yellow .esc-timer { color: #c0a020; }
+.esc-time-red .esc-timer    { color: #e04040; }
+.esc-time-grey .esc-timer   { color: var(--text-dim); }
 
 .esc-item-head { display: flex; align-items: center; gap: 0.3rem; }
-.esc-prio-label { flex-shrink: 0; cursor: pointer; }
-.esc-prio-cb { cursor: pointer; accent-color: var(--accent); }
 .esc-ded { font-size: 11px; font-weight: 700; flex-shrink: 0; }
 .esc-type-name { font-size: 12px; color: var(--text-main); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .esc-del { background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; padding: 0 0.2rem; line-height: 1; }
@@ -5965,9 +5965,12 @@ input.eve-plex-input {
 
 .esc-item-foot { display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-top: 0.15rem; }
 .esc-pilot-name { color: var(--text-dim); }
-.esc-timer { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
-.esc-expired .esc-timer { color: var(--text-dim); }
-.esc-new .esc-timer { color: #00cc66; }
+.esc-timer { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Кнопка «Продано» */
+.esc-sold-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-weight: 700; cursor: pointer; padding: 0 0.3rem; border-radius: 3px; line-height: 1.4; }
+.esc-sold-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.esc-sold-btn.is-sold { background: var(--cyan); color: var(--bg-deep); border-color: var(--cyan); }
 
 /* Обёртка таймера + кнопка редактирования */
 .esc-timer-wrap { display: flex; align-items: center; gap: 0.3rem; }

@@ -1,6 +1,6 @@
 /* Эскалации — трекер DED-комплексов из боевых аномалий.
    Вкладка «Карты» → «Эскалации».
-   Слева: список активных эскалаций с таймерами и приоритетом.
+   Слева: список активных эскалаций с таймерами.
    Справа: SVG-карта галактики с маркерами.
    Данные хранятся в localStorage. */
 (function () {
@@ -211,22 +211,32 @@
                 '<input type="text" id="esc-sys" class="ct-input esc-input" placeholder="Вставьте название системы" autocomplete="off">' +
             '</label>' +
             '<div id="esc-region-hint" class="esc-region-hint"></div>' +
-            /* Игрок: select + кнопка «⚙» */
-            '<div class="esc-pilot-row">' +
-                '<label class="esc-label esc-label-grow">Игрок' +
-                    '<select id="esc-pilot" class="ct-input esc-input">' +
-                        '<option value="">— выбрать —</option>' +
-                        visiblePilots.map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('') +
-                        '<option value="__custom">другой…</option>' +
-                    '</select>' +
-                '</label>' +
-                '<button type="button" id="esc-pilot-edit" class="btn esc-gear-btn" title="Настроить список пилотов">⚙</button>' +
+            /* Персонажи: чекбоксы (как на вкладке Планеты) */
+            '<div class="esc-chars-block">' +
+                '<div class="esc-chars-title">Персонажи</div>' +
+                '<div id="esc-chars-list" class="esc-chars-list">' +
+                    (function () {
+                        var all = getAllPilots();
+                        var visible = loadVisiblePilots();
+                        return all.map(function (p) {
+                            var checked = !visible || visible.indexOf(p) !== -1;
+                            return '<label class="esc-char-row"><input type="checkbox" class="esc-char-cb" value="' +
+                                esc(p) + '"' + (checked ? ' checked' : '') + '> ' + esc(p) + '</label>';
+                        }).join('');
+                    })() +
+                '</div>' +
             '</div>' +
+            /* Выбор пилота для новой эскалации */
+            '<label class="esc-label">Игрок' +
+                '<select id="esc-pilot" class="ct-input esc-input">' +
+                    '<option value="">— выбрать —</option>' +
+                    visiblePilots.map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('') +
+                    '<option value="__custom">другой…</option>' +
+                '</select>' +
+            '</label>' +
             '<div id="esc-pilot-custom-wrap" hidden>' +
                 '<input type="text" id="esc-pilot-custom" class="ct-input esc-input" placeholder="Имя пилота">' +
             '</div>' +
-            /* Панель редактирования пилотов (скрыта) */
-            '<div id="esc-pilot-editor" class="esc-pilot-editor" hidden></div>' +
             /* Эскалация (фильтруется по региону) */
             '<label class="esc-label">Эскалация' +
                 '<select id="esc-type" class="ct-input esc-input">' +
@@ -245,10 +255,8 @@
 
         var now = Date.now();
 
-        /* Сортировка: приоритетные сверху, затем по времени (новые выше) */
+        /* Сортировка: по времени (новые выше) */
         var sorted = data.slice().sort(function (a, b) {
-            if (a.priority && !b.priority) return -1;
-            if (!a.priority && b.priority) return 1;
             return b.created - a.created;
         });
 
@@ -258,8 +266,11 @@
             sorted.forEach(function (item) {
                 var remaining = (item.created + ESC_LIFETIME) - now;
                 var expired = remaining <= 0;
-                var isNew = (now - item.created) < 600000; /* < 10 мин */
-                var cls = 'esc-item' + (expired ? ' esc-expired' : '') + (isNew ? ' esc-new' : '') + (item.priority ? ' esc-prio' : '');
+                var remainH = remaining / 3600000;
+
+                /* Цвет по времени: зелёный >15ч, жёлтый 10-15ч, красный 0-10ч, серый истекло */
+                var timeCls = expired ? 'esc-time-grey' : remainH > 15 ? 'esc-time-green' : remainH > 10 ? 'esc-time-yellow' : 'esc-time-red';
+                var cls = 'esc-item ' + timeCls + (item.sold ? ' esc-sold' : '');
 
                 var escInfo = ESC_LIST.find(function (e) { return e.name === item.type; });
                 var ded = escInfo ? escInfo.ded : '';
@@ -268,7 +279,6 @@
 
                 var html = '<div class="' + cls + '" data-id="' + item.id + '">';
                 html += '<div class="esc-item-head">';
-                html += '<label class="esc-prio-label" title="Приоритет"><input type="checkbox" class="esc-prio-cb"' + (item.priority ? ' checked' : '') + '></label>';
                 html += '<span class="esc-ded" style="color:' + color + '">' + (ded ? '[' + ded + ']' : '') + '</span>';
                 html += '<span class="esc-type-name">' + esc(item.type) + '</span>';
                 html += '<button type="button" class="esc-del" title="Удалить">×</button>';
@@ -282,6 +292,7 @@
                 html += '<span class="esc-timer-wrap">';
                 html += '<span class="esc-timer" data-end="' + (item.created + ESC_LIFETIME) + '">' + fmtTimer(remaining) + '</span>';
                 html += '<button type="button" class="esc-time-edit" title="Изменить время">✎</button>';
+                html += '<button type="button" class="esc-sold-btn' + (item.sold ? ' is-sold' : '') + '" title="Продано">$</button>';
                 html += '</span>';
                 html += '</div>';
                 html += '</div>';
@@ -543,7 +554,6 @@
         /* ---- 4. Маркеры эскалаций (верхний слой) ---- */
         var now = Date.now();
         var markerR = Math.max(3, 6 * pxSize).toFixed(2);
-        var prioR = Math.max(4, 9 * pxSize).toFixed(2);
         var labelSize = Math.max(5, 10 * pxSize).toFixed(1);
         var strokeW = Math.max(0.5, 1.5 * pxSize).toFixed(2);
         var pulseR = Math.max(5, 12 * pxSize).toFixed(2);
@@ -553,14 +563,11 @@
             if (!inView(px, pz)) return;
             var remaining = (item.created + ESC_LIFETIME) - now;
             var expired = remaining <= 0;
-            var isNew = (now - item.created) < 600000;
+            var remainH = remaining / 3600000;
 
-            var escInfo = ESC_LIST.find(function (e) { return e.name === item.type; });
-            var faction = escInfo ? escInfo.faction : '';
-            var color = expired ? '#555' : (FACTION_COLOR[faction] || '#aaa');
-            if (isNew) color = '#00ff80';
-
-            var r = item.priority ? prioR : markerR;
+            /* Цвет по времени: зелёный >15ч, жёлтый 10-15ч, красный 0-10ч, серый */
+            var color = expired ? '#555' : remainH > 15 ? '#40c060' : remainH > 10 ? '#c0a020' : '#e04040';
+            if (item.sold) color = '#4080c0';
             var opacity = expired ? 0.4 : 1;
 
             /* Свечение вокруг активных маркеров */
@@ -570,12 +577,12 @@
             }
 
             parts.push('<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) +
-                '" r="' + r + '" fill="' + color + '" fill-opacity="' + opacity +
-                '" stroke="' + (item.priority ? '#fff' : color) + '" stroke-width="' + strokeW + '" stroke-opacity="' + (item.priority ? opacity : 0.3) + '">' +
-                '<title>' + esc(item.system) + ' — ' + esc(item.type) + ' (' + fmtTimer(remaining) + ')</title></circle>');
+                '" r="' + markerR + '" fill="' + color + '" fill-opacity="' + opacity +
+                '" stroke="' + color + '" stroke-width="' + strokeW + '" stroke-opacity="0.3">' +
+                '<title>' + esc(item.system) + ' — ' + esc(item.type) + ' (' + fmtTimer(remaining) + ')' + (item.sold ? ' [ПРОДАНО]' : '') + '</title></circle>');
 
             /* Подпись системы */
-            parts.push('<text x="' + (px + parseFloat(r) + 2 * pxSize).toFixed(1) + '" y="' + (pz + parseFloat(labelSize) * 0.35).toFixed(1) +
+            parts.push('<text x="' + (px + parseFloat(markerR) + 2 * pxSize).toFixed(1) + '" y="' + (pz + parseFloat(labelSize) * 0.35).toFixed(1) +
                 '" fill="' + color + '" opacity="' + opacity + '" font-size="' + labelSize +
                 '" font-family="Rajdhani, sans-serif" font-weight="600" pointer-events="none">' +
                 esc(item.system) + '</text>');
@@ -752,48 +759,32 @@
             });
         }
 
-        /* --- 2. Кнопка редактирования пилотов --- */
-        var editBtn = document.getElementById('esc-pilot-edit');
-        var editorDiv = document.getElementById('esc-pilot-editor');
-        if (editBtn && editorDiv) {
-            editBtn.addEventListener('click', function () {
-                if (!editorDiv.hidden) { editorDiv.hidden = true; return; }
-
-                var all = getAllPilots();
-                var visible = loadVisiblePilots();
-                var html = '<div class="esc-editor-title">Показывать в списке:</div>';
-                all.forEach(function (p) {
-                    var checked = !visible || visible.indexOf(p) !== -1;
-                    html += '<label class="esc-editor-row"><input type="checkbox" class="esc-editor-cb" value="' +
-                        esc(p) + '"' + (checked ? ' checked' : '') + '> ' + esc(p) + '</label>';
-                });
-                html += '<button type="button" id="esc-pilot-save" class="btn card-add esc-save-btn">Сохранить</button>';
-                editorDiv.innerHTML = html;
-                editorDiv.hidden = false;
-
-                /* Кнопка сохранения */
-                document.getElementById('esc-pilot-save').addEventListener('click', function () {
-                    var cbs = editorDiv.querySelectorAll('.esc-editor-cb');
-                    var selected = [];
-                    cbs.forEach(function (cb) { if (cb.checked) selected.push(cb.value); });
-                    saveVisiblePilots(selected);
-                    editorDiv.hidden = true;
-                    /* Обновляем select */
-                    if (pilotSel) {
-                        var prevPilot = pilotSel.value;
-                        var opts = '<option value="">— выбрать —</option>';
-                        selected.forEach(function (p) {
-                            opts += '<option value="' + esc(p) + '">' + esc(p) + '</option>';
-                        });
-                        opts += '<option value="__custom">другой…</option>';
-                        pilotSel.innerHTML = opts;
-                        if (prevPilot) {
-                            for (var i = 0; i < pilotSel.options.length; i++) {
-                                if (pilotSel.options[i].value === prevPilot) { pilotSel.selectedIndex = i; break; }
-                            }
+        /* --- 2. Чекбоксы персонажей — мгновенно фильтруют список и обновляют select --- */
+        var charsListDiv = document.getElementById('esc-chars-list');
+        if (charsListDiv) {
+            charsListDiv.addEventListener('change', function (e) {
+                if (!e.target.classList.contains('esc-char-cb')) return;
+                var cbs = charsListDiv.querySelectorAll('.esc-char-cb');
+                var selected = [];
+                cbs.forEach(function (cb) { if (cb.checked) selected.push(cb.value); });
+                saveVisiblePilots(selected);
+                /* Обновляем select пилотов */
+                if (pilotSel) {
+                    var prevPilot = pilotSel.value;
+                    var opts = '<option value="">— выбрать —</option>';
+                    selected.forEach(function (p) {
+                        opts += '<option value="' + esc(p) + '">' + esc(p) + '</option>';
+                    });
+                    opts += '<option value="__custom">другой…</option>';
+                    pilotSel.innerHTML = opts;
+                    if (prevPilot) {
+                        for (var i = 0; i < pilotSel.options.length; i++) {
+                            if (pilotSel.options[i].value === prevPilot) { pilotSel.selectedIndex = i; break; }
                         }
                     }
-                });
+                }
+                /* Перерисовываем список и карту */
+                render();
             });
         }
 
@@ -841,7 +832,7 @@
                     region: sys ? sys.region : '',
                     type: escType,
                     pilot: pilot,
-                    priority: false,
+                    sold: false,
                     created: Date.now(),
                     sx: sys ? sys.x : null,
                     sz: sys ? sys.z : null
@@ -853,22 +844,9 @@
             });
         }
 
-        /* Клики по списку: приоритет и удаление */
+        /* Клики по списку: удаление, продано, редактирование времени */
         var list = root.querySelector('.esc-list');
         if (list) {
-            list.addEventListener('change', function (e) {
-                if (!e.target.classList.contains('esc-prio-cb')) return;
-                var item = e.target.closest('.esc-item');
-                if (!item) return;
-                var id = item.dataset.id;
-                var found = data.find(function (d) { return d.id === id; });
-                if (found) {
-                    found.priority = e.target.checked;
-                    saveData(data);
-                    render();
-                }
-            });
-
             list.addEventListener('click', function (e) {
                 /* Удаление */
                 if (e.target.classList.contains('esc-del')) {
@@ -877,6 +855,19 @@
                     data = data.filter(function (d) { return d.id !== item.dataset.id; });
                     saveData(data);
                     render();
+                    return;
+                }
+                /* Кнопка «Продано» */
+                if (e.target.classList.contains('esc-sold-btn')) {
+                    var item = e.target.closest('.esc-item');
+                    if (!item) return;
+                    var id = item.dataset.id;
+                    var found = data.find(function (d) { return d.id === id; });
+                    if (found) {
+                        found.sold = !found.sold;
+                        saveData(data);
+                        render();
+                    }
                     return;
                 }
                 /* Редактирование времени */
@@ -905,16 +896,27 @@
                     hInput.focus();
                     hInput.select();
 
-                    wrap.querySelector('.esc-time-ok').addEventListener('click', function () {
+                    /* Применение по Enter */
+                    function applyTimeEdit() {
                         var h = parseInt(wrap.querySelector('.esc-time-h').value, 10) || 0;
                         var m = parseInt(wrap.querySelector('.esc-time-m').value, 10) || 0;
                         var newRemaining = (h * 3600000) + (m * 60000);
                         found.created = Date.now() - ESC_LIFETIME + newRemaining;
                         saveData(data);
                         render();
-                    });
+                    }
+
+                    wrap.querySelector('.esc-time-ok').addEventListener('click', applyTimeEdit);
                     wrap.querySelector('.esc-time-cancel').addEventListener('click', function () {
                         render();
+                    });
+
+                    /* Enter на полях часов/минут */
+                    wrap.querySelectorAll('.esc-time-h, .esc-time-m').forEach(function (inp) {
+                        inp.addEventListener('keydown', function (ev) {
+                            if (ev.key === 'Enter') { ev.preventDefault(); applyTimeEdit(); }
+                            if (ev.key === 'Escape') { ev.preventDefault(); render(); }
+                        });
                     });
                     return;
                 }
@@ -932,11 +934,15 @@
                 var end = Number(el.dataset.end);
                 var remaining = end - now;
                 el.textContent = fmtTimer(remaining);
-                /* Обновляем класс элемента-родителя */
+                /* Обновляем класс цвета по времени */
                 var item = el.closest('.esc-item');
                 if (item) {
-                    if (remaining <= 0) item.classList.add('esc-expired');
-                    if (remaining <= 3600000 && remaining > 0) item.classList.add('esc-warning');
+                    var remainH = remaining / 3600000;
+                    item.classList.remove('esc-time-green', 'esc-time-yellow', 'esc-time-red', 'esc-time-grey');
+                    if (remaining <= 0) item.classList.add('esc-time-grey');
+                    else if (remainH > 15) item.classList.add('esc-time-green');
+                    else if (remainH > 10) item.classList.add('esc-time-yellow');
+                    else item.classList.add('esc-time-red');
                 }
             });
         }, 30000); /* обновление каждые 30 секунд */
