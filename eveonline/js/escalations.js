@@ -61,9 +61,63 @@
         'Rogue Drones':   '#909090'
     };
 
+    /* ===================== Регион → Фракция ===================== */
+    /* Карта регионов EVE к доминирующей NPC-фракции (пиратской).
+       Хайсек-регионы: эскалация может увести в лоу/нуль, поэтому
+       для хайсек-региона показываем фракцию соседнего пиратского. */
+    var REGION_FACTION = {
+        /* Angel Cartel — Минматар-пространство + нуль */
+        'Heimatar': 'Angel Cartel', 'Molden Heath': 'Angel Cartel',
+        'Great Wildlands': 'Angel Cartel', 'Metropolis': 'Angel Cartel',
+        'Curse': 'Angel Cartel', 'Angel Cartel': 'Angel Cartel',
+        'Impass': 'Angel Cartel', 'Feythabolis': 'Angel Cartel',
+        'Omist': 'Angel Cartel', 'Tenerifis': 'Angel Cartel',
+        'Detorid': 'Angel Cartel', 'Insmother': 'Angel Cartel',
+        'Scalding Pass': 'Angel Cartel', 'Wicked Creek': 'Angel Cartel',
+        'Immensea': 'Angel Cartel', 'Cache': 'Angel Cartel',
+
+        /* Blood Raiders — Амарр-пространство + нуль */
+        'Domain': 'Blood Raiders', 'Devoid': 'Blood Raiders',
+        'The Bleak Lands': 'Blood Raiders', 'Kador': 'Blood Raiders',
+        'Khanid': 'Blood Raiders', 'Kor-Azor': 'Blood Raiders',
+        'Genesis': 'Blood Raiders', 'Tash-Murkon': 'Blood Raiders',
+        'Aridia': 'Blood Raiders',
+        'Delve': 'Blood Raiders', 'Period Basis': 'Blood Raiders',
+        'Querious': 'Blood Raiders',
+
+        /* Guristas — Калдари-пространство + нуль */
+        'The Forge': 'Guristas', 'Lonetrek': 'Guristas',
+        'The Citadel': 'Guristas', 'Black Rise': 'Guristas',
+        'Venal': 'Guristas', 'Tenal': 'Guristas',
+        'Branch': 'Guristas', 'Deklein': 'Guristas',
+        'Pure Blind': 'Guristas', 'Fade': 'Guristas',
+        'Tribute': 'Guristas', 'Vale of the Silent': 'Guristas',
+        'Geminate': 'Guristas',
+
+        /* Sansha's Nation — юго-восток нулей + часть Амарр */
+        'Stain': "Sansha's Nation", 'Esoteria': "Sansha's Nation",
+        'Paragon Soul': "Sansha's Nation", 'Catch': "Sansha's Nation",
+        'Providence': "Sansha's Nation",
+
+        /* Serpentis — Галленте-пространство + нуль */
+        'Essence': 'Serpentis', 'Everyshore': 'Serpentis',
+        'Placid': 'Serpentis', 'Verge Vendor': 'Serpentis',
+        'Sinq Laison': 'Serpentis', 'Solitude': 'Serpentis',
+        'Syndicate': 'Serpentis', 'Outer Ring': 'Serpentis',
+        'Cloud Ring': 'Serpentis', 'Fountain': 'Serpentis',
+
+        /* Rogue Drones — восток нулей */
+        'Cobalt Edge': 'Rogue Drones', 'Outer Passage': 'Rogue Drones',
+        'Malpais': 'Rogue Drones', 'Etherium Reach': 'Rogue Drones',
+        'The Spire': 'Rogue Drones', 'Oasa': 'Rogue Drones',
+        'Perrigen Falls': 'Rogue Drones',
+        'The Kalevala Expanse': 'Rogue Drones'
+    };
+
     /* 24 часа в мс — срок жизни эскалации */
     var ESC_LIFETIME = 24 * 60 * 60 * 1000;
     var LS_KEY = 'evepi.escalations';
+    var LS_PILOTS_KEY = 'evepi.esc.pilots';  /* видимые пилоты */
 
     /* ===================== Утилиты ===================== */
     var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
@@ -75,6 +129,13 @@
     }
     function saveData(arr) {
         try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch (e) { /* без памяти */ }
+    }
+    function loadVisiblePilots() {
+        try { var d = JSON.parse(localStorage.getItem(LS_PILOTS_KEY)); return Array.isArray(d) ? d : null; }
+        catch (e) { return null; }
+    }
+    function saveVisiblePilots(arr) {
+        try { localStorage.setItem(LS_PILOTS_KEY, JSON.stringify(arr)); } catch (e) { /* без памяти */ }
     }
 
     /* Генератор ID */
@@ -93,8 +154,8 @@
         return null;
     }
 
-    /* Список пилотов из карточек (как в app.js — select#pilot-new) */
-    function getPilots() {
+    /* Все пилоты из карточек (select#pilot-new) */
+    function getAllPilots() {
         var sel = document.getElementById('pilot-new');
         if (!sel) return [];
         var arr = [];
@@ -103,6 +164,14 @@
             if (v) arr.push(v);
         }
         return arr;
+    }
+
+    /* Видимые пилоты (отфильтрованные). Если фильтр не настроен — все */
+    function getVisiblePilots() {
+        var all = getAllPilots();
+        var visible = loadVisiblePilots();
+        if (!visible) return all; /* фильтр не настроен — показываем всех */
+        return all.filter(function (p) { return visible.indexOf(p) !== -1; });
     }
 
     /* Форматирование времени */
@@ -116,6 +185,7 @@
     /* ===================== Состояние ===================== */
     var data = loadData();
     var timerInterval = null;
+    var currentRegion = '';  /* текущий регион из поля «Система» */
 
     /* ===================== Рендер ===================== */
     function render() {
@@ -126,30 +196,36 @@
         panel.className = 'esc-panel';
 
         /* Форма добавления */
+        var visiblePilots = getVisiblePilots();
         var form = document.createElement('div');
         form.className = 'esc-form';
         form.innerHTML =
             '<div class="esc-form-title">Новая эскалация</div>' +
+            /* Система + авто-регион */
             '<label class="esc-label">Система' +
-                '<input type="text" id="esc-sys" class="ct-input esc-input" placeholder="Вставьте название системы">' +
+                '<input type="text" id="esc-sys" class="ct-input esc-input" placeholder="Вставьте название системы" autocomplete="off">' +
             '</label>' +
-            '<label class="esc-label">Игрок' +
-                '<select id="esc-pilot" class="ct-input esc-input">' +
-                    '<option value="">— выбрать —</option>' +
-                    getPilots().map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('') +
-                    '<option value="__custom">другой…</option>' +
-                '</select>' +
-            '</label>' +
+            '<div id="esc-region-hint" class="esc-region-hint"></div>' +
+            /* Игрок: select + кнопка «⚙» */
+            '<div class="esc-pilot-row">' +
+                '<label class="esc-label esc-label-grow">Игрок' +
+                    '<select id="esc-pilot" class="ct-input esc-input">' +
+                        '<option value="">— выбрать —</option>' +
+                        visiblePilots.map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('') +
+                        '<option value="__custom">другой…</option>' +
+                    '</select>' +
+                '</label>' +
+                '<button type="button" id="esc-pilot-edit" class="btn esc-gear-btn" title="Настроить список пилотов">⚙</button>' +
+            '</div>' +
             '<div id="esc-pilot-custom-wrap" hidden>' +
                 '<input type="text" id="esc-pilot-custom" class="ct-input esc-input" placeholder="Имя пилота">' +
             '</div>' +
+            /* Панель редактирования пилотов (скрыта) */
+            '<div id="esc-pilot-editor" class="esc-pilot-editor" hidden></div>' +
+            /* Эскалация (фильтруется по региону) */
             '<label class="esc-label">Эскалация' +
                 '<select id="esc-type" class="ct-input esc-input">' +
-                    '<option value="">— выбрать —</option>' +
-                    ESC_LIST.map(function (e) {
-                        return '<option value="' + esc(e.name) + '">[' + e.ded + '] ' + esc(e.name) + '</option>';
-                    }).join('') +
-                    '<option value="__custom">другая…</option>' +
+                    buildEscOptions('') +
                 '</select>' +
             '</label>' +
             '<div id="esc-type-custom-wrap" hidden>' +
@@ -221,6 +297,32 @@
         startTimers();
     }
 
+    /* ===================== Опции эскалаций (фильтр по фракции) ===================== */
+    function buildEscOptions(region) {
+        var faction = region ? (REGION_FACTION[region] || '') : '';
+        var filtered = faction
+            ? ESC_LIST.filter(function (e) { return e.faction === faction; })
+            : ESC_LIST;
+        var html = '<option value="">— выбрать —</option>';
+        if (faction) {
+            /* Сначала подходящие по фракции */
+            filtered.forEach(function (e) {
+                html += '<option value="' + esc(e.name) + '">[' + e.ded + '] ' + esc(e.name) + '</option>';
+            });
+            /* Разделитель + остальные */
+            html += '<option disabled>── другие фракции ──</option>';
+            ESC_LIST.filter(function (e) { return e.faction !== faction; }).forEach(function (e) {
+                html += '<option value="' + esc(e.name) + '">[' + e.ded + '] ' + esc(e.name) + '</option>';
+            });
+        } else {
+            ESC_LIST.forEach(function (e) {
+                html += '<option value="' + esc(e.name) + '">[' + e.ded + '] ' + esc(e.name) + '</option>';
+            });
+        }
+        html += '<option value="__custom">другая…</option>';
+        return html;
+    }
+
     /* ===================== SVG-карта галактики ===================== */
     function drawMap() {
         var svg = document.getElementById('esc-svg');
@@ -288,8 +390,95 @@
 
     /* ===================== Обработчики ===================== */
     function bindEvents() {
-        /* Показать/скрыть кастомное поле пилота */
+        var sysInput = document.getElementById('esc-sys');
+        var regionHint = document.getElementById('esc-region-hint');
+        var typeSel = document.getElementById('esc-type');
         var pilotSel = document.getElementById('esc-pilot');
+
+        /* --- 1. Авто-определение региона при вводе системы --- */
+        if (sysInput) {
+            var debounce = null;
+            sysInput.addEventListener('input', function () {
+                clearTimeout(debounce);
+                debounce = setTimeout(function () {
+                    var val = sysInput.value.trim();
+                    var sys = val ? findSystem(val) : null;
+                    currentRegion = sys ? sys.region : '';
+                    if (regionHint) {
+                        if (sys) {
+                            var faction = REGION_FACTION[sys.region] || '';
+                            var fColor = FACTION_COLOR[faction] || 'var(--text-dim)';
+                            regionHint.innerHTML = '<span class="esc-region-name">' + esc(sys.region) + '</span>' +
+                                (faction ? ' <span class="esc-faction-name" style="color:' + fColor + '">' + esc(faction) + '</span>' : '');
+                        } else {
+                            regionHint.textContent = val ? 'система не найдена' : '';
+                        }
+                    }
+                    /* Обновляем список эскалаций */
+                    if (typeSel) {
+                        var prev = typeSel.value;
+                        typeSel.innerHTML = buildEscOptions(currentRegion);
+                        /* Восстанавливаем выбор если возможно */
+                        if (prev) {
+                            for (var i = 0; i < typeSel.options.length; i++) {
+                                if (typeSel.options[i].value === prev) { typeSel.selectedIndex = i; break; }
+                            }
+                        }
+                    }
+                }, 300);
+            });
+            /* Обработка paste — мгновенно (без debounce) */
+            sysInput.addEventListener('paste', function () {
+                setTimeout(function () { sysInput.dispatchEvent(new Event('input')); }, 50);
+            });
+        }
+
+        /* --- 2. Кнопка редактирования пилотов --- */
+        var editBtn = document.getElementById('esc-pilot-edit');
+        var editorDiv = document.getElementById('esc-pilot-editor');
+        if (editBtn && editorDiv) {
+            editBtn.addEventListener('click', function () {
+                if (!editorDiv.hidden) { editorDiv.hidden = true; return; }
+
+                var all = getAllPilots();
+                var visible = loadVisiblePilots();
+                var html = '<div class="esc-editor-title">Показывать в списке:</div>';
+                all.forEach(function (p) {
+                    var checked = !visible || visible.indexOf(p) !== -1;
+                    html += '<label class="esc-editor-row"><input type="checkbox" class="esc-editor-cb" value="' +
+                        esc(p) + '"' + (checked ? ' checked' : '') + '> ' + esc(p) + '</label>';
+                });
+                html += '<button type="button" id="esc-pilot-save" class="btn card-add esc-save-btn">Сохранить</button>';
+                editorDiv.innerHTML = html;
+                editorDiv.hidden = false;
+
+                /* Кнопка сохранения */
+                document.getElementById('esc-pilot-save').addEventListener('click', function () {
+                    var cbs = editorDiv.querySelectorAll('.esc-editor-cb');
+                    var selected = [];
+                    cbs.forEach(function (cb) { if (cb.checked) selected.push(cb.value); });
+                    saveVisiblePilots(selected);
+                    editorDiv.hidden = true;
+                    /* Обновляем select */
+                    if (pilotSel) {
+                        var prevPilot = pilotSel.value;
+                        var opts = '<option value="">— выбрать —</option>';
+                        selected.forEach(function (p) {
+                            opts += '<option value="' + esc(p) + '">' + esc(p) + '</option>';
+                        });
+                        opts += '<option value="__custom">другой…</option>';
+                        pilotSel.innerHTML = opts;
+                        if (prevPilot) {
+                            for (var i = 0; i < pilotSel.options.length; i++) {
+                                if (pilotSel.options[i].value === prevPilot) { pilotSel.selectedIndex = i; break; }
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        /* Показать/скрыть кастомное поле пилота */
         if (pilotSel) {
             pilotSel.addEventListener('change', function () {
                 var wrap = document.getElementById('esc-pilot-custom-wrap');
@@ -298,7 +487,6 @@
         }
 
         /* Показать/скрыть кастомное поле типа */
-        var typeSel = document.getElementById('esc-type');
         if (typeSel) {
             typeSel.addEventListener('change', function () {
                 var wrap = document.getElementById('esc-type-custom-wrap');
@@ -310,7 +498,6 @@
         var addBtn = document.getElementById('esc-add');
         if (addBtn) {
             addBtn.addEventListener('click', function () {
-                var sysInput = document.getElementById('esc-sys');
                 var sysName = sysInput ? sysInput.value.trim() : '';
                 if (!sysName) { sysInput && sysInput.focus(); return; }
 
