@@ -154,8 +154,13 @@
         return null;
     }
 
-    /* Все пилоты из карточек (select#pilot-new) */
+    /* Все подключённые персонажи (через eveChars из eveauth.js) */
     function getAllPilots() {
+        if (typeof eveChars === 'function') {
+            var chars = eveChars();
+            return chars.map(function (c) { return c.characterName || ''; }).filter(Boolean);
+        }
+        /* Фоллбек — из карточек */
         var sel = document.getElementById('pilot-new');
         if (!sel) return [];
         var arr = [];
@@ -274,7 +279,10 @@
                 html += '</div>';
                 html += '<div class="esc-item-foot">';
                 html += '<span class="esc-pilot-name">' + esc(item.pilot || '—') + '</span>';
+                html += '<span class="esc-timer-wrap">';
                 html += '<span class="esc-timer" data-end="' + (item.created + ESC_LIFETIME) + '">' + fmtTimer(remaining) + '</span>';
+                html += '<button type="button" class="esc-time-edit" title="Изменить время">✎</button>';
+                html += '</span>';
                 html += '</div>';
                 html += '</div>';
                 list.innerHTML += html;
@@ -324,6 +332,26 @@
     }
 
     /* ===================== SVG-карта галактики ===================== */
+    /* Собирает регионы всех активных (не истёкших) эскалаций */
+    function getActiveRegions() {
+        var now = Date.now();
+        var regions = {};
+        data.forEach(function (item) {
+            if (!item.region) return;
+            if ((item.created + ESC_LIFETIME) - now <= 0) return; /* истёкшая */
+            regions[item.region] = true;
+        });
+        return Object.keys(regions);
+    }
+
+    /* Системы региона из JUMP_SYSTEMS */
+    function getRegionSystems(regionName) {
+        if (typeof JUMP_SYSTEMS === 'undefined' || typeof JUMP_REGIONS === 'undefined') return [];
+        var idx = JUMP_REGIONS.indexOf(regionName);
+        if (idx < 0) return [];
+        return JUMP_SYSTEMS.filter(function (s) { return s[2] === idx; });
+    }
+
     function drawMap() {
         var svg = document.getElementById('esc-svg');
         if (!svg || typeof JUMP_SYSTEMS === 'undefined') return;
@@ -331,39 +359,94 @@
         var W = 900, H = 700;
         svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
 
-        /* Границы координат (x, z — план галактики) */
-        var minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+        /* Границы координат — вся галактика (для фона) */
+        var gMinX = Infinity, gMaxX = -Infinity, gMinZ = Infinity, gMaxZ = -Infinity;
         JUMP_SYSTEMS.forEach(function (s) {
-            if (s[4] < minX) minX = s[4];
-            if (s[4] > maxX) maxX = s[4];
-            if (s[6] < minZ) minZ = s[6];
-            if (s[6] > maxZ) maxZ = s[6];
+            if (s[4] < gMinX) gMinX = s[4];
+            if (s[4] > gMaxX) gMaxX = s[4];
+            if (s[6] < gMinZ) gMinZ = s[6];
+            if (s[6] > gMaxZ) gMaxZ = s[6];
         });
+
+        /* Определяем зону обзора: если есть активные эскалации — зумим к их регионам */
+        var activeRegions = getActiveRegions();
+        var zoomed = activeRegions.length > 0;
+        var vMinX, vMaxX, vMinZ, vMaxZ;
+
+        if (zoomed) {
+            /* Собираем все системы из регионов с эскалациями + соседний отступ */
+            vMinX = Infinity; vMaxX = -Infinity; vMinZ = Infinity; vMaxZ = -Infinity;
+            activeRegions.forEach(function (rName) {
+                var systems = getRegionSystems(rName);
+                systems.forEach(function (s) {
+                    if (s[4] < vMinX) vMinX = s[4];
+                    if (s[4] > vMaxX) vMaxX = s[4];
+                    if (s[6] < vMinZ) vMinZ = s[6];
+                    if (s[6] > vMaxZ) vMaxZ = s[6];
+                });
+            });
+            /* Если все точки в одной системе — берём окрестность */
+            var dx = vMaxX - vMinX;
+            var dz = vMaxZ - vMinZ;
+            if (dx < 1) { vMinX -= 0.5; vMaxX += 0.5; }
+            if (dz < 1) { vMinZ -= 0.5; vMaxZ += 0.5; }
+            /* Добавляем 20% отступ */
+            var marginX = (vMaxX - vMinX) * 0.2;
+            var marginZ = (vMaxZ - vMinZ) * 0.2;
+            vMinX -= marginX; vMaxX += marginX;
+            vMinZ -= marginZ; vMaxZ += marginZ;
+        } else {
+            vMinX = gMinX; vMaxX = gMaxX; vMinZ = gMinZ; vMaxZ = gMaxZ;
+        }
+
         var pad = 40;
-        var scaleX = (W - pad * 2) / (maxX - minX);
-        var scaleZ = (H - pad * 2) / (maxZ - minZ);
+        var scaleX = (W - pad * 2) / (vMaxX - vMinX);
+        var scaleZ = (H - pad * 2) / (vMaxZ - vMinZ);
         var scale = Math.min(scaleX, scaleZ);
 
-        var cx = (maxX + minX) / 2;
-        var cz = (maxZ + minZ) / 2;
+        var cx = (vMaxX + vMinX) / 2;
+        var cz = (vMaxZ + vMinZ) / 2;
         function tx(x) { return W / 2 + (x - cx) * scale; }
         function tz(z) { return H / 2 + (z - cz) * scale; }
 
         /* Фон: все системы как мелкие точки */
-        var dots = '';
+        var parts = [];
+        var dotR = zoomed ? 1.5 : 0.8;
         JUMP_SYSTEMS.forEach(function (s) {
             var px = tx(s[4]), pz = tz(s[6]);
+            /* Отсекаем точки за пределами видимости */
+            if (px < -10 || px > W + 10 || pz < -10 || pz > H + 10) return;
             var sec = s[3];
-            var fill = sec >= 0.45 ? 'rgba(80,160,80,0.15)' : sec > 0 ? 'rgba(200,160,40,0.15)' : 'rgba(200,60,60,0.12)';
-            dots += '<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) + '" r="0.8" fill="' + fill + '"/>';
+            var fill = sec >= 0.45 ? 'rgba(80,160,80,0.18)' : sec > 0 ? 'rgba(200,160,40,0.18)' : 'rgba(200,60,60,0.15)';
+            parts.push('<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) + '" r="' + dotR + '" fill="' + fill + '"/>');
         });
-        svg.innerHTML = dots;
+
+        /* При зуме рисуем подписи регионов */
+        if (zoomed) {
+            activeRegions.forEach(function (rName) {
+                var systems = getRegionSystems(rName);
+                if (!systems.length) return;
+                /* Центр региона */
+                var sumX = 0, sumZ = 0;
+                systems.forEach(function (s) { sumX += s[4]; sumZ += s[6]; });
+                var rcx = tx(sumX / systems.length), rcz = tz(sumZ / systems.length);
+                var faction = REGION_FACTION[rName] || '';
+                var rColor = FACTION_COLOR[faction] || 'rgba(255,255,255,0.25)';
+                parts.push('<text x="' + rcx.toFixed(1) + '" y="' + rcz.toFixed(1) +
+                    '" fill="' + rColor + '" opacity="0.3" font-size="14" font-family="Rajdhani, sans-serif" font-weight="600" text-anchor="middle">' +
+                    esc(rName) + '</text>');
+            });
+        }
+
+        svg.innerHTML = parts.join('');
 
         /* Маркеры эскалаций */
         var now = Date.now();
+        var markers = '';
         data.forEach(function (item) {
             if (!item.sx) return; /* нет координат */
             var px = tx(item.sx), pz = tz(item.sz);
+            if (px < -20 || px > W + 20 || pz < -20 || pz > H + 20) return;
             var remaining = (item.created + ESC_LIFETIME) - now;
             var expired = remaining <= 0;
             var isNew = (now - item.created) < 600000;
@@ -373,19 +456,21 @@
             var color = expired ? '#555' : (FACTION_COLOR[faction] || '#aaa');
             if (isNew) color = '#00ff80';
 
-            var r = item.priority ? 6 : 4;
+            var r = zoomed ? (item.priority ? 8 : 5) : (item.priority ? 6 : 4);
             var opacity = expired ? 0.4 : 1;
+            var fontSize = zoomed ? 11 : 8;
 
-            svg.innerHTML += '<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) +
+            markers += '<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) +
                 '" r="' + r + '" fill="' + color + '" fill-opacity="' + opacity +
                 '" stroke="' + (item.priority ? '#fff' : 'none') + '" stroke-width="' + (item.priority ? 1.5 : 0) + '">' +
                 '<title>' + esc(item.system) + ' — ' + esc(item.type) + ' (' + fmtTimer(remaining) + ')</title></circle>';
 
             /* Подпись системы */
-            svg.innerHTML += '<text x="' + (px + r + 2).toFixed(1) + '" y="' + (pz + 3).toFixed(1) +
-                '" class="esc-map-label" fill="' + color + '" opacity="' + opacity + '">' +
+            markers += '<text x="' + (px + r + 2).toFixed(1) + '" y="' + (pz + 3).toFixed(1) +
+                '" class="esc-map-label" fill="' + color + '" opacity="' + opacity + '" font-size="' + fontSize + '">' +
                 esc(item.system) + '</text>';
         });
+        svg.innerHTML += markers;
     }
 
     /* ===================== Обработчики ===================== */
@@ -551,13 +636,54 @@
             });
 
             list.addEventListener('click', function (e) {
-                if (!e.target.classList.contains('esc-del')) return;
-                var item = e.target.closest('.esc-item');
-                if (!item) return;
-                var id = item.dataset.id;
-                data = data.filter(function (d) { return d.id !== id; });
-                saveData(data);
-                render();
+                /* Удаление */
+                if (e.target.classList.contains('esc-del')) {
+                    var item = e.target.closest('.esc-item');
+                    if (!item) return;
+                    data = data.filter(function (d) { return d.id !== item.dataset.id; });
+                    saveData(data);
+                    render();
+                    return;
+                }
+                /* Редактирование времени */
+                if (e.target.classList.contains('esc-time-edit')) {
+                    var item = e.target.closest('.esc-item');
+                    if (!item) return;
+                    var id = item.dataset.id;
+                    var found = data.find(function (d) { return d.id === id; });
+                    if (!found) return;
+
+                    /* Показываем инлайн-редактор вместо таймера */
+                    var wrap = e.target.closest('.esc-timer-wrap');
+                    if (!wrap) return;
+                    var remaining = (found.created + ESC_LIFETIME) - Date.now();
+                    var hLeft = Math.max(0, Math.floor(remaining / 3600000));
+                    var mLeft = Math.max(0, Math.floor((remaining % 3600000) / 60000));
+                    wrap.innerHTML =
+                        '<span class="esc-time-editor">' +
+                        '<input type="number" class="ct-input esc-time-h" value="' + hLeft + '" min="0" max="24" title="Часы"> ч ' +
+                        '<input type="number" class="ct-input esc-time-m" value="' + mLeft + '" min="0" max="59" title="Минуты"> м ' +
+                        '<button type="button" class="btn esc-time-ok" title="Сохранить">✓</button>' +
+                        '<button type="button" class="esc-time-cancel" title="Отмена">✕</button>' +
+                        '</span>';
+
+                    var hInput = wrap.querySelector('.esc-time-h');
+                    hInput.focus();
+                    hInput.select();
+
+                    wrap.querySelector('.esc-time-ok').addEventListener('click', function () {
+                        var h = parseInt(wrap.querySelector('.esc-time-h').value, 10) || 0;
+                        var m = parseInt(wrap.querySelector('.esc-time-m').value, 10) || 0;
+                        var newRemaining = (h * 3600000) + (m * 60000);
+                        found.created = Date.now() - ESC_LIFETIME + newRemaining;
+                        saveData(data);
+                        render();
+                    });
+                    wrap.querySelector('.esc-time-cancel').addEventListener('click', function () {
+                        render();
+                    });
+                    return;
+                }
             });
         }
     }
