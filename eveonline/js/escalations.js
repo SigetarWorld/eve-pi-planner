@@ -196,52 +196,38 @@
     function render() {
         root.innerHTML = '';
 
-        /* --- Панель слева --- */
-        var panel = document.createElement('aside');
-        panel.className = 'esc-panel';
-
-        /* Форма добавления */
         var visiblePilots = getVisiblePilots();
-        var form = document.createElement('div');
-        form.className = 'esc-form';
-        form.innerHTML =
-            '<div class="esc-form-title">Новая эскалация</div>' +
-            /* Система + авто-регион */
-            '<label class="esc-label">Система' +
-                '<input type="text" id="esc-sys" class="ct-input esc-input" placeholder="Вставьте название системы" autocomplete="off">' +
-            '</label>' +
-            '<div id="esc-region-hint" class="esc-region-hint"></div>' +
-            /* Персонажи: кнопка-выпадашка как на вкладке Планеты */
+
+        /* --- Верхняя панель инструментов (как у планетарной карты) --- */
+        var toolbar = document.createElement('div');
+        toolbar.className = 'esc-toolbar';
+        toolbar.innerHTML =
+            '<input type="text" id="esc-sys" class="ct-input esc-tb-input" placeholder="Система" autocomplete="off">' +
+            '<div id="esc-region-hint" class="esc-region-hint esc-tb-hint"></div>' +
             '<div class="esc-chars-wrap">' +
                 '<button type="button" id="esc-chars-btn" class="ct-input esc-chars-btn" aria-haspopup="true" aria-expanded="false">' +
                     'Персонажи: ' + visiblePilots.length +
                 '</button>' +
                 '<div id="esc-chars-popup" class="esc-chars-popup" hidden></div>' +
             '</div>' +
-            /* Выбор пилота для новой эскалации */
-            '<label class="esc-label">Игрок' +
-                '<select id="esc-pilot" class="ct-input esc-input">' +
-                    '<option value="">— выбрать —</option>' +
-                    visiblePilots.map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + '</option>'; }).join('') +
-                    '<option value="__custom">другой…</option>' +
-                '</select>' +
-            '</label>' +
-            '<div id="esc-pilot-custom-wrap" hidden>' +
-                '<input type="text" id="esc-pilot-custom" class="ct-input esc-input" placeholder="Имя пилота">' +
-            '</div>' +
-            /* Эскалация (фильтруется по региону) */
-            '<label class="esc-label">Эскалация' +
-                '<select id="esc-type" class="ct-input esc-input">' +
-                    buildEscOptions('') +
-                '</select>' +
-            '</label>' +
-            '<div id="esc-type-custom-wrap" hidden>' +
-                '<input type="text" id="esc-type-custom" class="ct-input esc-input" placeholder="Название эскалации">' +
-            '</div>' +
-            '<button type="button" id="esc-add" class="btn card-add esc-add-btn">Добавить</button>';
-        panel.appendChild(form);
+            '<select id="esc-type" class="ct-input esc-tb-input esc-tb-select">' +
+                buildEscOptions('') +
+            '</select>' +
+            '<button type="button" id="esc-add" class="btn card-add esc-tb-add">Добавить</button>' +
+            '<span class="esc-tb-spacer"></span>' +
+            '<button type="button" class="btn esc-map-btn" id="esc-zoom-in" title="Приблизить">+</button>' +
+            '<button type="button" class="btn esc-map-btn" id="esc-zoom-out" title="Отдалить">−</button>' +
+            '<button type="button" class="btn esc-map-btn" id="esc-zoom-reset" title="Сброс">⌂</button>';
+        root.appendChild(toolbar);
 
-        /* Список эскалаций */
+        /* --- Контент: панель слева + карта справа --- */
+        var content = document.createElement('div');
+        content.className = 'esc-content';
+
+        /* Панель слева — только карточки */
+        var panel = document.createElement('aside');
+        panel.className = 'esc-panel';
+
         var list = document.createElement('div');
         list.className = 'esc-list';
 
@@ -292,18 +278,15 @@
             });
         }
         panel.appendChild(list);
-        root.appendChild(panel);
+        content.appendChild(panel);
 
-        /* --- Карта справа --- */
+        /* --- Карта справа (без кнопок зума — они в тулбаре) --- */
         var mapWrap = document.createElement('div');
         mapWrap.className = 'esc-map-wrap';
-        mapWrap.innerHTML = '<svg id="esc-svg" class="esc-svg"></svg>' +
-            '<div class="esc-map-controls">' +
-                '<button type="button" class="btn esc-map-btn" id="esc-zoom-in" title="Приблизить">+</button>' +
-                '<button type="button" class="btn esc-map-btn" id="esc-zoom-out" title="Отдалить">−</button>' +
-                '<button type="button" class="btn esc-map-btn" id="esc-zoom-reset" title="Сброс (двойной клик)">⌂</button>' +
-            '</div>';
-        root.appendChild(mapWrap);
+        mapWrap.innerHTML = '<svg id="esc-svg" class="esc-svg"></svg>';
+        content.appendChild(mapWrap);
+
+        root.appendChild(content);
 
         /* Рисуем карту */
         drawMap();
@@ -559,11 +542,11 @@
 
             /* Цвет по времени: зелёный >15ч, жёлтый 10-15ч, красный 0-10ч, серый */
             var color = expired ? '#555' : remainH > 15 ? '#40c060' : remainH > 10 ? '#c0a020' : '#e04040';
-            if (item.sold) color = '#4080c0';
-            var opacity = expired ? 0.4 : 1;
+            if (item.sold) color = '#666';
+            var opacity = expired ? 0.4 : item.sold ? 0.6 : 1;
 
             /* Свечение вокруг активных маркеров */
-            if (!expired) {
+            if (!expired && !item.sold) {
                 parts.push('<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) +
                     '" r="' + pulseR + '" fill="' + color + '" fill-opacity="0.15"/>');
             }
@@ -572,6 +555,14 @@
                 '" r="' + markerR + '" fill="' + color + '" fill-opacity="' + opacity +
                 '" stroke="' + color + '" stroke-width="' + strokeW + '" stroke-opacity="0.3">' +
                 '<title>' + esc(item.system) + ' — ' + esc(item.type) + ' (' + fmtTimer(remaining) + ')' + (item.sold ? ' [ПРОДАНО]' : '') + '</title></circle>');
+
+            /* Символ $ внутри маркера для проданных */
+            if (item.sold) {
+                var dollarSize = Math.max(4, 8 * pxSize).toFixed(1);
+                parts.push('<text x="' + px.toFixed(1) + '" y="' + (pz + parseFloat(dollarSize) * 0.35).toFixed(1) +
+                    '" fill="#fff" font-size="' + dollarSize +
+                    '" font-weight="700" text-anchor="middle" font-family="Rajdhani, sans-serif" pointer-events="none">$</text>');
+            }
 
             /* Подпись системы */
             parts.push('<text x="' + (px + parseFloat(markerR) + 2 * pxSize).toFixed(1) + '" y="' + (pz + parseFloat(labelSize) * 0.35).toFixed(1) +
@@ -711,7 +702,6 @@
         var sysInput = document.getElementById('esc-sys');
         var regionHint = document.getElementById('esc-region-hint');
         var typeSel = document.getElementById('esc-type');
-        var pilotSel = document.getElementById('esc-pilot');
 
         /* --- 1. Авто-определение региона при вводе системы --- */
         if (sysInput) {
@@ -770,11 +760,11 @@
             var html = '';
             sorted.forEach(function (p) {
                 var checked = !visible || visible.indexOf(p.name) !== -1;
-                html += '<label class="esc-char-row">' +
+                html += '<div class="esc-char-row" data-name="' + esc(p.name) + '">' +
                     (p.id ? '<img class="esc-char-img" src="' + pilotPortrait(p.id) + '" alt="" width="24" height="24">' : '') +
                     '<span class="esc-char-name">' + esc(p.name) + '</span>' +
                     '<input type="checkbox" class="esc-char-cb" value="' + esc(p.name) + '"' + (checked ? ' checked' : '') + '>' +
-                '</label>';
+                '</div>';
             });
             charsPopup.innerHTML = html;
         }
@@ -794,6 +784,17 @@
                     charsBtn.setAttribute('aria-expanded', 'false');
                 }
             });
+            /* Клик по строке персонажа — переключает чекбокс */
+            charsPopup.addEventListener('click', function (e) {
+                var row = e.target.closest('.esc-char-row');
+                if (!row) return;
+                if (e.target.classList.contains('esc-char-cb')) return; /* чекбокс сам обработает */
+                var cb = row.querySelector('.esc-char-cb');
+                if (cb) {
+                    cb.checked = !cb.checked;
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
             /* Чекбокс — мгновенно сохраняет и обновляет */
             charsPopup.addEventListener('change', function (e) {
                 if (!e.target.classList.contains('esc-char-cb')) return;
@@ -803,31 +804,8 @@
                 saveVisiblePilots(selected);
                 /* Обновляем кнопку */
                 charsBtn.textContent = 'Персонажи: ' + selected.length;
-                /* Обновляем select пилотов */
-                if (pilotSel) {
-                    var prevPilot = pilotSel.value;
-                    var opts = '<option value="">— выбрать —</option>';
-                    selected.forEach(function (p) {
-                        opts += '<option value="' + esc(p) + '">' + esc(p) + '</option>';
-                    });
-                    opts += '<option value="__custom">другой…</option>';
-                    pilotSel.innerHTML = opts;
-                    if (prevPilot) {
-                        for (var i = 0; i < pilotSel.options.length; i++) {
-                            if (pilotSel.options[i].value === prevPilot) { pilotSel.selectedIndex = i; break; }
-                        }
-                    }
-                }
                 /* Пересортировать: отмеченные наверх */
                 renderCharsPopup();
-            });
-        }
-
-        /* Показать/скрыть кастомное поле пилота */
-        if (pilotSel) {
-            pilotSel.addEventListener('change', function () {
-                var wrap = document.getElementById('esc-pilot-custom-wrap');
-                if (wrap) wrap.hidden = pilotSel.value !== '__custom';
             });
         }
 
@@ -846,11 +824,9 @@
                 var sysName = sysInput ? sysInput.value.trim() : '';
                 if (!sysName) { sysInput && sysInput.focus(); return; }
 
-                /* Пилот */
-                var pilotVal = pilotSel ? pilotSel.value : '';
-                var pilot = pilotVal === '__custom'
-                    ? (document.getElementById('esc-pilot-custom') || {}).value || ''
-                    : pilotVal;
+                /* Пилот — первый видимый персонаж */
+                var vp = getVisiblePilots();
+                var pilot = vp.length ? vp[0] : '';
 
                 /* Тип эскалации */
                 var typeVal = typeSel ? typeSel.value : '';
