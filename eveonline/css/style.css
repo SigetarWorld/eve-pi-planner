@@ -5923,12 +5923,56 @@ input.eve-plex-input {
 .esc-region-name { color: var(--cyan); font-weight: 600; }
 .esc-faction-name { font-weight: 600; }
 
-/* Блок персонажей с чекбоксами */
-.esc-chars-block { margin-top: 0.25rem; }
-.esc-chars-title { color: var(--accent); font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 0.2rem; }
-.esc-chars-list { display: flex; flex-wrap: wrap; gap: 0.15rem 0.6rem; }
-.esc-char-row { display: flex; align-items: center; font-size: 12px; color: var(--text-main); cursor: pointer; white-space: nowrap; }
-.esc-char-cb { accent-color: var(--accent); margin-right: 0.25rem; cursor: pointer; }
+/* Выпадающий список персонажей */
+.esc-chars-wrap { position: relative; margin-top: 0.15rem; }
+.esc-chars-btn {
+    width: 100%;
+    font-family: var(--font-heading);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-main);
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 0.35rem 0.6rem;
+    text-align: left;
+}
+.esc-chars-btn::after { content: " ▾"; color: var(--text-dim); }
+.esc-chars-btn:hover, .esc-chars-btn[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); }
+.esc-chars-popup {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 0.4rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.esc-chars-popup[hidden] { display: none; }
+.esc-char-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.3rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-main);
+}
+.esc-char-row:hover { background: rgba(255,255,255,0.04); }
+.esc-char-img { width: 24px; height: 24px; border-radius: 3px; flex-shrink: 0; }
+.esc-char-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.esc-char-cb { accent-color: var(--accent); cursor: pointer; flex-shrink: 0; margin-left: auto; }
 
 /* Список эскалаций */
 .esc-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.3rem; }

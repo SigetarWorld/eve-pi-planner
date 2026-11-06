@@ -155,20 +155,20 @@
     }
 
     /* Все подключённые персонажи (через eveChars из eveauth.js) */
-    function getAllPilots() {
+    function getAllPilotObjects() {
         if (typeof eveChars === 'function') {
-            var chars = eveChars();
-            return chars.map(function (c) { return c.characterName || ''; }).filter(Boolean);
+            return eveChars().filter(function (c) { return c && c.characterName; }).map(function (c) {
+                return { id: c.characterId, name: c.characterName };
+            });
         }
-        /* Фоллбек — из карточек */
-        var sel = document.getElementById('pilot-new');
-        if (!sel) return [];
-        var arr = [];
-        for (var i = 0; i < sel.options.length; i++) {
-            var v = sel.options[i].value;
-            if (v) arr.push(v);
-        }
-        return arr;
+        return [];
+    }
+    function getAllPilots() {
+        return getAllPilotObjects().map(function (p) { return p.name; });
+    }
+    /* Портрет персонажа */
+    function pilotPortrait(charId) {
+        return 'https://images.evetech.net/characters/' + encodeURIComponent(charId) + '/portrait?size=32';
     }
 
     /* Видимые пилоты (отфильтрованные). Если фильтр не настроен — все */
@@ -211,20 +211,12 @@
                 '<input type="text" id="esc-sys" class="ct-input esc-input" placeholder="Вставьте название системы" autocomplete="off">' +
             '</label>' +
             '<div id="esc-region-hint" class="esc-region-hint"></div>' +
-            /* Персонажи: чекбоксы (как на вкладке Планеты) */
-            '<div class="esc-chars-block">' +
-                '<div class="esc-chars-title">Персонажи</div>' +
-                '<div id="esc-chars-list" class="esc-chars-list">' +
-                    (function () {
-                        var all = getAllPilots();
-                        var visible = loadVisiblePilots();
-                        return all.map(function (p) {
-                            var checked = !visible || visible.indexOf(p) !== -1;
-                            return '<label class="esc-char-row"><input type="checkbox" class="esc-char-cb" value="' +
-                                esc(p) + '"' + (checked ? ' checked' : '') + '> ' + esc(p) + '</label>';
-                        }).join('');
-                    })() +
-                '</div>' +
+            /* Персонажи: кнопка-выпадашка как на вкладке Планеты */
+            '<div class="esc-chars-wrap">' +
+                '<button type="button" id="esc-chars-btn" class="ct-input esc-chars-btn" aria-haspopup="true" aria-expanded="false">' +
+                    'Персонажи: ' + visiblePilots.length +
+                '</button>' +
+                '<div id="esc-chars-popup" class="esc-chars-popup" hidden></div>' +
             '</div>' +
             /* Выбор пилота для новой эскалации */
             '<label class="esc-label">Игрок' +
@@ -759,15 +751,58 @@
             });
         }
 
-        /* --- 2. Чекбоксы персонажей — мгновенно фильтруют список и обновляют select --- */
-        var charsListDiv = document.getElementById('esc-chars-list');
-        if (charsListDiv) {
-            charsListDiv.addEventListener('change', function (e) {
+        /* --- 2. Выпадающий список персонажей (как на Планетах) --- */
+        var charsBtn = document.getElementById('esc-chars-btn');
+        var charsPopup = document.getElementById('esc-chars-popup');
+
+        function renderCharsPopup() {
+            if (!charsPopup) return;
+            var all = getAllPilotObjects();
+            var visible = loadVisiblePilots();
+            /* Сортировка: отмеченные вверху */
+            var sorted = all.slice().sort(function (a, b) {
+                var aOn = !visible || visible.indexOf(a.name) !== -1;
+                var bOn = !visible || visible.indexOf(b.name) !== -1;
+                if (aOn && !bOn) return -1;
+                if (!aOn && bOn) return 1;
+                return 0;
+            });
+            var html = '';
+            sorted.forEach(function (p) {
+                var checked = !visible || visible.indexOf(p.name) !== -1;
+                html += '<label class="esc-char-row">' +
+                    (p.id ? '<img class="esc-char-img" src="' + pilotPortrait(p.id) + '" alt="" width="24" height="24">' : '') +
+                    '<span class="esc-char-name">' + esc(p.name) + '</span>' +
+                    '<input type="checkbox" class="esc-char-cb" value="' + esc(p.name) + '"' + (checked ? ' checked' : '') + '>' +
+                '</label>';
+            });
+            charsPopup.innerHTML = html;
+        }
+
+        if (charsBtn && charsPopup) {
+            charsBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var open = charsPopup.hidden;
+                charsPopup.hidden = !open;
+                charsBtn.setAttribute('aria-expanded', String(open));
+                if (open) renderCharsPopup();
+            });
+            /* Закрытие по клику вне */
+            document.addEventListener('click', function (e) {
+                if (!charsPopup.hidden && !e.target.closest('#esc-chars-popup, #esc-chars-btn')) {
+                    charsPopup.hidden = true;
+                    charsBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+            /* Чекбокс — мгновенно сохраняет и обновляет */
+            charsPopup.addEventListener('change', function (e) {
                 if (!e.target.classList.contains('esc-char-cb')) return;
-                var cbs = charsListDiv.querySelectorAll('.esc-char-cb');
+                var cbs = charsPopup.querySelectorAll('.esc-char-cb');
                 var selected = [];
                 cbs.forEach(function (cb) { if (cb.checked) selected.push(cb.value); });
                 saveVisiblePilots(selected);
+                /* Обновляем кнопку */
+                charsBtn.textContent = 'Персонажи: ' + selected.length;
                 /* Обновляем select пилотов */
                 if (pilotSel) {
                     var prevPilot = pilotSel.value;
@@ -783,8 +818,8 @@
                         }
                     }
                 }
-                /* Перерисовываем список и карту */
-                render();
+                /* Пересортировать: отмеченные наверх */
+                renderCharsPopup();
             });
         }
 
