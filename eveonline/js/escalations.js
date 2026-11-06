@@ -415,6 +415,34 @@
         return { x: eMinX - mx, y: eMinZ - mz, w: dx + mx * 2, h: dz + mz * 2 };
     }
 
+    /* Кэш врат — строим из MAP_REGIONS один раз */
+    var gateLinksCache = null;
+    function buildGateLinks() {
+        if (gateLinksCache) return gateLinksCache;
+        gateLinksCache = [];
+        if (typeof MAP_REGIONS !== 'object') return gateLinksCache;
+        /* Индекс JUMP_SYSTEMS по имени → [x, z] */
+        var sysPos = {};
+        JUMP_SYSTEMS.forEach(function (s) { sysPos[s[1]] = s; });
+
+        Object.keys(MAP_REGIONS).forEach(function (rKey) {
+            var reg = MAP_REGIONS[rKey];
+            if (!reg.s || !reg.j) return;
+            var names = reg.s.map(function (x) { return x[0]; });
+            /* Внутренние врата */
+            for (var i = 0; i + 1 < reg.j.length; i += 2) {
+                var a = sysPos[names[reg.j[i]]], b = sysPos[names[reg.j[i + 1]]];
+                if (a && b) gateLinksCache.push([a, b]);
+            }
+            /* Внешние врата */
+            (reg.e || []).forEach(function (e) {
+                var a = sysPos[names[e[0]]], b = sysPos[e[1]];
+                if (a && b) gateLinksCache.push([a, b]);
+            });
+        });
+        return gateLinksCache;
+    }
+
     function drawMap() {
         var svg = document.getElementById('esc-svg');
         if (!svg || typeof JUMP_SYSTEMS === 'undefined') return;
@@ -446,48 +474,83 @@
         }
         applyViewBox(svg);
 
-        /* Размер 1 пикселя в SVG-координатах (для адаптивных размеров) */
+        /* Размер 1 SVG-единицы на экране */
         var pxSize = mapVB.w / MAP_W;
 
-        /* Фон: все системы */
-        var parts = [];
-        var dotR = (1.2 * pxSize).toFixed(2);
-        JUMP_SYSTEMS.forEach(function (s) {
-            var px = toSVG_X(s[4]), pz = toSVG_Z(s[6]);
-            var sec = s[3];
-            var fill = sec >= 0.45 ? 'rgba(80,160,80,0.2)' : sec > 0 ? 'rgba(200,160,40,0.2)' : 'rgba(200,60,60,0.15)';
-            parts.push('<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) + '" r="' + dotR + '" fill="' + fill + '"/>');
-        });
+        /* Границы видимой области (с запасом) */
+        var vLeft = mapVB.x - mapVB.w * 0.1;
+        var vRight = mapVB.x + mapVB.w * 1.1;
+        var vTop = mapVB.y - mapVB.h * 0.1;
+        var vBottom = mapVB.y + mapVB.h * 1.1;
+        function inView(sx, sz) { return sx >= vLeft && sx <= vRight && sz >= vTop && sz <= vBottom; }
 
-        /* Подписи регионов с активными эскалациями */
-        var activeRegions = getActiveRegions();
-        var regionFontSize = (18 * pxSize).toFixed(1);
-        activeRegions.forEach(function (rName) {
-            var systems = getRegionSystems(rName);
-            if (!systems.length) return;
-            var sumX = 0, sumZ = 0;
-            systems.forEach(function (s) { sumX += s[4]; sumZ += s[6]; });
-            var rcx = toSVG_X(sumX / systems.length), rcz = toSVG_Z(sumZ / systems.length);
+        var parts = [];
+
+        /* ---- 1. Подписи регионов (самый нижний слой) ---- */
+        var regionFontSize = Math.max(8, 16 * pxSize).toFixed(1);
+        var regionMap = {};  /* name → {sumX, sumZ, cnt} */
+        JUMP_SYSTEMS.forEach(function (s) {
+            var rName = JUMP_REGIONS[s[2]];
+            if (!rName) return;
+            if (!regionMap[rName]) regionMap[rName] = { sumX: 0, sumZ: 0, cnt: 0 };
+            regionMap[rName].sumX += s[4];
+            regionMap[rName].sumZ += s[6];
+            regionMap[rName].cnt++;
+        });
+        var activeSet = {};
+        getActiveRegions().forEach(function (r) { activeSet[r] = true; });
+        Object.keys(regionMap).forEach(function (rName) {
+            var r = regionMap[rName];
+            var rcx = toSVG_X(r.sumX / r.cnt);
+            var rcz = toSVG_Z(r.sumZ / r.cnt);
+            if (!inView(rcx, rcz)) return;
             var faction = REGION_FACTION[rName] || '';
-            var rColor = FACTION_COLOR[faction] || 'rgba(255,255,255,0.25)';
+            var rColor = FACTION_COLOR[faction] || '#4a6080';
+            var opacity = activeSet[rName] ? 0.4 : 0.15;
             parts.push('<text x="' + rcx.toFixed(1) + '" y="' + rcz.toFixed(1) +
-                '" fill="' + rColor + '" opacity="0.3" font-size="' + regionFontSize +
-                '" font-family="Rajdhani, sans-serif" font-weight="600" text-anchor="middle">' +
+                '" fill="' + rColor + '" opacity="' + opacity + '" font-size="' + regionFontSize +
+                '" font-family="Rajdhani, sans-serif" font-weight="700" letter-spacing="0.08em"' +
+                ' text-transform="uppercase" text-anchor="middle" dominant-baseline="middle" pointer-events="none">' +
                 esc(rName) + '</text>');
         });
 
-        svg.innerHTML = parts.join('');
+        /* ---- 2. Линии звёздных врат ---- */
+        var gateStroke = Math.max(0.3, 0.8 * pxSize).toFixed(2);
+        var gates = buildGateLinks();
+        gates.forEach(function (pair) {
+            var a = pair[0], b = pair[1];
+            var ax = toSVG_X(a[4]), az = toSVG_Z(a[6]);
+            var bx = toSVG_X(b[4]), bz = toSVG_Z(b[6]);
+            /* Рисуем только видимые */
+            if (!inView(ax, az) && !inView(bx, bz)) return;
+            parts.push('<line x1="' + ax.toFixed(1) + '" y1="' + az.toFixed(1) +
+                '" x2="' + bx.toFixed(1) + '" y2="' + bz.toFixed(1) +
+                '" stroke="#2a3f5c" stroke-width="' + gateStroke + '" opacity="0.6"/>');
+        });
 
-        /* Маркеры эскалаций */
+        /* ---- 3. Системы — точки ---- */
+        var dotR = Math.max(0.5, 1.4 * pxSize).toFixed(2);
+        JUMP_SYSTEMS.forEach(function (s) {
+            var px = toSVG_X(s[4]), pz = toSVG_Z(s[6]);
+            if (!inView(px, pz)) return;
+            var sec = s[3];
+            var fill = sec >= 0.45 ? '#4a8' : sec > 0.0 ? '#ba3' : '#a44';
+            var op = sec >= 0.45 ? '0.5' : sec > 0.0 ? '0.5' : '0.4';
+            parts.push('<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) +
+                '" r="' + dotR + '" fill="' + fill + '" opacity="' + op + '"/>');
+        });
+
+        /* ---- 4. Маркеры эскалаций (верхний слой) ---- */
         var now = Date.now();
-        var markers = '';
-        var markerR = (5 * pxSize).toFixed(2);
-        var prioR = (8 * pxSize).toFixed(2);
-        var labelSize = (10 * pxSize).toFixed(1);
-        var strokeW = (1.5 * pxSize).toFixed(2);
+        var markerR = Math.max(3, 6 * pxSize).toFixed(2);
+        var prioR = Math.max(4, 9 * pxSize).toFixed(2);
+        var labelSize = Math.max(5, 10 * pxSize).toFixed(1);
+        var strokeW = Math.max(0.5, 1.5 * pxSize).toFixed(2);
+        var pulseR = Math.max(5, 12 * pxSize).toFixed(2);
         data.forEach(function (item) {
             if (!item.sx) return;
             var px = toSVG_X(item.sx), pz = toSVG_Z(item.sz);
+            if (!inView(px, pz)) return;
             var remaining = (item.created + ESC_LIFETIME) - now;
             var expired = remaining <= 0;
             var isNew = (now - item.created) < 600000;
@@ -500,16 +563,25 @@
             var r = item.priority ? prioR : markerR;
             var opacity = expired ? 0.4 : 1;
 
-            markers += '<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) +
-                '" r="' + r + '" fill="' + color + '" fill-opacity="' + opacity +
-                '" stroke="' + (item.priority ? '#fff' : 'none') + '" stroke-width="' + (item.priority ? strokeW : 0) + '">' +
-                '<title>' + esc(item.system) + ' — ' + esc(item.type) + ' (' + fmtTimer(remaining) + ')</title></circle>';
+            /* Свечение вокруг активных маркеров */
+            if (!expired) {
+                parts.push('<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) +
+                    '" r="' + pulseR + '" fill="' + color + '" fill-opacity="0.15"/>');
+            }
 
-            markers += '<text x="' + (px + parseFloat(r) + parseFloat(markerR) * 0.4).toFixed(1) + '" y="' + (pz + parseFloat(labelSize) * 0.35).toFixed(1) +
-                '" class="esc-map-label" fill="' + color + '" opacity="' + opacity + '" font-size="' + labelSize + '">' +
-                esc(item.system) + '</text>';
+            parts.push('<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) +
+                '" r="' + r + '" fill="' + color + '" fill-opacity="' + opacity +
+                '" stroke="' + (item.priority ? '#fff' : color) + '" stroke-width="' + strokeW + '" stroke-opacity="' + (item.priority ? opacity : 0.3) + '">' +
+                '<title>' + esc(item.system) + ' — ' + esc(item.type) + ' (' + fmtTimer(remaining) + ')</title></circle>');
+
+            /* Подпись системы */
+            parts.push('<text x="' + (px + parseFloat(r) + 2 * pxSize).toFixed(1) + '" y="' + (pz + parseFloat(labelSize) * 0.35).toFixed(1) +
+                '" fill="' + color + '" opacity="' + opacity + '" font-size="' + labelSize +
+                '" font-family="Rajdhani, sans-serif" font-weight="600" pointer-events="none">' +
+                esc(item.system) + '</text>');
         });
-        svg.innerHTML += markers;
+
+        svg.innerHTML = parts.join('');
     }
 
     /* ===================== Пан и зум карты ===================== */
