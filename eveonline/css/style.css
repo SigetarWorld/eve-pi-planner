@@ -5904,3 +5904,62 @@ input.eve-plex-input {
 #planets2 .p2-chain-1 .uv-name,
 #planets2 .p2-chain-1 .uv-qty  { color: var(--text-dim); }
 #planets2 .p2-deficit .res-icon { width: 1rem; height: 1rem; margin: 0 0.15rem; vertical-align: middle; }
+
+/* ==================== Эскалации ==================== */
+#map-esc { display: flex; gap: 1rem; height: calc(100vh - 10rem); min-height: 400px; }
+
+/* Панель слева */
+.esc-panel { width: 340px; min-width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 0.5rem; overflow: hidden; }
+
+/* Форма добавления */
+.esc-form { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 0.7rem; }
+.esc-form-title { color: var(--accent); font-size: 12px; font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.esc-label { display: block; color: var(--text-dim); font-size: 11px; margin-bottom: 0.35rem; }
+.esc-input { width: 100%; margin-top: 0.15rem; }
+.esc-add-btn { width: 100%; margin-top: 0.4rem; }
+
+/* Список эскалаций */
+.esc-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.3rem; }
+.esc-empty { color: var(--text-dim); font-size: 12px; padding: 1rem; text-align: center; }
+
+.esc-item {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.6rem;
+    transition: opacity 0.3s, border-color 0.3s;
+}
+.esc-item.esc-new   { border-color: #00cc66; }
+.esc-item.esc-expired { opacity: 0.4; }
+.esc-item.esc-prio  { border-left: 3px solid var(--accent); }
+.esc-item.esc-warning { border-color: var(--red); }
+
+.esc-item-head { display: flex; align-items: center; gap: 0.3rem; }
+.esc-prio-label { flex-shrink: 0; cursor: pointer; }
+.esc-prio-cb { cursor: pointer; accent-color: var(--accent); }
+.esc-ded { font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.esc-type-name { font-size: 12px; color: var(--text-main); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.esc-del { background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; padding: 0 0.2rem; line-height: 1; }
+.esc-del:hover { color: var(--red); }
+
+.esc-item-body { font-size: 11px; margin-top: 0.15rem; }
+.esc-sys-name { color: var(--cyan); font-weight: 600; }
+.esc-region { color: var(--text-dim); }
+
+.esc-item-foot { display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-top: 0.15rem; }
+.esc-pilot-name { color: var(--text-dim); }
+.esc-timer { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+.esc-expired .esc-timer { color: var(--text-dim); }
+.esc-new .esc-timer { color: #00cc66; }
+
+/* Карта */
+.esc-map-wrap { flex: 1; min-width: 0; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; position: relative; }
+.esc-svg { width: 100%; height: 100%; display: block; }
+.esc-map-label { font-size: 8px; font-family: 'Rajdhani', sans-serif; pointer-events: none; }
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+    #map-esc { flex-direction: column; height: auto; }
+    .esc-panel { width: 100%; min-width: 0; }
+    .esc-map-wrap { min-height: 300px; }
+}

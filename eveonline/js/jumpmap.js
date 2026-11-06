@@ -36,9 +36,11 @@
     const views = {
         planet: document.getElementById('map-planet'),
         plan: document.getElementById('map-plan'),
-        jump: document.getElementById('map-jump')
+        jump: document.getElementById('map-jump'),
+        esc: document.getElementById('map-esc')
     };
     if (!views.plan) delete views.plan;
+    if (!views.esc) delete views.esc;
     const btns = Array.from(document.querySelectorAll('[data-role="maps-view"]'));
     if (!views.planet || !views.jump || !btns.length) return;
     const show = (v, openTab) => {

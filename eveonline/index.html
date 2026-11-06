@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=231">
+    <link rel="stylesheet" href="css/style.css?v=232">
 </head>
 <body>
     <header>
@@ -220,6 +220,7 @@
                 <button type="button" class="btn card-add maps-view-btn" data-role="maps-view" data-view="planet" aria-pressed="true">Планетарная карта</button>
                 <button type="button" class="btn card-add maps-view-btn" data-role="maps-view" data-view="plan" aria-pressed="false">Карта планирования</button>
                 <button type="button" class="btn card-add maps-view-btn" data-role="maps-view" data-view="jump" aria-pressed="false">Прыжковая карта</button>
+                <button type="button" class="btn card-add maps-view-btn" data-role="maps-view" data-view="esc" aria-pressed="false">Эскалации</button>
             </div>
             <div id="map-planet">
             <div class="mm-bar">
@@ -252,6 +253,8 @@
             <!-- Карта планирования: план колоний по ресурсам P0–P2 (js/planmap.js) -->
             <div id="map-plan" class="pm" hidden></div>
             <div id="map-jump" class="jm" hidden></div>
+            <!-- Эскалации: трекер DED-комплексов (js/escalations.js) -->
+            <div id="map-esc" class="esc" hidden></div>
         </section>
 
         <!-- Вкладка: производство по чертежам -->
@@ -293,10 +296,11 @@
     <script src="js/calculator.js?v=36"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=21"></script>
-    <script src="js/app.js?v=216"></script>
+    <script src="js/app.js?v=217"></script>
     <script src="js/jumpdata.js?v=1"></script>
-    <script src="js/jumpmap.js?v=10"></script>
+    <script src="js/jumpmap.js?v=11"></script>
     <script src="js/planmap.js?v=5"></script>
+    <script src="js/escalations.js?v=1"></script>
     <script src="js/planets2.js?v=13"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
