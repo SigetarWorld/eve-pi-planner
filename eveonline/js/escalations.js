@@ -294,11 +294,17 @@
         /* --- Карта справа --- */
         var mapWrap = document.createElement('div');
         mapWrap.className = 'esc-map-wrap';
-        mapWrap.innerHTML = '<svg id="esc-svg" class="esc-svg"></svg>';
+        mapWrap.innerHTML = '<svg id="esc-svg" class="esc-svg"></svg>' +
+            '<div class="esc-map-controls">' +
+                '<button type="button" class="btn esc-map-btn" id="esc-zoom-in" title="Приблизить">+</button>' +
+                '<button type="button" class="btn esc-map-btn" id="esc-zoom-out" title="Отдалить">−</button>' +
+                '<button type="button" class="btn esc-map-btn" id="esc-zoom-reset" title="Сброс (двойной клик)">⌂</button>' +
+            '</div>';
         root.appendChild(mapWrap);
 
         /* Рисуем карту */
         drawMap();
+        bindMapPanZoom();
 
         /* Обработчики */
         bindEvents();
@@ -332,13 +338,15 @@
     }
 
     /* ===================== SVG-карта галактики ===================== */
+    var LS_VIEW_KEY = 'evepi.esc.mapView';  /* сохранение позиции/зума */
+
     /* Собирает регионы всех активных (не истёкших) эскалаций */
     function getActiveRegions() {
         var now = Date.now();
         var regions = {};
         data.forEach(function (item) {
             if (!item.region) return;
-            if ((item.created + ESC_LIFETIME) - now <= 0) return; /* истёкшая */
+            if ((item.created + ESC_LIFETIME) - now <= 0) return;
             regions[item.region] = true;
         });
         return Object.keys(regions);
@@ -352,101 +360,134 @@
         return JUMP_SYSTEMS.filter(function (s) { return s[2] === idx; });
     }
 
+    /* Сохраняем/загружаем позицию карты */
+    function saveMapView(vb) {
+        try { localStorage.setItem(LS_VIEW_KEY, JSON.stringify(vb)); } catch (e) {}
+    }
+    function loadMapView() {
+        try {
+            var d = JSON.parse(localStorage.getItem(LS_VIEW_KEY));
+            if (d && typeof d.x === 'number' && typeof d.w === 'number') return d;
+        } catch (e) {}
+        return null;
+    }
+
+    /* Внутреннее пространство карты (в единицах SVG).
+       Все системы рисуются однажды в фиксированных координатах,
+       а viewBox управляет видимой областью (пан/зум). */
+    var MAP_W = 2000, MAP_H = 1600;
+    var galaxyBounds = null;  /* {minX,maxX,minZ,maxZ} — мировые */
+    var mapScale = 1;         /* мировые → SVG */
+    var mapCX = 0, mapCZ = 0; /* центр мира */
+
+    /* Мировые → SVG */
+    function toSVG_X(x) { return MAP_W / 2 + (x - mapCX) * mapScale; }
+    function toSVG_Z(z) { return MAP_H / 2 + (z - mapCZ) * mapScale; }
+
+    /* Текущий viewBox {x,y,w,h} */
+    var mapVB = { x: 0, y: 0, w: MAP_W, h: MAP_H };
+
+    function applyViewBox(svg) {
+        svg.setAttribute('viewBox', mapVB.x + ' ' + mapVB.y + ' ' + mapVB.w + ' ' + mapVB.h);
+    }
+
+    /* Вычислить начальный viewBox — зум к активным эскалациям */
+    function calcInitialVB() {
+        var activeRegions = getActiveRegions();
+        if (!activeRegions.length) return { x: 0, y: 0, w: MAP_W, h: MAP_H };
+
+        /* Находим SVG-координаты крайних систем регионов */
+        var eMinX = Infinity, eMaxX = -Infinity, eMinZ = Infinity, eMaxZ = -Infinity;
+        activeRegions.forEach(function (rName) {
+            getRegionSystems(rName).forEach(function (s) {
+                var sx = toSVG_X(s[4]), sz = toSVG_Z(s[6]);
+                if (sx < eMinX) eMinX = sx;
+                if (sx > eMaxX) eMaxX = sx;
+                if (sz < eMinZ) eMinZ = sz;
+                if (sz > eMaxZ) eMaxZ = sz;
+            });
+        });
+        var dx = eMaxX - eMinX, dz = eMaxZ - eMinZ;
+        if (dx < 50) { eMinX -= 25; eMaxX += 25; dx = 50; }
+        if (dz < 50) { eMinZ -= 25; eMaxZ += 25; dz = 50; }
+        /* Отступ 30% */
+        var mx = dx * 0.3, mz = dz * 0.3;
+        return { x: eMinX - mx, y: eMinZ - mz, w: dx + mx * 2, h: dz + mz * 2 };
+    }
+
     function drawMap() {
         var svg = document.getElementById('esc-svg');
         if (!svg || typeof JUMP_SYSTEMS === 'undefined') return;
 
-        var W = 900, H = 700;
-        svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-
-        /* Границы координат — вся галактика (для фона) */
-        var gMinX = Infinity, gMaxX = -Infinity, gMinZ = Infinity, gMaxZ = -Infinity;
-        JUMP_SYSTEMS.forEach(function (s) {
-            if (s[4] < gMinX) gMinX = s[4];
-            if (s[4] > gMaxX) gMaxX = s[4];
-            if (s[6] < gMinZ) gMinZ = s[6];
-            if (s[6] > gMaxZ) gMaxZ = s[6];
-        });
-
-        /* Определяем зону обзора: если есть активные эскалации — зумим к их регионам */
-        var activeRegions = getActiveRegions();
-        var zoomed = activeRegions.length > 0;
-        var vMinX, vMaxX, vMinZ, vMaxZ;
-
-        if (zoomed) {
-            /* Собираем все системы из регионов с эскалациями + соседний отступ */
-            vMinX = Infinity; vMaxX = -Infinity; vMinZ = Infinity; vMaxZ = -Infinity;
-            activeRegions.forEach(function (rName) {
-                var systems = getRegionSystems(rName);
-                systems.forEach(function (s) {
-                    if (s[4] < vMinX) vMinX = s[4];
-                    if (s[4] > vMaxX) vMaxX = s[4];
-                    if (s[6] < vMinZ) vMinZ = s[6];
-                    if (s[6] > vMaxZ) vMaxZ = s[6];
-                });
+        /* Подсчитываем границы галактики один раз */
+        if (!galaxyBounds) {
+            var gMinX = Infinity, gMaxX = -Infinity, gMinZ = Infinity, gMaxZ = -Infinity;
+            JUMP_SYSTEMS.forEach(function (s) {
+                if (s[4] < gMinX) gMinX = s[4];
+                if (s[4] > gMaxX) gMaxX = s[4];
+                if (s[6] < gMinZ) gMinZ = s[6];
+                if (s[6] > gMaxZ) gMaxZ = s[6];
             });
-            /* Если все точки в одной системе — берём окрестность */
-            var dx = vMaxX - vMinX;
-            var dz = vMaxZ - vMinZ;
-            if (dx < 1) { vMinX -= 0.5; vMaxX += 0.5; }
-            if (dz < 1) { vMinZ -= 0.5; vMaxZ += 0.5; }
-            /* Добавляем 20% отступ */
-            var marginX = (vMaxX - vMinX) * 0.2;
-            var marginZ = (vMaxZ - vMinZ) * 0.2;
-            vMinX -= marginX; vMaxX += marginX;
-            vMinZ -= marginZ; vMaxZ += marginZ;
-        } else {
-            vMinX = gMinX; vMaxX = gMaxX; vMinZ = gMinZ; vMaxZ = gMaxZ;
+            galaxyBounds = { minX: gMinX, maxX: gMaxX, minZ: gMinZ, maxZ: gMaxZ };
+            var pad = 60;
+            var sx = (MAP_W - pad * 2) / (gMaxX - gMinX);
+            var sz = (MAP_H - pad * 2) / (gMaxZ - gMinZ);
+            mapScale = Math.min(sx, sz);
+            mapCX = (gMaxX + gMinX) / 2;
+            mapCZ = (gMaxZ + gMinZ) / 2;
         }
 
-        var pad = 40;
-        var scaleX = (W - pad * 2) / (vMaxX - vMinX);
-        var scaleZ = (H - pad * 2) / (vMaxZ - vMinZ);
-        var scale = Math.min(scaleX, scaleZ);
+        /* ViewBox: из localStorage или авто-зум к эскалациям */
+        var saved = loadMapView();
+        if (saved) {
+            mapVB = saved;
+        } else {
+            mapVB = calcInitialVB();
+        }
+        applyViewBox(svg);
 
-        var cx = (vMaxX + vMinX) / 2;
-        var cz = (vMaxZ + vMinZ) / 2;
-        function tx(x) { return W / 2 + (x - cx) * scale; }
-        function tz(z) { return H / 2 + (z - cz) * scale; }
+        /* Размер 1 пикселя в SVG-координатах (для адаптивных размеров) */
+        var pxSize = mapVB.w / MAP_W;
 
-        /* Фон: все системы как мелкие точки */
+        /* Фон: все системы */
         var parts = [];
-        var dotR = zoomed ? 1.5 : 0.8;
+        var dotR = (1.2 * pxSize).toFixed(2);
         JUMP_SYSTEMS.forEach(function (s) {
-            var px = tx(s[4]), pz = tz(s[6]);
-            /* Отсекаем точки за пределами видимости */
-            if (px < -10 || px > W + 10 || pz < -10 || pz > H + 10) return;
+            var px = toSVG_X(s[4]), pz = toSVG_Z(s[6]);
             var sec = s[3];
-            var fill = sec >= 0.45 ? 'rgba(80,160,80,0.18)' : sec > 0 ? 'rgba(200,160,40,0.18)' : 'rgba(200,60,60,0.15)';
+            var fill = sec >= 0.45 ? 'rgba(80,160,80,0.2)' : sec > 0 ? 'rgba(200,160,40,0.2)' : 'rgba(200,60,60,0.15)';
             parts.push('<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) + '" r="' + dotR + '" fill="' + fill + '"/>');
         });
 
-        /* При зуме рисуем подписи регионов */
-        if (zoomed) {
-            activeRegions.forEach(function (rName) {
-                var systems = getRegionSystems(rName);
-                if (!systems.length) return;
-                /* Центр региона */
-                var sumX = 0, sumZ = 0;
-                systems.forEach(function (s) { sumX += s[4]; sumZ += s[6]; });
-                var rcx = tx(sumX / systems.length), rcz = tz(sumZ / systems.length);
-                var faction = REGION_FACTION[rName] || '';
-                var rColor = FACTION_COLOR[faction] || 'rgba(255,255,255,0.25)';
-                parts.push('<text x="' + rcx.toFixed(1) + '" y="' + rcz.toFixed(1) +
-                    '" fill="' + rColor + '" opacity="0.3" font-size="14" font-family="Rajdhani, sans-serif" font-weight="600" text-anchor="middle">' +
-                    esc(rName) + '</text>');
-            });
-        }
+        /* Подписи регионов с активными эскалациями */
+        var activeRegions = getActiveRegions();
+        var regionFontSize = (18 * pxSize).toFixed(1);
+        activeRegions.forEach(function (rName) {
+            var systems = getRegionSystems(rName);
+            if (!systems.length) return;
+            var sumX = 0, sumZ = 0;
+            systems.forEach(function (s) { sumX += s[4]; sumZ += s[6]; });
+            var rcx = toSVG_X(sumX / systems.length), rcz = toSVG_Z(sumZ / systems.length);
+            var faction = REGION_FACTION[rName] || '';
+            var rColor = FACTION_COLOR[faction] || 'rgba(255,255,255,0.25)';
+            parts.push('<text x="' + rcx.toFixed(1) + '" y="' + rcz.toFixed(1) +
+                '" fill="' + rColor + '" opacity="0.3" font-size="' + regionFontSize +
+                '" font-family="Rajdhani, sans-serif" font-weight="600" text-anchor="middle">' +
+                esc(rName) + '</text>');
+        });
 
         svg.innerHTML = parts.join('');
 
         /* Маркеры эскалаций */
         var now = Date.now();
         var markers = '';
+        var markerR = (5 * pxSize).toFixed(2);
+        var prioR = (8 * pxSize).toFixed(2);
+        var labelSize = (10 * pxSize).toFixed(1);
+        var strokeW = (1.5 * pxSize).toFixed(2);
         data.forEach(function (item) {
-            if (!item.sx) return; /* нет координат */
-            var px = tx(item.sx), pz = tz(item.sz);
-            if (px < -20 || px > W + 20 || pz < -20 || pz > H + 20) return;
+            if (!item.sx) return;
+            var px = toSVG_X(item.sx), pz = toSVG_Z(item.sz);
             var remaining = (item.created + ESC_LIFETIME) - now;
             var expired = remaining <= 0;
             var isNew = (now - item.created) < 600000;
@@ -456,21 +497,142 @@
             var color = expired ? '#555' : (FACTION_COLOR[faction] || '#aaa');
             if (isNew) color = '#00ff80';
 
-            var r = zoomed ? (item.priority ? 8 : 5) : (item.priority ? 6 : 4);
+            var r = item.priority ? prioR : markerR;
             var opacity = expired ? 0.4 : 1;
-            var fontSize = zoomed ? 11 : 8;
 
             markers += '<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) +
                 '" r="' + r + '" fill="' + color + '" fill-opacity="' + opacity +
-                '" stroke="' + (item.priority ? '#fff' : 'none') + '" stroke-width="' + (item.priority ? 1.5 : 0) + '">' +
+                '" stroke="' + (item.priority ? '#fff' : 'none') + '" stroke-width="' + (item.priority ? strokeW : 0) + '">' +
                 '<title>' + esc(item.system) + ' — ' + esc(item.type) + ' (' + fmtTimer(remaining) + ')</title></circle>';
 
-            /* Подпись системы */
-            markers += '<text x="' + (px + r + 2).toFixed(1) + '" y="' + (pz + 3).toFixed(1) +
-                '" class="esc-map-label" fill="' + color + '" opacity="' + opacity + '" font-size="' + fontSize + '">' +
+            markers += '<text x="' + (px + parseFloat(r) + parseFloat(markerR) * 0.4).toFixed(1) + '" y="' + (pz + parseFloat(labelSize) * 0.35).toFixed(1) +
+                '" class="esc-map-label" fill="' + color + '" opacity="' + opacity + '" font-size="' + labelSize + '">' +
                 esc(item.system) + '</text>';
         });
         svg.innerHTML += markers;
+    }
+
+    /* ===================== Пан и зум карты ===================== */
+    function bindMapPanZoom() {
+        var svg = document.getElementById('esc-svg');
+        if (!svg) return;
+        var wrap = svg.parentElement;
+
+        /* --- Mouse drag (пан) --- */
+        var dragging = false, dragStart = null, wheelRedraw = null;
+        svg.addEventListener('mousedown', function (e) {
+            if (e.button !== 0) return;
+            dragging = true;
+            dragStart = { mx: e.clientX, my: e.clientY, vx: mapVB.x, vy: mapVB.y };
+            svg.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+        window.addEventListener('mousemove', function (e) {
+            if (!dragging || !dragStart) return;
+            /* Пиксели экрана → единицы SVG */
+            var rect = svg.getBoundingClientRect();
+            var sx = mapVB.w / rect.width;
+            var sy = mapVB.h / rect.height;
+            mapVB.x = dragStart.vx - (e.clientX - dragStart.mx) * sx;
+            mapVB.y = dragStart.vy - (e.clientY - dragStart.my) * sy;
+            applyViewBox(svg);
+        });
+        window.addEventListener('mouseup', function () {
+            if (dragging) {
+                dragging = false;
+                svg.style.cursor = 'grab';
+                saveMapView(mapVB);
+            }
+        });
+
+        /* --- Touch drag (мобильный пан) --- */
+        var touchStart = null;
+        svg.addEventListener('touchstart', function (e) {
+            if (e.touches.length !== 1) return;
+            var t = e.touches[0];
+            touchStart = { mx: t.clientX, my: t.clientY, vx: mapVB.x, vy: mapVB.y };
+        }, { passive: true });
+        svg.addEventListener('touchmove', function (e) {
+            if (!touchStart || e.touches.length !== 1) return;
+            var t = e.touches[0];
+            var rect = svg.getBoundingClientRect();
+            var sx = mapVB.w / rect.width;
+            var sy = mapVB.h / rect.height;
+            mapVB.x = touchStart.vx - (t.clientX - touchStart.mx) * sx;
+            mapVB.y = touchStart.vy - (t.clientY - touchStart.my) * sy;
+            applyViewBox(svg);
+            e.preventDefault();
+        }, { passive: false });
+        svg.addEventListener('touchend', function () {
+            if (touchStart) {
+                touchStart = null;
+                saveMapView(mapVB);
+            }
+        }, { passive: true });
+
+        /* --- Wheel zoom --- */
+        svg.addEventListener('wheel', function (e) {
+            e.preventDefault();
+            var rect = svg.getBoundingClientRect();
+            /* Позиция мыши в SVG-координатах */
+            var mx = mapVB.x + ((e.clientX - rect.left) / rect.width) * mapVB.w;
+            var my = mapVB.y + ((e.clientY - rect.top) / rect.height) * mapVB.h;
+
+            var factor = e.deltaY > 0 ? 1.15 : 1 / 1.15;
+            /* Ограничения: не меньше 30×24 (сильный зум) и не больше полной карты ×1.5 */
+            var newW = mapVB.w * factor;
+            var newH = mapVB.h * factor;
+            if (newW < 30 || newH < 24) return;
+            if (newW > MAP_W * 1.5 || newH > MAP_H * 1.5) return;
+
+            /* Зум к точке под курсором */
+            mapVB.x = mx - (mx - mapVB.x) * factor;
+            mapVB.y = my - (my - mapVB.y) * factor;
+            mapVB.w = newW;
+            mapVB.h = newH;
+            applyViewBox(svg);
+            saveMapView(mapVB);
+            /* Перерисовать с задержкой (для обновления размеров маркеров) */
+            clearTimeout(wheelRedraw);
+            wheelRedraw = setTimeout(function () { drawMap(); }, 200);
+        }, { passive: false });
+
+        /* --- Двойной клик — сброс вида --- */
+        svg.addEventListener('dblclick', function (e) {
+            e.preventDefault();
+            mapVB = calcInitialVB();
+            applyViewBox(svg);
+            saveMapView(mapVB);
+            drawMap(); /* перерисовать с новыми размерами */
+        });
+
+        svg.style.cursor = 'grab';
+
+        /* --- Кнопки +/−/⌂ --- */
+        function zoomBy(factor) {
+            var cx = mapVB.x + mapVB.w / 2;
+            var cy = mapVB.y + mapVB.h / 2;
+            var nw = mapVB.w * factor, nh = mapVB.h * factor;
+            if (nw < 30 || nh < 24 || nw > MAP_W * 1.5 || nh > MAP_H * 1.5) return;
+            mapVB.x = cx - nw / 2;
+            mapVB.y = cy - nh / 2;
+            mapVB.w = nw;
+            mapVB.h = nh;
+            applyViewBox(svg);
+            saveMapView(mapVB);
+            drawMap();
+        }
+        var btnIn = document.getElementById('esc-zoom-in');
+        var btnOut = document.getElementById('esc-zoom-out');
+        var btnReset = document.getElementById('esc-zoom-reset');
+        if (btnIn) btnIn.addEventListener('click', function () { zoomBy(1 / 1.4); });
+        if (btnOut) btnOut.addEventListener('click', function () { zoomBy(1.4); });
+        if (btnReset) btnReset.addEventListener('click', function () {
+            try { localStorage.removeItem(LS_VIEW_KEY); } catch (e) {}
+            mapVB = calcInitialVB();
+            applyViewBox(svg);
+            drawMap();
+        });
     }
 
     /* ===================== Обработчики ===================== */

@@ -5983,8 +5983,13 @@ input.eve-plex-input {
 
 /* Карта */
 .esc-map-wrap { flex: 1; min-width: 0; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; position: relative; }
-.esc-svg { width: 100%; height: 100%; display: block; }
-.esc-map-label { font-size: 8px; font-family: 'Rajdhani', sans-serif; pointer-events: none; }
+.esc-svg { width: 100%; height: 100%; display: block; user-select: none; }
+.esc-map-label { font-family: 'Rajdhani', sans-serif; pointer-events: none; }
+
+/* Кнопки управления картой */
+.esc-map-controls { position: absolute; top: 0.5rem; right: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; z-index: 2; }
+.esc-map-btn { width: 28px; height: 28px; padding: 0; font-size: 16px; line-height: 28px; text-align: center; min-width: 0; opacity: 0.7; }
+.esc-map-btn:hover { opacity: 1; }
 
 /* Мобильная адаптация */
 @media (max-width: 768px) {
