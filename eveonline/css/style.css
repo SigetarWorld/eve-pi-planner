@@ -5927,7 +5927,7 @@ input.eve-plex-input {
 .esc-tb-spacer { flex: 1; min-width: 0.5rem; }
 .esc-tb-hint { min-height: 0; padding: 0; white-space: nowrap; font-size: 11px; }
 .esc-toolbar .esc-chars-wrap { margin: 0; }
-.esc-toolbar .esc-chars-btn { padding: 0.25rem 0.5rem; font-size: 0.65rem; }
+.esc-toolbar .esc-chars-btn { padding: 0.25rem 0.5rem; font-size: 12px; }
 
 /* Контент: панель + карта */
 .esc-content { display: flex; gap: 0.5rem; flex: 1; min-height: 0; }
@@ -5962,7 +5962,8 @@ input.eve-plex-input {
 .esc-chars-popup {
     position: absolute;
     top: calc(100% + 4px);
-    left: 0; right: 0;
+    left: 0;
+    min-width: 220px;
     z-index: 10;
     display: flex;
     flex-direction: column;
