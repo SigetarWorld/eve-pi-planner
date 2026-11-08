@@ -191,6 +191,7 @@
     var data = loadData();
     var timerInterval = null;
     var currentRegion = '';  /* текущий регион из поля «Система» */
+    var selectedPilot = '';  /* выбранный пилот для добавления */
 
     /* ===================== Рендер ===================== */
     function render() {
@@ -206,7 +207,7 @@
             '<div id="esc-region-hint" class="esc-region-hint esc-tb-hint"></div>' +
             '<div class="esc-chars-wrap">' +
                 '<button type="button" id="esc-chars-btn" class="ct-input esc-chars-btn" aria-haspopup="true" aria-expanded="false">' +
-                    'Персонажи: ' + visiblePilots.length +
+                    (selectedPilot ? 'Пилот: ' + esc(selectedPilot) : 'Персонажи: ' + visiblePilots.length) +
                 '</button>' +
                 '<div id="esc-chars-popup" class="esc-chars-popup" hidden></div>' +
             '</div>' +
@@ -760,7 +761,8 @@
             var html = '';
             sorted.forEach(function (p) {
                 var checked = !visible || visible.indexOf(p.name) !== -1;
-                html += '<div class="esc-char-row" data-name="' + esc(p.name) + '">' +
+                var isSel = selectedPilot === p.name;
+                html += '<div class="esc-char-row' + (isSel ? ' is-selected' : '') + '" data-name="' + esc(p.name) + '">' +
                     (p.id ? '<img class="esc-char-img" src="' + pilotPortrait(p.id) + '" alt="" width="24" height="24">' : '') +
                     '<span class="esc-char-name">' + esc(p.name) + '</span>' +
                     '<input type="checkbox" class="esc-char-cb" value="' + esc(p.name) + '"' + (checked ? ' checked' : '') + '>' +
@@ -784,16 +786,21 @@
                     charsBtn.setAttribute('aria-expanded', 'false');
                 }
             });
-            /* Клик по строке персонажа — переключает чекбокс */
+            /* Клик по строке персонажа (не по чекбоксу) — выбирает пилота для добавления */
             charsPopup.addEventListener('click', function (e) {
+                if (e.target.classList.contains('esc-char-cb')) return; /* чекбокс сам */
                 var row = e.target.closest('.esc-char-row');
                 if (!row) return;
-                if (e.target.classList.contains('esc-char-cb')) return; /* чекбокс сам обработает */
-                var cb = row.querySelector('.esc-char-cb');
-                if (cb) {
-                    cb.checked = !cb.checked;
-                    cb.dispatchEvent(new Event('change', { bubbles: true }));
-                }
+                var name = row.getAttribute('data-name');
+                if (!name) return;
+                selectedPilot = name;
+                charsBtn.textContent = 'Пилот: ' + name;
+                charsPopup.hidden = true;
+                charsBtn.setAttribute('aria-expanded', 'false');
+                /* Подсветить выбранного */
+                charsPopup.querySelectorAll('.esc-char-row').forEach(function (r) {
+                    r.classList.toggle('is-selected', r.getAttribute('data-name') === name);
+                });
             });
             /* Чекбокс — мгновенно сохраняет и обновляет */
             charsPopup.addEventListener('change', function (e) {
@@ -824,9 +831,12 @@
                 var sysName = sysInput ? sysInput.value.trim() : '';
                 if (!sysName) { sysInput && sysInput.focus(); return; }
 
-                /* Пилот — первый видимый персонаж */
-                var vp = getVisiblePilots();
-                var pilot = vp.length ? vp[0] : '';
+                /* Пилот — выбранный в меню персонажей */
+                var pilot = selectedPilot || '';
+                if (!pilot) {
+                    var vp = getVisiblePilots();
+                    pilot = vp.length ? vp[0] : '';
+                }
 
                 /* Тип эскалации */
                 var typeVal = typeSel ? typeSel.value : '';

@@ -5988,6 +5988,7 @@ input.eve-plex-input {
     color: var(--text-main);
 }
 .esc-char-row:hover { background: rgba(255,255,255,0.04); }
+.esc-char-row.is-selected { background: rgba(255,157,46,0.12); border-left: 2px solid var(--accent); }
 .esc-char-img { width: 24px; height: 24px; border-radius: 3px; flex-shrink: 0; }
 .esc-char-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .esc-char-cb { accent-color: var(--accent); cursor: pointer; flex-shrink: 0; margin-left: auto; }
