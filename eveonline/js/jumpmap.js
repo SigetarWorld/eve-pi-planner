@@ -846,4 +846,16 @@
     renderRoute();
     window.addEventListener('eve-chars-changed', renderChars);
     if (linked && typeof window.showMapsView === 'function') window.showMapsView('jump', true);
+
+    /* Приём точек маршрута из Эскалаций (кнопка «Маршрут») */
+    window.addEventListener('jump-set-waypoints', (e) => {
+        const systems = (e.detail && e.detail.systems) || [];
+        if (!systems.length) return;
+        /* Заменяем текущие точки маршрута системами эскалаций */
+        st.waypoints = systems.filter((n) => byName.has(n.toLowerCase())).map((n) => byName.get(n.toLowerCase()).name);
+        $('jm-ship').value = st.ship;
+        showSkills();
+        renderTags();
+        renderRoute();
+    });
 }());
