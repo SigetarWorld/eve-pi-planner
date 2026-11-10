@@ -508,7 +508,7 @@
             seen.add(key);
             gateLines += `<line class="jm-gate" x1="${px(a).toFixed(1)}" y1="${pz(a).toFixed(1)}" x2="${px(b).toFixed(1)}" y2="${pz(b).toFixed(1)}"/>`;
         }));
-        const dots = around.map((s) => `<circle class="jm-dot jm-dot-${secClass(s.sec)}" cx="${px(s).toFixed(1)}" cy="${pz(s).toFixed(1)}" r="1.4" title="${esc(`${s.name} · ${s.region} · ${secText(s.sec)}`)}"/>`).join('');
+        const dots = around.filter((s) => !new Set(path.map(p => p.name)).has(s.name)).map((s) => `<g class="jm-dot-g"><circle class="jm-dot jm-dot-${secClass(s.sec)}" cx="${px(s).toFixed(1)}" cy="${pz(s).toFixed(1)}" r="4" title="${esc(`${s.name} · ${s.region} · ${secText(s.sec)}`)}"/><text class="jm-hover-t" x="${(px(s) + 5).toFixed(1)}" y="${(pz(s) - 3).toFixed(1)}">${esc(s.name)}</text></g>`).join('');
         /* подписи регионов — по центру систем региона в кадре, крупно и
            бледно, под всем остальным (не мешают системам и маршруту) */
         const byRegion = new Map();
@@ -521,21 +521,7 @@
             const cy = list.reduce((t, s) => t + pz(s), 0) / list.length;
             return `<text class="jm-reg-t" x="${cx.toFixed(1)}" y="${cy.toFixed(1)}">${esc(name)}</text>`;
         }).join('');
-        // подписи систем вокруг маршрута (системы маршрута подписаны крупнее отдельно)
-        const onPath = new Set(path.map((s) => s.name));
-        /* подпись ставим, только если не налезает на уже поставленные; ближние
-           к маршруту системы — первыми; остальные — в подсказке при наведении */
-        const boxes = path.map((s) => [px(s) + 6, pz(s) - 8, px(s) + 14 + s.name.length * 6.2, pz(s) + 6]);
-        const hit = (b) => boxes.some((o) => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]);
-        const near = (s) => Math.min(...path.map((p) => (px(p) - px(s)) ** 2 + (pz(p) - pz(s)) ** 2));
-        const labels = around.filter((s) => !onPath.has(s.name)).sort((a, b) => near(a) - near(b)).map((s) => {
-            const x = px(s) + 3;
-            const y = pz(s) - 2.5;
-            const b = [x, y - 7, x + s.name.length * 4.3, y + 1];
-            if (hit(b)) return '';
-            boxes.push(b);
-            return `<text class="jm-sys-t" x="${x.toFixed(1)}" y="${y.toFixed(1)}">${esc(s.name)}</text>`;
-        }).join('');
+        /* подписи систем теперь встроены в dots-группы и показываются при наведении */
         const legs = path.slice(1).map((s, i) => {
             const a = path[i];
             const mx = (px(a) + px(s)) / 2;
@@ -556,12 +542,13 @@
         const nodes = path.map((s, i) => `<g class="jm-node${isWp.has(s) ? ' is-wp' : ''}" title="${esc(`${s.name} · ${s.region} · ${secText(s.sec)}`)}">
                 <circle cx="${px(s)}" cy="${pz(s)}" r="${isWp.has(s) ? 6 : 4.5}" class="jm-node-c jm-dot-${secClass(s.sec)}"/>
                 <text x="${px(s) + 8}" y="${pz(s) + 4}" class="jm-node-t">${i + 1}. ${esc(s.name)}</text></g>`).join('');
-        box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Схема маршрута">${regionLabels}${gateLines}${dots}${labels}${legs}${nodes}</svg>
+        box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Схема маршрута">${regionLabels}${gateLines}${dots}${legs}${nodes}</svg>
             <p class="jm-map-legend"><span class="jm-lg-gate"></span>звёздные врата<span class="jm-lg-arc"></span>прыжок</p>`;
+        if (mapZoom !== 1) applyZoom();
     }
 
     /* ---- Зум карты ---- */
-    let mapZoom = 1;
+    let mapZoom = 1.69;
     function applyZoom() {
         const svg = $('jm-map').querySelector('svg');
         if (!svg) return;

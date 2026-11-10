@@ -5241,7 +5241,8 @@ input.eve-plex-input {
 .jm-leg-ly { fill: var(--text-dim); font-size: 10px; text-anchor: middle; font-variant-numeric: tabular-nums; }
 .jm-node-c { stroke: var(--bg-deep); stroke-width: 2; }
 .jm-node.is-wp .jm-node-c { stroke: var(--accent); stroke-width: 2; }
-.jm-node-t { fill: var(--text); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--bg-deep); stroke-width: 3px; }
+.jm-node-t { fill: var(--text); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--bg-deep); stroke-width: 3px; opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+.jm-node:hover .jm-node-t { opacity: 1; }
 /* планировщик: поле системы — на всю ширину панели */
 .jm-field:has([data-role="jm-add"]) { grid-template-columns: auto 1fr; }
 .jm-field [data-role="jm-add"] { width: 100%; min-width: 0; }
@@ -5286,9 +5287,12 @@ input.eve-plex-input {
 }
 @media (max-width: 760px) { .jm-grid { grid-template-columns: 1fr; } }
 .jm-sys-t { fill: var(--text-faint); font-size: 7px; pointer-events: none; }
+.jm-dot-g circle { cursor: pointer; }
+.jm-hover-t { fill: var(--text); font-size: 9px; font-weight: 600; paint-order: stroke; stroke: var(--bg-deep); stroke-width: 3px; opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+.jm-dot-g:hover .jm-hover-t { opacity: 1; }
 
 /* Панели — по минимальной ширине: столбцы не шире нужного */
-.jm-layout { grid-template-columns: repeat(2, minmax(260px, 300px)) minmax(280px, 480px) minmax(380px, 520px); justify-content: center; }
+.jm-layout { grid-template-columns: repeat(2, minmax(260px, 300px)) minmax(480px, 680px) minmax(380px, 520px); justify-content: center; }
 .jm-grid { grid-template-columns: repeat(2, minmax(260px, 300px)); }
 @media (max-width: 1400px) { .jm-layout { grid-template-columns: 1fr 1fr; } .jm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 900px) { .jm-layout { grid-template-columns: 1fr; } }
