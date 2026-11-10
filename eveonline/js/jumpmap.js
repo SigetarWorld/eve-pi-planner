@@ -478,7 +478,7 @@
         }
         const W = Math.max(280, Math.round(box.clientWidth || 520));
         const H = Math.max(220, Math.round((box.clientHeight || 346) - 26));
-        const pad = 40;
+        const pad = 20;
         const xs = path.map((s) => s.x);
         const zs = path.map((s) => -s.z);
         let x0 = Math.min(...xs);
@@ -554,17 +554,7 @@
         const nodes = path.map((s, i) => `<g class="jm-node${isWp.has(s) ? ' is-wp' : ''}" title="${esc(`${s.name} · ${s.region} · ${secText(s.sec)}`)}">
                 <circle cx="${px(s)}" cy="${pz(s)}" r="${isWp.has(s) ? 6 : 4.5}" class="jm-node-c jm-dot-${secClass(s.sec)}"/>
                 <text x="${px(s) + 8}" y="${pz(s) + 4}" class="jm-node-t">${i + 1}. ${esc(s.name)}</text></g>`).join('');
-        /* viewBox — обрезаем по реальным границам контента, чтобы не было
-           пустого места сверху/снизу при горизонтальном маршруте */
-        const allPts = around.length ? around : path;
-        const allPx = allPts.map((s) => px(s));
-        const allPy = allPts.map((s) => pz(s));
-        const cp = 25;
-        const vbX = Math.min(...allPx) - cp - 5;
-        const vbY = Math.min(...allPy) - cp;
-        const vbW = Math.max(...allPx) - vbX + cp + 90;
-        const vbH = Math.max(...allPy) - vbY + cp + 20;
-        box.innerHTML = `<svg class="jm-svg" viewBox="${vbX.toFixed(0)} ${vbY.toFixed(0)} ${vbW.toFixed(0)} ${vbH.toFixed(0)}" role="img" aria-label="Схема маршрута" preserveAspectRatio="xMidYMid meet">${regionLabels}${gateLines}${dots}${labels}${legs}${nodes}</svg>
+        box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Схема маршрута">${regionLabels}${gateLines}${dots}${labels}${legs}${nodes}</svg>
             <p class="jm-map-legend"><span class="jm-lg-gate"></span>звёздные врата<span class="jm-lg-arc"></span>прыжок</p>`;
     }
 
