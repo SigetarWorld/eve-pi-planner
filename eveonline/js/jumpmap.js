@@ -378,7 +378,7 @@
             <div class="jm-main">
                 <section class="jm-panel jm-map-panel">
                     <h3 class="jm-h">Карта прыжков <span class="jm-sub" data-role="jm-map-title"></span>
-                        <span class="jm-zoom-bar"><button type="button" class="jm-zoom-btn" data-role="jm-zoom-in" title="Приблизить">＋</button><button type="button" class="jm-zoom-btn" data-role="jm-zoom-out" title="Отдалить">－</button><button type="button" class="jm-zoom-btn jm-zoom-reset" data-role="jm-zoom-reset" title="Сброс">⊙</button></span>
+                        <span class="mm-zoom"><button type="button" data-role="jm-zoom-in" title="Приблизить" aria-label="Приблизить">+</button><button type="button" data-role="jm-zoom-out" title="Отдалить" aria-label="Отдалить">−</button><button type="button" data-role="jm-zoom-fit" title="Вписать" aria-label="Вписать">⤢</button></span>
                     </h3>
                     <div class="jm-map" data-role="jm-map"><p class="evt-dim">Добавьте две системы — здесь появится схема маршрута</p></div>
                 </section>
@@ -544,24 +544,86 @@
                 <text x="${px(s) + 8}" y="${pz(s) + 4}" class="jm-node-t">${i + 1}. ${esc(s.name)}</text></g>`).join('');
         box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Схема маршрута">${regionLabels}${gateLines}${dots}${legs}${nodes}</svg>
             <p class="jm-map-legend"><span class="jm-lg-gate"></span>звёздные врата<span class="jm-lg-arc"></span>прыжок</p>`;
-        if (mapZoom !== 1) applyZoom();
+        mapCam.baseW = W; mapCam.baseH = H;
+        mapCam.vw = W; mapCam.vh = H;
+        mapCam.vx = 0; mapCam.vy = 0;
+        /* зум по умолчанию ×1.7 к центру */
+        const defZ = 1.7;
+        mapCam.vw = W / defZ; mapCam.vh = H / defZ;
+        mapCam.vx = (W - mapCam.vw) / 2; mapCam.vy = (H - mapCam.vh) / 2;
+        applyMapCam();
     }
 
-    /* ---- Зум карты ---- */
-    let mapZoom = 1.69;
-    function applyZoom() {
+    /* ---- Зум и панорамирование карты ---- */
+    const mapCam = { vx: 0, vy: 0, vw: 100, vh: 100, baseW: 100, baseH: 100 };
+    function applyMapCam() {
         const svg = $('jm-map').querySelector('svg');
         if (!svg) return;
-        const w0 = Number(svg.getAttribute('width'));
-        const h0 = Number(svg.getAttribute('height'));
-        const cx = w0 / 2, cy = h0 / 2;
-        const vw = w0 / mapZoom, vh = h0 / mapZoom;
-        const vx = cx - vw / 2, vy = cy - vh / 2;
-        svg.setAttribute('viewBox', `${vx.toFixed(0)} ${vy.toFixed(0)} ${vw.toFixed(0)} ${vh.toFixed(0)}`);
+        svg.setAttribute('viewBox', `${mapCam.vx.toFixed(1)} ${mapCam.vy.toFixed(1)} ${mapCam.vw.toFixed(1)} ${mapCam.vh.toFixed(1)}`);
     }
-    $('jm-zoom-in').addEventListener('click', () => { mapZoom = Math.min(5, mapZoom * 1.3); applyZoom(); });
-    $('jm-zoom-out').addEventListener('click', () => { mapZoom = Math.max(0.3, mapZoom / 1.3); applyZoom(); });
-    $('jm-zoom-reset').addEventListener('click', () => { mapZoom = 1; applyZoom(); });
+    function mapZoomAt(factor, clientX, clientY) {
+        const svg = $('jm-map').querySelector('svg');
+        if (!svg) return;
+        const r = svg.getBoundingClientRect();
+        // позиция курсора в координатах viewBox
+        const mx = mapCam.vx + (clientX - r.left) / r.width * mapCam.vw;
+        const my = mapCam.vy + (clientY - r.top) / r.height * mapCam.vh;
+        const nw = Math.max(mapCam.baseW * 0.1, Math.min(mapCam.baseW * 4, mapCam.vw / factor));
+        const nh = Math.max(mapCam.baseH * 0.1, Math.min(mapCam.baseH * 4, mapCam.vh / factor));
+        // сохраняем точку под курсором на месте
+        mapCam.vx = mx - (mx - mapCam.vx) * (nw / mapCam.vw);
+        mapCam.vy = my - (my - mapCam.vy) * (nh / mapCam.vh);
+        mapCam.vw = nw;
+        mapCam.vh = nh;
+        applyMapCam();
+    }
+    function mapFit() {
+        mapCam.vx = 0; mapCam.vy = 0;
+        mapCam.vw = mapCam.baseW; mapCam.vh = mapCam.baseH;
+        applyMapCam();
+    }
+    // колёсико мыши
+    const mapBox = $('jm-map');
+    mapBox.addEventListener('wheel', (e) => {
+        const svg = mapBox.querySelector('svg');
+        if (!svg) return;
+        e.preventDefault();
+        mapZoomAt(e.deltaY < 0 ? 1.2 : 1 / 1.2, e.clientX, e.clientY);
+    }, { passive: false });
+    // перетаскивание
+    let mapDrag = null;
+    mapBox.addEventListener('pointerdown', (e) => {
+        const svg = mapBox.querySelector('svg');
+        if (!svg || e.button !== 0) return;
+        mapDrag = { x: e.clientX, y: e.clientY, vx: mapCam.vx, vy: mapCam.vy };
+        mapBox.setPointerCapture(e.pointerId);
+        mapBox.style.cursor = 'grabbing';
+    });
+    mapBox.addEventListener('pointermove', (e) => {
+        if (!mapDrag) return;
+        const svg = mapBox.querySelector('svg');
+        if (!svg) return;
+        const r = svg.getBoundingClientRect();
+        const dx = (e.clientX - mapDrag.x) / r.width * mapCam.vw;
+        const dy = (e.clientY - mapDrag.y) / r.height * mapCam.vh;
+        mapCam.vx = mapDrag.vx - dx;
+        mapCam.vy = mapDrag.vy - dy;
+        applyMapCam();
+    });
+    mapBox.addEventListener('pointerup', () => { mapDrag = null; mapBox.style.cursor = ''; });
+    mapBox.addEventListener('pointercancel', () => { mapDrag = null; mapBox.style.cursor = ''; });
+    // кнопки
+    $('jm-zoom-in').addEventListener('click', () => {
+        const svg = mapBox.querySelector('svg'); if (!svg) return;
+        const r = svg.getBoundingClientRect();
+        mapZoomAt(1.3, r.left + r.width / 2, r.top + r.height / 2);
+    });
+    $('jm-zoom-out').addEventListener('click', () => {
+        const svg = mapBox.querySelector('svg'); if (!svg) return;
+        const r = svg.getBoundingClientRect();
+        mapZoomAt(1 / 1.3, r.left + r.width / 2, r.top + r.height / 2);
+    });
+    $('jm-zoom-fit').addEventListener('click', mapFit);
 
     let lastRoute = null;
     async function renderRoute() {
