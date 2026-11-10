@@ -508,7 +508,7 @@
             seen.add(key);
             gateLines += `<line class="jm-gate" x1="${px(a).toFixed(1)}" y1="${pz(a).toFixed(1)}" x2="${px(b).toFixed(1)}" y2="${pz(b).toFixed(1)}"/>`;
         }));
-        const dots = around.filter((s) => !new Set(path.map(p => p.name)).has(s.name)).map((s) => `<g class="jm-dot-g"><circle class="jm-dot jm-dot-${secClass(s.sec)}" cx="${px(s).toFixed(1)}" cy="${pz(s).toFixed(1)}" r="4" title="${esc(`${s.name} · ${s.region} · ${secText(s.sec)}`)}"/><text class="jm-hover-t" x="${(px(s) + 5).toFixed(1)}" y="${(pz(s) - 3).toFixed(1)}">${esc(s.name)}</text></g>`).join('');
+        const dots = around.filter((s) => !new Set(path.map(p => p.name)).has(s.name)).map((s) => `<g class="jm-dot-g"><circle class="jm-dot jm-dot-${secClass(s.sec)}" cx="${px(s).toFixed(1)}" cy="${pz(s).toFixed(1)}" r="4"/><text class="jm-hover-t" x="${(px(s) + 5).toFixed(1)}" y="${(pz(s) - 3).toFixed(1)}">${esc(s.name)}</text></g>`).join('');
         /* подписи регионов — по центру систем региона в кадре, крупно и
            бледно, под всем остальным (не мешают системам и маршруту) */
         const byRegion = new Map();
@@ -539,7 +539,7 @@
             return `<path class="jm-leg jm-arc" d="M${ax.toFixed(1)},${ay.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${bx.toFixed(1)},${by.toFixed(1)}"/>
                 <text class="jm-leg-ly" x="${lx.toFixed(1)}" y="${(lyy - 4).toFixed(1)}">${fmt(dist(a, s), 2)}</text>`;
         }).join('');
-        const nodes = path.map((s, i) => `<g class="jm-node${isWp.has(s) ? ' is-wp' : ''}" title="${esc(`${s.name} · ${s.region} · ${secText(s.sec)}`)}">
+        const nodes = path.map((s, i) => `<g class="jm-node${isWp.has(s) ? ' is-wp' : ''}">
                 <circle cx="${px(s)}" cy="${pz(s)}" r="${isWp.has(s) ? 6 : 4.5}" class="jm-node-c jm-dot-${secClass(s.sec)}"/>
                 <text x="${px(s) + 8}" y="${pz(s) + 4}" class="jm-node-t">${i + 1}. ${esc(s.name)}</text></g>`).join('');
         box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Схема маршрута">${regionLabels}${gateLines}${dots}${legs}${nodes}</svg>
