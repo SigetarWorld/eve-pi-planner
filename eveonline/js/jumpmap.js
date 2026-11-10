@@ -377,7 +377,9 @@
             </div>
             <div class="jm-main">
                 <section class="jm-panel jm-map-panel">
-                    <h3 class="jm-h">Карта прыжков <span class="jm-sub" data-role="jm-map-title"></span></h3>
+                    <h3 class="jm-h">Карта прыжков <span class="jm-sub" data-role="jm-map-title"></span>
+                        <span class="jm-zoom-bar"><button type="button" class="jm-zoom-btn" data-role="jm-zoom-in" title="Приблизить">＋</button><button type="button" class="jm-zoom-btn" data-role="jm-zoom-out" title="Отдалить">－</button><button type="button" class="jm-zoom-btn jm-zoom-reset" data-role="jm-zoom-reset" title="Сброс">⊙</button></span>
+                    </h3>
                     <div class="jm-map" data-role="jm-map"><p class="evt-dim">Добавьте две системы — здесь появится схема маршрута</p></div>
                 </section>
             </div>
@@ -557,6 +559,22 @@
         box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Схема маршрута">${regionLabels}${gateLines}${dots}${labels}${legs}${nodes}</svg>
             <p class="jm-map-legend"><span class="jm-lg-gate"></span>звёздные врата<span class="jm-lg-arc"></span>прыжок</p>`;
     }
+
+    /* ---- Зум карты ---- */
+    let mapZoom = 1;
+    function applyZoom() {
+        const svg = $('jm-map').querySelector('svg');
+        if (!svg) return;
+        const w0 = Number(svg.getAttribute('width'));
+        const h0 = Number(svg.getAttribute('height'));
+        const cx = w0 / 2, cy = h0 / 2;
+        const vw = w0 / mapZoom, vh = h0 / mapZoom;
+        const vx = cx - vw / 2, vy = cy - vh / 2;
+        svg.setAttribute('viewBox', `${vx.toFixed(0)} ${vy.toFixed(0)} ${vw.toFixed(0)} ${vh.toFixed(0)}`);
+    }
+    $('jm-zoom-in').addEventListener('click', () => { mapZoom = Math.min(5, mapZoom * 1.3); applyZoom(); });
+    $('jm-zoom-out').addEventListener('click', () => { mapZoom = Math.max(0.3, mapZoom / 1.3); applyZoom(); });
+    $('jm-zoom-reset').addEventListener('click', () => { mapZoom = 1; applyZoom(); });
 
     let lastRoute = null;
     async function renderRoute() {
