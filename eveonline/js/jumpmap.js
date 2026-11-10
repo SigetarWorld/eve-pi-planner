@@ -374,17 +374,17 @@
                     <ul class="jm-tags" data-role="jm-beacon-tags"></ul>
                 </section>
                 </div>
-                <div class="jm-cell jm-cell-wide">
-                <section class="jm-panel">
-                    <h3 class="jm-h">Маршрут прыжков <span class="jm-sub" data-role="jm-route-title"></span></h3>
-                    <div data-role="jm-route"></div>
-                </section>
-                </div>
             </div>
             <div class="jm-main">
                 <section class="jm-panel jm-map-panel">
                     <h3 class="jm-h">Карта прыжков <span class="jm-sub" data-role="jm-map-title"></span></h3>
                     <div class="jm-map" data-role="jm-map"><p class="evt-dim">Добавьте две системы — здесь появится схема маршрута</p></div>
+                </section>
+            </div>
+            <div class="jm-route-col">
+                <section class="jm-panel">
+                    <h3 class="jm-h">Маршрут прыжков <span class="jm-sub" data-role="jm-route-title"></span></h3>
+                    <div data-role="jm-route"></div>
                 </section>
             </div>
         </div>`;
