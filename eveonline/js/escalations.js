@@ -215,6 +215,7 @@
                 buildEscOptions('') +
             '</select>' +
             '<button type="button" id="esc-add" class="btn card-add esc-tb-add">Добавить</button>' +
+            '<button type="button" id="esc-route" class="esc-tb-route" title="Составить маршрут по активным эскалациям">Маршрут</button>' +
             '<span class="esc-tb-spacer"></span>' +
             '<button type="button" class="btn esc-map-btn" id="esc-zoom-in" title="Приблизить">+</button>' +
             '<button type="button" class="btn esc-map-btn" id="esc-zoom-out" title="Отдалить">−</button>' +
@@ -430,6 +431,177 @@
         return gateLinksCache;
     }
 
+    /* ===================== Маршрут через звёздные врата (BFS) ===================== */
+    /* Кэш соседей по вратам: имя системы → [имена соседей] */
+    var gateNeighbors = null;
+    function buildGateNeighbors() {
+        if (gateNeighbors) return gateNeighbors;
+        gateNeighbors = {};
+        if (typeof MAP_REGIONS !== 'object') return gateNeighbors;
+        function link(a, b) {
+            if (!gateNeighbors[a]) gateNeighbors[a] = [];
+            if (!gateNeighbors[b]) gateNeighbors[b] = [];
+            gateNeighbors[a].push(b);
+            gateNeighbors[b].push(a);
+        }
+        Object.keys(MAP_REGIONS).forEach(function (rKey) {
+            var reg = MAP_REGIONS[rKey];
+            if (!reg.s || !reg.j) return;
+            var names = reg.s.map(function (x) { return x[0]; });
+            for (var i = 0; i + 1 < reg.j.length; i += 2) {
+                link(names[reg.j[i]], names[reg.j[i + 1]]);
+            }
+            (reg.e || []).forEach(function (e) {
+                link(names[e[0]], e[1]);
+            });
+        });
+        return gateNeighbors;
+    }
+
+    /* BFS: кратчайший путь по вратам между двумя системами. Возвращает массив имён или null */
+    function bfsGateRoute(fromName, toName) {
+        if (fromName === toName) return [fromName];
+        var neighbors = buildGateNeighbors();
+        if (!neighbors[fromName] || !neighbors[toName]) return null;
+        var visited = {};
+        var prev = {};
+        visited[fromName] = true;
+        var queue = [fromName];
+        var head = 0;
+        while (head < queue.length) {
+            var cur = queue[head++];
+            if (cur === toName) break;
+            var nbrs = neighbors[cur] || [];
+            for (var i = 0; i < nbrs.length; i++) {
+                var nb = nbrs[i];
+                if (!visited[nb]) {
+                    visited[nb] = true;
+                    prev[nb] = cur;
+                    queue.push(nb);
+                }
+            }
+        }
+        if (!visited[toName]) return null;
+        var path = [toName];
+        var c = toName;
+        while (c !== fromName) { c = prev[c]; path.unshift(c); }
+        return path;
+    }
+
+    /* Маршрут по всем активным эскалациям (nearest-neighbor TSP через BFS-расстояния) */
+    function buildEscRoute() {
+        var now = Date.now();
+        var visiblePilots = getVisiblePilots();
+        /* Собираем активные (не истёкшие, не проданные) системы эскалаций видимых пилотов */
+        var systems = [];
+        var seenSys = {};
+        data.forEach(function (item) {
+            if (!item.system || !item.sx) return;
+            if ((item.created + ESC_LIFETIME) - now <= 0) return;
+            if (item.sold) return;
+            if (item.pilot && visiblePilots.indexOf(item.pilot) === -1) return;
+            if (seenSys[item.system]) return;
+            seenSys[item.system] = true;
+            systems.push({ name: item.system, type: item.type, region: item.region });
+        });
+        if (systems.length < 2) return { error: 'Нужно минимум 2 активные эскалации для маршрута', systems: systems };
+
+        /* nearest-neighbor: начинаем с первой, каждый раз выбираем ближайшую непосещённую */
+        var remaining = systems.slice();
+        var route = [remaining.shift()];
+        /* Кэш BFS-расстояний */
+        var distCache = {};
+        function getDist(a, b) {
+            var key = a + '|' + b;
+            if (distCache[key] !== undefined) return distCache[key];
+            var path = bfsGateRoute(a, b);
+            var d = path ? path.length - 1 : 999999;
+            distCache[key] = d;
+            distCache[b + '|' + a] = d;
+            return d;
+        }
+        while (remaining.length) {
+            var last = route[route.length - 1].name;
+            var bestIdx = 0, bestDist = getDist(last, remaining[0].name);
+            for (var i = 1; i < remaining.length; i++) {
+                var d = getDist(last, remaining[i].name);
+                if (d < bestDist) { bestDist = d; bestIdx = i; }
+            }
+            route.push(remaining.splice(bestIdx, 1)[0]);
+        }
+
+        /* Строим полный путь (с промежуточными системами) */
+        var fullPath = [];
+        var legs = [];
+        for (var i = 0; i < route.length - 1; i++) {
+            var seg = bfsGateRoute(route[i].name, route[i + 1].name);
+            if (!seg) {
+                legs.push({ from: route[i].name, to: route[i + 1].name, jumps: -1, path: null });
+                continue;
+            }
+            legs.push({ from: route[i].name, to: route[i + 1].name, jumps: seg.length - 1, path: seg });
+            if (i === 0) fullPath.push.apply(fullPath, seg);
+            else fullPath.push.apply(fullPath, seg.slice(1));
+        }
+        var totalJumps = 0;
+        legs.forEach(function (l) { if (l.jumps > 0) totalJumps += l.jumps; });
+        return { route: route, legs: legs, totalJumps: totalJumps, fullPath: fullPath };
+    }
+
+    /* Показать панель маршрута */
+    var routePanel = null;
+    function showRoutePanel() {
+        /* Удалить предыдущую панель */
+        if (routePanel && routePanel.parentElement) routePanel.parentElement.removeChild(routePanel);
+        var result = buildEscRoute();
+        if (result.error) {
+            alert(result.error);
+            return;
+        }
+        var panel = document.createElement('div');
+        panel.className = 'esc-route-panel';
+        var html = '<button type="button" class="esc-route-close" id="esc-route-close">×</button>';
+        html += '<h4>Маршрут (' + result.totalJumps + ' прыжков по вратам)</h4>';
+        html += '<ol class="esc-route-list">';
+        for (var i = 0; i < result.route.length; i++) {
+            var wp = result.route[i];
+            html += '<li><span class="esc-route-num">' + (i + 1) + '.</span>';
+            html += '<span class="esc-route-sys">' + esc(wp.name) + '</span>';
+            if (wp.region) html += ' <span class="esc-route-region">(' + esc(wp.region) + ')</span>';
+            if (i < result.legs.length) {
+                var leg = result.legs[i];
+                html += '<span class="esc-route-jumps">';
+                if (leg.jumps >= 0) html += leg.jumps + ' прыжков →';
+                else html += 'маршрут не найден →';
+                html += '</span>';
+            }
+            html += '</li>';
+        }
+        html += '</ol>';
+        html += '<p class="esc-route-total">Всего: <b>' + result.totalJumps + '</b> прыжков через <b>' + result.route.length + '</b> систем</p>';
+        panel.innerHTML = html;
+        /* Вставляем после тулбара */
+        var toolbar = root.querySelector('.esc-toolbar');
+        if (toolbar && toolbar.nextSibling) {
+            root.insertBefore(panel, toolbar.nextSibling);
+        } else {
+            root.appendChild(panel);
+        }
+        routePanel = panel;
+        /* Закрытие */
+        document.getElementById('esc-route-close').addEventListener('click', function () {
+            if (routePanel && routePanel.parentElement) routePanel.parentElement.removeChild(routePanel);
+            routePanel = null;
+            /* Убираем маршрутные линии с карты */
+            currentRouteFullPath = null;
+            drawMap();
+        });
+        /* Рисуем маршрут на карте */
+        currentRouteFullPath = result.fullPath;
+        drawMap();
+    }
+    var currentRouteFullPath = null;
+
     function drawMap() {
         var svg = document.getElementById('esc-svg');
         if (!svg || typeof JUMP_SYSTEMS === 'undefined') return;
@@ -526,6 +698,22 @@
             parts.push('<circle cx="' + px.toFixed(1) + '" cy="' + pz.toFixed(1) +
                 '" r="' + dotR + '" fill="' + fill + '" opacity="' + op + '"/>');
         });
+
+        /* ---- 3.5 Линии маршрута (если есть) ---- */
+        if (currentRouteFullPath && currentRouteFullPath.length > 1) {
+            var routeStroke = Math.max(0.8, 2 * pxSize).toFixed(2);
+            for (var ri = 0; ri < currentRouteFullPath.length - 1; ri++) {
+                var rSysA = findSystem(currentRouteFullPath[ri]);
+                var rSysB = findSystem(currentRouteFullPath[ri + 1]);
+                if (!rSysA || !rSysB) continue;
+                var rax = toSVG_X(rSysA.x), raz = toSVG_Z(rSysA.z);
+                var rbx = toSVG_X(rSysB.x), rbz = toSVG_Z(rSysB.z);
+                parts.push('<line x1="' + rax.toFixed(1) + '" y1="' + raz.toFixed(1) +
+                    '" x2="' + rbx.toFixed(1) + '" y2="' + rbz.toFixed(1) +
+                    '" stroke="' + 'var(--cyan, #4ec9e0)' + '" stroke-width="' + routeStroke +
+                    '" opacity="0.7" stroke-dasharray="' + Math.max(2, 4 * pxSize).toFixed(1) + ',' + Math.max(1, 2 * pxSize).toFixed(1) + '"/>');
+            }
+        }
 
         /* ---- 4. Маркеры эскалаций (верхний слой) ---- */
         var now = Date.now();
@@ -862,6 +1050,14 @@
                 data.push(entry);
                 saveData(data);
                 render();
+            });
+        }
+
+        /* --- Кнопка «Маршрут» --- */
+        var routeBtn = document.getElementById('esc-route');
+        if (routeBtn) {
+            routeBtn.addEventListener('click', function () {
+                showRoutePanel();
             });
         }
 
