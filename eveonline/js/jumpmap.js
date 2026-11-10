@@ -321,7 +321,7 @@
                 </div>
                 <div class="jm-cell">
                 <section class="jm-panel">
-                    <h3 class="jm-h">Точки маршрута</h3>
+                    <h3 class="jm-h">Точки маршрута <button type="button" class="jm-opt-btn" data-role="jm-optimize" title="Оптимизировать порядок — минимум прыжков">⟳ Оптимизировать</button></h3>
                     <ol class="jm-wps" data-role="jm-wps"></ol>
                     <p class="jm-hint">Перетащите, чтобы поменять порядок</p>
                 </section>
@@ -624,6 +624,75 @@
         mapZoomAt(1 / 1.3, r.left + r.width / 2, r.top + r.height / 2);
     });
     $('jm-zoom-fit').addEventListener('click', mapFit);
+
+    /* ---- Оптимизация порядка точек маршрута ---- */
+    async function optimizeWaypoints() {
+        const wps = st.waypoints.map((n) => byName.get(n.toLowerCase())).filter(Boolean);
+        if (wps.length < 3) return; // нечего оптимизировать
+        const btn = $('jm-optimize');
+        btn.disabled = true; btn.textContent = '⟳ …';
+        const range = rangeLy();
+        const avoidS = new Set(st.avoidSystems.map((n) => n.toLowerCase()));
+        const avoidR = new Set(st.avoidRegions);
+        const inc = st.avoidIncursions ? await loadIncursions() : new Set();
+        const beacons = new Set(st.beacons.map((n) => n.toLowerCase()));
+        const opts = {
+            range, preferStations: st.preferStations,
+            beaconsOnly: st.beaconsOnly && beacons.size > 0,
+            beacon: (s) => beacons.has(s.name.toLowerCase()),
+            blocked: (s) => avoidS.has(s.name.toLowerCase()) || avoidR.has(s.region) || inc.has(s.id)
+        };
+        // кеш длин сегментов между парами точек
+        const segLen = new Map();
+        const key = (a, b) => `${a.name}|${b.name}`;
+        for (let i = 0; i < wps.length; i++) {
+            for (let j = 0; j < wps.length; j++) {
+                if (i === j) continue;
+                const seg = findPath(wps[i], wps[j], opts);
+                segLen.set(key(wps[i], wps[j]), seg ? seg.length - 1 : 9999);
+            }
+        }
+        const n = wps.length;
+        let bestOrder, bestCost = Infinity;
+        if (n <= 8) {
+            // перебор всех перестановок (первая точка фиксирована)
+            const rest = wps.slice(1);
+            const perm = (arr, cb, cur = []) => {
+                if (!arr.length) { cb(cur); return; }
+                for (let i = 0; i < arr.length; i++) {
+                    const next = [...arr]; next.splice(i, 1);
+                    perm(next, cb, [...cur, arr[i]]);
+                }
+            };
+            perm(rest, (order) => {
+                const full = [wps[0], ...order];
+                let cost = 0;
+                for (let i = 1; i < full.length; i++) cost += segLen.get(key(full[i - 1], full[i])) || 9999;
+                if (cost < bestCost) { bestCost = cost; bestOrder = full; }
+            });
+        } else {
+            // жадный ближайший сосед
+            const used = new Set([0]);
+            const order = [wps[0]];
+            for (let step = 1; step < n; step++) {
+                let bestJ = -1, bestD = Infinity;
+                for (let j = 0; j < n; j++) {
+                    if (used.has(j)) continue;
+                    const d = segLen.get(key(order[order.length - 1], wps[j])) || 9999;
+                    if (d < bestD) { bestD = d; bestJ = j; }
+                }
+                used.add(bestJ);
+                order.push(wps[bestJ]);
+            }
+            bestOrder = order;
+        }
+        if (bestOrder) {
+            st.waypoints = bestOrder.map((s) => s.name);
+            renderRoute();
+        }
+        btn.disabled = false; btn.textContent = '⟳ Оптимизировать';
+    }
+    $('jm-optimize').addEventListener('click', optimizeWaypoints);
 
     let lastRoute = null;
     async function renderRoute() {
