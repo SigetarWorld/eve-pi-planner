@@ -5171,7 +5171,7 @@ input.eve-plex-input {
 .jm-opt-btn { margin-left: auto; padding: 2px 8px; font-size: 0.72rem; font-family: var(--font-body); font-weight: 500; color: var(--text-dim); background: var(--bg-deep); border: 1px solid var(--border-lit); border-radius: 4px; cursor: pointer; letter-spacing: 0; }
 .jm-opt-btn:hover { border-color: var(--accent); color: var(--accent); }
 .jm-opt-btn:disabled { opacity: 0.5; cursor: wait; }
-.jm-map { cursor: grab; }
+.jm-map { cursor: grab; touch-action: none; user-select: none; }
 .jm-map:active { cursor: grabbing; }
 .jm-h4 { margin: 0.6rem 0 0.35rem; font-family: var(--font-heading); font-size: 0.82rem; color: var(--text-dim); }
 .jm-sub { margin-left: 0.4rem; font-family: var(--font-body); font-size: 0.8rem; font-weight: 400; letter-spacing: 0; color: var(--text-dim); }
