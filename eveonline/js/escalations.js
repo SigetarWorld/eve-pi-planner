@@ -448,12 +448,12 @@
             systems.push(item.system);
         });
         if (!systems.length) return;
-        /* Передаём системы на Прыжковую карту через событие */
-        window.dispatchEvent(new CustomEvent('jump-set-waypoints', { detail: { systems: systems } }));
-        /* Переключаемся на Прыжковую карту */
+        /* Сначала переключаемся на Прыжковую карту (чтобы контейнер
+           имел размеры при отрисовке), затем передаём системы */
         if (typeof window.showMapsView === 'function') {
             window.showMapsView('jump');
         }
+        window.dispatchEvent(new CustomEvent('jump-set-waypoints', { detail: { systems: systems } }));
     }
 
     function drawMap() {

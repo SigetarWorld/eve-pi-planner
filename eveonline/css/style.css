@@ -5162,7 +5162,7 @@ input.eve-plex-input {
 .maps-views { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 0.9rem; }
 .maps-view-btn[aria-pressed="true"] { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
 .maps-view-btn[aria-pressed="false"] { opacity: 0.6; }
-#map-planet[hidden], #map-jump[hidden] { display: none; }
+#map-planet[hidden], #map-jump[hidden], #map-plan[hidden], #map-esc[hidden] { display: none; }
 
 /* панели (планировщик, точки, параметры…) — слева, карта и маршрут — справа */
 .jm-main, .jm-side { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; }
