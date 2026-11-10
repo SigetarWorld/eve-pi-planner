@@ -334,9 +334,10 @@
                 </div>
                 <div class="jm-cell">
                 <section class="jm-panel">
-                    <h3 class="jm-h">Точки маршрута <label class="jm-ret-label"><input type="checkbox" data-role="jm-return-home"${st.returnHome ? ' checked' : ''}> Вернуться</label><button type="button" class="jm-opt-btn" data-role="jm-optimize" title="Оптимизировать порядок — минимум топлива">⟳ Оптимизировать</button></h3>
+                    <h3 class="jm-h">Точки маршрута</h3>
                     <ol class="jm-wps" data-role="jm-wps"></ol>
                     <p class="jm-hint">Перетащите, чтобы поменять порядок</p>
+                    <div class="jm-row jm-wp-actions"><label class="jm-ret-check"><input type="checkbox" data-role="jm-return-home"${st.returnHome ? ' checked' : ''}> Вернуться</label><button type="button" class="btn card-add jm-btn" data-role="jm-optimize" title="Оптимизировать порядок — минимум топлива">⟳ Оптимизировать</button></div>
                 </section>
                 </div>
                 <div class="jm-cell">
