@@ -5168,7 +5168,9 @@ input.eve-plex-input {
 .jm-main, .jm-side { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; }
 .jm-panel { padding: 0.6rem 0.75rem 0.7rem; background: var(--bg-panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .jm-h { margin: 0 0 0.5rem; font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; letter-spacing: 0.06em; color: var(--accent); display: flex; align-items: center; }
-.jm-opt-btn { margin-left: auto; padding: 2px 8px; font-size: 0.72rem; font-family: var(--font-body); font-weight: 500; color: var(--text-dim); background: var(--bg-deep); border: 1px solid var(--border-lit); border-radius: 4px; cursor: pointer; letter-spacing: 0; }
+.jm-ret-label { display: inline-flex; align-items: center; gap: 0.3rem; margin-left: auto; font-size: 0.72rem; font-family: var(--font-body); font-weight: 500; color: var(--text-dim); cursor: pointer; letter-spacing: 0; }
+.jm-ret-label input { margin: 0; accent-color: #e8a63e; }
+.jm-opt-btn { margin-left: 0.5rem; padding: 2px 8px; font-size: 0.72rem; font-family: var(--font-body); font-weight: 500; color: var(--text-dim); background: var(--bg-deep); border: 1px solid var(--border-lit); border-radius: 4px; cursor: pointer; letter-spacing: 0; }
 .jm-opt-btn:hover { border-color: var(--accent); color: var(--accent); }
 .jm-opt-btn:disabled { opacity: 0.5; cursor: wait; }
 .jm-map { cursor: grab; touch-action: none; user-select: none; }
@@ -5253,10 +5255,17 @@ input.eve-plex-input {
     font-weight: 700; color: var(--accent); border: 1px solid var(--accent-line); border-radius: 3px; background: var(--accent-soft); font-variant-numeric: tabular-nums; }
 .jm-gate { stroke: #3f5677; stroke-width: 1; opacity: 0.7; }
 .jm-arc { fill: none; stroke: var(--cyan); stroke-width: 2.2; stroke-linecap: round; }
+.jm-ret { stroke: #e8a63e; stroke-dasharray: 6 3; }
+.jm-ret-t { fill: #e8a63e; }
+.jm-ret-row td { color: #e8a63e !important; }
+.jm-ret-leg td { background: rgba(232, 166, 62, 0.06) !important; }
+.jm-ret-leg b { color: #e8a63e !important; }
+.jm-ret-fuel { color: #e8a63e; font-weight: 700; }
 .jm-map-legend { display: flex; align-items: center; gap: 0.4rem; margin: 0.3rem 0 0; font-size: 0.74rem; color: var(--text-dim); }
-.jm-lg-gate, .jm-lg-arc { display: inline-block; width: 18px; height: 2px; border-radius: 1px; }
+.jm-lg-gate, .jm-lg-arc, .jm-lg-ret { display: inline-block; width: 18px; height: 2px; border-radius: 1px; }
 .jm-lg-gate { background: #3f5677; }
 .jm-lg-arc { margin-left: 0.6rem; background: var(--cyan); }
+.jm-lg-ret { margin-left: 0.6rem; background: #e8a63e; border-style: dashed; border-width: 0 0 2px; height: 0; }
 
 /* Прыжковая карта: четыре столбца — два с панелями, карта и маршрут.
    Пары по строкам: планировщик — точки, параметры — обход и маяки,

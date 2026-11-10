@@ -110,7 +110,8 @@
         avoidRegions: Array.isArray(saved.avoidRegions) ? saved.avoidRegions : [],
         beacons: Array.isArray(saved.beacons) ? saved.beacons : [],
         char: saved.char || '',
-        avoidRegion: saved.avoidRegion || ''
+        avoidRegion: saved.avoidRegion || '',
+        returnHome: !!saved.returnHome
     };
     const persist = () => ls.set(LS_KEY, st);
 
@@ -256,7 +257,19 @@
             path.push(...seg.slice(1));
             isWp.add(to);
         }
-        return { path, isWp, range, wps, startHigh: highsec(wps[0]) };
+        let returnIdx = -1; // индекс в path, с которого начинается обратный путь
+        if (st.returnHome && wps.length >= 2) {
+            const homeSys = wps[0];
+            const lastWp = wps[wps.length - 1];
+            if (homeSys !== lastWp) {
+                const retSeg = findPath(lastWp, homeSys, opts);
+                if (retSeg && retSeg.length > 1) {
+                    returnIdx = path.length; // текущая длина path — начало обратного пути
+                    path.push(...retSeg.slice(1));
+                }
+            }
+        }
+        return { path, isWp, range, wps, startHigh: highsec(wps[0]), returnIdx };
     }
 
     // Владельцы (sov), убийства и прыжки за час — ESI без входа, один раз
@@ -321,7 +334,7 @@
                 </div>
                 <div class="jm-cell">
                 <section class="jm-panel">
-                    <h3 class="jm-h">Точки маршрута <button type="button" class="jm-opt-btn" data-role="jm-optimize" title="Оптимизировать порядок — минимум прыжков">⟳ Оптимизировать</button></h3>
+                    <h3 class="jm-h">Точки маршрута <label class="jm-ret-label"><input type="checkbox" data-role="jm-return-home"${st.returnHome ? ' checked' : ''}> Вернуться</label><button type="button" class="jm-opt-btn" data-role="jm-optimize" title="Оптимизировать порядок — минимум топлива">⟳ Оптимизировать</button></h3>
                     <ol class="jm-wps" data-role="jm-wps"></ol>
                     <p class="jm-hint">Перетащите, чтобы поменять порядок</p>
                 </section>
@@ -457,9 +470,9 @@
        поменялась (маршрут стал длиннее, окно шире) — перерисовываем. */
     let lastMap = null;
     let mapRO = null;
-    function renderMap(path, isWp) {
+    function renderMap(path, isWp, returnIdx) {
         const box = $('jm-map');
-        lastMap = path ? { path, isWp } : null;
+        lastMap = path ? { path, isWp, returnIdx } : null;
         if (!mapRO && typeof ResizeObserver === 'function') {
             let raf = 0;
             mapRO = new ResizeObserver(() => {
@@ -469,7 +482,7 @@
                     if (!lastMap || !svg) return;
                     const w = Number(svg.getAttribute('width'));
                     const h = Number(svg.getAttribute('height'));
-                    if (Math.abs(box.clientWidth - w) > 4 || Math.abs(box.clientHeight - 26 - h) > 4) renderMap(lastMap.path, lastMap.isWp);
+                    if (Math.abs(box.clientWidth - w) > 4 || Math.abs(box.clientHeight - 26 - h) > 4) renderMap(lastMap.path, lastMap.isWp, lastMap.returnIdx);
                 });
             });
             mapRO.observe(box);
@@ -478,6 +491,7 @@
             box.innerHTML = '<p class="evt-dim">Добавьте две системы — здесь появится схема маршрута</p>';
             return;
         }
+        const hasReturn = returnIdx > 0;
         const W = Math.max(280, Math.round(box.clientWidth || 520));
         const H = Math.max(220, Math.round((box.clientHeight || 346) - 26));
         const pad = 20;
@@ -524,6 +538,7 @@
         /* подписи систем теперь встроены в dots-группы и показываются при наведении */
         const legs = path.slice(1).map((s, i) => {
             const a = path[i];
+            const isReturn = returnIdx > 0 && i >= returnIdx - 1;
             const mx = (px(a) + px(s)) / 2;
             const my = (pz(a) + pz(s)) / 2;
             // перелёт — дуга (изгиб в сторону от прямой на 18 % длины), свой цвет
@@ -536,14 +551,14 @@
             const cy = my + ((bx - ax) / len) * len * 0.18;
             const lx = (mx + cx) / 2;
             const lyy = (my + cy) / 2;
-            return `<path class="jm-leg jm-arc" d="M${ax.toFixed(1)},${ay.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${bx.toFixed(1)},${by.toFixed(1)}"/>
-                <text class="jm-leg-ly" x="${lx.toFixed(1)}" y="${(lyy - 4).toFixed(1)}">${fmt(dist(a, s), 2)}</text>`;
+            return `<path class="jm-leg jm-arc${isReturn ? ' jm-ret' : ''}" d="M${ax.toFixed(1)},${ay.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${bx.toFixed(1)},${by.toFixed(1)}"/>
+                <text class="jm-leg-ly${isReturn ? ' jm-ret-t' : ''}" x="${lx.toFixed(1)}" y="${(lyy - 4).toFixed(1)}">${fmt(dist(a, s), 2)}</text>`;
         }).join('');
         const nodes = path.map((s, i) => `<g class="jm-node${isWp.has(s) ? ' is-wp' : ''}">
                 <circle cx="${px(s)}" cy="${pz(s)}" r="${isWp.has(s) ? 6 : 4.5}" class="jm-node-c jm-dot-${secClass(s.sec)}"/>
                 <text x="${px(s) + 8}" y="${pz(s) + 4}" class="jm-node-t">${i + 1}. ${esc(s.name)}</text></g>`).join('');
         box.innerHTML = `<svg class="jm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Схема маршрута">${regionLabels}${gateLines}${dots}${legs}${nodes}</svg>
-            <p class="jm-map-legend"><span class="jm-lg-gate"></span>звёздные врата<span class="jm-lg-arc"></span>прыжок</p>`;
+            <p class="jm-map-legend"><span class="jm-lg-gate"></span>звёздные врата<span class="jm-lg-arc"></span>прыжок${hasReturn ? '<span class="jm-lg-ret"></span>обратно' : ''}</p>`;
         mapCam.baseW = W; mapCam.baseH = H;
         mapCam.vw = W; mapCam.vh = H;
         mapCam.vx = 0; mapCam.vy = 0;
@@ -642,17 +657,21 @@
             beacon: (s) => beacons.has(s.name.toLowerCase()),
             blocked: (s) => avoidS.has(s.name.toLowerCase()) || avoidR.has(s.region) || inc.has(s.id)
         };
-        // кеш длин сегментов между парами точек
-        const segLen = new Map();
+        // кеш стоимости сегментов (топливо) между парами точек
+        const segFuel = new Map();
         const key = (a, b) => `${a.name}|${b.name}`;
         for (let i = 0; i < wps.length; i++) {
             for (let j = 0; j < wps.length; j++) {
                 if (i === j) continue;
                 const seg = findPath(wps[i], wps[j], opts);
-                segLen.set(key(wps[i], wps[j]), seg ? seg.length - 1 : 9999);
+                if (!seg) { segFuel.set(key(wps[i], wps[j]), 999999); continue; }
+                let fuel = 0;
+                for (let k = 1; k < seg.length; k++) fuel += fuelFor(dist(seg[k - 1], seg[k]));
+                segFuel.set(key(wps[i], wps[j]), fuel);
             }
         }
         const n = wps.length;
+        const addReturn = st.returnHome && n >= 2;
         let bestOrder, bestCost = Infinity;
         if (n <= 8) {
             // перебор всех перестановок (первая точка фиксирована)
@@ -667,7 +686,8 @@
             perm(rest, (order) => {
                 const full = [wps[0], ...order];
                 let cost = 0;
-                for (let i = 1; i < full.length; i++) cost += segLen.get(key(full[i - 1], full[i])) || 9999;
+                for (let i = 1; i < full.length; i++) cost += segFuel.get(key(full[i - 1], full[i])) || 999999;
+                if (addReturn) cost += segFuel.get(key(full[full.length - 1], full[0])) || 999999;
                 if (cost < bestCost) { bestCost = cost; bestOrder = full; }
             });
         } else {
@@ -678,7 +698,7 @@
                 let bestJ = -1, bestD = Infinity;
                 for (let j = 0; j < n; j++) {
                     if (used.has(j)) continue;
-                    const d = segLen.get(key(order[order.length - 1], wps[j])) || 9999;
+                    const d = segFuel.get(key(order[order.length - 1], wps[j])) || 999999;
                     if (d < bestD) { bestD = d; bestJ = j; }
                 }
                 used.add(bestJ);
@@ -693,6 +713,7 @@
         btn.disabled = false; btn.textContent = '⟳ Оптимизировать';
     }
     $('jm-optimize').addEventListener('click', optimizeWaypoints);
+    $('jm-return-home').addEventListener('change', (e) => { st.returnHome = e.target.checked; renderRoute(); });
 
     let lastRoute = null;
     async function renderRoute() {
@@ -710,17 +731,18 @@
             out.innerHTML = r.error ? `<p class="evt-bad">${esc(r.error)}</p>` : '<p class="evt-dim">Маршрут появится, когда в «Точках маршрута» будет хотя бы две системы</p>';
             return;
         }
-        renderMap(r.path, r.isWp);
+        renderMap(r.path, r.isWp, r.returnIdx);
         const L = await loadLive();
         await holderNames(r.path.map((s) => L.sov.get(s.id)));
         const sh = shipOf(st.ship);
         const fuelName = (JUMP_FUEL[sh.ftype] || ['топливо'])[0];
         const fuelVol = (JUMP_FUEL[sh.ftype] || [0, 0])[1];
-        let totalLy = 0;
-        let totalFuel = 0;
+        let totalLy = 0, totalFuel = 0, retLy = 0, retFuel = 0;
+        const hasReturn = r.returnIdx > 0;
         const rows = r.path.map((s, i) => {
             const holder = L.sov.get(s.id);
-            const row = `<tr class="jm-sys${r.isWp.has(s) ? ' is-wp' : ''}">
+            const isRet = hasReturn && i >= r.returnIdx;
+            const row = `<tr class="jm-sys${r.isWp.has(s) ? ' is-wp' : ''}${isRet ? ' jm-ret-row' : ''}">
                     <td class="jm-n">${i + 1}.</td><td>${esc(s.region)}</td>
                     <td class="jm-name">${esc(s.name)}${s.station ? ' <span class="jm-st" title="Есть станция NPC">◆</span>' : ''}</td>
                     <td>${secBadge(s)}</td>
@@ -730,21 +752,25 @@
             if (!next) return row;
             const ly = dist(s, next);
             const fuel = fuelFor(ly);
-            totalLy += ly;
-            totalFuel += fuel;
-            const alt = !r.isWp.has(next) ? `<button type="button" class="jm-alt" data-role="jm-alt" data-i="${i + 1}" title="Другие промежуточные системы">⇄</button>` : '';
-            return `${row}<tr class="jm-leg-row"><td></td><td colspan="6">↓ Прыжок <b>${fmt(ly, 3)}</b> св. лет · топливо <b>${fmt(fuel)}</b> ${esc(fuelName)} ${alt}</td></tr>`;
+            const legIsRet = hasReturn && i >= r.returnIdx - 1;
+            if (legIsRet) { retLy += ly; retFuel += fuel; }
+            else { totalLy += ly; totalFuel += fuel; }
+            const alt = !r.isWp.has(next) && !legIsRet ? `<button type="button" class="jm-alt" data-role="jm-alt" data-i="${i + 1}" title="Другие промежуточные системы">⇄</button>` : '';
+            const retMark = legIsRet ? ' jm-ret-leg' : '';
+            return `${row}<tr class="jm-leg-row${retMark}"><td></td><td colspan="6">↓ Прыжок <b>${fmt(ly, 3)}</b> св. лет · топливо <b>${fmt(fuel)}</b> ${esc(fuelName)} ${alt}</td></tr>`;
         }).join('');
-        const jumps = r.path.length - 1;
+        const fwdJumps = hasReturn ? r.returnIdx - 1 : r.path.length - 1;
+        const retJumps = hasReturn ? r.path.length - r.returnIdx : 0;
+        const totalJumps = fwdJumps + retJumps;
         out.innerHTML = `
             ${r.startHigh ? '<p class="evt-bad jm-warn">Начало в хайсеке: прыжковый двигатель там не включается — сначала выйдите в лоу на вратах.</p>' : ''}
             <div class="st-scroll"><table class="stats-p1 jm-table">
                 <thead><tr><th>#</th><th>Регион</th><th>Система</th><th>Без.</th><th>Владелец</th><th title="Убийства кораблей и подов за последний час">Убийства</th><th title="Прыжки через врата за последний час">Прыжки</th></tr></thead>
                 <tbody>${rows}</tbody></table></div>
             <dl class="jm-total">
-                <dt>Прыжков</dt><dd>${jumps}</dd>
-                <dt>Всего расстояние</dt><dd>${fmt(totalLy, 3)} св. лет</dd>
-                <dt>Всего топлива</dt><dd>${fmt(totalFuel)} ${esc(fuelName)} (${fmt(totalFuel * fuelVol)} м³)</dd>
+                <dt>Прыжков</dt><dd>${fwdJumps}${hasReturn ? ` + ${retJumps} обратно = ${totalJumps}` : ''}</dd>
+                <dt>Расстояние</dt><dd>${fmt(totalLy, 3)} св. лет${hasReturn ? ` + ${fmt(retLy, 3)} обратно = ${fmt(totalLy + retLy, 3)}` : ''}</dd>
+                <dt>Топливо</dt><dd>${fmt(totalFuel)} ${esc(fuelName)}${hasReturn ? ` + <span class="jm-ret-fuel">${fmt(retFuel)}</span> обратно = ${fmt(totalFuel + retFuel)}` : ''} (${fmt((totalFuel + retFuel) * fuelVol)} м³)</dd>
                 <dt>Дальность прыжка</dt><dd>${fmt(r.range, 2)} св. лет (${esc(sh.name)}, Jump Drive Calibration ${st.jdc})</dd>
             </dl>
             <p class="jm-hint">Убийства и прыжки — за последний час (ESI). ⇄ — выбрать другую промежуточную систему.</p>`;
