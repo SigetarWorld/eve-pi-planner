@@ -449,8 +449,8 @@ main {
     color: hsl(var(--muted-foreground));
 }
 
-/* Логотипы — 6 квадратов (3×2), монохром + цвет при наведении */
-.stats--6 { grid-template-columns: repeat(3, 1fr); }
+/* Логотипы — 2 столбца, монохром + цвет при наведении */
+.stats--social { grid-template-columns: repeat(2, 1fr); }
 .stat--logo {
     display: flex;
     align-items: center;
@@ -480,10 +480,24 @@ main {
 .stat--logo:hover .stat-icon { fill: rgba(255,255,255,0.9); }
 [data-brand="yt"]:hover .stat-icon  { fill: #FF0000; }
 [data-brand="vk"]:hover .stat-icon  { fill: #0077FF; }
-[data-brand="steam"]:hover .stat-icon { fill: #66c0f4; }
 [data-brand="tg"]:hover .stat-icon  { fill: #2AABEE; }
 [data-brand="boosty"]:hover .stat-icon { fill: #F15F2C; }
 [data-brand]:hover { border-color: rgba(255,255,255,0.15); }
+
+/* QR-код */
+.qr-block {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+}
+.qr-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    opacity: 0.7;
+    transition: opacity .25s;
+}
+.qr-img:hover { opacity: 1; }
 
 /* ---------- Сетка панелей ---------- */
 .grid {
@@ -1346,8 +1360,8 @@ footer {
     .stats {
         grid-template-columns: 1fr;
     }
-    .stats--6 {
-        grid-template-columns: repeat(3, 1fr);
+    .stats--social {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .btn {
