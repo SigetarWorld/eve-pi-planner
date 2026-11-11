@@ -450,12 +450,12 @@ main {
 }
 
 /* Логотипы — 6 квадратов (3×2), монохром + цвет при наведении */
-.stats--6 { grid-template-columns: repeat(6, 1fr); }
+.stats--6 { grid-template-columns: repeat(3, 1fr); }
 .stat--logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px 8px;
+    padding: 18px 8px;
     text-decoration: none;
     color: inherit;
     transition: border-color .25s, transform .25s;
@@ -464,15 +464,21 @@ main {
     transform: translateY(-3px);
 }
 .stat-icon {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     flex-shrink: 0;
     fill: rgba(255,255,255,0.45);
     transition: fill .25s;
 }
+/* Rutube — составной логотип */
+.rt-bg { fill: rgba(255,255,255,0.12); transition: fill .25s; }
+.rt-dot { fill: rgba(255,255,255,0.25); transition: fill .25s; }
+[data-brand="rt"] .stat-icon { fill: none; }
+[data-brand="rt"]:hover .rt-bg { fill: #1c1340; }
+[data-brand="rt"]:hover .rt-dot { fill: #e31235; }
+/* Остальные бренды */
 .stat--logo:hover .stat-icon { fill: rgba(255,255,255,0.9); }
 [data-brand="yt"]:hover .stat-icon  { fill: #FF0000; }
-[data-brand="rt"]:hover .stat-icon  { fill: #e31235; }
 [data-brand="vk"]:hover .stat-icon  { fill: #0077FF; }
 [data-brand="steam"]:hover .stat-icon { fill: #66c0f4; }
 [data-brand="tg"]:hover .stat-icon  { fill: #2AABEE; }
