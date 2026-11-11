@@ -449,26 +449,35 @@ main {
     color: hsl(var(--muted-foreground));
 }
 
-/* Логотипы — 6 квадратов (3×2) */
-.stats--6 { grid-template-columns: repeat(3, 1fr); }
+/* Логотипы — 6 квадратов (3×2), монохром + цвет при наведении */
+.stats--6 { grid-template-columns: repeat(6, 1fr); }
 .stat--logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 18px 12px;
+    padding: 16px 8px;
     text-decoration: none;
     color: inherit;
-    transition: border-color .2s, transform .2s;
+    transition: border-color .25s, transform .25s;
 }
 .stat--logo:hover {
-    border-color: hsl(var(--primary));
-    transform: scale(1.05);
+    transform: translateY(-3px);
 }
 .stat-icon {
-    width: 44px;
-    height: 44px;
+    width: 30px;
+    height: 30px;
     flex-shrink: 0;
+    fill: rgba(255,255,255,0.45);
+    transition: fill .25s;
 }
+.stat--logo:hover .stat-icon { fill: rgba(255,255,255,0.9); }
+[data-brand="yt"]:hover .stat-icon  { fill: #FF0000; }
+[data-brand="rt"]:hover .stat-icon  { fill: #e31235; }
+[data-brand="vk"]:hover .stat-icon  { fill: #0077FF; }
+[data-brand="steam"]:hover .stat-icon { fill: #66c0f4; }
+[data-brand="tg"]:hover .stat-icon  { fill: #2AABEE; }
+[data-brand="dc"]:hover .stat-icon  { fill: #5865F2; }
+[data-brand]:hover { border-color: rgba(255,255,255,0.15); }
 
 /* ---------- Сетка панелей ---------- */
 .grid {
