@@ -482,7 +482,7 @@ main {
 [data-brand="vk"]:hover .stat-icon  { fill: #0077FF; }
 [data-brand="steam"]:hover .stat-icon { fill: #66c0f4; }
 [data-brand="tg"]:hover .stat-icon  { fill: #2AABEE; }
-[data-brand="dc"]:hover .stat-icon  { fill: #5865F2; }
+[data-brand="boosty"]:hover .stat-icon { fill: #F15F2C; }
 [data-brand]:hover { border-color: rgba(255,255,255,0.15); }
 
 /* ---------- Сетка панелей ---------- */
