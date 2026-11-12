@@ -450,16 +450,17 @@ main {
 }
 
 /* Логотипы — 2 столбца, монохром + цвет при наведении */
-.stats--social { grid-template-columns: repeat(2, 1fr); }
+.stats--social { grid-template-columns: repeat(2, 1fr); max-width: 280px; }
 .stat--logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 18px 8px;
+    padding: 14px 6px;
     text-decoration: none;
     color: inherit;
     transition: border-color .25s, transform .25s;
 }
+[data-brand="boosty"] { grid-column: 2; }
 .stat--logo:hover {
     transform: translateY(-3px);
 }
