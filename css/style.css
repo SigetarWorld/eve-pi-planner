@@ -463,11 +463,21 @@ main {
 .stat--donate {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 0.75rem;
-    letter-spacing: 0.15em;
+    font-size: 0.875rem;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     text-decoration: none;
     color: hsl(var(--primary));
+    background: hsl(var(--primary) / .05);
+    border-color: hsl(var(--primary) / .6);
+    box-shadow: 0 0 24px -8px hsl(var(--primary) / .6);
+}
+.stat--donate:hover {
+    color: hsl(220 50% 6%);
+    background: var(--gradient-amber);
+    border-color: hsl(var(--primary));
+    box-shadow: var(--glow-amber);
+    fill: hsl(220 50% 6%);
 }
 .stat--logo:hover {
     transform: translateY(-3px);
