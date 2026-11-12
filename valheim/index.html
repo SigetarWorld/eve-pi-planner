@@ -294,104 +294,53 @@
         .vm-section-title span {
             color: hsl(var(--primary));
         }
-        /* ===== Features: ring-menu icon grid ===== */
-        .feat-section {
-            margin-bottom: 20px;
+        /* ===== Features: sidebar + panel ===== */
+        .feat-wrap {
+            display: flex; gap: 0; min-height: 380px;
+            border: 1px solid hsl(var(--border)); border-radius: var(--radius);
+            overflow: hidden; background: hsl(var(--card));
         }
-        .feat-cat-title {
-            font-family: var(--font-heading);
-            font-size: 1rem;
-            font-weight: 700;
-            font-style: italic;
-            color: hsl(var(--primary));
-            padding: 10px 0 8px;
-            border-bottom: 1px solid hsl(var(--primary) / .25);
-            margin-bottom: 12px;
+        .feat-sidebar {
+            flex: 0 0 200px; display: flex; flex-direction: column;
+            border-right: 1px solid hsl(var(--border)); background: hsl(220 40% 5%);
+            overflow-y: auto;
         }
-        .feat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 10px;
-            margin-bottom: 24px;
+        .feat-tab {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; padding: 10px 14px;
+            font-family: var(--font-body); font-size: .82rem;
+            color: hsl(var(--muted-foreground)); background: transparent;
+            border: none; border-bottom: 1px solid hsl(var(--border) / .4);
+            cursor: pointer; text-align: left; transition: background .15s, color .15s;
         }
-        .feat-tile {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            padding: 14px 6px 10px;
-            border: 1.5px solid hsl(var(--primary) / .35);
-            border-radius: 6px;
-            background: hsl(220 40% 6% / .7);
-            cursor: default;
-            transition: border-color .2s, background .2s, box-shadow .2s;
-            position: relative;
+        .feat-tab:hover { background: hsl(220 40% 8%); color: hsl(var(--foreground)); }
+        .feat-tab.active { background: hsl(220 40% 9%); color: hsl(var(--primary)); border-left: 3px solid hsl(var(--primary)); }
+        .feat-tab .ft-icon { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; }
+        .feat-tab .ft-icon svg {
+            width: 18px; height: 18px;
+            stroke: currentColor; fill: none;
+            stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
         }
-        .feat-tile:hover {
-            border-color: hsl(var(--primary) / .8);
-            background: hsl(220 40% 8%);
-            box-shadow: 0 0 12px hsl(var(--primary) / .15);
+        .feat-tab .ft-count { margin-left: auto; font-size: .7rem; opacity: .5; font-family: 'Share Tech Mono', monospace; }
+        .feat-panel { flex: 1; overflow-y: auto; padding: 0; }
+        .feat-panel-cat { display: none; }
+        .feat-panel-cat.active { display: block; }
+        .feat-row {
+            display: flex; align-items: baseline; gap: 10px;
+            padding: 9px 16px;
+            border-bottom: 1px solid hsl(var(--border) / .2);
+            font-size: .82rem; line-height: 1.45;
         }
-        .feat-tile-icon {
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: hsl(var(--primary));
-            filter: drop-shadow(0 0 3px hsl(var(--primary) / .3));
-        }
-        .feat-tile-icon svg {
-            width: 34px;
-            height: 34px;
-            stroke: hsl(var(--primary));
-            fill: none;
-            stroke-width: 1.8;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-        .feat-tile-name {
-            font-family: var(--font-body);
-            font-size: 0.72rem;
-            color: hsl(var(--primary) / .9);
-            text-align: center;
-            line-height: 1.3;
-        }
-        .feat-tile-date {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.58rem;
-            color: hsl(var(--muted-foreground));
-            opacity: 0.6;
-        }
-        /* Tooltip */
-        .feat-tile .feat-tip {
-            display: none;
-            position: absolute;
-            bottom: calc(100% + 8px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: hsl(220 40% 10%);
-            border: 1px solid hsl(var(--primary) / .5);
-            border-radius: 4px;
-            padding: 8px 12px;
-            font-size: 0.78rem;
-            color: rgba(255,255,255,.85);
-            white-space: nowrap;
-            z-index: 20;
-            pointer-events: none;
-            box-shadow: 0 4px 16px rgba(0,0,0,.5);
-        }
-        .feat-tile:hover .feat-tip {
-            display: block;
-        }
+        .feat-row:hover { background: hsl(220 40% 6%); }
+        .feat-row-check { color: hsl(var(--primary)); font-size: .75rem; flex-shrink: 0; }
+        .feat-row-text  { flex: 1; color: hsl(var(--foreground) / .85); }
+        .feat-row-date  { font-family: 'Share Tech Mono', monospace; font-size: .7rem; color: hsl(var(--muted-foreground)); opacity: .6; white-space: nowrap; }
         @media (max-width: 640px) {
-            .feat-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
-            .feat-tile { padding: 10px 4px 8px; }
-            .feat-tile-icon { width: 36px; height: 36px; font-size: 1.2rem; }
-            .feat-tile-icon svg { width: 28px; height: 28px; }
-            .feat-tile-name { font-size: 0.65rem; }
-            .feat-tile .feat-tip { display: none !important; }
+            .feat-wrap { flex-direction: column; }
+            .feat-sidebar { flex: none; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid hsl(var(--border)); }
+            .feat-tab { white-space: nowrap; border-bottom: none; border-right: 1px solid hsl(var(--border) / .4); padding: 8px 12px; font-size: .75rem; }
+            .feat-tab.active { border-left: none; border-bottom: 3px solid hsl(var(--primary)); }
+            .feat-tab .ft-count { display: none; }
         }
         .tech-row {
             display: flex;
@@ -511,170 +460,152 @@
             <p class="eyebrow">// 01 — Что сделано</p>
             <h2 class="vm-section-title"><span>✓</span> Реализованные возможности</h2>
 
-            <div id="featRoot"></div>
+            <div class="feat-wrap" id="featWrap">
+                <!-- Sidebar -->
+                <div class="feat-sidebar" id="featSidebar"></div>
+                <!-- Panel -->
+                <div class="feat-panel" id="featPanel"></div>
+            </div>
+
             <script>
             (function(){
-                /* SVG icon paths (stroke-based, amber outline style) */
-                const I = {
-                    follow:   '<path d="M12 4a4 4 0 100 8 4 4 0 000-8z"/><path d="M6 20v-2a6 6 0 0112 0v2"/><path d="M19 11l3 3-3 3"/>',
-                    ship:     '<path d="M3 18l2-4h14l2 4"/><path d="M5 14V8l7-4 7 4v6"/><path d="M12 4v10"/>',
-                    portal:   '<rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 8v8"/><circle cx="12" cy="12" r="2"/>',
-                    sit:      '<path d="M5 20h14"/><path d="M9 16V8"/><path d="M15 16V8"/><path d="M7 12h10"/><path d="M9 8h6"/>',
-                    nav:      '<circle cx="12" cy="12" r="9"/><path d="M12 3v4"/><path d="M12 17v4"/><path d="M3 12h4"/><path d="M17 12h4"/><path d="M12 12l3-5"/>',
-                    marker:   '<path d="M12 2C8 2 5 5.6 5 10c0 6 7 12 7 12s7-6 7-12c0-4.4-3-8-7-8z"/><circle cx="12" cy="10" r="3"/>',
-                    skull:    '<circle cx="12" cy="10" r="7"/><path d="M9 14v4"/><path d="M15 14v4"/><path d="M8 21h8"/><circle cx="9" cy="9" r="1.5"/><circle cx="15" cy="9" r="1.5"/><path d="M10 13h4"/>',
-                    npc:      '<circle cx="12" cy="7" r="4"/><path d="M5 21v-3a7 7 0 0114 0v3"/><path d="M8 14l4 2 4-2"/>',
-                    bag:      '<rect x="5" y="8" width="14" height="12" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/><path d="M5 14h14"/>',
-                    equip:    '<path d="M12 2l2 5h5l-4 3.5L16.5 16 12 12.5 7.5 16 9 10.5 5 7h5z"/>',
-                    loot:     '<path d="M12 5v14"/><path d="M5 12h14"/><circle cx="12" cy="12" r="9"/>',
-                    food:     '<path d="M5 12c0-4 3-8 7-8s7 4 7 8"/><ellipse cx="12" cy="14" rx="7" ry="4"/><path d="M12 6V3"/>',
-                    skill:    '<path d="M4 20l4-4"/><path d="M8 16l8-12"/><path d="M20 4l-4 4"/><circle cx="12" cy="12" r="3"/>',
-                    craft:    '<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3-3a1 1 0 000-1.4l-1.6-1.6a1 1 0 00-1.4 0z"/><path d="M3 21l7-7"/><path d="M10 14L6.3 17.7"/>',
-                    sword:    '<path d="M14.5 3.5L21 10l-2 2-6.5-6.5z"/><path d="M10 14l-7 7"/><path d="M8 12l4 4"/><path d="M3 21l2-2"/>',
-                    ppo:      '<circle cx="12" cy="12" r="4"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/>',
-                    shield:   '<path d="M12 3l8 4v5c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V7z"/>',
-                    bow:      '<path d="M18 4c-4 0-6 4-6 8s2 8 6 8"/><path d="M18 4L6 12l12 8"/>',
-                    combo:    '<path d="M5 12h14"/><path d="M12 5l7 7-7 7"/><circle cx="5" cy="12" r="2"/>',
-                    heal:     '<path d="M12 3v18"/><path d="M3 12h18"/><rect x="5" y="5" width="14" height="14" rx="3"/>',
-                    boss:     '<path d="M12 2l3 6h6l-5 4 2 7-6-4-6 4 2-7-5-4h6z"/>',
-                    mic:      '<rect x="9" y="2" width="6" height="10" rx="3"/><path d="M5 10a7 7 0 0014 0"/><path d="M12 17v5"/><path d="M8 22h8"/>',
-                    brain:    '<path d="M12 2a8 8 0 00-5 14.3V20h10v-3.7A8 8 0 0012 2z"/><path d="M9 20h6v2H9z"/><path d="M9 10h6"/><path d="M12 7v6"/>',
-                    speaker:  '<path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18 6a8 8 0 010 12"/>',
-                    cmd:      '<path d="M4 17l6-10"/><path d="M14 17l6-10"/><path d="M2 12h20"/>',
-                    memory:   '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16"/><path d="M9 4v16"/>',
-                    multi:    '<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 18v-1a5 5 0 0110 0v1"/><path d="M13 18v-1a5 5 0 0110 0v1"/>',
-                    home:     '<path d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V12h6v9"/>',
-                    sort:     '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M10 4v16"/><path d="M14 13l2 2 2-2"/>',
-                    smelt:    '<path d="M5 18h14"/><path d="M8 18V8l4-4 4 4v10"/><path d="M10 14h4"/><path d="M12 10v4"/>',
-                    cook:     '<circle cx="12" cy="14" r="5"/><path d="M12 3v5"/><path d="M8 5l1 3"/><path d="M16 5l-1 3"/>',
-                    garden:   '<path d="M12 22V12"/><path d="M8 16c-4-2-4-8 4-8"/><path d="M16 16c4-2 4-8-4-8"/><path d="M12 6a3 3 0 100-6 3 3 0 000 6z"/>',
-                    patrol:   '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
-                    chest:    '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 14h18"/><path d="M7 3h10l3 5H4z"/><circle cx="12" cy="17" r="1.5"/>',
-                    lamp:     '<path d="M12 2v3"/><path d="M12 19v3"/><circle cx="12" cy="12" r="5"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M2 12h3"/><path d="M19 12h3"/>',
-                    pen:      '<rect x="3" y="10" width="18" height="10" rx="1"/><path d="M3 10l9-6 9 6"/><path d="M8 15h2"/><path d="M14 15h2"/>',
-                    honey:    '<path d="M12 2l4 4v4l-4 4-4-4V6z"/><path d="M12 14v6"/><path d="M8 18h8"/>',
-                    search:   '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>',
-                    axe:      '<path d="M12 2v20"/><path d="M5 7c0 3 3 5 7 5"/><path d="M19 7c0 3-3 5-7 5"/>',
-                    pick:     '<path d="M14 4l6 6-9 9-6-6z"/><path d="M5 19l-2 2"/><path d="M15 5l4-2"/>',
-                    mine:     '<path d="M4 20l7-7"/><path d="M15 9l5-5"/><path d="M11 13l4 4"/><rect x="13" y="3" width="8" height="8" rx="1" transform="rotate(45 17 7)"/>',
-                    collect:  '<path d="M5 12l5 5L20 7"/>',
-                    assist:   '<path d="M12 8v8"/><path d="M8 12h8"/><circle cx="12" cy="12" r="9"/>',
-                    store:    '<rect x="4" y="8" width="16" height="12" rx="2"/><path d="M8 8V5a4 4 0 018 0v3"/><path d="M12 14v3"/>',
-                    target:   '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
-                    cover:    '<path d="M4 20h16"/><path d="M4 20V10l8-6 8 6v10"/><path d="M12 14v6"/>',
-                    dummy:    '<circle cx="12" cy="5" r="3"/><path d="M12 8v8"/><path d="M8 12h8"/><path d="M8 22l4-6 4 6"/>',
-                    timer:    '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M10 2h4"/>',
-                    hud:      '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 12h4"/><path d="M14 12h4"/><path d="M12 8v8"/>',
-                    ring:     '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v5"/><path d="M21 12h-5"/>',
-                    emotion:  '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>',
-                    launch:   '<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>',
-                    reset:    '<path d="M3 12a9 9 0 119 9"/><path d="M3 21v-5h5"/><path d="M12 8v4l2 2"/>',
-                    rune:     '<path d="M12 2l6 20"/><path d="M6 22l6-20"/><path d="M4 12h16"/>',
-                    net:      '<path d="M12 2v20"/><path d="M2 12h20"/><circle cx="12" cy="12" r="9"/>',
-                    guard:    '<path d="M12 3l8 4v5c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V7z"/><path d="M12 8v4"/><circle cx="12" cy="15" r="1"/>',
+                /* SVG icon paths for category tabs */
+                const IC = {
+                    sword:  '<path d="M14.5 3.5L21 10l-2 2-6.5-6.5z"/><path d="M10 14l-7 7"/><path d="M8 12l4 4"/><path d="M3 21l2-2"/>',
+                    bag:    '<rect x="5" y="8" width="14" height="12" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/><path d="M5 14h14"/>',
+                    shield: '<path d="M12 3l8 4v5c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V7z"/>',
+                    mic:    '<rect x="9" y="2" width="6" height="10" rx="3"/><path d="M5 10a7 7 0 0014 0"/><path d="M12 17v5"/><path d="M8 22h8"/>',
+                    home:   '<path d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V12h6v9"/>',
+                    pick:   '<path d="M14 4l6 6-9 9-6-6z"/><path d="M5 19l-2 2"/><path d="M15 5l4-2"/>',
+                    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+                    multi:  '<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 18v-1a5 5 0 0110 0v1"/><path d="M13 18v-1a5 5 0 0110 0v1"/>',
+                    hud:    '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 12h4"/><path d="M14 12h4"/><path d="M12 8v8"/>',
                 };
-                function svg(key){ return `<svg viewBox="0 0 24 24">${I[key]||I.npc}</svg>`; }
+                function svgIcon(key){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (IC[key]||'') + '</svg>'; }
 
                 const CATS = [
-                    { title:'Компаньон и основы', tiles:[
-                        { icon:'npc',    name:'Компаньон',      tip:'Клон Player — ходит за тобой', date:'21.10' },
-                        { icon:'nav',    name:'Навигация',      tip:'Обход препятствий, навигационная сетка', date:'21.10' },
-                        { icon:'marker', name:'Метка',           tip:'Метка на миникарте и большой карте', date:'21.10' },
-                        { icon:'skull',  name:'Смерть',          tip:'Появляется у кровати, навыки падают', date:'21.10' },
-                        { icon:'portal', name:'Порталы',         tip:'Порталы, двери склепов и подземелий', date:'21.10' },
-                        { icon:'sit',    name:'Посиделки',       tip:'Садится рядом на стул или пол', date:'21.10' },
-                        { icon:'follow', name:'За кадром',       tip:'Ведётся модом за пределами 100 м', date:'28.10' },
-                        { icon:'ship',   name:'Корабль',         tip:'Залезает и сидит на лавке', date:'01.11' },
+                    { id:'companion', icon:'sword', name:'Компаньон', items:[
+                        { text:'Корабль и плот — залезает и сидит на лавке', date:'01.11' },
+                        { text:'«За кадром» — ведётся модом за пределами 100 м', date:'28.10' },
+                        { text:'Порталы, двери склепов и подземелий', date:'21.10' },
+                        { text:'Посиделки — садится рядом на стул или пол', date:'21.10' },
+                        { text:'Обход препятствий по навигационной сетке игры', date:'21.10' },
+                        { text:'Метка на миникарте и большой карте', date:'21.10' },
+                        { text:'Смерть и возрождение как у игрока', date:'21.10' },
+                        { text:'Компаньон-человек (клон Player) — ходит за тобой', date:'21.10' },
                     ]},
-                    { title:'Инвентарь и экипировка', tiles:[
-                        { icon:'bag',    name:'Сумка [E]',       tip:'Ванильное окно сундука 8×4', date:'21.10' },
-                        { icon:'equip',  name:'Авто-экипировка', tip:'Оружие и броня из сумки', date:'21.10' },
-                        { icon:'loot',   name:'Подбор',          tip:'Подбор добычи в 12 м', date:'21.10' },
-                        { icon:'food',   name:'Еда',             tip:'Ест до трёх блюд, ищет в сундуках', date:'21.10' },
-                        { icon:'skill',  name:'Навыки',          tip:'Растут и сохраняются между сессиями', date:'29.10' },
-                        { icon:'craft',  name:'Крафт',           tip:'Крафтит по голосу — факел, топор', date:'30.10' },
-                        { icon:'chest',  name:'Соберись',        tip:'Берёт лучшее из сундуков', date:'03.11' },
+                    { id:'inventory', icon:'bag', name:'Инвентарь', items:[
+                        { text:'«Соберись» — берёт лучшее из сундуков', date:'03.11' },
+                        { text:'Крафт по голосу — факел, топор и т.д.', date:'30.10' },
+                        { text:'Навыки растут и сохраняются между сессиями', date:'29.10' },
+                        { text:'Еда работает по-настоящему (таймеры, лечение)', date:'21.10' },
+                        { text:'Сам следит за едой — ест до трёх блюд', date:'21.10' },
+                        { text:'Подбор добычи в 12 м — подходит и берёт', date:'21.10' },
+                        { text:'Авто-экипировка оружия и брони из сумки', date:'21.10' },
+                        { text:'Сумка [E] — ванильное окно сундука 8×4', date:'21.10' },
                     ]},
-                    { title:'Боевая система', tiles:[
-                        { icon:'sword',  name:'6 приёмов',      tip:'Удар, блок, уклон, отступ, кружение', date:'21.10' },
-                        { icon:'ppo',    name:'Нейросеть PPO',  tip:'Выбирает приём по ситуации', date:'21.10' },
-                        { icon:'heal',   name:'Медовуха',       tip:'Пьёт в бою по нехватке здоровья', date:'26.10' },
-                        { icon:'shield', name:'Парирование',    tip:'Учит замах каждого врага', date:'26.10' },
-                        { icon:'guard',  name:'Спасение',       tip:'Заранее по запомненному урону', date:'26.10' },
-                        { icon:'bow',    name:'Лук',             tip:'Баллистика, упреждение, самообучение', date:'27.10' },
-                        { icon:'combo',  name:'Серии ударов',   tip:'Как игрок «держит кнопку»', date:'02.11' },
-                        { icon:'shield', name:'Танк-варианты',  tip:'Щит / перекаты / натиск / лук', date:'02.11' },
-                        { icon:'boss',   name:'Сборы на босса', tip:'Стрелы, медовухи, оружие', date:'08.11' },
-                        { icon:'mine',   name:'Масса костей',   tip:'Булава и ледяная медовуха', date:'11.11' },
+                    { id:'combat', icon:'shield', name:'Боевая система', items:[
+                        { text:'Масса костей — булава и ледяная медовуха', date:'11.11' },
+                        { text:'Подготовка к каждому боссу: стрелы, медовухи, оружие', date:'08.11' },
+                        { text:'Танк-варианты: щит / перекаты / натиск / лук', date:'02.11' },
+                        { text:'Серии ударов — как игрок «держит кнопку»', date:'02.11' },
+                        { text:'Лук — баллистика, упреждение, самообучение', date:'27.10' },
+                        { text:'Спасение заранее по запомненному урону врага', date:'26.10' },
+                        { text:'Парирование — учит замах каждого врага', date:'26.10' },
+                        { text:'Медовуха в бою — по нехватке здоровья', date:'26.10' },
+                        { text:'Нейросеть PPO выбирает приём по ситуации', date:'21.10' },
+                        { text:'6 приёмов: удар, блок, уклон, отступ, кружение, особый', date:'21.10' },
                     ]},
-                    { title:'Голос и мозг', tiles:[
-                        { icon:'mic',    name:'Whisper+Vosk',    tip:'Двойное распознавание офлайн', date:'21.10' },
-                        { icon:'speaker',name:'Silero TTS',      tip:'Озвучка Валеры, офлайн', date:'21.10' },
-                        { icon:'cmd',    name:'40+ команд',      tip:'Бой, сбор, готовка, огород', date:'21.10' },
-                        { icon:'multi',  name:'Мультиплеер',     tip:'Друзья слышат через ValeraListener', date:'22.10' },
-                        { icon:'memory', name:'Обучение',        tip:'«Запомни: X значит Y» — память', date:'22.10' },
-                        { icon:'brain',  name:'Claude Haiku',    tip:'Реплики ИИ по контексту', date:'28.10' },
-                        { icon:'brain',  name:'Ollama',           tip:'Бесплатно, локально, qwen3:4b', date:'04.11' },
+                    { id:'voice', icon:'mic', name:'Голос и мозг', items:[
+                        { text:'Ollama (локально, бесплатно) — qwen3:4b-instruct', date:'04.11' },
+                        { text:'Новый голос Silero TTS — мужской, чёткий', date:'30.10' },
+                        { text:'Claude Haiku — реплики по контексту и ситуации', date:'28.10' },
+                        { text:'Обучение голосом — «запомни: X значит Y»', date:'22.10' },
+                        { text:'Три режима: по имени (wake), рация (ptt), всегда', date:'22.10' },
+                        { text:'Друзья могут давать команды через ValeraListener', date:'22.10' },
+                        { text:'Silero TTS — озвучка офлайн', date:'21.10' },
+                        { text:'Whisper (офлайн) + Vosk — двойное распознавание', date:'21.10' },
+                        { text:'40+ голосовых команд: бой, сбор, готовка, огород', date:'21.10' },
                     ]},
-                    { title:'Работа на базе', tiles:[
-                        { icon:'home',   name:'Починка',         tip:'У верстака / кузницы', date:'21.10' },
-                        { icon:'chest',  name:'Память ящиков',   tip:'Таблички и содержимое', date:'21.10' },
-                        { icon:'smelt',  name:'Переплавка',      tip:'Руда, уголь', date:'01.11' },
-                        { icon:'cook',   name:'Готовка',          tip:'Вертел, сковорода, котёл, бочка', date:'02.11' },
-                        { icon:'sort',   name:'Сортировка',      tip:'Ящики по табличкам', date:'03.11' },
-                        { icon:'garden', name:'Огород',           tip:'Сбор, пересадка, семена', date:'05.11' },
-                        { icon:'patrol', name:'Патруль',          tip:'Обход базы и доклад', date:'08.11' },
-                        { icon:'store',  name:'Дела по списку',  tip:'Порядок из настроек', date:'08.11' },
-                        { icon:'search', name:'Где репа?',        tip:'Ищет в ящиках по имени', date:'10.11' },
-                        { icon:'pen',    name:'Загоны',           tip:'Звери у табличек, кормёжка', date:'10.11' },
-                        { icon:'lamp',   name:'Светильники',     tip:'Заправка топливом', date:'10.11' },
-                        { icon:'honey',  name:'Мёд и перья',     tip:'Ульи и птицы', date:'11.11' },
+                    { id:'base', icon:'home', name:'Работа на базе', items:[
+                        { text:'Загоны — звери у табличек, кормёжка', date:'10.11' },
+                        { text:'Светильники — заправка топливом', date:'10.11' },
+                        { text:'Мёд из ульев и перья с птиц', date:'11.11' },
+                        { text:'«Где репа?» — ищет в ящиках по имени', date:'10.11' },
+                        { text:'Патруль базы — обход и доклад', date:'08.11' },
+                        { text:'Домашние дела по порядку из настроек', date:'08.11' },
+                        { text:'Огород — сбор, пересадка, семена из ящиков', date:'05.11' },
+                        { text:'Готовка — вертел, сковорода, котёл, бочка', date:'02.11' },
+                        { text:'Переплавка руды, жжение угля', date:'01.11' },
+                        { text:'Сортировка ящиков по табличкам', date:'03.11' },
+                        { text:'Починка у верстака / кузницы', date:'21.10' },
+                        { text:'Память ящиков — таблички и содержимое', date:'21.10' },
                     ]},
-                    { title:'Добыча и задания', tiles:[
-                        { icon:'axe',    name:'Руби деревья',   tip:'Рубка деревьев', date:'21.10' },
-                        { icon:'pick',   name:'Копай',           tip:'Камень и руда', date:'21.10' },
-                        { icon:'search', name:'Поиск',           tip:'Ресурсы в радиусе 15–70 м', date:'21.10' },
-                        { icon:'collect',name:'Задания',         tip:'«Найди / добудь» с оценкой опасности', date:'21.10' },
-                        { icon:'marker', name:'Метки',           tip:'Ресурсы на карте по команде', date:'25.10' },
-                        { icon:'boss',   name:'Силы боссов',    tip:'Своя сила, значок, перезарядка', date:'25.10' },
+                    { id:'mining', icon:'pick', name:'Добыча', items:[
+                        { text:'Силы боссов — своя сила, значок и перезарядка', date:'25.10' },
+                        { text:'Метки ресурсов на карте по команде', date:'25.10' },
+                        { text:'Пинг на карте — «встречаемся там»', date:'25.10' },
+                        { text:'Задания «найди / добудь» с оценкой опасности', date:'21.10' },
+                        { text:'Поиск ресурсов в заданном радиусе (15–70 м)', date:'21.10' },
+                        { text:'Рубка деревьев, копка камня и руды', date:'21.10' },
                     ]},
-                    { title:'Тренировки', tiles:[
-                        { icon:'dummy',  name:'Манекены',        tip:'Отработка парирования и перекатов', date:'05.11' },
-                        { icon:'target', name:'Стрельбище',      tip:'Лесенка дистанций и углов', date:'08.11' },
-                        { icon:'cover',  name:'Из-за укрытия',   tip:'Стрельба из-за укрытия', date:'08.11' },
-                        { icon:'timer',  name:'Настройки',       tip:'Подходы, перерывы, время', date:'08.11' },
+                    { id:'training', icon:'target', name:'Тренировки', items:[
+                        { text:'Настраиваемые подходы, перерывы, время', date:'08.11' },
+                        { text:'Стрельбище — лесенка дистанций и углов', date:'08.11' },
+                        { text:'Стрельба из-за укрытия', date:'08.11' },
+                        { text:'Манекены — отработка парирования и перекатов', date:'05.11' },
                     ]},
-                    { title:'Мультиплеер', tiles:[
-                        { icon:'multi',  name:'Друзья видят',   tip:'ValeraListener.dll', date:'22.10' },
-                        { icon:'net',    name:'Голос по сети',   tip:'Сжатие ~16 КБ/с', date:'22.10' },
-                        { icon:'guard',  name:'Только хозяин',  tip:'Командует только хозяин', date:'22.10' },
-                        { icon:'home',   name:'Серверы',         tip:'Совместим с выделенными серверами', date:'22.10' },
+                    { id:'mp', icon:'multi', name:'Мультиплеер', items:[
+                        { text:'Совместим с выделенными серверами', date:'22.10' },
+                        { text:'Командует только хозяин', date:'22.10' },
+                        { text:'Голос сжимается и идёт по сети (~16 КБ/с)', date:'22.10' },
+                        { text:'Друг видит и слышит Валеру через ValeraListener.dll', date:'22.10' },
                     ]},
-                    { title:'Интерфейс', tiles:[
-                        { icon:'boss',   name:'Сила босса',     tip:'Значок и таймер перезарядки', date:'25.10' },
-                        { icon:'hud',    name:'HUD',             tip:'Здоровье, еда, выносливость, эффекты', date:'27.10' },
-                        { icon:'emotion',name:'Эмоции',          tip:'Радуется, огорчается, благодарит', date:'27.10' },
-                        { icon:'ring',   name:'Кольцо [E]',     tip:'Приказы и подменю', date:'08.11' },
-                        { icon:'skill',  name:'Окно навыков',   tip:'Навыки, ящики, настройки', date:'27.10' },
-                        { icon:'launch', name:'Автозапуск',      tip:'Тренер и голос с игрой', date:'10.11' },
-                        { icon:'reset',  name:'Сброс Валеры',   tip:'Полный сброс', date:'10.11' },
-                        { icon:'rune',   name:'Иконки рун',     tip:'Руны в кольцевом меню', date:'11.11' },
+                    { id:'ui', icon:'hud', name:'Интерфейс', items:[
+                        { text:'Автозапуск тренера и голоса с игрой', date:'10.11' },
+                        { text:'«Сбросить Валеру» — полный сброс', date:'10.11' },
+                        { text:'Иконки рун в кольцевом меню', date:'11.11' },
+                        { text:'Кольцевое меню на [E] — приказы и подменю', date:'08.11' },
+                        { text:'Окно навыков — вкладки: навыки, ящики, настройки', date:'27.10' },
+                        { text:'Чувства и эмоции — радуется, огорчается, благодарит', date:'27.10' },
+                        { text:'Эмоции по NumPad и голосом', date:'27.10' },
+                        { text:'Сила босса — значок и таймер перезарядки', date:'25.10' },
+                        { text:'HUD Валеры — здоровье, еда, выносливость, эффекты', date:'27.10' },
                     ]},
                 ];
 
-                const root = document.getElementById('featRoot');
-                CATS.forEach(cat => {
-                    let html = `<div class="feat-section"><div class="feat-cat-title">${cat.title}</div><div class="feat-grid">`;
-                    cat.tiles.forEach(t => {
-                        html += `<div class="feat-tile">
-                            <div class="feat-tile-icon">${svg(t.icon)}</div>
-                            <div class="feat-tile-name">${t.name}</div>
-                            <div class="feat-tile-date">${t.date}</div>
-                            <div class="feat-tip">${t.tip}</div>
+                const sidebar = document.getElementById('featSidebar');
+                const panel   = document.getElementById('featPanel');
+
+                CATS.forEach((cat, ci) => {
+                    /* Tab */
+                    const btn = document.createElement('button');
+                    btn.className = 'feat-tab' + (ci === 0 ? ' active' : '');
+                    btn.dataset.cat = cat.id;
+                    btn.innerHTML = `<span class="ft-icon">${svgIcon(cat.icon)}</span> ${cat.name} <span class="ft-count">${cat.items.length}</span>`;
+                    btn.onclick = () => {
+                        sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
+                        btn.classList.add('active');
+                        panel.querySelectorAll('.feat-panel-cat').forEach(p => p.classList.remove('active'));
+                        document.getElementById('fp-' + cat.id).classList.add('active');
+                    };
+                    sidebar.appendChild(btn);
+
+                    /* Panel */
+                    const div = document.createElement('div');
+                    div.className = 'feat-panel-cat' + (ci === 0 ? ' active' : '');
+                    div.id = 'fp-' + cat.id;
+
+                    let rows = '';
+                    cat.items.forEach(item => {
+                        rows += `<div class="feat-row">
+                            <span class="feat-row-check">✓</span>
+                            <span class="feat-row-text">${item.text}</span>
+                            <span class="feat-row-date">${item.date}</span>
                         </div>`;
                     });
-                    html += '</div></div>';
-                    root.innerHTML += html;
+                    div.innerHTML = rows;
+                    panel.appendChild(div);
                 });
             })();
             </script>
