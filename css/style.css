@@ -1082,6 +1082,7 @@ button {
     font-size: 0.875rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
+    text-decoration: none;
     color: hsl(var(--primary));
     background: hsl(var(--primary) / .05);
     border: 1px solid hsl(var(--primary) / .6);
