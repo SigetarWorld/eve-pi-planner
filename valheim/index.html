@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style.css?v=8">
+    <link rel="stylesheet" href="../css/style.css?v=9">
     <style>
         /* ===== Roadmap horizontal timeline ===== */
 
@@ -379,6 +379,63 @@
             .rm-card-text { font-size: 0.72rem; }
             .rm-progress-bar { flex-wrap: wrap; font-size: 0.72rem; }
         }
+
+        /* ===== Admin Panel ===== */
+        .admin-btn {
+            position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+            width: 48px; height: 48px; border-radius: 50%;
+            background: hsl(var(--primary)); color: #000; border: none;
+            font-size: 1.4rem; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.4);
+            transition: transform .2s, opacity .2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .admin-btn:hover { transform: scale(1.1); }
+        .admin-btn.logged-in { background: hsl(120 60% 40%); }
+        .admin-overlay {
+            display: none; position: fixed; inset: 0; z-index: 10000;
+            background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
+            overflow-y: auto; padding: 40px 16px;
+        }
+        .admin-overlay.open { display: flex; justify-content: center; align-items: flex-start; }
+        .admin-panel {
+            background: hsl(220 40% 7%); border: 1px solid hsl(var(--border));
+            border-radius: 8px; width: 100%; max-width: 700px; padding: 24px;
+            color: hsl(var(--foreground)); font-family: var(--font-body);
+        }
+        .admin-panel h2 { font-family: var(--font-display); color: hsl(var(--primary)); font-size: 1.3rem; margin: 0 0 16px; }
+        .admin-panel h3 { font-family: var(--font-display); color: hsl(var(--primary)); font-size: 1rem; margin: 16px 0 8px; }
+        .admin-panel label { display: block; font-size: .82rem; color: hsl(var(--muted-foreground)); margin: 8px 0 4px; }
+        .admin-panel input, .admin-panel textarea, .admin-panel select {
+            width: 100%; padding: 8px 10px; font-size: .85rem;
+            background: hsl(220 40% 10%); border: 1px solid hsl(var(--border));
+            border-radius: 4px; color: hsl(var(--foreground)); font-family: inherit;
+        }
+        .admin-panel textarea { min-height: 80px; resize: vertical; }
+        .admin-panel .btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .admin-panel button {
+            padding: 8px 16px; font-size: .82rem; border-radius: 4px; border: none;
+            cursor: pointer; font-family: var(--font-body); font-weight: 600;
+        }
+        .admin-panel .btn-primary { background: hsl(var(--primary)); color: #000; }
+        .admin-panel .btn-danger { background: hsl(0 60% 45%); color: #fff; }
+        .admin-panel .btn-secondary { background: hsl(220 40% 15%); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); }
+        .admin-panel .btn-close { position: absolute; top: 12px; right: 16px; background: none; color: hsl(var(--muted-foreground)); font-size: 1.4rem; border: none; cursor: pointer; }
+        .admin-panel .item-list { max-height: 300px; overflow-y: auto; margin: 8px 0; }
+        .admin-panel .item-row {
+            display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+            border-bottom: 1px solid hsl(var(--border) / .3); font-size: .8rem;
+        }
+        .admin-panel .item-row:hover { background: hsl(220 40% 9%); }
+        .admin-panel .item-row .edit-btn { margin-left: auto; padding: 2px 10px; font-size: .75rem; }
+        .admin-panel .tabs { display: flex; gap: 0; border-bottom: 1px solid hsl(var(--border)); margin-bottom: 16px; }
+        .admin-panel .tab-btn {
+            padding: 8px 16px; background: none; color: hsl(var(--muted-foreground));
+            border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: var(--font-body);
+        }
+        .admin-panel .tab-btn.active { color: hsl(var(--primary)); border-bottom-color: hsl(var(--primary)); }
+        .admin-panel .tab-content { display: none; }
+        .admin-panel .tab-content.active { display: block; }
+        .admin-status { font-family: 'Share Tech Mono', monospace; font-size: .75rem; color: hsl(120 60% 50%); margin-bottom: 12px; }
     </style>
 </head>
 <body>
@@ -803,6 +860,393 @@
             a.href = a.dataset.local;
         });
     }
+    </script>
+
+    <!-- ===== FIREBASE SDK ===== -->
+    <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+    import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider }
+        from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+    import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, orderBy, query }
+        from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCeiNbpGazVpxUCAIWG8z_uoZ1v04d3iWU",
+        authDomain: "sigetar-world.firebaseapp.com",
+        projectId: "sigetar-world",
+        storageBucket: "sigetar-world.firebasestorage.app",
+        messagingSenderId: "576934228499",
+        appId: "1:576934228499:web:540802299ff613600b85e0"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+    const ADMIN_EMAIL = 'citadelclubperm@gmail.com';
+
+    /* ---- Admin button ---- */
+    const adminBtn = document.createElement('button');
+    adminBtn.className = 'admin-btn';
+    adminBtn.title = 'Админ-панель';
+    adminBtn.innerHTML = '⚙';
+    document.body.appendChild(adminBtn);
+
+    /* ---- Admin overlay ---- */
+    const overlay = document.createElement('div');
+    overlay.className = 'admin-overlay';
+    overlay.innerHTML = `
+    <div class="admin-panel" style="position:relative;">
+        <button class="btn-close" id="adminClose">✕</button>
+        <h2>⚙ Админ-панель</h2>
+        <div class="admin-status" id="adminStatus">не авторизован</div>
+        <div id="adminLoginArea">
+            <button class="btn-primary" id="adminLoginBtn">Войти через Google</button>
+        </div>
+        <div id="adminContent" style="display:none;">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="milestones">Дорожная карта</button>
+                <button class="tab-btn" data-tab="features">Возможности</button>
+                <button class="tab-btn" data-tab="sync">Синхронизация</button>
+            </div>
+
+            <!-- TAB: Milestones -->
+            <div class="tab-content active" id="tab-milestones">
+                <h3>Текущие этапы</h3>
+                <div class="item-list" id="milestoneList"></div>
+                <h3>Добавить / Редактировать этап</h3>
+                <input id="mVer" placeholder="v0.XX">
+                <label>Название</label>
+                <input id="mTitle" placeholder="Название этапа">
+                <label>Дата (ДД.ММ)</label>
+                <input id="mDate" placeholder="01.11">
+                <label>Текст (каждая строка с новой строки)</label>
+                <textarea id="mText" placeholder="Описание&#10;Строка 2&#10;Строка 3"></textarea>
+                <label>Статус</label>
+                <select id="mStatus">
+                    <option value="done">Готово (done)</option>
+                    <option value="wip">В работе (wip)</option>
+                    <option value="plan" selected>Запланировано</option>
+                </select>
+                <label>Вес (по умолчанию 1, для финального — 15)</label>
+                <input id="mWeight" type="number" value="1" min="1">
+                <label>Порядок (число для сортировки)</label>
+                <input id="mOrder" type="number" value="0" min="0">
+                <div class="btn-row">
+                    <button class="btn-primary" id="mSave">Сохранить этап</button>
+                    <button class="btn-secondary" id="mClear">Очистить форму</button>
+                </div>
+            </div>
+
+            <!-- TAB: Features -->
+            <div class="tab-content" id="tab-features">
+                <h3>Категории и возможности</h3>
+                <div class="item-list" id="featureList"></div>
+                <h3>Добавить возможность</h3>
+                <label>Категория</label>
+                <select id="fCat">
+                    <option value="companion">Компаньон</option>
+                    <option value="inventory">Инвентарь</option>
+                    <option value="combat">Боевая система</option>
+                    <option value="voice">Голос и мозг</option>
+                    <option value="base">Работа на базе</option>
+                    <option value="mining">Добыча</option>
+                    <option value="training">Тренировки</option>
+                    <option value="mp">Мультиплеер</option>
+                    <option value="ui">Интерфейс</option>
+                </select>
+                <label>Описание</label>
+                <input id="fText" placeholder="Что реализовано">
+                <label>Дата (ДД.ММ)</label>
+                <input id="fDate" placeholder="01.11">
+                <div class="btn-row">
+                    <button class="btn-primary" id="fSave">Добавить возможность</button>
+                </div>
+            </div>
+
+            <!-- TAB: Sync -->
+            <div class="tab-content" id="tab-sync">
+                <h3>Синхронизация данных</h3>
+                <p style="font-size:.82rem;color:hsl(var(--muted-foreground));margin:8px 0;">
+                    Перенести текущие данные со страницы в Firebase (первый раз), или очистить базу.
+                </p>
+                <div class="btn-row">
+                    <button class="btn-primary" id="syncPush">📤 Загрузить данные в Firebase</button>
+                    <button class="btn-danger" id="syncClear">🗑 Очистить базу</button>
+                </div>
+                <div id="syncLog" style="margin-top:12px;font-family:'Share Tech Mono',monospace;font-size:.75rem;color:hsl(var(--muted-foreground));max-height:200px;overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>`;
+    document.body.appendChild(overlay);
+
+    /* ---- Tabs ---- */
+    overlay.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            overlay.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            overlay.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    /* ---- Open/Close ---- */
+    adminBtn.addEventListener('click', () => overlay.classList.add('open'));
+    document.getElementById('adminClose').addEventListener('click', () => overlay.classList.remove('open'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+    /* ---- Auth ---- */
+    const provider = new GoogleAuthProvider();
+    let currentUser = null;
+    let isAdmin = false;
+
+    document.getElementById('adminLoginBtn').addEventListener('click', async () => {
+        try { await signInWithPopup(auth, provider); }
+        catch(e) { alert('Ошибка входа: ' + e.message); }
+    });
+
+    onAuthStateChanged(auth, user => {
+        currentUser = user;
+        isAdmin = user && user.email === ADMIN_EMAIL;
+        const st = document.getElementById('adminStatus');
+        const la = document.getElementById('adminLoginArea');
+        const ac = document.getElementById('adminContent');
+
+        if (user) {
+            st.textContent = '✓ ' + user.email + (isAdmin ? ' (админ)' : ' (только чтение)');
+            la.innerHTML = `<button class="btn-secondary" id="adminLogoutBtn">Выйти</button>`;
+            document.getElementById('adminLogoutBtn').addEventListener('click', () => signOut(auth));
+            adminBtn.classList.add('logged-in');
+            if (isAdmin) {
+                ac.style.display = 'block';
+                refreshMilestoneList();
+                refreshFeatureList();
+            }
+        } else {
+            st.textContent = 'не авторизован';
+            la.innerHTML = `<button class="btn-primary" id="adminLoginBtn">Войти через Google</button>`;
+            document.getElementById('adminLoginBtn').addEventListener('click', async () => {
+                try { await signInWithPopup(auth, provider); }
+                catch(e) { alert('Ошибка входа: ' + e.message); }
+            });
+            ac.style.display = 'none';
+            adminBtn.classList.remove('logged-in');
+        }
+    });
+
+    /* ---- Firestore: load milestones ---- */
+    async function loadMilestonesFromDB() {
+        try {
+            const snap = await getDocs(query(collection(db, 'milestones'), orderBy('order')));
+            if (snap.empty) return null;
+            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch(e) { console.warn('Firestore milestones load error:', e); return null; }
+    }
+
+    /* ---- Firestore: load features ---- */
+    async function loadFeaturesFromDB() {
+        try {
+            const snap = await getDocs(collection(db, 'features'));
+            if (snap.empty) return null;
+            const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            return items;
+        } catch(e) { console.warn('Firestore features load error:', e); return null; }
+    }
+
+    /* ---- Refresh milestone list in admin ---- */
+    async function refreshMilestoneList() {
+        const list = document.getElementById('milestoneList');
+        const data = await loadMilestonesFromDB();
+        if (!data || data.length === 0) {
+            list.innerHTML = '<div style="padding:8px;font-size:.8rem;color:hsl(var(--muted-foreground))">База пуста — загрузите данные во вкладке «Синхронизация»</div>';
+            return;
+        }
+        list.innerHTML = data.map(m => `
+            <div class="item-row">
+                <span style="color:hsl(var(--primary));font-family:'Share Tech Mono',monospace;font-size:.75rem;width:50px;">${m.ver}</span>
+                <span style="flex:1">${m.title}</span>
+                <span style="font-size:.7rem;color:hsl(var(--muted-foreground))">${m.done ? '✓' : m.wip ? '~' : '○'}</span>
+                <button class="btn-secondary edit-btn" data-id="${m.id}">✎</button>
+                <button class="btn-danger edit-btn" data-del="${m.id}" style="padding:2px 8px;">✕</button>
+            </div>
+        `).join('');
+        list.querySelectorAll('[data-id]').forEach(btn => {
+            btn.addEventListener('click', () => editMilestone(data.find(m => m.id === btn.dataset.id)));
+        });
+        list.querySelectorAll('[data-del]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (confirm('Удалить этот этап?')) {
+                    await deleteDoc(doc(db, 'milestones', btn.dataset.del));
+                    refreshMilestoneList();
+                }
+            });
+        });
+    }
+
+    function editMilestone(m) {
+        document.getElementById('mVer').value = m.ver;
+        document.getElementById('mTitle').value = m.title;
+        document.getElementById('mDate').value = m.date || '';
+        document.getElementById('mText').value = (m.text || '').replace(/<br>/g, '\n');
+        document.getElementById('mStatus').value = m.done ? 'done' : m.wip ? 'wip' : 'plan';
+        document.getElementById('mWeight').value = m.w || 1;
+        document.getElementById('mOrder').value = m.order || 0;
+    }
+
+    /* ---- Save milestone ---- */
+    document.getElementById('mSave').addEventListener('click', async () => {
+        const ver = document.getElementById('mVer').value.trim();
+        if (!ver) return alert('Укажите версию (v0.XX)');
+        const status = document.getElementById('mStatus').value;
+        const data = {
+            ver,
+            title: document.getElementById('mTitle').value.trim(),
+            date: document.getElementById('mDate').value.trim(),
+            text: document.getElementById('mText').value.trim(),
+            done: status === 'done',
+            wip: status === 'wip',
+            w: parseInt(document.getElementById('mWeight').value) || 1,
+            order: parseInt(document.getElementById('mOrder').value) || 0,
+        };
+        try {
+            await setDoc(doc(db, 'milestones', ver), data);
+            alert('Этап ' + ver + ' сохранён!');
+            clearMilestoneForm();
+            refreshMilestoneList();
+        } catch(e) { alert('Ошибка: ' + e.message); }
+    });
+
+    document.getElementById('mClear').addEventListener('click', clearMilestoneForm);
+    function clearMilestoneForm() {
+        ['mVer','mTitle','mDate','mText'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('mStatus').value = 'plan';
+        document.getElementById('mWeight').value = '1';
+        document.getElementById('mOrder').value = '0';
+    }
+
+    /* ---- Refresh feature list in admin ---- */
+    async function refreshFeatureList() {
+        const list = document.getElementById('featureList');
+        const data = await loadFeaturesFromDB();
+        if (!data || data.length === 0) {
+            list.innerHTML = '<div style="padding:8px;font-size:.8rem;color:hsl(var(--muted-foreground))">База пуста — загрузите данные во вкладке «Синхронизация»</div>';
+            return;
+        }
+        /* Group by category */
+        const grouped = {};
+        data.forEach(f => {
+            if (!grouped[f.cat]) grouped[f.cat] = [];
+            grouped[f.cat].push(f);
+        });
+        let html = '';
+        for (const [cat, items] of Object.entries(grouped)) {
+            html += `<div style="font-size:.75rem;color:hsl(var(--primary));padding:6px 8px;font-weight:600;">${cat} (${items.length})</div>`;
+            items.forEach(f => {
+                html += `<div class="item-row">
+                    <span style="flex:1">${f.text}</span>
+                    <span style="font-size:.7rem;color:hsl(var(--muted-foreground))">${f.date||''}</span>
+                    <button class="btn-danger edit-btn" data-fdel="${f.id}" style="padding:2px 8px;">✕</button>
+                </div>`;
+            });
+        }
+        list.innerHTML = html;
+        list.querySelectorAll('[data-fdel]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (confirm('Удалить эту возможность?')) {
+                    await deleteDoc(doc(db, 'features', btn.dataset.fdel));
+                    refreshFeatureList();
+                }
+            });
+        });
+    }
+
+    /* ---- Save feature ---- */
+    document.getElementById('fSave').addEventListener('click', async () => {
+        const text = document.getElementById('fText').value.trim();
+        if (!text) return alert('Укажите описание');
+        const data = {
+            cat: document.getElementById('fCat').value,
+            text,
+            date: document.getElementById('fDate').value.trim(),
+        };
+        const id = data.cat + '_' + Date.now();
+        try {
+            await setDoc(doc(db, 'features', id), data);
+            alert('Возможность добавлена!');
+            document.getElementById('fText').value = '';
+            document.getElementById('fDate').value = '';
+            refreshFeatureList();
+        } catch(e) { alert('Ошибка: ' + e.message); }
+    });
+
+    /* ---- Sync: push hardcoded data to Firestore ---- */
+    document.getElementById('syncPush').addEventListener('click', async () => {
+        if (!isAdmin) return alert('Нет прав');
+        if (!confirm('Загрузить все текущие данные со страницы в Firebase?')) return;
+        const log = document.getElementById('syncLog');
+        log.innerHTML = '';
+        const addLog = msg => { log.innerHTML += msg + '<br>'; log.scrollTop = log.scrollHeight; };
+
+        try {
+            /* Milestones */
+            addLog('Загрузка этапов...');
+            for (let i = 0; i < MILESTONES.length; i++) {
+                const m = MILESTONES[i];
+                await setDoc(doc(db, 'milestones', m.ver), {
+                    ver: m.ver, title: m.title, done: !!m.done, wip: !!m.wip,
+                    date: m.date || '', text: m.text || '', w: m.w || 1, order: i,
+                });
+                addLog('  ✓ ' + m.ver + ' — ' + m.title);
+            }
+
+            /* Features (from CATS) — read from page script variable */
+            addLog('Загрузка возможностей...');
+            /* CATS is inside an IIFE, but we have the data in the page DOM.
+               Instead, we'll parse the items from the feat-panel */
+            const catNames = { companion:'companion', inventory:'inventory', combat:'combat',
+                voice:'voice', base:'base', mining:'mining', training:'training', mp:'mp', ui:'ui' };
+            const panels = document.querySelectorAll('.feat-panel-cat');
+            const sidebar = document.querySelectorAll('.feat-tab');
+            let fCount = 0;
+            sidebar.forEach((tab, ci) => {
+                const catId = tab.dataset.cat;
+                const panel = document.getElementById('fp-' + catId);
+                if (!panel) return;
+                const rows = panel.querySelectorAll('.feat-row');
+                rows.forEach((row, ri) => {
+                    const text = row.querySelector('.feat-row-text')?.textContent?.trim() || '';
+                    const date = row.querySelector('.feat-row-date')?.textContent?.trim() || '';
+                    const fId = catId + '_' + String(ri).padStart(3, '0');
+                    setDoc(doc(db, 'features', fId), { cat: catId, text, date });
+                    fCount++;
+                });
+                addLog('  ✓ ' + catId + ': ' + rows.length + ' элементов');
+            });
+            addLog('Готово! Загружено ' + MILESTONES.length + ' этапов и ' + fCount + ' возможностей.');
+            refreshMilestoneList();
+            refreshFeatureList();
+        } catch(e) {
+            addLog('❌ Ошибка: ' + e.message);
+        }
+    });
+
+    /* ---- Sync: clear DB ---- */
+    document.getElementById('syncClear').addEventListener('click', async () => {
+        if (!isAdmin) return alert('Нет прав');
+        if (!confirm('УДАЛИТЬ ВСЕ данные из Firebase? Это действие необратимо!')) return;
+        const log = document.getElementById('syncLog');
+        log.innerHTML = 'Очистка...<br>';
+        try {
+            for (const col of ['milestones', 'features']) {
+                const snap = await getDocs(collection(db, col));
+                for (const d of snap.docs) await deleteDoc(d.ref);
+                log.innerHTML += col + ': удалено ' + snap.docs.length + '<br>';
+            }
+            log.innerHTML += 'Готово!<br>';
+            refreshMilestoneList();
+            refreshFeatureList();
+        } catch(e) { log.innerHTML += '❌ ' + e.message + '<br>'; }
+    });
+
     </script>
 </body>
 </html>
