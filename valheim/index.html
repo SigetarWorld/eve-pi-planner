@@ -195,6 +195,13 @@
         .rm-ver .pending {
             color: hsl(var(--muted-foreground));
         }
+        .rm-date {
+            font-family: var(--font-body);
+            font-size: 0.6rem;
+            color: hsl(var(--muted-foreground));
+            margin-left: 6px;
+            opacity: 0.7;
+        }
         .rm-card-title {
             font-family: var(--font-heading);
             font-size: 0.95rem;
@@ -454,7 +461,7 @@
             <div class="rm-bar-track" id="rmBarTrack"></div>
             <span id="rmPercent">0%</span>
             <span>|</span>
-            <span>NEXT: v5.0 ВИКИНГ</span>
+            <span id="rmNext">NEXT: v0.29</span>
         </div>
     </div>
 
@@ -634,35 +641,38 @@
     <script>
     /* ===== Roadmap milestones data ===== */
     const MILESTONES = [
-        { ver:'v0.01', title:'Запуск', done:true, text:'Запускается в игре\nСпавн рядом с игроком\nСвой чат с [AI] Валерой\nВиден на карте' },
-        { ver:'v0.02', title:'Инвентарь', done:true, text:'Выносливость тратится\nЕсть перегруз\nИнвентарь 8×4\nВиден на карте' },
-        { ver:'v0.03', title:'Смерть', done:true, text:'Появляется у своей кровати\nЖдёт или идёт по команде\nЕсли погиб, помогает другим игрокам' },
-        { ver:'v0.04', title:'Движение', done:true, text:'Бежит сам, а не телепортируется\nПроходит порталы\nОбходит препятствия\nНе лезет в костёр\nВ подземельях не мешает\nУклоняется от деревьев' },
-        { ver:'v0.05', title:'Потребности', done:true, text:'Ест до трёх блюд\nПросит еду\nИщет еду в сундуках\nЧинится у верстака\nОтдыхает у огня' },
-        { ver:'v0.06', title:'Зрение и Звуки', done:true, text:'Не видит сквозь стены\nСлышит вокруг себя на 5 метров\nЗрение под ноги — ступени, обрывы' },
-        { ver:'v0.07', title:'Работа', done:true, text:'Рубит и копает\nДобывает по ассисту\nМожно попросить добыть в радиусе 50 метров' },
-        { ver:'v0.08', title:'Крафт', done:true, text:'Крафтит по просьбе\nГоворит, чего не хватает\nНадевает скрафченное' },
-        { ver:'v0.09', title:'База (Дом)', done:true, text:'Запоминает дом\nКоманды: «Здесь база»,\n«Жди на базе», «Отнеси\nдобычу», «Сложи в ящики»' },
-        { ver:'v0.10', title:'Карта', done:true, text:'Ставит метки ресурсов\nИдёт на Ping по карте\nВедёт к могиле' },
-        { ver:'v0.11', title:'Силы боссов', done:true, text:'Берёт их у камня и использует\nСвоя перезарядка\nРешает, когда применить' },
-        { ver:'v0.12', title:'Бой', done:true, text:'Выбирает приёмы нейросетью\nОбучение запускается с игрой\nВыносливость тратит\nНа Валеру тоже агрятся враги' },
-        { ver:'v0.13', title:'Бой: Лук', done:true, text:'Навесная траектория\nСтрельба на ходу и самообучение\nупреждению по движущейся цели' },
-        { ver:'v0.14', title:'Бой: Авария', done:true, text:'Меньше 20% здоровья — спасается\nКончились стрелы — говорит и\nберёт другое оружие\nДраться нечем — убегает' },
-        { ver:'v0.15', title:'Бой: Лут', done:true, text:'Собирает с тех, кого убил\nКончились стрелы — подбирает\nберёт другое оружие\nДраться нечем — убегает' },
-        { ver:'v0.16', title:'Голос', done:true, text:'Микрофон по Имени, если нажать V,\nбез имени\nКрафтит предметы\nПомогает строить' },
-        { ver:'v0.17', title:'Голос: Друзья', done:true, text:'Есть дополнительный мод, чтобы\nего слышали играющие с вами\nдрузья' },
-        { ver:'v0.18', title:'Голос: Друзья', done:true, text:'Друзья могли давать команды\nВалере или разговаривать с ним' },
-        { ver:'v0.19', title:'Мозг', done:true, text:'Платный (Claude)\nРеплики ИИ придумывает по ходу\nПонимает контекст' },
-        { ver:'v0.20', title:'Мозг', done:false, wip:true, text:'Сделать бесплатно!\nOllama локально на GPU\nqwen3:4b-instruct' },
-        { ver:'v0.21', title:'Интерфейс', done:true, text:'Справа внизу как у игрока\nВыносливость по центру внизу\nСилы боссов и эффекты слева от\nминикарты\nE — инвентарь с бронёй\nЗажать E — навыки' },
-        { ver:'v0.22', title:'Автозапуск', done:true, text:'Голос и Обучение ИИ стартуют\nвместе с игрой\nНастройки в конфиге' },
-        { ver:'v0.23', title:'Сохранение', done:true, text:'Новый Мир все с нуля\nBackUp инвентаря, оружия и шмоток\nНавыки между сессиями' },
-        { ver:'v0.24', title:'Домашние дела', done:true, text:'Переплавка, уголь, готовка\nОгород — пересадка\nСортировка ящиков\nПатруль базы' },
-        { ver:'v0.25', title:'Тренировки', done:true, text:'Стрельбище — лесенка\nМанекены — парирование\nПерекаты — тайминги\nУчит замахи врагов' },
-        { ver:'v0.26', title:'Обучение вне боя', done:false, wip:true, text:'Исследование, сбор ресурсов\nОтдельная ветка награды\nНейросеть вместо правил' },
-        { ver:'v0.27', title:'Цепочки заданий', done:false, text:'«Наруби и принеси»\nПодцели и приоритеты\nСложные просьбы' },
-        { ver:'v0.28', title:'ONNX режим', done:false, text:'Без Python\nВстроенный в мод\nMicrosoft.ML.OnnxRuntime' },
-        { ver:'v5.0', title:'ВИКИНГ', done:false, text:'Сам ставит себе цели\nХодит в походы\nНастоящий напарник\nДискутирует о вселенной' },
+        { ver:'v0.01', title:'Запуск', done:true, date:'21.10', text:'Рождение Валеры\nСпавн рядом с игроком\nМетка на карте\nДогоняет бегом' },
+        { ver:'v0.02', title:'Инвентарь', done:true, date:'21.10', text:'Сумка [E] — окно 8×4\nАвто-экипировка\nПодбор добычи в 12 м\nЕсть перегруз' },
+        { ver:'v0.03', title:'Смерть', done:true, date:'21.10', text:'Появляется у кровати\nЖдёт или идёт по команде\nНавыки падают как у игрока' },
+        { ver:'v0.04', title:'Движение', done:true, date:'21.10', text:'Бежит, не телепортируется\nПорталы и подземелья\nОбход препятствий\nНе лезет в костёр' },
+        { ver:'v0.05', title:'Потребности', done:true, date:'21.10', text:'Ест до трёх блюд\nИщет еду в сундуках\nЧинится у верстака\nОтдыхает у огня' },
+        { ver:'v0.06', title:'Зрение', done:true, date:'27.10', text:'Не видит сквозь стены\nЗрение под ноги\nСтупени, обрывы, вода\nОбходит огонь' },
+        { ver:'v0.07', title:'Работа', done:true, date:'21.10', text:'Рубит деревья и камни\nДобывает руду\nПоиск ресурсов в радиусе\nМетки на карте' },
+        { ver:'v0.08', title:'Крафт', done:true, date:'21.10', text:'Крафтит по просьбе\nГоворит, чего не хватает\nНадевает скрафченное' },
+        { ver:'v0.09', title:'База (Дом)', done:true, date:'21.10', text:'Запоминает базу\n«Отнеси добычу»\n«Сложи в ящики»\nПамять ящиков и табличек' },
+        { ver:'v0.10', title:'Карта', done:true, date:'25.10', text:'Метки ресурсов по команде\nИдёт на Ping по карте\nВедёт к могиле\n«Убери / верни метки»' },
+        { ver:'v0.11', title:'Силы боссов', done:true, date:'25.10', text:'Берёт силу у камня\nСвоя перезарядка\nРешает, когда применить\nЗначок и таймер на HUD' },
+        { ver:'v0.12', title:'Бой', done:true, date:'21.10', text:'Нейросеть PPO\n6 приёмов: удар, блок,\nуклон, отступ, кружение\nОбучение с игрой' },
+        { ver:'v0.13', title:'Бой: Лук', done:true, date:'27.10', text:'Баллистика стрел\nСамообучение упреждения\nСтрельба на ходу\nПоправка по дистанции' },
+        { ver:'v0.14', title:'Бой: Авария', done:true, date:'26.10', text:'Меньше 20% HP — спасается\nКончились стрелы — другое оружие\nСпасение заранее по памяти урона' },
+        { ver:'v0.15', title:'Бой: Лут', done:true, date:'21.10', text:'Собирает добычу после боя\nНе подбирает в бою\nПодбирает стрелы с тел' },
+        { ver:'v0.16', title:'Голос', done:true, date:'21.10', text:'Whisper + Vosk + словарь\nSilero TTS офлайн\n40+ голосовых команд\n3 режима: имя, рация, всегда' },
+        { ver:'v0.17', title:'Мультиплеер', done:true, date:'22.10', text:'ValeraListener.dll для друзей\nГолос по сети ~16 КБ/с\nДрузья видят и слышат\nКомандует только хозяин' },
+        { ver:'v0.18', title:'Чувства', done:true, date:'27.10', text:'Радость новым вещам\nОгорчение при потере\nЭмоции по NumPad и голосом\nБлагодарит за лучшую экипировку' },
+        { ver:'v0.19', title:'Мозг: Claude', done:true, date:'28.10', text:'Claude Haiku для диалога\nРеплики по ходу игры\nПонимает контекст\nШутки и советы' },
+        { ver:'v0.20', title:'Мозг: Бесплатно', done:true, date:'04.11', text:'Ollama локально на GPU\nqwen3:4b-instruct\nБез интернета и оплаты\n~3.2 ГБ видеопамяти' },
+        { ver:'v0.21', title:'Интерфейс', done:true, date:'27.10', text:'HUD как у игрока\nКольцевое меню на [E]\nОкно навыков — зажать E\nВкладки: навыки, ящики, настройки' },
+        { ver:'v0.22', title:'Автозапуск', done:true, date:'10.11', text:'Тренер и голос стартуют\nвместе с игрой\nОтслеживание падений\nНастройки в конфиге' },
+        { ver:'v0.23', title:'Сохранение', done:true, date:'29.10', text:'Каждый мир — свои данные\nBackUp инвентаря\nНавыки между сессиями\n«Верни шмот» из backup' },
+        { ver:'v0.24', title:'Домашние дела', done:true, date:'08.11', text:'Переплавка, уголь, готовка\nОгород — пересадка\nСортировка ящиков\nПатруль и порядок дел' },
+        { ver:'v0.25', title:'Тренировки', done:true, date:'08.11', text:'Стрельбище — лесенка\nМанекены — парирование\nПерекаты — тайминги\nУчит замахи врагов' },
+        { ver:'v0.26', title:'Загоны и Свет', done:true, date:'10.11', text:'Загоны: звери у табличек\nСветильники: топливо\nМёд из ульев и перья\n«Где репа?» — ищет в ящиках' },
+        { ver:'v0.27', title:'Бой с боссами', done:true, date:'11.11', text:'Подготовка к каждому боссу\nМедовуха по уязвимости\nМасса костей — булава и лёд\nЭмоции на боссов и память' },
+        { ver:'v0.28', title:'Защита позиции', done:true, date:'12.11', text:'«Стой на месте» — охраняет\nБьёт врагов в 10 м\nСмерть: «идти к тебе?»\nНовые иконки кольца' },
+        { ver:'v0.29', title:'Обучение вне боя', done:false, wip:true, text:'Исследование и сбор\nОтдельная ветка награды\nНейросеть вместо правил' },
+        { ver:'v0.30', title:'Цепочки заданий', done:false, text:'«Наруби и принеси»\nПодцели и приоритеты\nСложные просьбы' },
+        { ver:'v0.31', title:'ONNX режим', done:false, text:'Без Python\nВстроенный в мод\nMicrosoft.ML.OnnxRuntime' },
+        { ver:'v5.0', title:'ВИКИНГ', done:false, w:15, text:'Сам ставит себе цели\nХодит в походы\nНастоящий напарник\nДискутирует о вселенной' },
     ];
 
     const rmInner  = document.getElementById('rmInner');
@@ -671,9 +681,15 @@
     const rmBar    = document.getElementById('rmBarTrack');
     const rmPct    = document.getElementById('rmPercent');
 
-    const totalDone = MILESTONES.filter(m => m.done).length;
-    const totalWip  = MILESTONES.filter(m => m.wip).length;
-    const pct = Math.round(((totalDone + totalWip * 0.5) / MILESTONES.length) * 100);
+    /* Weighted progress: v5.0 counts as 15 steps, not 1 */
+    let wDone = 0, wWip = 0, wTotal = 0;
+    MILESTONES.forEach(m => {
+        const w = m.w || 1;
+        wTotal += w;
+        if (m.done) wDone += w;
+        else if (m.wip) wWip += w * 0.5;
+    });
+    const pct = Math.round((wDone + wWip) / wTotal * 100);
 
     /* Build nodes */
     MILESTONES.forEach((m, i) => {
@@ -683,11 +699,13 @@
         const status = m.done ? 'done' : (m.wip ? 'wip' : 'plan');
         const check  = m.done ? '<span class="check">[x]</span>' : (m.wip ? '<span class="pending">[~]</span>' : '<span class="pending">[ ]</span>');
 
+        const dateTag = m.date ? `<span class="rm-date">${m.date}</span>` : '';
+
         node.innerHTML = `
             <div class="rm-dot rm-dot--${status}"></div>
             <div class="rm-stem"></div>
             <div class="rm-card">
-                <div class="rm-ver">${check} ${m.ver}</div>
+                <div class="rm-ver">${check} ${m.ver} ${dateTag}</div>
                 <div class="rm-card-title">${m.title}</div>
                 <div class="rm-card-text">${m.text.replace(/\n/g, '<br>')}</div>
             </div>
@@ -721,6 +739,10 @@
         rmBar.appendChild(b);
     }
     rmPct.textContent = pct + '%';
+
+    /* Set NEXT milestone label */
+    const nextM = MILESTONES.find(m => !m.done && !m.wip);
+    if (nextM) document.getElementById('rmNext').textContent = 'NEXT: ' + nextM.ver + ' ' + nextM.title;
 
     /* Auto-scroll animation */
     let autoScroll = true;
