@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=7">
+    <link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
     <header class="site-header">
@@ -21,6 +21,7 @@
                 <button type="button" data-tab="about">Обо мне</button>
                 <!-- Переходы на другие разделы сайта. На сервере — /eveonline/ и /clashroyale/,
                      при открытии файла с диска js/app.js подставляет data-local -->
+                <a class="nav-link" href="/valheim/" data-local="../Valheim/index.html">Valheim</a>
                 <a class="nav-link" href="/eveonline/" data-local="../EVE/index.html">EVE Online</a>
                 <a class="nav-link" href="/clashroyale/" data-local="../ClashRoyale/index.html">Clash Royale</a>
                 <a class="nav-link" href="/log/" data-local="log/index.html">Log</a>
@@ -72,7 +73,24 @@
 
             <hr class="rule">
 
-            <p class="eyebrow">// 01 — EVE Online</p>
+            <p class="eyebrow">// 01 — Valheim Mod</p>
+            <h2 class="section-title">Valheim Mod</h2>
+            <p class="section-lead">
+                Valheim — кооперативная survival-игра в скандинавском сеттинге.
+                Здесь собраны моды и инструменты для улучшения игрового опыта.
+            </p>
+
+            <div class="grid">
+                <div class="panel">
+                    <h3 class="h-split">Моды <span>mods</span></h3>
+                    <p class="panel-text">Коллекция модов для Valheim — улучшения геймплея, новые предметы, настройки сервера и многое другое.</p>
+                    <a class="panel-link" href="/valheim/" data-local="../Valheim/index.html">Перейти →</a>
+                </div>
+            </div>
+
+            <hr class="rule">
+
+            <p class="eyebrow">// 02 — EVE Online</p>
             <h2 class="section-title">EVE Online</h2>
             <p class="section-lead">
                 EVE Online - это массовая многопользовательская онлайн-игра (ММО) с научно-фантастическим сеттингом, 
@@ -211,7 +229,7 @@
 			
 			 <hr class="rule">
 
-            <p class="eyebrow">// 02 — Clash Royale</p>
+            <p class="eyebrow">// 03 — Clash Royale</p>
             <h2 class="section-title">Clash Royale</h2>
             <p class="section-lead">
                 Clash Royale - игра в жанре стратегии с элементами коллекционных карточных игр (ККИ).
