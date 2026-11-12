@@ -450,7 +450,7 @@ main {
 }
 
 /* Логотипы — 2 столбца, монохром + цвет при наведении */
-.stats--social { grid-template-columns: repeat(2, 1fr); max-width: 280px; margin-left: auto; }
+.stats--social { grid-template-columns: repeat(2, 1fr); margin-left: auto; }
 .stat--logo {
     display: flex;
     align-items: center;
