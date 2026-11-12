@@ -294,71 +294,130 @@
         .vm-section-title span {
             color: hsl(var(--primary));
         }
-        .feat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-            margin-bottom: 32px;
-        }
-        .feat-card {
+        /* ===== Features: sidebar + panel ===== */
+        .feat-wrap {
+            display: flex;
+            gap: 0;
             border: 1px solid hsl(var(--border));
             border-radius: var(--radius);
-            background: hsl(var(--card));
-            padding: 20px 22px;
-            transition: border-color .25s;
+            overflow: hidden;
+            margin-bottom: 32px;
+            min-height: 420px;
         }
-        .feat-card:hover { border-color: hsl(var(--secondary)); }
-        .feat-card-head {
+        .feat-sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            background: hsl(var(--card));
+            border-right: 1px solid hsl(var(--border));
+            display: flex;
+            flex-direction: column;
+        }
+        .feat-tab {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 12px;
-        }
-        .feat-card-head .feat-date {
-            margin-left: auto;
-            font-family: var(--font-body);
-            font-size: 0.65rem;
+            padding: 14px 16px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
             color: hsl(var(--muted-foreground));
-            opacity: 0.7;
-            white-space: nowrap;
+            font-family: var(--font-heading);
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-align: left;
+            border-bottom: 1px solid hsl(var(--border) / .4);
+            transition: background .2s, color .2s;
         }
-        .feat-icon {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: hsl(var(--primary) / .1);
+        .feat-tab:hover {
+            background: hsl(var(--secondary) / .12);
+            color: hsl(var(--foreground));
+        }
+        .feat-tab.active {
+            background: hsl(var(--secondary) / .2);
             color: hsl(var(--primary));
+            border-left: 3px solid hsl(var(--primary));
+        }
+        .feat-tab .ft-icon {
             font-size: 1rem;
+            width: 22px;
+            text-align: center;
             flex-shrink: 0;
         }
-        .feat-card h3 {
-            font-family: var(--font-heading);
-            font-size: 1.05rem;
-            font-weight: 700;
-            margin: 0;
-            letter-spacing: 0.03em;
+        .feat-tab .ft-count {
+            margin-left: auto;
+            font-size: 0.7rem;
+            opacity: 0.5;
+            font-family: var(--font-body);
         }
-        .feat-list {
-            list-style: none;
-            margin: 0;
+        .feat-panel {
+            flex: 1;
             padding: 0;
+            overflow-y: auto;
         }
-        .feat-list li {
-            position: relative;
-            padding: 5px 0 5px 20px;
-            font-size: 0.88rem;
-            color: rgba(255,255,255,0.6);
-            line-height: 1.6;
+        .feat-panel-cat {
+            display: none;
         }
-        .feat-list li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
+        .feat-panel-cat.active {
+            display: block;
+        }
+        .feat-panel-head {
+            padding: 18px 24px 10px;
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: hsl(var(--foreground));
+            border-bottom: 1px solid hsl(var(--border) / .3);
+        }
+        .feat-row {
+            display: flex;
+            align-items: flex-start;
+            padding: 10px 24px;
+            border-bottom: 1px solid hsl(var(--border) / .15);
+            transition: background .15s;
+        }
+        .feat-row:hover {
+            background: hsl(var(--secondary) / .06);
+        }
+        .feat-row-check {
             color: hsl(150 60% 45%);
             font-weight: 700;
+            margin-right: 10px;
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+        .feat-row-text {
+            flex: 1;
+            font-size: 0.88rem;
+            color: rgba(255,255,255,.75);
+            line-height: 1.5;
+        }
+        .feat-row-date {
+            margin-left: 16px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.72rem;
+            color: hsl(var(--primary) / .7);
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        @media (max-width: 700px) {
+            .feat-wrap { flex-direction: column; min-height: auto; }
+            .feat-sidebar {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                border-right: none;
+                border-bottom: 1px solid hsl(var(--border));
+            }
+            .feat-tab {
+                white-space: nowrap;
+                border-bottom: none;
+                border-left: none !important;
+                padding: 10px 14px;
+                font-size: 0.8rem;
+            }
+            .feat-tab.active { border-bottom: 2px solid hsl(var(--primary)); border-left: none !important; }
+            .feat-tab .ft-count { display: none; }
         }
         .tech-row {
             display: flex;
@@ -390,7 +449,6 @@
         .vm-footer a:hover { text-decoration: underline; }
 
         @media (max-width: 640px) {
-            .feat-grid { grid-template-columns: 1fr; }
             .rm-inner { height: 480px; }
             .rm-node { width: 220px; }
             .rm-card { width: 200px; padding: 10px 12px; }
@@ -479,149 +537,141 @@
             <p class="eyebrow">// 01 — Что сделано</p>
             <h2 class="vm-section-title"><span>✓</span> Реализованные возможности</h2>
 
-            <div class="feat-grid">
-                <div class="feat-card">
-                    <div class="feat-card-head">
-                        <div class="feat-icon">⚔</div>
-                        <h3>Компаньон и основы</h3>
-                        <span class="feat-date">с 21.10</span>
-                    </div>
-                    <ul class="feat-list">
-                        <li>Компаньон-человек (клон Player) — ходит за тобой</li>
-                        <li>Обход препятствий по навигационной сетке игры</li>
-                        <li>Метка на миникарте и большой карте</li>
-                        <li>Смерть и возрождение как у игрока</li>
-                        <li>«За кадром» — ведётся модом за пределами 100 м</li>
-                        <li>Порталы, двери склепов и подземелий</li>
-                        <li>Посиделки — садится рядом на стул или пол</li>
-                        <li>Корабль и плот — залезает и сидит на лавке</li>
-                    </ul>
-                </div>
-                <div class="feat-card">
-                    <div class="feat-card-head">
-                        <div class="feat-icon">🎒</div>
-                        <h3>Инвентарь и экипировка</h3>
-                        <span class="feat-date">с 21.10</span>
-                    </div>
-                    <ul class="feat-list">
-                        <li>Сумка [E] — ванильное окно сундука 8×4</li>
-                        <li>Авто-экипировка оружия и брони из сумки</li>
-                        <li>Подбор добычи в 12 м — подходит и берёт</li>
-                        <li>Сам следит за едой — ест до трёх блюд</li>
-                        <li>Еда работает по-настоящему (таймеры, лечение)</li>
-                        <li>Навыки растут и сохраняются между сессиями</li>
-                        <li>«Соберись» — берёт лучшее из сундуков</li>
-                        <li>Крафт по голосу — факел, топор и т.д.</li>
-                    </ul>
-                </div>
-                <div class="feat-card">
-                    <div class="feat-card-head">
-                        <div class="feat-icon">🗡</div>
-                        <h3>Боевая система</h3>
-                        <span class="feat-date">21.10 — 11.11</span>
-                    </div>
-                    <ul class="feat-list">
-                        <li>6 приёмов: удар, блок, уклон, отступ, кружение, особый</li>
-                        <li>Нейросеть PPO выбирает приём по ситуации</li>
-                        <li>Парирование — учит замах каждого врага</li>
-                        <li>Лук — поправка на падение стрелы и упреждение</li>
-                        <li>Танк-варианты: щит / перекаты / натиск / лук</li>
-                        <li>Серии ударов — как игрок «держит кнопку»</li>
-                        <li>Спасение заранее по запомненному урону врага</li>
-                        <li>Медовуха в бою — по нехватке здоровья</li>
-                        <li>Сборы на босса — стрелы, медовухи, оружие</li>
-                    </ul>
-                </div>
-                <div class="feat-card">
-                    <div class="feat-card-head">
-                        <div class="feat-icon">🎙</div>
-                        <h3>Голосовое управление</h3>
-                        <span class="feat-date">21.10 — 04.11</span>
-                    </div>
-                    <ul class="feat-list">
-                        <li>Whisper (офлайн) + Vosk — двойное распознавание</li>
-                        <li>Ollama (локально, бесплатно) или Claude для ответов</li>
-                        <li>Silero TTS — озвучка Валеры (офлайн)</li>
-                        <li>40+ голосовых команд: бой, сбор, готовка, огород</li>
-                        <li>Обучение голосом — «запомни: X значит Y»</li>
-                        <li>Память фактов между сессиями</li>
-                        <li>Три режима: по имени (wake), рация (ptt), всегда</li>
-                    </ul>
-                </div>
-                <div class="feat-card">
-                    <div class="feat-card-head">
-                        <div class="feat-icon">🏠</div>
-                        <h3>Работа на базе</h3>
-                        <span class="feat-date">01.11 — 10.11</span>
-                    </div>
-                    <ul class="feat-list">
-                        <li>Сортировка ящиков по табличкам</li>
-                        <li>Переплавка руды, жжение угля</li>
-                        <li>Готовка — вертел, сковорода, котёл, бочка</li>
-                        <li>Огород — сбор, пересадка, семена из ящиков</li>
-                        <li>Починка у верстака / кузницы</li>
-                        <li>Патруль базы — обход и доклад</li>
-                        <li>Память ящиков — таблички и содержимое</li>
-                        <li>Домашние дела по порядку из настроек</li>
-                    </ul>
-                </div>
-                <div class="feat-card">
-                    <div class="feat-card-head">
-                        <div class="feat-icon">⛏</div>
-                        <h3>Добыча и задания</h3>
-                        <span class="feat-date">с 21.10</span>
-                    </div>
-                    <ul class="feat-list">
-                        <li>Рубка деревьев, копка камня и руды</li>
-                        <li>Поиск ресурсов в заданном радиусе (15–70 м)</li>
-                        <li>Задания «найди / добудь» с оценкой опасности</li>
-                        <li>Метки ресурсов на карте по команде</li>
-                        <li>Пинг на карте — «встречаемся там»</li>
-                        <li>Силы боссов — своя сила, как у игрока</li>
-                    </ul>
-                </div>
-                <div class="feat-card">
-                    <div class="feat-card-head">
-                        <div class="feat-icon">🎯</div>
-                        <h3>Тренировки</h3>
-                        <span class="feat-date">05.11 — 08.11</span>
-                    </div>
-                    <ul class="feat-list">
-                        <li>Стрельбище — лесенка дистанций и углов</li>
-                        <li>Стрельба из-за укрытия</li>
-                        <li>Манекены — отработка парирования и перекатов</li>
-                        <li>Настраиваемые подходы, перерывы, время</li>
-                    </ul>
-                </div>
-                <div class="feat-card">
-                    <div class="feat-card-head">
-                        <div class="feat-icon">👥</div>
-                        <h3>Мультиплеер</h3>
-                        <span class="feat-date">с 22.10</span>
-                    </div>
-                    <ul class="feat-list">
-                        <li>Друг видит и слышит Валеру через ValeraListener.dll</li>
-                        <li>Голос сжимается и идёт по сети (~16 КБ/с)</li>
-                        <li>Командует только хозяин</li>
-                        <li>Совместим с выделенными серверами</li>
-                    </ul>
-                </div>
-                <div class="feat-card">
-                    <div class="feat-card-head">
-                        <div class="feat-icon">📊</div>
-                        <h3>Интерфейс</h3>
-                        <span class="feat-date">27.10 — 10.11</span>
-                    </div>
-                    <ul class="feat-list">
-                        <li>HUD Валеры — здоровье, еда, выносливость, эффекты</li>
-                        <li>Кольцевое меню на [E] — приказы и подменю</li>
-                        <li>Окно навыков — вкладки: навыки, ящики, настройки</li>
-                        <li>Чувства и эмоции — радуется, огорчается, благодарит</li>
-                        <li>Эмоции по NumPad и голосом</li>
-                        <li>Сила босса — значок и таймер перезарядки</li>
-                    </ul>
-                </div>
+            <div class="feat-wrap" id="featWrap">
+                <!-- Sidebar -->
+                <div class="feat-sidebar" id="featSidebar"></div>
+                <!-- Panel -->
+                <div class="feat-panel" id="featPanel"></div>
             </div>
+
+            <script>
+            (function(){
+                const CATS = [
+                    { id:'companion', icon:'⚔', name:'Компаньон', items:[
+                        { text:'Корабль и плот — залезает и сидит на лавке', date:'01.11' },
+                        { text:'«За кадром» — ведётся модом за пределами 100 м', date:'28.10' },
+                        { text:'Порталы, двери склепов и подземелий', date:'21.10' },
+                        { text:'Посиделки — садится рядом на стул или пол', date:'21.10' },
+                        { text:'Обход препятствий по навигационной сетке игры', date:'21.10' },
+                        { text:'Метка на миникарте и большой карте', date:'21.10' },
+                        { text:'Смерть и возрождение как у игрока', date:'21.10' },
+                        { text:'Компаньон-человек (клон Player) — ходит за тобой', date:'21.10' },
+                    ]},
+                    { id:'inventory', icon:'🎒', name:'Инвентарь', items:[
+                        { text:'«Соберись» — берёт лучшее из сундуков', date:'03.11' },
+                        { text:'Крафт по голосу — факел, топор и т.д.', date:'30.10' },
+                        { text:'Навыки растут и сохраняются между сессиями', date:'29.10' },
+                        { text:'Еда работает по-настоящему (таймеры, лечение)', date:'21.10' },
+                        { text:'Сам следит за едой — ест до трёх блюд', date:'21.10' },
+                        { text:'Подбор добычи в 12 м — подходит и берёт', date:'21.10' },
+                        { text:'Авто-экипировка оружия и брони из сумки', date:'21.10' },
+                        { text:'Сумка [E] — ванильное окно сундука 8×4', date:'21.10' },
+                    ]},
+                    { id:'combat', icon:'🗡', name:'Боевая система', items:[
+                        { text:'Масса костей — булава и ледяная медовуха', date:'11.11' },
+                        { text:'Подготовка к каждому боссу: стрелы, медовухи, оружие', date:'08.11' },
+                        { text:'Танк-варианты: щит / перекаты / натиск / лук', date:'02.11' },
+                        { text:'Серии ударов — как игрок «держит кнопку»', date:'02.11' },
+                        { text:'Лук — баллистика, упреждение, самообучение', date:'27.10' },
+                        { text:'Спасение заранее по запомненному урону врага', date:'26.10' },
+                        { text:'Парирование — учит замах каждого врага', date:'26.10' },
+                        { text:'Медовуха в бою — по нехватке здоровья', date:'26.10' },
+                        { text:'Нейросеть PPO выбирает приём по ситуации', date:'21.10' },
+                        { text:'6 приёмов: удар, блок, уклон, отступ, кружение, особый', date:'21.10' },
+                    ]},
+                    { id:'voice', icon:'🎙', name:'Голос и мозг', items:[
+                        { text:'Ollama (локально, бесплатно) — qwen3:4b-instruct', date:'04.11' },
+                        { text:'Новый голос Silero TTS — мужской, чёткий', date:'30.10' },
+                        { text:'Claude Haiku — реплики по контексту и ситуации', date:'28.10' },
+                        { text:'Обучение голосом — «запомни: X значит Y»', date:'22.10' },
+                        { text:'Три режима: по имени (wake), рация (ptt), всегда', date:'22.10' },
+                        { text:'Друзья могут давать команды через ValeraListener', date:'22.10' },
+                        { text:'Silero TTS — озвучка офлайн', date:'21.10' },
+                        { text:'Whisper (офлайн) + Vosk — двойное распознавание', date:'21.10' },
+                        { text:'40+ голосовых команд: бой, сбор, готовка, огород', date:'21.10' },
+                    ]},
+                    { id:'base', icon:'🏠', name:'Работа на базе', items:[
+                        { text:'Загоны — звери у табличек, кормёжка', date:'10.11' },
+                        { text:'Светильники — заправка топливом', date:'10.11' },
+                        { text:'Мёд из ульев и перья с птиц', date:'11.11' },
+                        { text:'«Где репа?» — ищет в ящиках по имени', date:'10.11' },
+                        { text:'Патруль базы — обход и доклад', date:'08.11' },
+                        { text:'Домашние дела по порядку из настроек', date:'08.11' },
+                        { text:'Огород — сбор, пересадка, семена из ящиков', date:'05.11' },
+                        { text:'Готовка — вертел, сковорода, котёл, бочка', date:'02.11' },
+                        { text:'Переплавка руды, жжение угля', date:'01.11' },
+                        { text:'Сортировка ящиков по табличкам', date:'03.11' },
+                        { text:'Починка у верстака / кузницы', date:'21.10' },
+                        { text:'Память ящиков — таблички и содержимое', date:'21.10' },
+                    ]},
+                    { id:'mining', icon:'⛏', name:'Добыча', items:[
+                        { text:'Силы боссов — своя сила, значок и перезарядка', date:'25.10' },
+                        { text:'Метки ресурсов на карте по команде', date:'25.10' },
+                        { text:'Пинг на карте — «встречаемся там»', date:'25.10' },
+                        { text:'Задания «найди / добудь» с оценкой опасности', date:'21.10' },
+                        { text:'Поиск ресурсов в заданном радиусе (15–70 м)', date:'21.10' },
+                        { text:'Рубка деревьев, копка камня и руды', date:'21.10' },
+                    ]},
+                    { id:'training', icon:'🎯', name:'Тренировки', items:[
+                        { text:'Настраиваемые подходы, перерывы, время', date:'08.11' },
+                        { text:'Стрельбище — лесенка дистанций и углов', date:'08.11' },
+                        { text:'Стрельба из-за укрытия', date:'08.11' },
+                        { text:'Манекены — отработка парирования и перекатов', date:'05.11' },
+                    ]},
+                    { id:'mp', icon:'👥', name:'Мультиплеер', items:[
+                        { text:'Совместим с выделенными серверами', date:'22.10' },
+                        { text:'Командует только хозяин', date:'22.10' },
+                        { text:'Голос сжимается и идёт по сети (~16 КБ/с)', date:'22.10' },
+                        { text:'Друг видит и слышит Валеру через ValeraListener.dll', date:'22.10' },
+                    ]},
+                    { id:'ui', icon:'📊', name:'Интерфейс', items:[
+                        { text:'Автозапуск тренера и голоса с игрой', date:'10.11' },
+                        { text:'«Сбросить Валеру» — полный сброс', date:'10.11' },
+                        { text:'Иконки рун в кольцевом меню', date:'11.11' },
+                        { text:'Кольцевое меню на [E] — приказы и подменю', date:'08.11' },
+                        { text:'Окно навыков — вкладки: навыки, ящики, настройки', date:'27.10' },
+                        { text:'Чувства и эмоции — радуется, огорчается, благодарит', date:'27.10' },
+                        { text:'Эмоции по NumPad и голосом', date:'27.10' },
+                        { text:'Сила босса — значок и таймер перезарядки', date:'25.10' },
+                        { text:'HUD Валеры — здоровье, еда, выносливость, эффекты', date:'27.10' },
+                    ]},
+                ];
+
+                const sidebar = document.getElementById('featSidebar');
+                const panel   = document.getElementById('featPanel');
+
+                CATS.forEach((cat, ci) => {
+                    /* Tab */
+                    const btn = document.createElement('button');
+                    btn.className = 'feat-tab' + (ci === 0 ? ' active' : '');
+                    btn.dataset.cat = cat.id;
+                    btn.innerHTML = `<span class="ft-icon">${cat.icon}</span> ${cat.name} <span class="ft-count">${cat.items.length}</span>`;
+                    btn.onclick = () => {
+                        sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
+                        btn.classList.add('active');
+                        panel.querySelectorAll('.feat-panel-cat').forEach(p => p.classList.remove('active'));
+                        document.getElementById('fp-' + cat.id).classList.add('active');
+                    };
+                    sidebar.appendChild(btn);
+
+                    /* Panel */
+                    const div = document.createElement('div');
+                    div.className = 'feat-panel-cat' + (ci === 0 ? ' active' : '');
+                    div.id = 'fp-' + cat.id;
+
+                    let rows = '';
+                    cat.items.forEach(item => {
+                        rows += `<div class="feat-row">
+                            <span class="feat-row-check">✓</span>
+                            <span class="feat-row-text">${item.text}</span>
+                            <span class="feat-row-date">${item.date}</span>
+                        </div>`;
+                    });
+                    div.innerHTML = rows;
+                    panel.appendChild(div);
+                });
+            })();
+            </script>
         </div>
 
         <hr class="rule">
