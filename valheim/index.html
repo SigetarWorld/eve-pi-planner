@@ -7,76 +7,265 @@
     <meta name="description" content="Companion AI — самообучающийся компаньон Валера для Valheim. Дорожная карта, возможности и план развития.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css?v=8">
     <style>
-        /* ===== Valheim Roadmap page ===== */
+        /* ===== Roadmap horizontal timeline ===== */
 
-        .vm-hero {
-            text-align: center;
-            padding: 80px 0 32px;
+        .rm-wrap {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            background:
+                radial-gradient(ellipse at 50% 50%, hsl(36 95% 55% / .03) 0%, transparent 70%),
+                hsl(var(--space-deep));
+            border-top: 1px solid hsl(var(--primary) / .15);
+            border-bottom: 1px solid hsl(var(--primary) / .15);
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        .vm-hero .section-title {
-            font-size: clamp(2rem, 5vw, 3.5rem);
-            margin-bottom: 8px;
+        .rm-wrap:active { cursor: grabbing; }
+
+        /* Terminal header */
+        .rm-terminal {
+            padding: 20px 24px 0;
+            font-family: 'Share Tech Mono', monospace;
+            color: hsl(var(--primary) / .5);
+            font-size: 0.78rem;
         }
-        .vm-subtitle {
-            font-family: var(--font-heading);
-            font-size: 1.1rem;
+        .rm-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.3rem, 4vw, 2.2rem);
+            font-weight: 900;
             color: hsl(var(--primary));
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            margin-bottom: 20px;
+            letter-spacing: 0.06em;
+            margin: 6px 0 0 24px;
+            text-shadow: 0 0 30px hsl(var(--primary) / .3);
         }
-        .vm-hero .section-lead {
-            max-width: 680px;
-            margin: 0 auto;
-            line-height: 1.8;
+        .rm-title .blink {
+            animation: blink-cursor .8s step-end infinite;
+        }
+        @keyframes blink-cursor {
+            50% { opacity: 0; }
         }
 
-        /* Архитектура */
-        .arch-box {
-            display: flex;
-            gap: 0;
-            justify-content: center;
-            align-items: stretch;
-            flex-wrap: wrap;
-            margin: 32px auto 0;
-            max-width: 720px;
+        /* Scrollable track */
+        .rm-track {
+            position: relative;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding: 0 0 16px;
         }
-        .arch-node {
-            flex: 1 1 200px;
-            max-width: 280px;
-            padding: 18px 16px;
-            border: 1px solid hsl(var(--border));
-            background: hsl(var(--card));
-            text-align: center;
-        }
-        .arch-node:first-child { border-radius: var(--radius) 0 0 var(--radius); }
-        .arch-node:last-child  { border-radius: 0 var(--radius) var(--radius) 0; }
-        .arch-arrow {
+        .rm-track::-webkit-scrollbar { display: none; }
+
+        .rm-inner {
             display: flex;
             align-items: center;
-            padding: 0 6px;
-            color: hsl(var(--primary));
-            font-size: 1.4rem;
-            font-family: var(--font-display);
-        }
-        .arch-label {
-            font-family: var(--font-display);
-            font-size: 0.7rem;
-            letter-spacing: 0.1em;
-            color: hsl(var(--primary));
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-        .arch-desc {
-            font-size: 0.82rem;
-            color: rgba(255,255,255,0.55);
-            line-height: 1.5;
+            position: relative;
+            min-width: max-content;
+            padding: 0 60px;
+            height: 460px;
         }
 
-        /* Секции */
+        /* The horizontal line */
+        .rm-line {
+            position: absolute;
+            top: 50%;
+            left: 40px;
+            right: 40px;
+            height: 3px;
+            background: linear-gradient(90deg,
+                hsl(var(--primary)),
+                hsl(var(--primary)),
+                hsl(var(--primary) / .6),
+                hsl(var(--primary) / .2));
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+        /* Glow on line */
+        .rm-line::after {
+            content: '';
+            position: absolute;
+            inset: -4px 0;
+            background: linear-gradient(90deg,
+                hsl(var(--primary) / .3),
+                hsl(var(--primary) / .3),
+                hsl(var(--primary) / .1),
+                transparent);
+            filter: blur(6px);
+        }
+
+        /* Milestone nodes */
+        .rm-node {
+            position: relative;
+            flex-shrink: 0;
+            width: 200px;
+            z-index: 2;
+        }
+
+        /* Dot on the line */
+        .rm-dot {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 18px;
+            height: 18px;
+            border: 2px solid hsl(var(--primary));
+            background: hsl(var(--primary) / .2);
+            z-index: 3;
+        }
+        .rm-dot--done {
+            background: hsl(var(--primary));
+            box-shadow: 0 0 12px hsl(var(--primary) / .6);
+        }
+        .rm-dot--wip {
+            background: hsl(var(--primary) / .5);
+            border-color: hsl(var(--primary));
+            animation: pulse-wip 2s ease-in-out infinite;
+        }
+        @keyframes pulse-wip {
+            0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / .5); }
+            50% { box-shadow: 0 0 16px 4px hsl(var(--primary) / .3); }
+        }
+        .rm-dot--plan {
+            background: transparent;
+            border-color: hsl(var(--primary) / .4);
+        }
+
+        /* Dashed connector from dot to card */
+        .rm-stem {
+            position: absolute;
+            left: 50%;
+            width: 1px;
+            border-left: 2px dashed hsl(var(--primary) / .35);
+            z-index: 2;
+        }
+        /* Odd nodes: card above */
+        .rm-node:nth-child(odd) .rm-stem {
+            bottom: 50%;
+            height: 56px;
+        }
+        /* Even nodes: card below */
+        .rm-node:nth-child(even) .rm-stem {
+            top: 50%;
+            height: 56px;
+        }
+
+        /* Card */
+        .rm-card {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 190px;
+            padding: 10px 12px;
+            background: hsl(var(--space-deep));
+            border: 1px solid hsl(var(--primary) / .25);
+            font-family: 'Share Tech Mono', monospace;
+            z-index: 4;
+        }
+        .rm-node:nth-child(odd) .rm-card {
+            bottom: calc(50% + 58px);
+        }
+        .rm-node:nth-child(even) .rm-card {
+            top: calc(50% + 58px);
+        }
+        .rm-card:hover {
+            border-color: hsl(var(--primary) / .6);
+            box-shadow: 0 0 20px hsl(var(--primary) / .1);
+        }
+
+        .rm-ver {
+            font-size: 0.72rem;
+            color: hsl(var(--primary));
+            margin-bottom: 3px;
+            white-space: nowrap;
+        }
+        .rm-ver .check {
+            color: hsl(150 60% 50%);
+        }
+        .rm-ver .pending {
+            color: hsl(var(--primary) / .4);
+        }
+        .rm-card-title {
+            font-family: var(--font-heading);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: hsl(var(--primary));
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+        .rm-card-text {
+            font-size: 0.68rem;
+            line-height: 1.55;
+            color: hsl(var(--primary) / .55);
+        }
+
+        /* Viking avatar walking along */
+        .rm-viking {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            width: 60px;
+            height: 70px;
+            transition: left 0.3s ease;
+            pointer-events: none;
+        }
+        .rm-viking svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 12px hsl(var(--primary) / .5));
+        }
+
+        /* Progress bar at bottom */
+        .rm-progress-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 12px 24px 18px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.82rem;
+            color: hsl(var(--primary) / .7);
+        }
+        .rm-bar-track {
+            display: flex;
+            gap: 2px;
+        }
+        .rm-bar-block {
+            width: 10px;
+            height: 16px;
+            border: 1px solid hsl(var(--primary) / .2);
+        }
+        .rm-bar-block--filled {
+            background: hsl(var(--primary));
+            border-color: hsl(var(--primary));
+            box-shadow: 0 0 4px hsl(var(--primary) / .4);
+        }
+        .rm-bar-block--half {
+            background: linear-gradient(90deg, hsl(var(--primary)) 50%, transparent 50%);
+            border-color: hsl(var(--primary) / .5);
+        }
+
+        /* Scroll hint */
+        .rm-hint {
+            text-align: center;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.72rem;
+            color: hsl(var(--primary) / .3);
+            padding: 0 0 6px;
+            animation: hint-fade 3s ease-in-out infinite;
+        }
+        @keyframes hint-fade {
+            0%, 100% { opacity: .3; }
+            50% { opacity: .7; }
+        }
+
+        /* ===== Feature cards section (kept from before) ===== */
         .vm-section {
             padding: 48px 0 0;
         }
@@ -91,8 +280,6 @@
         .vm-section-title span {
             color: hsl(var(--primary));
         }
-
-        /* Категории фич */
         .feat-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -106,9 +293,7 @@
             padding: 20px 22px;
             transition: border-color .25s;
         }
-        .feat-card:hover {
-            border-color: hsl(var(--secondary));
-        }
+        .feat-card:hover { border-color: hsl(var(--secondary)); }
         .feat-card-head {
             display: flex;
             align-items: center;
@@ -153,102 +338,6 @@
             color: hsl(150 60% 45%);
             font-weight: 700;
         }
-
-        /* Roadmap */
-        .road-timeline {
-            position: relative;
-            padding-left: 32px;
-        }
-        .road-timeline::before {
-            content: '';
-            position: absolute;
-            left: 11px;
-            top: 8px;
-            bottom: 8px;
-            width: 2px;
-            background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--border)));
-        }
-        .road-item {
-            position: relative;
-            margin-bottom: 28px;
-        }
-        .road-dot {
-            position: absolute;
-            left: -32px;
-            top: 4px;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: 2px solid hsl(var(--border));
-            background: hsl(var(--card));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .road-dot--done {
-            border-color: hsl(150 60% 45%);
-            background: hsl(150 60% 45% / .15);
-        }
-        .road-dot--done::after {
-            content: '✓';
-            font-size: 0.65rem;
-            color: hsl(150 60% 45%);
-            font-weight: 700;
-        }
-        .road-dot--wip {
-            border-color: hsl(var(--primary));
-            background: hsl(var(--primary) / .15);
-            animation: pulse-dot 2s ease-in-out infinite;
-        }
-        .road-dot--wip::after {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: hsl(var(--primary));
-        }
-        .road-dot--plan {
-            border-color: hsl(var(--border));
-        }
-        .road-dot--plan::after {
-            content: '';
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: hsl(var(--border));
-        }
-        @keyframes pulse-dot {
-            0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / .4); }
-            50%      { box-shadow: 0 0 0 6px hsl(var(--primary) / 0); }
-        }
-        .road-title {
-            font-family: var(--font-heading);
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-        .road-badge {
-            display: inline-block;
-            font-family: var(--font-display);
-            font-size: 0.6rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            padding: 2px 8px;
-            border-radius: 3px;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-        .road-badge--done { background: hsl(150 60% 45% / .15); color: hsl(150 60% 45%); border: 1px solid hsl(150 60% 45% / .3); }
-        .road-badge--wip  { background: hsl(var(--primary) / .15); color: hsl(var(--primary)); border: 1px solid hsl(var(--primary) / .3); }
-        .road-badge--plan { background: hsl(var(--secondary) / .15); color: hsl(var(--secondary-ink)); border: 1px solid hsl(var(--secondary) / .3); }
-        .road-desc {
-            font-size: 0.86rem;
-            color: rgba(255,255,255,0.5);
-            line-height: 1.65;
-            margin-top: 4px;
-        }
-
-        /* Стек технологий */
         .tech-row {
             display: flex;
             flex-wrap: wrap;
@@ -266,32 +355,6 @@
             color: rgba(255,255,255,0.55);
             background: hsl(var(--card));
         }
-
-        /* Легенда */
-        .legend {
-            display: flex;
-            gap: 24px;
-            flex-wrap: wrap;
-            margin-bottom: 24px;
-            font-size: 0.82rem;
-            color: rgba(255,255,255,0.5);
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .legend-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid;
-        }
-        .legend-dot--done { border-color: hsl(150 60% 45%); background: hsl(150 60% 45% / .2); }
-        .legend-dot--wip  { border-color: hsl(var(--primary)); background: hsl(var(--primary) / .2); }
-        .legend-dot--plan { border-color: hsl(var(--border)); background: transparent; }
-
-        /* Футер */
         .vm-footer {
             text-align: center;
             padding: 48px 0 64px;
@@ -302,15 +365,14 @@
             color: hsl(var(--primary));
             text-decoration: none;
         }
-        .vm-footer a:hover {
-            text-decoration: underline;
-        }
+        .vm-footer a:hover { text-decoration: underline; }
 
         @media (max-width: 640px) {
-            .arch-box { flex-direction: column; align-items: center; }
-            .arch-node { max-width: 100%; border-radius: var(--radius) !important; }
-            .arch-arrow { transform: rotate(90deg); padding: 8px 0; }
             .feat-grid { grid-template-columns: 1fr; }
+            .rm-inner { height: 420px; }
+            .rm-node { width: 170px; }
+            .rm-card { width: 160px; padding: 8px 10px; }
+            .rm-card-text { font-size: 0.62rem; }
         }
     </style>
 </head>
@@ -327,47 +389,73 @@
         </div>
     </header>
 
-    <main class="container">
+    <main>
 
-        <!-- ===== HERO ===== -->
-        <div class="vm-hero">
-            <p class="vm-subtitle">Companion AI для Valheim</p>
-            <h1 class="section-title">Валера — самообучающийся компаньон</h1>
-            <p class="section-lead">
-                Компаньон-человек, который учится прямо во время игры на твоём ПК.
-                Мод в игре шлёт состояния в Python, PPO-алгоритм возвращает тактику,
-                чекпоинты сохраняются на диск. Голосовое управление через Whisper + Ollama + Silero TTS.
-            </p>
+    <!-- =============== HORIZONTAL ROADMAP =============== -->
+    <div class="rm-wrap" id="roadmapWrap">
+        <div class="rm-terminal">C:\GAMES\Valheim&gt;roadmap.exe</div>
+        <div class="rm-title">ДОРОЖНАЯ КАРТА &mdash; [AI] Валера<span class="blink">_</span></div>
 
-            <!-- Архитектура -->
-            <div class="arch-box">
-                <div class="arch-node">
-                    <div class="arch-label">Valheim + BepInEx</div>
-                    <div class="arch-desc">Мод на C# — спавн, движение, бой, сумка, подбор, экипировка, голосовой мост</div>
+        <div class="rm-hint" id="rmHint">◄ перетащите или прокрутите ►</div>
+
+        <div class="rm-track" id="rmTrack">
+            <div class="rm-inner" id="rmInner">
+                <!-- Line -->
+                <div class="rm-line"></div>
+
+                <!-- Viking avatar -->
+                <div class="rm-viking" id="rmViking">
+                    <svg viewBox="0 0 60 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Helmet -->
+                        <ellipse cx="30" cy="28" rx="18" ry="14" stroke="hsl(36,95%,55%)" stroke-width="2" fill="hsl(36,95%,55%,0.1)"/>
+                        <!-- Horns -->
+                        <path d="M12 28 C8 18, 2 12, 0 6" stroke="hsl(36,95%,55%)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <path d="M48 28 C52 18, 58 12, 60 6" stroke="hsl(36,95%,55%)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <!-- Face guard -->
+                        <rect x="18" y="30" width="24" height="10" rx="2" stroke="hsl(36,95%,55%)" stroke-width="1.5" fill="hsl(36,95%,55%,0.05)"/>
+                        <!-- Eyes -->
+                        <rect x="22" y="33" width="5" height="4" rx="1" fill="hsl(36,95%,55%)" opacity="0.8"/>
+                        <rect x="33" y="33" width="5" height="4" rx="1" fill="hsl(36,95%,55%)" opacity="0.8"/>
+                        <!-- Nose guard -->
+                        <line x1="30" y1="30" x2="30" y2="40" stroke="hsl(36,95%,55%)" stroke-width="1.5"/>
+                        <!-- Helmet rivet row -->
+                        <circle cx="16" cy="24" r="1.5" fill="hsl(36,95%,55%)" opacity="0.6"/>
+                        <circle cx="22" cy="20" r="1.5" fill="hsl(36,95%,55%)" opacity="0.6"/>
+                        <circle cx="30" cy="18" r="1.5" fill="hsl(36,95%,55%)" opacity="0.6"/>
+                        <circle cx="38" cy="20" r="1.5" fill="hsl(36,95%,55%)" opacity="0.6"/>
+                        <circle cx="44" cy="24" r="1.5" fill="hsl(36,95%,55%)" opacity="0.6"/>
+                        <!-- Body -->
+                        <rect x="22" y="42" width="16" height="18" rx="2" stroke="hsl(36,95%,55%)" stroke-width="1.5" fill="hsl(36,95%,55%,0.05)"/>
+                        <!-- Belt -->
+                        <line x1="22" y1="52" x2="38" y2="52" stroke="hsl(36,95%,55%)" stroke-width="1.5"/>
+                        <rect x="28" y="50" width="4" height="4" rx="0.5" fill="hsl(36,95%,55%)" opacity="0.7"/>
+                        <!-- Legs -->
+                        <line x1="26" y1="60" x2="26" y2="68" stroke="hsl(36,95%,55%)" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="34" y1="60" x2="34" y2="68" stroke="hsl(36,95%,55%)" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
                 </div>
-                <div class="arch-arrow">⇄</div>
-                <div class="arch-node">
-                    <div class="arch-label">TCP 127.0.0.1</div>
-                    <div class="arch-desc">:7777 — тренер PPO<br>:7778 — голос Валеры</div>
-                </div>
-                <div class="arch-arrow">⇄</div>
-                <div class="arch-node">
-                    <div class="arch-label">Python / PyTorch</div>
-                    <div class="arch-desc">PPO на GPU, Whisper, Ollama (qwen3:4b), Silero TTS, ONNX-экспорт</div>
-                </div>
+
+                <!-- === MILESTONES === -->
             </div>
         </div>
 
-        <hr class="rule">
+        <!-- Progress bar -->
+        <div class="rm-progress-bar">
+            <span>PROGRESS</span>
+            <div class="rm-bar-track" id="rmBarTrack"></div>
+            <span id="rmPercent">0%</span>
+            <span>|</span>
+            <span>NEXT: v5.0 ВИКИНГ</span>
+        </div>
+    </div>
 
-        <!-- ===== РЕАЛИЗОВАНО ===== -->
+    <!-- =============== FEATURES (kept) =============== -->
+    <div class="container">
         <div class="vm-section">
             <p class="eyebrow">// 01 — Что сделано</p>
             <h2 class="vm-section-title"><span>✓</span> Реализованные возможности</h2>
 
             <div class="feat-grid">
-
-                <!-- Компаньон -->
                 <div class="feat-card">
                     <div class="feat-card-head">
                         <div class="feat-icon">⚔</div>
@@ -384,8 +472,6 @@
                         <li>Корабль и плот — залезает и сидит на лавке</li>
                     </ul>
                 </div>
-
-                <!-- Инвентарь -->
                 <div class="feat-card">
                     <div class="feat-card-head">
                         <div class="feat-icon">🎒</div>
@@ -402,8 +488,6 @@
                         <li>Крафт по голосу — факел, топор и т.д.</li>
                     </ul>
                 </div>
-
-                <!-- Бой -->
                 <div class="feat-card">
                     <div class="feat-card-head">
                         <div class="feat-icon">🗡</div>
@@ -419,11 +503,8 @@
                         <li>Спасение заранее по запомненному урону врага</li>
                         <li>Медовуха в бою — по нехватке здоровья</li>
                         <li>Сборы на босса — стрелы, медовухи, оружие</li>
-                        <li>Бой с Древним — лук издалека, уклон от корней</li>
                     </ul>
                 </div>
-
-                <!-- Голос -->
                 <div class="feat-card">
                     <div class="feat-card-head">
                         <div class="feat-icon">🎙</div>
@@ -436,12 +517,9 @@
                         <li>40+ голосовых команд: бой, сбор, готовка, огород</li>
                         <li>Обучение голосом — «запомни: X значит Y»</li>
                         <li>Память фактов между сессиями</li>
-                        <li>Сам заговаривает по ситуации — биом, погода, шутки</li>
                         <li>Три режима: по имени (wake), рация (ptt), всегда</li>
                     </ul>
                 </div>
-
-                <!-- Работа на базе -->
                 <div class="feat-card">
                     <div class="feat-card-head">
                         <div class="feat-icon">🏠</div>
@@ -456,11 +534,8 @@
                         <li>Патруль базы — обход и доклад</li>
                         <li>Память ящиков — таблички и содержимое</li>
                         <li>Домашние дела по порядку из настроек</li>
-                        <li>Подсвечники — заправка смолой/углём</li>
                     </ul>
                 </div>
-
-                <!-- Добыча и задания -->
                 <div class="feat-card">
                     <div class="feat-card-head">
                         <div class="feat-icon">⛏</div>
@@ -472,12 +547,9 @@
                         <li>Задания «найди / добудь» с оценкой опасности</li>
                         <li>Метки ресурсов на карте по команде</li>
                         <li>Пинг на карте — «встречаемся там»</li>
-                        <li>Веди к могиле — «где мои вещи?»</li>
                         <li>Силы боссов — своя сила, как у игрока</li>
                     </ul>
                 </div>
-
-                <!-- Тренировки -->
                 <div class="feat-card">
                     <div class="feat-card-head">
                         <div class="feat-icon">🎯</div>
@@ -490,8 +562,6 @@
                         <li>Настраиваемые подходы, перерывы, время</li>
                     </ul>
                 </div>
-
-                <!-- Мультиплеер -->
                 <div class="feat-card">
                     <div class="feat-card-head">
                         <div class="feat-icon">👥</div>
@@ -504,8 +574,6 @@
                         <li>Совместим с выделенными серверами</li>
                     </ul>
                 </div>
-
-                <!-- UI -->
                 <div class="feat-card">
                     <div class="feat-card-head">
                         <div class="feat-icon">📊</div>
@@ -520,173 +588,13 @@
                         <li>Сила босса — значок и таймер перезарядки</li>
                     </ul>
                 </div>
-
             </div>
         </div>
 
         <hr class="rule">
 
-        <!-- ===== ДОРОЖНАЯ КАРТА ===== -->
-        <div class="vm-section">
-            <p class="eyebrow">// 02 — Roadmap</p>
-            <h2 class="vm-section-title"><span>→</span> Дорожная карта развития</h2>
-
-            <div class="legend">
-                <div class="legend-item"><div class="legend-dot legend-dot--done"></div> Готово</div>
-                <div class="legend-item"><div class="legend-dot legend-dot--wip"></div> В работе</div>
-                <div class="legend-item"><div class="legend-dot legend-dot--plan"></div> Планируется</div>
-            </div>
-
-            <div class="road-timeline">
-
-                <!-- Голос -->
-                <div class="road-item">
-                    <div class="road-dot road-dot--done"></div>
-                    <div class="road-title">
-                        Голосовое общение
-                        <span class="road-badge road-badge--done">Готово</span>
-                    </div>
-                    <div class="road-desc">
-                        Whisper + Vosk распознавание → приказы по правилам мгновенно,
-                        вопросы и болтовня через Ollama (локально) или Claude → Silero TTS озвучка.
-                        Обучение новым словам голосом, память фактов, журнал разговоров.
-                    </div>
-                </div>
-
-                <!-- Боевая нейросеть -->
-                <div class="road-item">
-                    <div class="road-dot road-dot--done"></div>
-                    <div class="road-title">
-                        Боевая нейросеть (PPO)
-                        <span class="road-badge road-badge--done">Готово</span>
-                    </div>
-                    <div class="road-desc">
-                        6 боевых приёмов, выбор по ситуации. Парирование, серии ударов, танк-варианты.
-                        Стрельбище с лесенкой. Тренировки у манекенов. Статистика по врагам.
-                        Каждый мир — своя модель боя.
-                    </div>
-                </div>
-
-                <!-- База и хозяйство -->
-                <div class="road-item">
-                    <div class="road-dot road-dot--done"></div>
-                    <div class="road-title">
-                        База и хозяйство
-                        <span class="road-badge road-badge--done">Готово</span>
-                    </div>
-                    <div class="road-desc">
-                        Сортировка ящиков по табличкам, переплавка, уголь, готовка всех блюд по цепочке,
-                        огород с пересадкой, починка, патруль, подсвечники. Настраиваемый порядок дел.
-                    </div>
-                </div>
-
-                <!-- Мультиплеер -->
-                <div class="road-item">
-                    <div class="road-dot road-dot--done"></div>
-                    <div class="road-title">
-                        Мультиплеер
-                        <span class="road-badge road-badge--done">Готово</span>
-                    </div>
-                    <div class="road-desc">
-                        ValeraListener.dll — друг видит и слышит Валеру. Голос сжимается и идёт по сети игры.
-                        Командует только хозяин. Совместим с выделенными серверами.
-                    </div>
-                </div>
-
-                <!-- В работе: обучение вне боя -->
-                <div class="road-item">
-                    <div class="road-dot road-dot--wip"></div>
-                    <div class="road-title">
-                        Обучение вне боя — исследование и сбор
-                        <span class="road-badge road-badge--wip">В работе</span>
-                    </div>
-                    <div class="road-desc">
-                        Научить компаньона бродить, исследовать и собирать ресурсы, когда нет боя,
-                        используя нейросеть вместо правил. Отдельная ветка награды в env.py.
-                    </div>
-                </div>
-
-                <!-- Планируется -->
-                <div class="road-item">
-                    <div class="road-dot road-dot--plan"></div>
-                    <div class="road-title">
-                        Расширенные задания
-                        <span class="road-badge road-badge--plan">План</span>
-                    </div>
-                    <div class="road-desc">
-                        Сложные просьбы с подцелями: «наруби руды и принеси», «сходи за дровами
-                        и переплавь железо». Цепочки правил + подцели.
-                    </div>
-                </div>
-
-                <div class="road-item">
-                    <div class="road-dot road-dot--plan"></div>
-                    <div class="road-title">
-                        Нейросеть управляет ударами
-                        <span class="road-badge road-badge--plan">План</span>
-                    </div>
-                    <div class="road-desc">
-                        Сейчас удары ванильные. Следующий шаг — нейросеть решает «когда бить»,
-                        вызывая атаку так, как MonsterAI/Humanoid.
-                    </div>
-                </div>
-
-                <div class="road-item">
-                    <div class="road-dot road-dot--plan"></div>
-                    <div class="road-title">
-                        Больше инструментов для ИИ
-                        <span class="road-badge road-badge--plan">План</span>
-                    </div>
-                    <div class="road-desc">
-                        Дать языковой модели (Ollama/Claude) больше инструментов: задания «принеси дерево»,
-                        улучшенная память между сессиями.
-                    </div>
-                </div>
-
-                <div class="road-item">
-                    <div class="road-dot road-dot--plan"></div>
-                    <div class="road-title">
-                        Автономный режим (ONNX)
-                        <span class="road-badge road-badge--plan">План</span>
-                    </div>
-                    <div class="road-desc">
-                        Экспорт обученной модели в ONNX, запуск через Microsoft.ML.OnnxRuntime
-                        прямо в моде — компаньон играет без Python.
-                    </div>
-                </div>
-
-                <div class="road-item">
-                    <div class="road-dot road-dot--plan"></div>
-                    <div class="road-title">
-                        Стамина и кулдаун в наблюдении
-                        <span class="road-badge road-badge--plan">План</span>
-                    </div>
-                    <div class="road-desc">
-                        Поле weaponReady в StateMsg — нейросеть будет учитывать готовность оружия
-                        и запас выносливости при выборе приёма.
-                    </div>
-                </div>
-
-                <div class="road-item">
-                    <div class="road-dot road-dot--plan"></div>
-                    <div class="road-title">
-                        Укрытия в настоящем бою
-                        <span class="road-badge road-badge--plan">План</span>
-                    </div>
-                    <div class="road-desc">
-                        На стрельбище Валера уже стреляет из-за укрытий. Следующий шаг —
-                        использование укрытий в реальном бою с луком.
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <hr class="rule">
-
-        <!-- ===== ТЕХНОЛОГИИ ===== -->
         <div class="vm-section" style="padding-bottom: 16px;">
-            <p class="eyebrow">// 03 — Стек</p>
+            <p class="eyebrow">// 02 — Стек</p>
             <h2 class="vm-section-title"><span>&lt;/&gt;</span> Технологии</h2>
             <div class="tech-row">
                 <span class="tech-tag">C#</span>
@@ -706,20 +614,160 @@
             </div>
         </div>
 
-        <!-- ===== FOOTER ===== -->
         <div class="vm-footer">
             Только одиночная игра / свои серверы &middot;
             <a href="/" data-local="../Start/index.html">sigetar.ru</a>
         </div>
+    </div>
 
     </main>
 
     <script>
-        if (location.protocol === 'file:') {
-            document.querySelectorAll('[data-local]').forEach(a => {
-                a.href = a.dataset.local;
-            });
+    /* ===== Roadmap milestones data ===== */
+    const MILESTONES = [
+        { ver:'v0.01', title:'Запуск', done:true, text:'Запускается в игре\nСпавн рядом с игроком\nСвой чат с [AI] Валерой\nВиден на карте' },
+        { ver:'v0.02', title:'Инвентарь', done:true, text:'Выносливость тратится\nЕсть перегруз\nИнвентарь 8×4\nВиден на карте' },
+        { ver:'v0.03', title:'Смерть', done:true, text:'Появляется у своей кровати\nЖдёт или идёт по команде\nЕсли погиб, помогает другим игрокам' },
+        { ver:'v0.04', title:'Движение', done:true, text:'Бежит сам, а не телепортируется\nПроходит порталы\nОбходит препятствия\nНе лезет в костёр\nВ подземельях не мешает\nУклоняется от деревьев' },
+        { ver:'v0.05', title:'Потребности', done:true, text:'Ест до трёх блюд\nПросит еду\nИщет еду в сундуках\nЧинится у верстака\nОтдыхает у огня' },
+        { ver:'v0.06', title:'Зрение и Звуки', done:true, text:'Не видит сквозь стены\nСлышит вокруг себя на 5 метров\nЗрение под ноги — ступени, обрывы' },
+        { ver:'v0.07', title:'Работа', done:true, text:'Рубит и копает\nДобывает по ассисту\nМожно попросить добыть в радиусе 50 метров' },
+        { ver:'v0.08', title:'Крафт', done:true, text:'Крафтит по просьбе\nГоворит, чего не хватает\nНадевает скрафченное' },
+        { ver:'v0.09', title:'База (Дом)', done:true, text:'Запоминает дом\nКоманды: «Здесь база»,\n«Жди на базе», «Отнеси\nдобычу», «Сложи в ящики»' },
+        { ver:'v0.10', title:'Карта', done:true, text:'Ставит метки ресурсов\nИдёт на Ping по карте\nВедёт к могиле' },
+        { ver:'v0.11', title:'Силы боссов', done:true, text:'Берёт их у камня и использует\nСвоя перезарядка\nРешает, когда применить' },
+        { ver:'v0.12', title:'Бой', done:true, text:'Выбирает приёмы нейросетью\nОбучение запускается с игрой\nВыносливость тратит\nНа Валеру тоже агрятся враги' },
+        { ver:'v0.13', title:'Бой: Лук', done:true, text:'Навесная траектория\nСтрельба на ходу и самообучение\nупреждению по движущейся цели' },
+        { ver:'v0.14', title:'Бой: Авария', done:true, text:'Меньше 20% здоровья — спасается\nКончились стрелы — говорит и\nберёт другое оружие\nДраться нечем — убегает' },
+        { ver:'v0.15', title:'Бой: Лут', done:true, text:'Собирает с тех, кого убил\nКончились стрелы — подбирает\nберёт другое оружие\nДраться нечем — убегает' },
+        { ver:'v0.16', title:'Голос', done:true, text:'Микрофон по Имени, если нажать V,\nбез имени\nКрафтит предметы\nПомогает строить' },
+        { ver:'v0.17', title:'Голос: Друзья', done:true, text:'Есть дополнительный мод, чтобы\nего слышали играющие с вами\nдрузья' },
+        { ver:'v0.18', title:'Голос: Друзья', done:true, text:'Друзья могли давать команды\nВалере или разговаривать с ним' },
+        { ver:'v0.19', title:'Мозг', done:true, text:'Платный (Claude)\nРеплики ИИ придумывает по ходу\nПонимает контекст' },
+        { ver:'v0.20', title:'Мозг', done:false, wip:true, text:'Сделать бесплатно!\nOllama локально на GPU\nqwen3:4b-instruct' },
+        { ver:'v0.21', title:'Интерфейс', done:true, text:'Справа внизу как у игрока\nВыносливость по центру внизу\nСилы боссов и эффекты слева от\nминикарты\nE — инвентарь с бронёй\nЗажать E — навыки' },
+        { ver:'v0.22', title:'Автозапуск', done:true, text:'Голос и Обучение ИИ стартуют\nвместе с игрой\nНастройки в конфиге' },
+        { ver:'v0.23', title:'Сохранение', done:true, text:'Новый Мир все с нуля\nBackUp инвентаря, оружия и шмоток\nНавыки между сессиями' },
+        { ver:'v0.24', title:'Домашние дела', done:true, text:'Переплавка, уголь, готовка\nОгород — пересадка\nСортировка ящиков\nПатруль базы' },
+        { ver:'v0.25', title:'Тренировки', done:true, text:'Стрельбище — лесенка\nМанекены — парирование\nПерекаты — тайминги\nУчит замахи врагов' },
+        { ver:'v0.26', title:'Обучение вне боя', done:false, wip:true, text:'Исследование, сбор ресурсов\nОтдельная ветка награды\nНейросеть вместо правил' },
+        { ver:'v0.27', title:'Цепочки заданий', done:false, text:'«Наруби и принеси»\nПодцели и приоритеты\nСложные просьбы' },
+        { ver:'v0.28', title:'ONNX режим', done:false, text:'Без Python\nВстроенный в мод\nMicrosoft.ML.OnnxRuntime' },
+        { ver:'v5.0', title:'ВИКИНГ', done:false, text:'Сам ставит себе цели\nХодит в походы\nНастоящий напарник\nДискутирует о вселенной' },
+    ];
+
+    const rmInner  = document.getElementById('rmInner');
+    const rmTrack  = document.getElementById('rmTrack');
+    const rmViking = document.getElementById('rmViking');
+    const rmBar    = document.getElementById('rmBarTrack');
+    const rmPct    = document.getElementById('rmPercent');
+
+    const totalDone = MILESTONES.filter(m => m.done).length;
+    const totalWip  = MILESTONES.filter(m => m.wip).length;
+    const pct = Math.round(((totalDone + totalWip * 0.5) / MILESTONES.length) * 100);
+
+    /* Build nodes */
+    MILESTONES.forEach((m, i) => {
+        const node = document.createElement('div');
+        node.className = 'rm-node';
+
+        const status = m.done ? 'done' : (m.wip ? 'wip' : 'plan');
+        const check  = m.done ? '<span class="check">[x]</span>' : (m.wip ? '<span class="pending">[~]</span>' : '<span class="pending">[ ]</span>');
+
+        node.innerHTML = `
+            <div class="rm-dot rm-dot--${status}"></div>
+            <div class="rm-stem"></div>
+            <div class="rm-card">
+                <div class="rm-ver">${check} ${m.ver}</div>
+                <div class="rm-card-title">${m.title}</div>
+                <div class="rm-card-text">${m.text.replace(/\n/g, '<br>')}</div>
+            </div>
+        `;
+        /* Insert before viking */
+        rmInner.appendChild(node);
+    });
+
+    /* Move viking back into inner (it was placed before nodes, reappend at end) */
+    rmInner.appendChild(rmViking);
+
+    /* Position viking at last done/wip milestone */
+    function positionViking() {
+        const nodes = rmInner.querySelectorAll('.rm-node');
+        let lastIdx = 0;
+        MILESTONES.forEach((m, i) => { if (m.done || m.wip) lastIdx = i; });
+        const targetNode = nodes[lastIdx];
+        if (targetNode) {
+            const nodeLeft = targetNode.offsetLeft + targetNode.offsetWidth / 2;
+            rmViking.style.left = nodeLeft + 'px';
         }
+    }
+    positionViking();
+
+    /* Build progress bar */
+    const barBlocks = 25;
+    const filledBlocks = Math.round(pct / 100 * barBlocks);
+    for (let i = 0; i < barBlocks; i++) {
+        const b = document.createElement('div');
+        b.className = 'rm-bar-block' + (i < filledBlocks ? ' rm-bar-block--filled' : '');
+        rmBar.appendChild(b);
+    }
+    rmPct.textContent = pct + '%';
+
+    /* Auto-scroll animation */
+    let autoScroll = true;
+    let scrollSpeed = 0.6;
+    let animFrame;
+
+    function autoScrollTick() {
+        if (autoScroll && rmTrack.scrollLeft < rmTrack.scrollWidth - rmTrack.clientWidth - 10) {
+            rmTrack.scrollLeft += scrollSpeed;
+        }
+        animFrame = requestAnimationFrame(autoScrollTick);
+    }
+    /* Start after a small delay */
+    setTimeout(() => {
+        animFrame = requestAnimationFrame(autoScrollTick);
+    }, 1500);
+
+    /* Stop auto-scroll on user interaction */
+    function stopAuto() {
+        autoScroll = false;
+        document.getElementById('rmHint').style.display = 'none';
+    }
+
+    /* Drag scrolling */
+    let isDragging = false, startX, scrollStart;
+    rmTrack.addEventListener('mousedown', e => {
+        isDragging = true;
+        startX = e.pageX;
+        scrollStart = rmTrack.scrollLeft;
+        stopAuto();
+    });
+    document.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        rmTrack.scrollLeft = scrollStart - (e.pageX - startX);
+    });
+    document.addEventListener('mouseup', () => { isDragging = false; });
+
+    /* Touch drag */
+    rmTrack.addEventListener('touchstart', e => {
+        startX = e.touches[0].pageX;
+        scrollStart = rmTrack.scrollLeft;
+        stopAuto();
+    }, { passive: true });
+    rmTrack.addEventListener('touchmove', e => {
+        rmTrack.scrollLeft = scrollStart - (e.touches[0].pageX - startX);
+    }, { passive: true });
+
+    /* Wheel scroll also stops auto */
+    rmTrack.addEventListener('wheel', () => { stopAuto(); }, { passive: true });
+
+    /* Local links for file:// */
+    if (location.protocol === 'file:') {
+        document.querySelectorAll('[data-local]').forEach(a => {
+            a.href = a.dataset.local;
+        });
+    }
     </script>
 </body>
 </html>
