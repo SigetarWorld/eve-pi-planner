@@ -460,7 +460,15 @@ main {
     color: inherit;
     transition: border-color .25s, transform .25s;
 }
-[data-brand="boosty"] { grid-column: 2; }
+.stat--donate {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: hsl(var(--primary));
+}
 .stat--logo:hover {
     transform: translateY(-3px);
 }
