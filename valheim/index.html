@@ -2,43 +2,315 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Valheim Mod — Sigetar</title>
+    <title>Companion AI — Valheim Mod — Sigetar</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Моды и инструменты для Valheim от Sigetar.">
+    <meta name="description" content="Companion AI — самообучающийся компаньон Валера для Valheim. Дорожная карта, возможности и план развития.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style.css?v=7">
+    <link rel="stylesheet" href="../css/style.css?v=8">
     <style>
-        /* Valheim page overrides */
-        .valheim-hero {
+        /* ===== Valheim Roadmap page ===== */
+
+        .vm-hero {
             text-align: center;
-            padding: 80px 0 40px;
+            padding: 80px 0 32px;
         }
-        .valheim-hero .section-title {
+        .vm-hero .section-title {
             font-size: clamp(2rem, 5vw, 3.5rem);
+            margin-bottom: 8px;
         }
-        .valheim-hero .section-lead {
-            max-width: 600px;
+        .vm-subtitle {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: hsl(var(--primary));
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .vm-hero .section-lead {
+            max-width: 680px;
             margin: 0 auto;
+            line-height: 1.8;
         }
-        .valheim-content {
-            padding: 40px 0 80px;
+
+        /* Архитектура */
+        .arch-box {
+            display: flex;
+            gap: 0;
+            justify-content: center;
+            align-items: stretch;
+            flex-wrap: wrap;
+            margin: 32px auto 0;
+            max-width: 720px;
         }
-        .valheim-content .panel {
+        .arch-node {
+            flex: 1 1 200px;
+            max-width: 280px;
+            padding: 18px 16px;
+            border: 1px solid hsl(var(--border));
+            background: hsl(var(--card));
+            text-align: center;
+        }
+        .arch-node:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+        .arch-node:last-child  { border-radius: 0 var(--radius) var(--radius) 0; }
+        .arch-arrow {
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            color: hsl(var(--primary));
+            font-size: 1.4rem;
+            font-family: var(--font-display);
+        }
+        .arch-label {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            color: hsl(var(--primary));
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .arch-desc {
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.55);
+            line-height: 1.5;
+        }
+
+        /* Секции */
+        .vm-section {
+            padding: 48px 0 0;
+        }
+        .vm-section-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: hsl(var(--foreground));
             margin-bottom: 24px;
         }
-        .panel-text {
-            color: rgba(255,255,255,0.6);
-            line-height: 1.7;
+        .vm-section-title span {
+            color: hsl(var(--primary));
         }
-        .coming-soon {
-            text-align: center;
-            padding: 60px 20px;
-            color: rgba(255,255,255,0.4);
+
+        /* Категории фич */
+        .feat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .feat-card {
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            background: hsl(var(--card));
+            padding: 20px 22px;
+            transition: border-color .25s;
+        }
+        .feat-card:hover {
+            border-color: hsl(var(--secondary));
+        }
+        .feat-card-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .feat-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: hsl(var(--primary) / .1);
+            color: hsl(var(--primary));
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .feat-card h3 {
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.03em;
+        }
+        .feat-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .feat-list li {
+            position: relative;
+            padding: 5px 0 5px 20px;
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.6;
+        }
+        .feat-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: hsl(150 60% 45%);
+            font-weight: 700;
+        }
+
+        /* Roadmap */
+        .road-timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+        .road-timeline::before {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: linear-gradient(180deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--border)));
+        }
+        .road-item {
+            position: relative;
+            margin-bottom: 28px;
+        }
+        .road-dot {
+            position: absolute;
+            left: -32px;
+            top: 4px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid hsl(var(--border));
+            background: hsl(var(--card));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .road-dot--done {
+            border-color: hsl(150 60% 45%);
+            background: hsl(150 60% 45% / .15);
+        }
+        .road-dot--done::after {
+            content: '✓';
+            font-size: 0.65rem;
+            color: hsl(150 60% 45%);
+            font-weight: 700;
+        }
+        .road-dot--wip {
+            border-color: hsl(var(--primary));
+            background: hsl(var(--primary) / .15);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        .road-dot--wip::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: hsl(var(--primary));
+        }
+        .road-dot--plan {
+            border-color: hsl(var(--border));
+        }
+        .road-dot--plan::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: hsl(var(--border));
+        }
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / .4); }
+            50%      { box-shadow: 0 0 0 6px hsl(var(--primary) / 0); }
+        }
+        .road-title {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .road-badge {
+            display: inline-block;
             font-family: var(--font-display);
-            font-size: 1.1rem;
+            font-size: 0.6rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 3px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .road-badge--done { background: hsl(150 60% 45% / .15); color: hsl(150 60% 45%); border: 1px solid hsl(150 60% 45% / .3); }
+        .road-badge--wip  { background: hsl(var(--primary) / .15); color: hsl(var(--primary)); border: 1px solid hsl(var(--primary) / .3); }
+        .road-badge--plan { background: hsl(var(--secondary) / .15); color: hsl(var(--secondary-ink)); border: 1px solid hsl(var(--secondary) / .3); }
+        .road-desc {
+            font-size: 0.86rem;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.65;
+            margin-top: 4px;
+        }
+
+        /* Стек технологий */
+        .tech-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .tech-tag {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
             letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            color: rgba(255,255,255,0.55);
+            background: hsl(var(--card));
+        }
+
+        /* Легенда */
+        .legend {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.5);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid;
+        }
+        .legend-dot--done { border-color: hsl(150 60% 45%); background: hsl(150 60% 45% / .2); }
+        .legend-dot--wip  { border-color: hsl(var(--primary)); background: hsl(var(--primary) / .2); }
+        .legend-dot--plan { border-color: hsl(var(--border)); background: transparent; }
+
+        /* Футер */
+        .vm-footer {
+            text-align: center;
+            padding: 48px 0 64px;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.82rem;
+        }
+        .vm-footer a {
+            color: hsl(var(--primary));
+            text-decoration: none;
+        }
+        .vm-footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .arch-box { flex-direction: column; align-items: center; }
+            .arch-node { max-width: 100%; border-radius: var(--radius) !important; }
+            .arch-arrow { transform: rotate(90deg); padding: 8px 0; }
+            .feat-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -49,30 +321,400 @@
                 <a class="home-link" href="/" data-local="../Start/index.html" title="На главную sigetar.ru" style="color:hsl(var(--primary));text-decoration:none;font-family:var(--font-display);font-weight:700;letter-spacing:0.05em;">← Sigetar.ru</a>
             </div>
             <a class="brand" href="/valheim/" data-local="index.html">
-                <span class="brand-name">Valheim Mod</span>
-                <span class="brand-tag">[ Mods & Tools ]</span>
+                <span class="brand-name">Companion AI</span>
+                <span class="brand-tag">[ Valheim Mod ]</span>
             </a>
         </div>
     </header>
 
     <main class="container">
-        <div class="valheim-hero">
-            <h1 class="section-title">Valheim Mod</h1>
+
+        <!-- ===== HERO ===== -->
+        <div class="vm-hero">
+            <p class="vm-subtitle">Companion AI для Valheim</p>
+            <h1 class="section-title">Валера — самообучающийся компаньон</h1>
             <p class="section-lead">
-                Моды и инструменты для Valheim — улучшения геймплея,
-                новые предметы, настройки сервера и многое другое.
+                Компаньон-человек, который учится прямо во время игры на твоём ПК.
+                Мод в игре шлёт состояния в Python, PPO-алгоритм возвращает тактику,
+                чекпоинты сохраняются на диск. Голосовое управление через Whisper + Ollama + Silero TTS.
             </p>
+
+            <!-- Архитектура -->
+            <div class="arch-box">
+                <div class="arch-node">
+                    <div class="arch-label">Valheim + BepInEx</div>
+                    <div class="arch-desc">Мод на C# — спавн, движение, бой, сумка, подбор, экипировка, голосовой мост</div>
+                </div>
+                <div class="arch-arrow">⇄</div>
+                <div class="arch-node">
+                    <div class="arch-label">TCP 127.0.0.1</div>
+                    <div class="arch-desc">:7777 — тренер PPO<br>:7778 — голос Валеры</div>
+                </div>
+                <div class="arch-arrow">⇄</div>
+                <div class="arch-node">
+                    <div class="arch-label">Python / PyTorch</div>
+                    <div class="arch-desc">PPO на GPU, Whisper, Ollama (qwen3:4b), Silero TTS, ONNX-экспорт</div>
+                </div>
+            </div>
         </div>
 
         <hr class="rule">
 
-        <div class="valheim-content">
-            <p class="coming-soon">Раздел в разработке — скоро здесь появится контент</p>
+        <!-- ===== РЕАЛИЗОВАНО ===== -->
+        <div class="vm-section">
+            <p class="eyebrow">// 01 — Что сделано</p>
+            <h2 class="vm-section-title"><span>✓</span> Реализованные возможности</h2>
+
+            <div class="feat-grid">
+
+                <!-- Компаньон -->
+                <div class="feat-card">
+                    <div class="feat-card-head">
+                        <div class="feat-icon">⚔</div>
+                        <h3>Компаньон и основы</h3>
+                    </div>
+                    <ul class="feat-list">
+                        <li>Компаньон-человек (клон Player) — ходит за тобой</li>
+                        <li>Обход препятствий по навигационной сетке игры</li>
+                        <li>Метка на миникарте и большой карте</li>
+                        <li>Смерть и возрождение как у игрока</li>
+                        <li>«За кадром» — ведётся модом за пределами 100 м</li>
+                        <li>Порталы, двери склепов и подземелий</li>
+                        <li>Посиделки — садится рядом на стул или пол</li>
+                        <li>Корабль и плот — залезает и сидит на лавке</li>
+                    </ul>
+                </div>
+
+                <!-- Инвентарь -->
+                <div class="feat-card">
+                    <div class="feat-card-head">
+                        <div class="feat-icon">🎒</div>
+                        <h3>Инвентарь и экипировка</h3>
+                    </div>
+                    <ul class="feat-list">
+                        <li>Сумка [E] — ванильное окно сундука 8×4</li>
+                        <li>Авто-экипировка оружия и брони из сумки</li>
+                        <li>Подбор добычи в 12 м — подходит и берёт</li>
+                        <li>Сам следит за едой — ест до трёх блюд</li>
+                        <li>Еда работает по-настоящему (таймеры, лечение)</li>
+                        <li>Навыки растут и сохраняются между сессиями</li>
+                        <li>«Соберись» — берёт лучшее из сундуков</li>
+                        <li>Крафт по голосу — факел, топор и т.д.</li>
+                    </ul>
+                </div>
+
+                <!-- Бой -->
+                <div class="feat-card">
+                    <div class="feat-card-head">
+                        <div class="feat-icon">🗡</div>
+                        <h3>Боевая система</h3>
+                    </div>
+                    <ul class="feat-list">
+                        <li>6 приёмов: удар, блок, уклон, отступ, кружение, особый</li>
+                        <li>Нейросеть PPO выбирает приём по ситуации</li>
+                        <li>Парирование — учит замах каждого врага</li>
+                        <li>Лук — поправка на падение стрелы и упреждение</li>
+                        <li>Танк-варианты: щит / перекаты / натиск / лук</li>
+                        <li>Серии ударов — как игрок «держит кнопку»</li>
+                        <li>Спасение заранее по запомненному урону врага</li>
+                        <li>Медовуха в бою — по нехватке здоровья</li>
+                        <li>Сборы на босса — стрелы, медовухи, оружие</li>
+                        <li>Бой с Древним — лук издалека, уклон от корней</li>
+                    </ul>
+                </div>
+
+                <!-- Голос -->
+                <div class="feat-card">
+                    <div class="feat-card-head">
+                        <div class="feat-icon">🎙</div>
+                        <h3>Голосовое управление</h3>
+                    </div>
+                    <ul class="feat-list">
+                        <li>Whisper (офлайн) + Vosk — двойное распознавание</li>
+                        <li>Ollama (локально, бесплатно) или Claude для ответов</li>
+                        <li>Silero TTS — озвучка Валеры (офлайн)</li>
+                        <li>40+ голосовых команд: бой, сбор, готовка, огород</li>
+                        <li>Обучение голосом — «запомни: X значит Y»</li>
+                        <li>Память фактов между сессиями</li>
+                        <li>Сам заговаривает по ситуации — биом, погода, шутки</li>
+                        <li>Три режима: по имени (wake), рация (ptt), всегда</li>
+                    </ul>
+                </div>
+
+                <!-- Работа на базе -->
+                <div class="feat-card">
+                    <div class="feat-card-head">
+                        <div class="feat-icon">🏠</div>
+                        <h3>Работа на базе</h3>
+                    </div>
+                    <ul class="feat-list">
+                        <li>Сортировка ящиков по табличкам</li>
+                        <li>Переплавка руды, жжение угля</li>
+                        <li>Готовка — вертел, сковорода, котёл, бочка</li>
+                        <li>Огород — сбор, пересадка, семена из ящиков</li>
+                        <li>Починка у верстака / кузницы</li>
+                        <li>Патруль базы — обход и доклад</li>
+                        <li>Память ящиков — таблички и содержимое</li>
+                        <li>Домашние дела по порядку из настроек</li>
+                        <li>Подсвечники — заправка смолой/углём</li>
+                    </ul>
+                </div>
+
+                <!-- Добыча и задания -->
+                <div class="feat-card">
+                    <div class="feat-card-head">
+                        <div class="feat-icon">⛏</div>
+                        <h3>Добыча и задания</h3>
+                    </div>
+                    <ul class="feat-list">
+                        <li>Рубка деревьев, копка камня и руды</li>
+                        <li>Поиск ресурсов в заданном радиусе (15–70 м)</li>
+                        <li>Задания «найди / добудь» с оценкой опасности</li>
+                        <li>Метки ресурсов на карте по команде</li>
+                        <li>Пинг на карте — «встречаемся там»</li>
+                        <li>Веди к могиле — «где мои вещи?»</li>
+                        <li>Силы боссов — своя сила, как у игрока</li>
+                    </ul>
+                </div>
+
+                <!-- Тренировки -->
+                <div class="feat-card">
+                    <div class="feat-card-head">
+                        <div class="feat-icon">🎯</div>
+                        <h3>Тренировки</h3>
+                    </div>
+                    <ul class="feat-list">
+                        <li>Стрельбище — лесенка дистанций и углов</li>
+                        <li>Стрельба из-за укрытия</li>
+                        <li>Манекены — отработка парирования и перекатов</li>
+                        <li>Настраиваемые подходы, перерывы, время</li>
+                    </ul>
+                </div>
+
+                <!-- Мультиплеер -->
+                <div class="feat-card">
+                    <div class="feat-card-head">
+                        <div class="feat-icon">👥</div>
+                        <h3>Мультиплеер</h3>
+                    </div>
+                    <ul class="feat-list">
+                        <li>Друг видит и слышит Валеру через ValeraListener.dll</li>
+                        <li>Голос сжимается и идёт по сети (~16 КБ/с)</li>
+                        <li>Командует только хозяин</li>
+                        <li>Совместим с выделенными серверами</li>
+                    </ul>
+                </div>
+
+                <!-- UI -->
+                <div class="feat-card">
+                    <div class="feat-card-head">
+                        <div class="feat-icon">📊</div>
+                        <h3>Интерфейс</h3>
+                    </div>
+                    <ul class="feat-list">
+                        <li>HUD Валеры — здоровье, еда, выносливость, эффекты</li>
+                        <li>Кольцевое меню на [E] — приказы и подменю</li>
+                        <li>Окно навыков — вкладки: навыки, ящики, настройки</li>
+                        <li>Чувства и эмоции — радуется, огорчается, благодарит</li>
+                        <li>Эмоции по NumPad и голосом</li>
+                        <li>Сила босса — значок и таймер перезарядки</li>
+                    </ul>
+                </div>
+
+            </div>
         </div>
+
+        <hr class="rule">
+
+        <!-- ===== ДОРОЖНАЯ КАРТА ===== -->
+        <div class="vm-section">
+            <p class="eyebrow">// 02 — Roadmap</p>
+            <h2 class="vm-section-title"><span>→</span> Дорожная карта развития</h2>
+
+            <div class="legend">
+                <div class="legend-item"><div class="legend-dot legend-dot--done"></div> Готово</div>
+                <div class="legend-item"><div class="legend-dot legend-dot--wip"></div> В работе</div>
+                <div class="legend-item"><div class="legend-dot legend-dot--plan"></div> Планируется</div>
+            </div>
+
+            <div class="road-timeline">
+
+                <!-- Голос -->
+                <div class="road-item">
+                    <div class="road-dot road-dot--done"></div>
+                    <div class="road-title">
+                        Голосовое общение
+                        <span class="road-badge road-badge--done">Готово</span>
+                    </div>
+                    <div class="road-desc">
+                        Whisper + Vosk распознавание → приказы по правилам мгновенно,
+                        вопросы и болтовня через Ollama (локально) или Claude → Silero TTS озвучка.
+                        Обучение новым словам голосом, память фактов, журнал разговоров.
+                    </div>
+                </div>
+
+                <!-- Боевая нейросеть -->
+                <div class="road-item">
+                    <div class="road-dot road-dot--done"></div>
+                    <div class="road-title">
+                        Боевая нейросеть (PPO)
+                        <span class="road-badge road-badge--done">Готово</span>
+                    </div>
+                    <div class="road-desc">
+                        6 боевых приёмов, выбор по ситуации. Парирование, серии ударов, танк-варианты.
+                        Стрельбище с лесенкой. Тренировки у манекенов. Статистика по врагам.
+                        Каждый мир — своя модель боя.
+                    </div>
+                </div>
+
+                <!-- База и хозяйство -->
+                <div class="road-item">
+                    <div class="road-dot road-dot--done"></div>
+                    <div class="road-title">
+                        База и хозяйство
+                        <span class="road-badge road-badge--done">Готово</span>
+                    </div>
+                    <div class="road-desc">
+                        Сортировка ящиков по табличкам, переплавка, уголь, готовка всех блюд по цепочке,
+                        огород с пересадкой, починка, патруль, подсвечники. Настраиваемый порядок дел.
+                    </div>
+                </div>
+
+                <!-- Мультиплеер -->
+                <div class="road-item">
+                    <div class="road-dot road-dot--done"></div>
+                    <div class="road-title">
+                        Мультиплеер
+                        <span class="road-badge road-badge--done">Готово</span>
+                    </div>
+                    <div class="road-desc">
+                        ValeraListener.dll — друг видит и слышит Валеру. Голос сжимается и идёт по сети игры.
+                        Командует только хозяин. Совместим с выделенными серверами.
+                    </div>
+                </div>
+
+                <!-- В работе: обучение вне боя -->
+                <div class="road-item">
+                    <div class="road-dot road-dot--wip"></div>
+                    <div class="road-title">
+                        Обучение вне боя — исследование и сбор
+                        <span class="road-badge road-badge--wip">В работе</span>
+                    </div>
+                    <div class="road-desc">
+                        Научить компаньона бродить, исследовать и собирать ресурсы, когда нет боя,
+                        используя нейросеть вместо правил. Отдельная ветка награды в env.py.
+                    </div>
+                </div>
+
+                <!-- Планируется -->
+                <div class="road-item">
+                    <div class="road-dot road-dot--plan"></div>
+                    <div class="road-title">
+                        Расширенные задания
+                        <span class="road-badge road-badge--plan">План</span>
+                    </div>
+                    <div class="road-desc">
+                        Сложные просьбы с подцелями: «наруби руды и принеси», «сходи за дровами
+                        и переплавь железо». Цепочки правил + подцели.
+                    </div>
+                </div>
+
+                <div class="road-item">
+                    <div class="road-dot road-dot--plan"></div>
+                    <div class="road-title">
+                        Нейросеть управляет ударами
+                        <span class="road-badge road-badge--plan">План</span>
+                    </div>
+                    <div class="road-desc">
+                        Сейчас удары ванильные. Следующий шаг — нейросеть решает «когда бить»,
+                        вызывая атаку так, как MonsterAI/Humanoid.
+                    </div>
+                </div>
+
+                <div class="road-item">
+                    <div class="road-dot road-dot--plan"></div>
+                    <div class="road-title">
+                        Больше инструментов для ИИ
+                        <span class="road-badge road-badge--plan">План</span>
+                    </div>
+                    <div class="road-desc">
+                        Дать языковой модели (Ollama/Claude) больше инструментов: задания «принеси дерево»,
+                        улучшенная память между сессиями.
+                    </div>
+                </div>
+
+                <div class="road-item">
+                    <div class="road-dot road-dot--plan"></div>
+                    <div class="road-title">
+                        Автономный режим (ONNX)
+                        <span class="road-badge road-badge--plan">План</span>
+                    </div>
+                    <div class="road-desc">
+                        Экспорт обученной модели в ONNX, запуск через Microsoft.ML.OnnxRuntime
+                        прямо в моде — компаньон играет без Python.
+                    </div>
+                </div>
+
+                <div class="road-item">
+                    <div class="road-dot road-dot--plan"></div>
+                    <div class="road-title">
+                        Стамина и кулдаун в наблюдении
+                        <span class="road-badge road-badge--plan">План</span>
+                    </div>
+                    <div class="road-desc">
+                        Поле weaponReady в StateMsg — нейросеть будет учитывать готовность оружия
+                        и запас выносливости при выборе приёма.
+                    </div>
+                </div>
+
+                <div class="road-item">
+                    <div class="road-dot road-dot--plan"></div>
+                    <div class="road-title">
+                        Укрытия в настоящем бою
+                        <span class="road-badge road-badge--plan">План</span>
+                    </div>
+                    <div class="road-desc">
+                        На стрельбище Валера уже стреляет из-за укрытий. Следующий шаг —
+                        использование укрытий в реальном бою с луком.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <hr class="rule">
+
+        <!-- ===== ТЕХНОЛОГИИ ===== -->
+        <div class="vm-section" style="padding-bottom: 16px;">
+            <p class="eyebrow">// 03 — Стек</p>
+            <h2 class="vm-section-title"><span>&lt;/&gt;</span> Технологии</h2>
+            <div class="tech-row">
+                <span class="tech-tag">C#</span>
+                <span class="tech-tag">BepInEx 5</span>
+                <span class="tech-tag">Harmony</span>
+                <span class="tech-tag">Python 3.12</span>
+                <span class="tech-tag">PyTorch</span>
+                <span class="tech-tag">PPO</span>
+                <span class="tech-tag">ONNX</span>
+                <span class="tech-tag">Whisper</span>
+                <span class="tech-tag">Vosk</span>
+                <span class="tech-tag">Ollama</span>
+                <span class="tech-tag">Silero TTS</span>
+                <span class="tech-tag">Claude API</span>
+                <span class="tech-tag">.NET SDK 8</span>
+                <span class="tech-tag">Gymnasium</span>
+            </div>
+        </div>
+
+        <!-- ===== FOOTER ===== -->
+        <div class="vm-footer">
+            Только одиночная игра / свои серверы &middot;
+            <a href="/" data-local="../Start/index.html">sigetar.ru</a>
+        </div>
+
     </main>
 
     <script>
-        /* Поддержка локальных ссылок при открытии с диска */
         if (location.protocol === 'file:') {
             document.querySelectorAll('[data-local]').forEach(a => {
                 a.href = a.dataset.local;
