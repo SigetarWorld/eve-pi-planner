@@ -927,7 +927,6 @@
     /* Stop auto-scroll on user interaction (drag/touch/wheel) */
     function stopAuto() {
         autoScroll = false;
-        document.getElementById('rmHint').style.display = 'none';
         updateToggleUI();
     }
 
@@ -935,9 +934,6 @@
     rmAutoToggle.addEventListener('click', () => {
         autoScroll = !autoScroll;
         updateToggleUI();
-        if (autoScroll) {
-            document.getElementById('rmHint').style.display = '';
-        }
     });
 
     /* Arrow navigation — smooth scroll by ~300px */
