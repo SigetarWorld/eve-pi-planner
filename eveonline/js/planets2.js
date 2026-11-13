@@ -154,7 +154,7 @@
             html += '<div class="uv-empty">пусто</div>';
         }
 
-        /* --- Дефицит: учитываем ВЕСЬ склад (колония + ангары) --- */
+        /* --- Дефицит: полная цепочка P4→P3→P2→P1, использовать склад в 0 --- */
         var hasP2P3 = items.some(function (it) { var t = tierOf(it.name); return t >= 2 && t <= 3; });
         var prod = col.dataset.prod || '';
         if (hasP2P3 && prod && typeof PI_RECIPE_OF !== 'undefined') {
@@ -167,7 +167,6 @@
                         if (q >= 1) allItems[name] = (allItems[name] || 0) + Math.floor(q);
                     });
                 });
-                // Добавляем данные из склада (ангаров) если загружены
                 if (window._whLast && window._whLast.length) {
                     window._whLast.forEach(function (owner) {
                         owner.entries.forEach(function (e) {
@@ -176,63 +175,104 @@
                     });
                 }
 
-                // 2. Макс. циклов P4, которые может дать любой ингредиент
-                var maxCyc = 0;
+                // 2. Для каждого P3-ингредиента P4: считаем потенциал P3 из имеющихся P2
+                //    + P2-дефициты чтобы использовать ВСЕ P2 в 0
+                var p3info = [];  // { name, p3have, p3fromP2, p3total, p2defs: [{name, deficit}] }
+                var p2used = {};  // отслеживаем использованные P2
+
                 recipe.in.forEach(function (ing) {
-                    var c = Math.floor((allItems[ing[0]] || 0) / ing[1]);
+                    var p3name = ing[0], p3perCyc = ing[1];
+                    var p3have = allItems[p3name] || 0;
+                    var p3fromP2 = 0;
+                    var p2defs = [];
+
+                    if (tierOf(p3name) === 3) {
+                        var p3r = PI_RECIPE_OF.get(p3name);
+                        if (p3r) {
+                            // Сколько P2 есть для этого P3 (не считая уже использованных)
+                            var maxP3cyc = 0;
+                            p3r.in.forEach(function (p2ing) {
+                                var p2name = p2ing[0], p2perCyc = p2ing[1];
+                                var p2avail = (allItems[p2name] || 0) - (p2used[p2name] || 0);
+                                var cyc = Math.floor(Math.max(0, p2avail) / p2perCyc);
+                                if (cyc > maxP3cyc) maxP3cyc = cyc;
+                            });
+                            // Использовать ВСЕ P2 → maxP3cyc циклов P3
+                            p3r.in.forEach(function (p2ing) {
+                                var p2name = p2ing[0], p2perCyc = p2ing[1];
+                                var p2avail = (allItems[p2name] || 0) - (p2used[p2name] || 0);
+                                var p2target = maxP3cyc * p2perCyc;
+                                p2used[p2name] = (p2used[p2name] || 0) + Math.min(p2avail, p2target);
+                                if (p2avail < p2target) {
+                                    p2defs.push({ name: p2name, deficit: p2target - Math.max(0, p2avail) });
+                                }
+                            });
+                            p3fromP2 = maxP3cyc * p3r.outQty;
+                        }
+                    }
+
+                    p3info.push({
+                        name: p3name, perCyc: p3perCyc,
+                        p3have: p3have, p3fromP2: p3fromP2,
+                        p3total: p3have + p3fromP2,
+                        p2defs: p2defs
+                    });
+                });
+
+                // 3. Макс. циклов P4 чтобы использовать ВСЕ P3
+                var maxCyc = 0;
+                p3info.forEach(function (pi) {
+                    var c = Math.floor(pi.p3total / pi.perCyc);
                     if (c > maxCyc) maxCyc = c;
                 });
 
-                // 3. Дефицит P3/P2 для выравнивания (чтобы всё ушло в 0)
-                var defs = [];
-                recipe.in.forEach(function (ing) {
-                    var iName = ing[0], iPerCyc = ing[1];
-                    var iHave = allItems[iName] || 0;
-                    var target = maxCyc * iPerCyc;
-                    if (iHave < target) defs.push({ name: iName, deficit: target - iHave, tier: tierOf(iName) });
-                });
-
-                // 4. Разворачиваем дефицит до P1, вычитая запасы P2 и P1 из склада
-                //    p1Need — итоговая потребность P1 с учётом всего
-                var p1Need = {};
-
-                defs.forEach(function (d) {
-                    if (d.tier === 3) {
-                        var p3r = PI_RECIPE_OF.get(d.name);
-                        if (p3r) {
-                            var p3cyc = Math.ceil(d.deficit / p3r.outQty);
-                            p3r.in.forEach(function (p2ing) {
-                                var p2name = p2ing[0];
-                                var p2need = p3cyc * p2ing[1];
-                                // Вычитаем запас P2 из склада
-                                var p2have = allItems[p2name] || 0;
-                                var p2deficit = Math.max(0, p2need - p2have);
-                                if (p2deficit > 0 && tierOf(p2name) === 2) {
-                                    var p2r = PI_RECIPE_OF.get(p2name);
-                                    if (p2r) {
-                                        var p2cyc = Math.ceil(p2deficit / p2r.outQty);
-                                        p2r.in.forEach(function (p1ing) {
-                                            var p1name = p1ing[0];
-                                            var p1total = p2cyc * p1ing[1];
-                                            // Вычитаем запас P1
-                                            p1Need[p1name] = (p1Need[p1name] || 0) + p1total;
-                                        });
-                                    }
-                                }
-                            });
-                        }
-                    } else if (d.tier === 2) {
-                        var p2r = PI_RECIPE_OF.get(d.name);
-                        if (p2r) {
-                            var p2cyc = Math.ceil(d.deficit / p2r.outQty);
-                            p2r.in.forEach(function (p1ing) {
-                                p1Need[p1ing[0]] = (p1Need[p1ing[0]] || 0) + p2cyc * p1ing[1];
-                            });
-                        }
+                // 4. Дефицит P3 для выравнивания
+                var p3defs = [];
+                p3info.forEach(function (pi) {
+                    var target = maxCyc * pi.perCyc;
+                    if (pi.p3total < target) {
+                        p3defs.push({ name: pi.name, deficit: target - pi.p3total });
                     }
                 });
 
-                // Вычитаем имеющиеся запасы P1 из итоговой потребности
+                // 5. Считаем все P2-дефициты:
+                //    a) из балансировки P2 внутри каждого P3 (шаг 2)
+                //    b) из дефицита P3 (шаг 4) → разворачиваем в P2
+                var allP2defs = {};  // name → deficit
+
+                // 5a: дефициты балансировки P2
+                p3info.forEach(function (pi) {
+                    pi.p2defs.forEach(function (d) {
+                        allP2defs[d.name] = (allP2defs[d.name] || 0) + d.deficit;
+                    });
+                });
+
+                // 5b: дефициты P3 → P2
+                p3defs.forEach(function (d) {
+                    var p3r = PI_RECIPE_OF.get(d.name);
+                    if (p3r) {
+                        var cyc = Math.ceil(d.deficit / p3r.outQty);
+                        p3r.in.forEach(function (p2ing) {
+                            allP2defs[p2ing[0]] = (allP2defs[p2ing[0]] || 0) + cyc * p2ing[1];
+                        });
+                    }
+                });
+
+                // 6. P2-дефициты → P1 (через рецепты P2)
+                var p1Need = {};
+                Object.keys(allP2defs).forEach(function (p2name) {
+                    var p2deficit = allP2defs[p2name];
+                    if (p2deficit <= 0) return;
+                    var p2r = PI_RECIPE_OF.get(p2name);
+                    if (p2r && tierOf(p2name) === 2) {
+                        var cyc = Math.ceil(p2deficit / p2r.outQty);
+                        p2r.in.forEach(function (p1ing) {
+                            p1Need[p1ing[0]] = (p1Need[p1ing[0]] || 0) + cyc * p1ing[1];
+                        });
+                    }
+                });
+
+                // Вычитаем запасы P1 из потребности
                 var p1List = [];
                 Object.keys(p1Need).forEach(function (name) {
                     var need = p1Need[name];
@@ -242,9 +282,9 @@
                 });
                 p1List.sort(function (a, b) { return b.add - a.add || a.name.localeCompare(b.name); });
 
-                // 5. Рендер
-                var hasAny = defs.length > 0;
-                if (hasAny) {
+                // 7. Рендер
+                var hasDefs = p3defs.length > 0 || Object.keys(allP2defs).length > 0;
+                if (hasDefs) {
                     var whLoaded = window._whLast && window._whLast.length;
                     html += '<div class="p2-deficit">';
                     html += '<div class="p2-deficit-title">' + escHtml(prod) +
@@ -252,12 +292,31 @@
                         (whLoaded ? '' : ' <span class="p2-warn-tag">(откройте Склад)</span>') +
                         '</div>';
 
-                    // Дефицит P3/P2 — что не хватает
-                    defs.forEach(function (d) {
-                        html += '<div class="uv-line p2-def-row">' + resHtml(d.name) +
-                            '<span class="uv-sep">нужно ×</span><span class="uv-qty">' +
-                            d.deficit.toLocaleString('ru-RU') + '</span></div>';
-                    });
+                    // Показываем P4 циклов
+                    html += '<div class="uv-line p2-info-row"><span class="uv-name">' +
+                        escHtml(prod) + '</span><span class="uv-sep">×</span><span class="uv-qty">' +
+                        (maxCyc * recipe.outQty).toLocaleString('ru-RU') + ' шт</span></div>';
+
+                    // P3 дефицит
+                    if (p3defs.length) {
+                        html += '<div class="p2-deficit-sub">Не хватает P3:</div>';
+                        p3defs.forEach(function (d) {
+                            html += '<div class="uv-line p2-def-row">' + resHtml(d.name) +
+                                '<span class="uv-sep">×</span><span class="uv-qty">' +
+                                d.deficit.toLocaleString('ru-RU') + '</span></div>';
+                        });
+                    }
+
+                    // P2 дефицит
+                    var p2names = Object.keys(allP2defs).filter(function (n) { return allP2defs[n] > 0; });
+                    if (p2names.length) {
+                        html += '<div class="p2-deficit-sub">Не хватает P2:</div>';
+                        p2names.forEach(function (name) {
+                            html += '<div class="uv-line p2-def-row p2-chain-2">' + resHtml(name) +
+                                '<span class="uv-sep">×</span><span class="uv-qty">' +
+                                allP2defs[name].toLocaleString('ru-RU') + '</span></div>';
+                        });
+                    }
 
                     // Итого P1 — надо добавить
                     var hasP1add = p1List.some(function (p) { return p.add > 0; });
@@ -272,7 +331,7 @@
                                 '<span class="uv-sep">×</span><span class="uv-qty p2-add">' +
                                 p.add.toLocaleString('ru-RU') + '</span>' + haveTag + '</div>';
                         });
-                    } else if (defs.length) {
+                    } else if (hasDefs) {
                         html += '<div class="p2-deficit-sub p2-ok">P1 хватает на складе ✓</div>';
                     }
 

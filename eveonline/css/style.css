@@ -5929,6 +5929,8 @@ input.eve-plex-input {
 #planets2 .p2-have { color: var(--text-dim); font-size: 10px; margin-left: 0.3rem; }
 #planets2 .p2-add { color: var(--yellow, #ffc107) !important; font-weight: 600; }
 #planets2 .p2-warn-tag { color: var(--red); font-weight: 400; font-size: 10px; }
+#planets2 .p2-info-row .uv-name { color: var(--green, #4caf50); }
+#planets2 .p2-info-row .uv-qty  { color: var(--green, #4caf50); font-weight: 600; }
 
 /* ==================== Эскалации ==================== */
 #map-esc { display: flex; flex-direction: column; gap: 0; height: calc(100vh - 10rem); min-height: 400px; }
