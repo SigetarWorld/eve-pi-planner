@@ -5924,6 +5924,11 @@ input.eve-plex-input {
 #planets2 .p2-chain-1 .uv-name,
 #planets2 .p2-chain-1 .uv-qty  { color: var(--text-dim); }
 #planets2 .p2-deficit .res-icon { width: 1rem; height: 1rem; margin: 0 0.15rem; vertical-align: middle; }
+#planets2 .p2-deficit-sub { color: var(--accent); font-size: 11px; font-weight: 600 !important; margin-top: 0.3rem; border-top: 1px dotted var(--border); padding-top: 0.2rem; }
+#planets2 .p2-deficit-sub.p2-ok { color: var(--green, #4caf50); }
+#planets2 .p2-have { color: var(--text-dim); font-size: 10px; margin-left: 0.3rem; }
+#planets2 .p2-add { color: var(--yellow, #ffc107) !important; font-weight: 600; }
+#planets2 .p2-warn-tag { color: var(--red); font-weight: 400; font-size: 10px; }
 
 /* ==================== Эскалации ==================== */
 #map-esc { display: flex; flex-direction: column; gap: 0; height: calc(100vh - 10rem); min-height: 400px; }

@@ -154,28 +154,36 @@
             html += '<div class="uv-empty">пусто</div>';
         }
 
-        /* --- Дефицит P4: показываем под складом с P2/P3 --- */
+        /* --- Дефицит: учитываем ВЕСЬ склад (колония + ангары) --- */
         var hasP2P3 = items.some(function (it) { var t = tierOf(it.name); return t >= 2 && t <= 3; });
         var prod = col.dataset.prod || '';
         if (hasP2P3 && prod && typeof PI_RECIPE_OF !== 'undefined') {
             var recipe = PI_RECIPE_OF.get(prod);
             if (recipe) {
-                // Сумма всех предметов по всем 3 складам колонии
+                // 1. Собираем ВСЕ предметы: колония + склад (ангары)
                 var allItems = {};
                 (col.storeData || []).forEach(function (s) {
                     s.items.forEach(function (q, name) {
                         if (q >= 1) allItems[name] = (allItems[name] || 0) + Math.floor(q);
                     });
                 });
+                // Добавляем данные из склада (ангаров) если загружены
+                if (window._whLast && window._whLast.length) {
+                    window._whLast.forEach(function (owner) {
+                        owner.entries.forEach(function (e) {
+                            if (e.qty >= 1) allItems[e.name] = (allItems[e.name] || 0) + Math.floor(e.qty);
+                        });
+                    });
+                }
 
-                // Макс. циклов P4, которые может дать любой ингредиент
+                // 2. Макс. циклов P4, которые может дать любой ингредиент
                 var maxCyc = 0;
                 recipe.in.forEach(function (ing) {
                     var c = Math.floor((allItems[ing[0]] || 0) / ing[1]);
                     if (c > maxCyc) maxCyc = c;
                 });
 
-                // Собираем ингредиенты с дефицитом (have < target)
+                // 3. Дефицит P3/P2 для выравнивания (чтобы всё ушло в 0)
                 var defs = [];
                 recipe.in.forEach(function (ing) {
                     var iName = ing[0], iPerCyc = ing[1];
@@ -184,42 +192,90 @@
                     if (iHave < target) defs.push({ name: iName, deficit: target - iHave, tier: tierOf(iName) });
                 });
 
-                if (defs.length) {
-                    html += '<div class="p2-deficit">';
-                    html += '<div class="p2-deficit-title">' + escHtml(prod) + ' — не хватает:</div>';
+                // 4. Разворачиваем дефицит до P1, вычитая запасы P2 и P1 из склада
+                //    p1Need — итоговая потребность P1 с учётом всего
+                var p1Need = {};
 
-                    defs.forEach(function (d) {
-                        // Строка P3 (или P1 если рецепт P4 содержит P1 напрямую)
-                        html += '<div class="uv-line p2-def-row">' + resHtml(d.name) +
-                            '<span class="uv-sep">×</span><span class="uv-qty">' +
-                            d.deficit.toLocaleString('ru-RU') + '</span></div>';
-
-                        // Если P3 — разворачиваем цепочку P2→P1
-                        if (d.tier === 3) {
-                            var p3r = PI_RECIPE_OF.get(d.name);
-                            if (p3r) {
-                                var p3cyc = Math.ceil(d.deficit / p3r.outQty);
-                                p3r.in.forEach(function (p2ing) {
-                                    var p2name = p2ing[0], p2need = p3cyc * p2ing[1];
-                                    html += '<div class="uv-line p2-chain-2">' + resHtml(p2name) +
-                                        '<span class="uv-sep">×</span><span class="uv-qty">' +
-                                        p2need.toLocaleString('ru-RU') + '</span></div>';
-
-                                    // P1 для этого P2
+                defs.forEach(function (d) {
+                    if (d.tier === 3) {
+                        var p3r = PI_RECIPE_OF.get(d.name);
+                        if (p3r) {
+                            var p3cyc = Math.ceil(d.deficit / p3r.outQty);
+                            p3r.in.forEach(function (p2ing) {
+                                var p2name = p2ing[0];
+                                var p2need = p3cyc * p2ing[1];
+                                // Вычитаем запас P2 из склада
+                                var p2have = allItems[p2name] || 0;
+                                var p2deficit = Math.max(0, p2need - p2have);
+                                if (p2deficit > 0 && tierOf(p2name) === 2) {
                                     var p2r = PI_RECIPE_OF.get(p2name);
-                                    if (p2r && tierOf(p2name) === 2) {
-                                        var p2cyc = Math.ceil(p2need / p2r.outQty);
+                                    if (p2r) {
+                                        var p2cyc = Math.ceil(p2deficit / p2r.outQty);
                                         p2r.in.forEach(function (p1ing) {
-                                            var p1need = p2cyc * p1ing[1];
-                                            html += '<div class="uv-line p2-chain-1">' + resHtml(p1ing[0]) +
-                                                '<span class="uv-sep">×</span><span class="uv-qty">' +
-                                                p1need.toLocaleString('ru-RU') + '</span></div>';
+                                            var p1name = p1ing[0];
+                                            var p1total = p2cyc * p1ing[1];
+                                            // Вычитаем запас P1
+                                            p1Need[p1name] = (p1Need[p1name] || 0) + p1total;
                                         });
                                     }
-                                });
-                            }
+                                }
+                            });
                         }
+                    } else if (d.tier === 2) {
+                        var p2r = PI_RECIPE_OF.get(d.name);
+                        if (p2r) {
+                            var p2cyc = Math.ceil(d.deficit / p2r.outQty);
+                            p2r.in.forEach(function (p1ing) {
+                                p1Need[p1ing[0]] = (p1Need[p1ing[0]] || 0) + p2cyc * p1ing[1];
+                            });
+                        }
+                    }
+                });
+
+                // Вычитаем имеющиеся запасы P1 из итоговой потребности
+                var p1List = [];
+                Object.keys(p1Need).forEach(function (name) {
+                    var need = p1Need[name];
+                    var have = allItems[name] || 0;
+                    var add = Math.max(0, need - have);
+                    p1List.push({ name: name, need: need, have: have, add: add });
+                });
+                p1List.sort(function (a, b) { return b.add - a.add || a.name.localeCompare(b.name); });
+
+                // 5. Рендер
+                var hasAny = defs.length > 0;
+                if (hasAny) {
+                    var whLoaded = window._whLast && window._whLast.length;
+                    html += '<div class="p2-deficit">';
+                    html += '<div class="p2-deficit-title">' + escHtml(prod) +
+                        ' — реализовать склад в 0' +
+                        (whLoaded ? '' : ' <span class="p2-warn-tag">(откройте Склад)</span>') +
+                        '</div>';
+
+                    // Дефицит P3/P2 — что не хватает
+                    defs.forEach(function (d) {
+                        html += '<div class="uv-line p2-def-row">' + resHtml(d.name) +
+                            '<span class="uv-sep">нужно ×</span><span class="uv-qty">' +
+                            d.deficit.toLocaleString('ru-RU') + '</span></div>';
                     });
+
+                    // Итого P1 — надо добавить
+                    var hasP1add = p1List.some(function (p) { return p.add > 0; });
+                    if (hasP1add) {
+                        html += '<div class="p2-deficit-sub">Добавить P1:</div>';
+                        p1List.forEach(function (p) {
+                            if (p.add <= 0) return;
+                            var haveTag = p.have > 0
+                                ? ' <span class="p2-have">(есть ' + p.have.toLocaleString('ru-RU') + ')</span>'
+                                : '';
+                            html += '<div class="uv-line p2-chain-1">' + resHtml(p.name) +
+                                '<span class="uv-sep">×</span><span class="uv-qty p2-add">' +
+                                p.add.toLocaleString('ru-RU') + '</span>' + haveTag + '</div>';
+                        });
+                    } else if (defs.length) {
+                        html += '<div class="p2-deficit-sub p2-ok">P1 хватает на складе ✓</div>';
+                    }
+
                     html += '</div>';
                 }
             }
