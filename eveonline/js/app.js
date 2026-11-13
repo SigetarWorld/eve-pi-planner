@@ -3742,6 +3742,7 @@ async function renderWarehouse() {
     body.innerHTML = '<p class="evt-dim">Загрузка складов из EVE…</p>';
     try {
         whLast = await loadWarehouse(chars);
+        window._whLast = whLast;          // expose for planets2.js
         if (whLast.length) whSaveHistory(whLast);
         if (whFilter.owner && !whLast.some((o) => whOwnerKey(o) === whFilter.owner)) whFilter.owner = '';
         body.innerHTML = warehouseHtml(whLast);
