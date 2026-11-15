@@ -4415,8 +4415,7 @@ function viewStockOf(name) {
                Center, как в «Тесте». Экстрактор без маршрута копит добычу
                «в себе» (в игре так не бывает) — в сумму её не берём. */
             byPin.forEach((items, pinId) => {
-                if (factories.has(pinId)) return;   // буферы фабрик не считаем
-                if (!typeOfPin.has(pinId) || !storeKindOf(typeOfPin.get(pinId), true)) return;
+                if (factories.has(pinId) || !typeOfPin.has(pinId) || !storeKindOf(typeOfPin.get(pinId), true)) return;
                 items.forEach((n, item) => {
                     if (!(n > 0)) return;
                     stock.set(item, (stock.get(item) || 0) + n);

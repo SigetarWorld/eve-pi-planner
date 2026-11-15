@@ -353,16 +353,7 @@ const chainKey = (recipe, pos) => recipe.in
     .sort((a, b) => a - b);
 
 [2, 3, 4].forEach((level) => {
-    const prevPos = positionsOf(PI_LEVEL_ORDER[level - 1]);
-    PI_LEVEL_ORDER[level] = PI_LEVEL_ORDER[level].slice().sort((a, b) => {
-        const ka = chainKey(PI_RECIPE_OF.get(a), prevPos);
-        const kb = chainKey(PI_RECIPE_OF.get(b), prevPos);
-        const count = Math.min(ka.length, kb.length);
-        for (let i = 0; i < count; i += 1) {
-            if (ka[i] !== kb[i]) return ka[i] - kb[i];
-        }
-        return ka.length - kb.length;
-    });
+    PI_LEVEL_ORDER[level] = PI_LEVEL_ORDER[level].slice().sort(piCompare);
 });
 
 /* ---------- Отрисовка схемы ---------- */
