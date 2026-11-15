@@ -377,7 +377,7 @@
             overflow: hidden; background: hsl(var(--card));
         }
         .feat-sidebar {
-            flex: 0 0 200px; display: flex; flex-direction: column;
+            flex: 0 0 240px; display: flex; flex-direction: column;
             border-right: 1px solid hsl(var(--border)); background: hsl(220 40% 5%);
             overflow-y: auto;
         }
@@ -874,6 +874,7 @@
                         const isNew = daysAgo(item.date) <= 3;
                         rRows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
                             <span class="feat-row-cat-icon" title="${cm ? cm.name : item.cat}">${cm ? svgIcon(cm.icon) : ''}</span>
+                            <span style="font-size:.7rem;color:hsl(var(--primary));white-space:nowrap;flex-shrink:0;min-width:70px">${cm ? cm.name : item.cat}</span>
                             <span class="feat-row-text">${item.text}</span>
                             <span class="feat-row-date">${item.date}</span>
                         </div>`;
@@ -1424,6 +1425,7 @@
                 const isNew = daysAgo(item.date) <= 3;
                 rRows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
                     <span class="feat-row-cat-icon" title="${cm ? cm.name : item.cat}">${cm ? svgIcon(cm.icon) : ''}</span>
+                    <span style="font-size:.7rem;color:hsl(var(--primary));white-space:nowrap;flex-shrink:0;min-width:70px">${cm ? cm.name : item.cat}</span>
                     <span class="feat-row-text">${item.text}</span>
                     <span class="feat-row-date">${item.date}</span>
                 </div>`;
