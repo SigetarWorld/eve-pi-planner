@@ -1151,10 +1151,14 @@
                         <label>Название</label>
                         <input id="cName" placeholder="Крафт">
                         <label>Иконка</label>
-                        <select id="cIcon"></select>
-                        <div style="margin:8px 0;display:flex;align-items:center;gap:8px;">
-                            <span id="cIconPreview" style="width:24px;height:24px;color:hsl(var(--primary))"></span>
-                            <span style="font-size:.75rem;color:hsl(var(--muted-foreground))">Предпросмотр</span>
+                        <input type="hidden" id="cIcon">
+                        <div id="cIconPicker" style="position:relative;">
+                            <button type="button" id="cIconBtn" style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 12px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:6px;color:hsl(var(--foreground));cursor:pointer;font-size:.85rem;">
+                                <span id="cIconPreview" style="width:20px;height:20px;color:hsl(var(--primary));flex-shrink:0"></span>
+                                <span id="cIconLabel">выберите иконку</span>
+                                <span style="margin-left:auto;font-size:.7rem;opacity:.5">▼</span>
+                            </button>
+                            <div id="cIconDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;max-height:200px;overflow-y:auto;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:6px;z-index:10;margin-top:4px;box-shadow:0 4px 12px rgba(0,0,0,.3);"></div>
                         </div>
                         <label>Порядок</label>
                         <input id="cOrder" type="number" value="0" min="0">
@@ -1500,17 +1504,37 @@
         document.getElementById('cIcon').value = c.icon;
         document.getElementById('cOrder').value = c.order || 0;
         document.getElementById('cIconPreview').innerHTML = svgIcon(c.icon);
+        document.getElementById('cIconLabel').textContent = iconNames[c.icon] || c.icon;
     }
 
-    /* Populate icon dropdown */
-    const cIconSel = document.getElementById('cIcon');
+    /* Populate icon dropdown (custom with SVG previews) */
+    const cIconInput = document.getElementById('cIcon');
+    const cIconBtn = document.getElementById('cIconBtn');
+    const cIconDropdown = document.getElementById('cIconDropdown');
+    const cIconPreview = document.getElementById('cIconPreview');
+    const cIconLabel = document.getElementById('cIconLabel');
+    const iconNames = { sword:'Меч', bag:'Сумка', shield:'Щит', mic:'Микрофон', home:'Дом', pick:'Кирка', target:'Мишень', multi:'Группа', hud:'Экран' };
+
     Object.keys(IC).forEach(key => {
-        const o = document.createElement('option');
-        o.value = key; o.textContent = key;
-        cIconSel.appendChild(o);
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;transition:background .15s;';
+        item.innerHTML = `<span style="width:20px;height:20px;color:hsl(var(--primary));flex-shrink:0">${svgIcon(key)}</span><span style="font-size:.85rem">${iconNames[key] || key}</span>`;
+        item.addEventListener('mouseenter', () => { item.style.background = 'hsl(var(--accent))'; });
+        item.addEventListener('mouseleave', () => { item.style.background = ''; });
+        item.addEventListener('click', () => {
+            cIconInput.value = key;
+            cIconPreview.innerHTML = svgIcon(key);
+            cIconLabel.textContent = iconNames[key] || key;
+            cIconDropdown.style.display = 'none';
+        });
+        cIconDropdown.appendChild(item);
     });
-    cIconSel.addEventListener('change', () => {
-        document.getElementById('cIconPreview').innerHTML = svgIcon(cIconSel.value);
+
+    cIconBtn.addEventListener('click', () => {
+        cIconDropdown.style.display = cIconDropdown.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', e => {
+        if (!document.getElementById('cIconPicker').contains(e.target)) cIconDropdown.style.display = 'none';
     });
 
     /* Save category */
@@ -1540,9 +1564,10 @@
         document.getElementById('cId').value = '';
         document.getElementById('cId').disabled = false;
         document.getElementById('cName').value = '';
-        document.getElementById('cIcon').value = Object.keys(IC)[0];
+        document.getElementById('cIcon').value = '';
         document.getElementById('cOrder').value = '0';
-        document.getElementById('cIconPreview').innerHTML = svgIcon(Object.keys(IC)[0]);
+        document.getElementById('cIconPreview').innerHTML = '';
+        document.getElementById('cIconLabel').textContent = 'выберите иконку';
     }
 
     /* Rebuild fCat dropdown from current CAT_META */
