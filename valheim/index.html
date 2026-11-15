@@ -630,7 +630,7 @@
             function svgIcon(key){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (IC[key]||'') + '</svg>'; }
 
             /* ===== Категории ===== */
-            const CAT_META = [
+            let CAT_META = [
                 { id:'companion', icon:'sword', name:'Компаньон' },
                 { id:'combat',    icon:'shield', name:'Боевая система' },
                 { id:'voice',     icon:'mic',    name:'Голос и мозг' },
@@ -1072,6 +1072,7 @@
             <div class="tabs">
                 <button class="tab-btn active" data-tab="milestones">Дорожная карта</button>
                 <button class="tab-btn" data-tab="features">Возможности</button>
+                <button class="tab-btn" data-tab="categories">Категории</button>
                 <button class="tab-btn" data-tab="sync">Синхронизация</button>
             </div>
 
@@ -1135,6 +1136,36 @@
                 </div>
             </div>
 
+
+            <!-- TAB: Categories -->
+            <div class="tab-content" id="tab-categories">
+                <div class="admin-split">
+                    <div class="admin-split-left">
+                        <h3 style="margin-top:0">Категории</h3>
+                        <div class="item-list" id="categoryList"></div>
+                    </div>
+                    <div class="admin-split-right">
+                        <h3 style="margin-top:0">Добавить / редактировать</h3>
+                        <label>ID (латиница, без пробелов)</label>
+                        <input id="cId" placeholder="crafting">
+                        <label>Название</label>
+                        <input id="cName" placeholder="Крафт">
+                        <label>Иконка</label>
+                        <select id="cIcon"></select>
+                        <div style="margin:8px 0;display:flex;align-items:center;gap:8px;">
+                            <span id="cIconPreview" style="width:24px;height:24px;color:hsl(var(--primary))"></span>
+                            <span style="font-size:.75rem;color:hsl(var(--muted-foreground))">Предпросмотр</span>
+                        </div>
+                        <label>Порядок</label>
+                        <input id="cOrder" type="number" value="0" min="0">
+                        <div class="btn-row">
+                            <button class="btn-primary" id="cSave">Сохранить категорию</button>
+                            <button class="btn-secondary" id="cClear">Очистить</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- TAB: Sync -->
             <div class="tab-content" id="tab-sync">
                 <h3>Синхронизация данных</h3>
@@ -1176,6 +1207,9 @@
         catch(e) { alert('Ошибка входа: ' + e.message); }
     });
 
+    /* Try to load categories from Firebase on startup */
+    applyCategoriesFromDB();
+
     onAuthStateChanged(auth, user => {
         currentUser = user;
         isAdmin = user && user.email === ADMIN_EMAIL;
@@ -1210,6 +1244,7 @@
                 }
                 refreshMilestoneList();
                 refreshFeatureList();
+                refreshCategoryList();
             }
         } else {
             st.textContent = 'не авторизован';
@@ -1240,6 +1275,57 @@
             const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             return items;
         } catch(e) { console.warn('Firestore features load error:', e); return null; }
+    }
+
+
+    /* ---- Firestore: load categories ---- */
+    async function loadCategoriesFromDB() {
+        try {
+            const snap = await getDocs(query(collection(db, 'categories'), orderBy('order')));
+            if (snap.empty) return null;
+            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch(e) { console.warn('Firestore categories load error:', e); return null; }
+    }
+
+    /* ---- Apply categories from DB to page ---- */
+    async function applyCategoriesFromDB() {
+        const cats = await loadCategoriesFromDB();
+        if (cats && cats.length > 0) {
+            CAT_META = cats.map(c => ({ id: c.id, icon: c.icon, name: c.name }));
+            /* Re-render features section */
+            const sidebar = document.getElementById('featSidebar');
+            const panel = document.getElementById('featPanel');
+            sidebar.innerHTML = '';
+            panel.innerHTML = '';
+            const byCat = groupBy(FEATURES, 'cat');
+            CAT_META.forEach((cat, ci) => {
+                const items = byCat[cat.id] || [];
+                const btn = document.createElement('button');
+                btn.className = 'feat-tab' + (ci === 0 ? ' active' : '');
+                btn.dataset.cat = cat.id;
+                btn.innerHTML = `<span class="ft-icon">${svgIcon(cat.icon)}</span> ${cat.name} <span class="ft-count">${items.length}</span>`;
+                btn.onclick = () => {
+                    sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
+                    panel.querySelectorAll('.feat-panel-cat').forEach(p => p.classList.remove('active'));
+                    document.getElementById('fp-' + cat.id).classList.add('active');
+                };
+                sidebar.appendChild(btn);
+                const div = document.createElement('div');
+                div.className = 'feat-panel-cat' + (ci === 0 ? ' active' : '');
+                div.id = 'fp-' + cat.id;
+                let rows = '';
+                items.forEach(item => {
+                    rows += `<div class="feat-row">
+                        <span class="feat-row-check">\u2713</span>
+                        <span class="feat-row-text">${item.text}</span>
+                        <span class="feat-row-date">${item.date}</span>
+                    </div>`;
+                });
+                div.innerHTML = rows;
+                panel.appendChild(div);
+            });
+        }
     }
 
     /* ---- Refresh milestone list in admin ---- */
@@ -1370,6 +1456,106 @@
         } catch(e) { alert('Ошибка: ' + e.message); }
     });
 
+
+    /* ---- Refresh category list in admin ---- */
+    async function refreshCategoryList() {
+        const list = document.getElementById('categoryList');
+        const data = await loadCategoriesFromDB();
+        if (!data || data.length === 0) {
+            list.innerHTML = '<div style="padding:8px;font-size:.8rem;color:hsl(var(--muted-foreground))">Нет категорий в Firebase — загрузите данные во вкладке «Синхронизация»</div>';
+            return;
+        }
+        list.innerHTML = data.map(c => `
+            <div class="item-row">
+                <span style="width:24px;height:24px;color:hsl(var(--primary));flex-shrink:0">${svgIcon(c.icon)}</span>
+                <span style="font-family:'Share Tech Mono',monospace;font-size:.75rem;color:hsl(var(--secondary));width:80px;">${c.id}</span>
+                <span style="flex:1">${c.name}</span>
+                <span style="font-size:.7rem;color:hsl(var(--muted-foreground))">⇅${c.order || 0}</span>
+                <button class="btn-secondary edit-btn" data-cedit="${c.id}">✎</button>
+                <button class="btn-danger edit-btn" data-cdel="${c.id}" style="padding:2px 8px;">✕</button>
+            </div>
+        `).join('');
+        list.querySelectorAll('[data-cedit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const c = data.find(x => x.id === btn.dataset.cedit);
+                if (c) editCategory(c);
+            });
+        });
+        list.querySelectorAll('[data-cdel]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (confirm('Удалить категорию «' + btn.dataset.cdel + '»? Возможности в этой категории останутся, но не будут отображаться.')) {
+                    await deleteDoc(doc(db, 'categories', btn.dataset.cdel));
+                    refreshCategoryList();
+                    await applyCategoriesFromDB();
+                    rebuildCatDropdown();
+                }
+            });
+        });
+    }
+
+    function editCategory(c) {
+        document.getElementById('cId').value = c.id;
+        document.getElementById('cId').disabled = true; /* ID нельзя менять при редактировании */
+        document.getElementById('cName').value = c.name;
+        document.getElementById('cIcon').value = c.icon;
+        document.getElementById('cOrder').value = c.order || 0;
+        document.getElementById('cIconPreview').innerHTML = svgIcon(c.icon);
+    }
+
+    /* Populate icon dropdown */
+    const cIconSel = document.getElementById('cIcon');
+    Object.keys(IC).forEach(key => {
+        const o = document.createElement('option');
+        o.value = key; o.textContent = key;
+        cIconSel.appendChild(o);
+    });
+    cIconSel.addEventListener('change', () => {
+        document.getElementById('cIconPreview').innerHTML = svgIcon(cIconSel.value);
+    });
+
+    /* Save category */
+    document.getElementById('cSave').addEventListener('click', async () => {
+        const id = document.getElementById('cId').value.trim();
+        const name = document.getElementById('cName').value.trim();
+        const icon = document.getElementById('cIcon').value;
+        if (!id) return alert('Укажите ID категории');
+        if (!name) return alert('Укажите название');
+        if (!/^[a-z][a-z0-9_]*$/.test(id)) return alert('ID должен быть латиницей, начинаться с буквы (a-z, 0-9, _)');
+        const data = {
+            id, name, icon,
+            order: parseInt(document.getElementById('cOrder').value) || 0,
+        };
+        try {
+            await setDoc(doc(db, 'categories', id), data);
+            alert('Категория «' + name + '» сохранена!');
+            clearCategoryForm();
+            refreshCategoryList();
+            await applyCategoriesFromDB();
+            rebuildCatDropdown();
+        } catch(e) { alert('Ошибка: ' + e.message); }
+    });
+
+    document.getElementById('cClear').addEventListener('click', clearCategoryForm);
+    function clearCategoryForm() {
+        document.getElementById('cId').value = '';
+        document.getElementById('cId').disabled = false;
+        document.getElementById('cName').value = '';
+        document.getElementById('cIcon').value = Object.keys(IC)[0];
+        document.getElementById('cOrder').value = '0';
+        document.getElementById('cIconPreview').innerHTML = svgIcon(Object.keys(IC)[0]);
+    }
+
+    /* Rebuild fCat dropdown from current CAT_META */
+    function rebuildCatDropdown() {
+        const fCatSel = document.getElementById('fCat');
+        fCatSel.innerHTML = '';
+        CAT_META.forEach(c => {
+            const o = document.createElement('option');
+            o.value = c.id; o.textContent = c.name;
+            fCatSel.appendChild(o);
+        });
+    }
+
     /* ---- Sync: push hardcoded data to Firestore ---- */
     document.getElementById('syncPush').addEventListener('click', async () => {
         if (!isAdmin) return alert('Нет прав');
@@ -1379,6 +1565,17 @@
         const addLog = msg => { log.innerHTML += msg + '<br>'; log.scrollTop = log.scrollHeight; };
 
         try {
+            /* Categories */
+            addLog('Загрузка категорий...');
+            for (let i = 0; i < CAT_META.length; i++) {
+                const c = CAT_META[i];
+                await setDoc(doc(db, 'categories', c.id), {
+                    id: c.id, name: c.name, icon: c.icon, order: i,
+                });
+                addLog('  \u2713 ' + c.id + ' — ' + c.name);
+            }
+            addLog(CAT_META.length + ' категорий загружено.');
+
             /* Milestones */
             addLog('Загрузка этапов...');
             for (let i = 0; i < MILESTONES.length; i++) {
@@ -1419,7 +1616,7 @@
         const log = document.getElementById('syncLog');
         log.innerHTML = 'Очистка...<br>';
         try {
-            for (const col of ['milestones', 'features']) {
+            for (const col of ['milestones', 'features', 'categories']) {
                 const snap = await getDocs(collection(db, col));
                 for (const d of snap.docs) await deleteDoc(d.ref);
                 log.innerHTML += col + ': удалено ' + snap.docs.length + '<br>';
