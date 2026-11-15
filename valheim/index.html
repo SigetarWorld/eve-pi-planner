@@ -615,121 +615,191 @@
             </div>
 
             <script>
-            (function(){
-                /* SVG icon paths for category tabs */
-                const IC = {
-                    sword:  '<path d="M14.5 3.5L21 10l-2 2-6.5-6.5z"/><path d="M10 14l-7 7"/><path d="M8 12l4 4"/><path d="M3 21l2-2"/>',
-                    bag:    '<rect x="5" y="8" width="14" height="12" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/><path d="M5 14h14"/>',
-                    shield: '<path d="M12 3l8 4v5c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V7z"/>',
-                    mic:    '<rect x="9" y="2" width="6" height="10" rx="3"/><path d="M5 10a7 7 0 0014 0"/><path d="M12 17v5"/><path d="M8 22h8"/>',
-                    home:   '<path d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V12h6v9"/>',
-                    pick:   '<path d="M14 4l6 6-9 9-6-6z"/><path d="M5 19l-2 2"/><path d="M15 5l4-2"/>',
-                    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
-                    multi:  '<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 18v-1a5 5 0 0110 0v1"/><path d="M13 18v-1a5 5 0 0110 0v1"/>',
-                    hud:    '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 12h4"/><path d="M14 12h4"/><path d="M12 8v8"/>',
-                };
-                function svgIcon(key){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (IC[key]||'') + '</svg>'; }
+            /* ===== SVG icons (global) ===== */
+            const IC = {
+                sword:  '<path d="M14.5 3.5L21 10l-2 2-6.5-6.5z"/><path d="M10 14l-7 7"/><path d="M8 12l4 4"/><path d="M3 21l2-2"/>',
+                bag:    '<rect x="5" y="8" width="14" height="12" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/><path d="M5 14h14"/>',
+                shield: '<path d="M12 3l8 4v5c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V7z"/>',
+                mic:    '<rect x="9" y="2" width="6" height="10" rx="3"/><path d="M5 10a7 7 0 0014 0"/><path d="M12 17v5"/><path d="M8 22h8"/>',
+                home:   '<path d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V12h6v9"/>',
+                pick:   '<path d="M14 4l6 6-9 9-6-6z"/><path d="M5 19l-2 2"/><path d="M15 5l4-2"/>',
+                target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+                multi:  '<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 18v-1a5 5 0 0110 0v1"/><path d="M13 18v-1a5 5 0 0110 0v1"/>',
+                hud:    '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 12h4"/><path d="M14 12h4"/><path d="M12 8v8"/>',
+            };
+            function svgIcon(key){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (IC[key]||'') + '</svg>'; }
 
-                const CATS = [
-                    { id:'companion', icon:'sword', name:'Компаньон', items:[
-                        { text:'Корабль и плот — залезает и сидит на лавке', date:'01.11.2024' },
-                        { text:'«За кадром» — ведётся модом за пределами 100 м', date:'28.10.2024' },
-                        { text:'Порталы, двери склепов и подземелий', date:'21.10.2024' },
-                        { text:'Посиделки — садится рядом на стул или пол', date:'21.10.2024' },
-                        { text:'Обход препятствий по навигационной сетке игры', date:'21.10.2024' },
-                        { text:'Метка на миникарте и большой карте', date:'21.10.2024' },
-                        { text:'Смерть и возрождение как у игрока', date:'21.10.2024' },
-                        { text:'Компаньон-человек (клон Player) — ходит за тобой', date:'21.10.2024' },
-                    ]},
-                    { id:'inventory', icon:'bag', name:'Инвентарь', items:[
-                        { text:'«Соберись» — берёт лучшее из сундуков', date:'03.11.2024' },
-                        { text:'Крафт по голосу — факел, топор и т.д.', date:'30.10.2024' },
-                        { text:'Навыки растут и сохраняются между сессиями', date:'29.10.2024' },
-                        { text:'Еда работает по-настоящему (таймеры, лечение)', date:'21.10.2024' },
-                        { text:'Сам следит за едой — ест до трёх блюд', date:'21.10.2024' },
-                        { text:'Подбор добычи в 12 м — подходит и берёт', date:'21.10.2024' },
-                        { text:'Авто-экипировка оружия и брони из сумки', date:'21.10.2024' },
-                        { text:'Сумка [E] — ванильное окно сундука 8×4', date:'21.10.2024' },
-                    ]},
-                    { id:'combat', icon:'shield', name:'Боевая система', items:[
-                        { text:'Масса костей — булава и ледяная медовуха', date:'11.11.2024' },
-                        { text:'Подготовка к каждому боссу: стрелы, медовухи, оружие', date:'08.11.2024' },
-                        { text:'Танк-варианты: щит / перекаты / натиск / лук', date:'02.11.2024' },
-                        { text:'Серии ударов — как игрок «держит кнопку»', date:'02.11.2024' },
-                        { text:'Лук — баллистика, упреждение, самообучение', date:'27.10.2024' },
-                        { text:'Спасение заранее по запомненному урону врага', date:'26.10.2024' },
-                        { text:'Парирование — учит замах каждого врага', date:'26.10.2024' },
-                        { text:'Медовуха в бою — по нехватке здоровья', date:'26.10.2024' },
-                        { text:'Нейросеть PPO выбирает приём по ситуации', date:'21.10.2024' },
-                        { text:'6 приёмов: удар, блок, уклон, отступ, кружение, особый', date:'21.10.2024' },
-                    ]},
-                    { id:'voice', icon:'mic', name:'Голос и мозг', items:[
-                        { text:'Ollama (локально, бесплатно) — qwen3:4b-instruct', date:'04.11.2024' },
-                        { text:'Новый голос Silero TTS — мужской, чёткий', date:'30.10.2024' },
-                        { text:'Claude Haiku — реплики по контексту и ситуации', date:'28.10.2024' },
-                        { text:'Обучение голосом — «запомни: X значит Y»', date:'22.10.2024' },
-                        { text:'Три режима: по имени (wake), рация (ptt), всегда', date:'22.10.2024' },
-                        { text:'Друзья могут давать команды через ValeraListener', date:'22.10.2024' },
-                        { text:'Silero TTS — озвучка офлайн', date:'21.10.2024' },
-                        { text:'Whisper (офлайн) + Vosk — двойное распознавание', date:'21.10.2024' },
-                        { text:'40+ голосовых команд: бой, сбор, готовка, огород', date:'21.10.2024' },
-                    ]},
-                    { id:'base', icon:'home', name:'Работа на базе', items:[
-                        { text:'Загоны — звери у табличек, кормёжка', date:'10.11.2024' },
-                        { text:'Светильники — заправка топливом', date:'10.11.2024' },
-                        { text:'Мёд из ульев и перья с птиц', date:'11.11.2024' },
-                        { text:'«Где репа?» — ищет в ящиках по имени', date:'10.11.2024' },
-                        { text:'Патруль базы — обход и доклад', date:'08.11.2024' },
-                        { text:'Домашние дела по порядку из настроек', date:'08.11.2024' },
-                        { text:'Огород — сбор, пересадка, семена из ящиков', date:'05.11.2024' },
-                        { text:'Готовка — вертел, сковорода, котёл, бочка', date:'02.11.2024' },
-                        { text:'Переплавка руды, жжение угля', date:'01.11.2024' },
-                        { text:'Сортировка ящиков по табличкам', date:'03.11.2024' },
-                        { text:'Починка у верстака / кузницы', date:'21.10.2024' },
-                        { text:'Память ящиков — таблички и содержимое', date:'21.10.2024' },
-                    ]},
-                    { id:'mining', icon:'pick', name:'Добыча', items:[
-                        { text:'Силы боссов — своя сила, значок и перезарядка', date:'25.10.2024' },
-                        { text:'Метки ресурсов на карте по команде', date:'25.10.2024' },
-                        { text:'Пинг на карте — «встречаемся там»', date:'25.10.2024' },
-                        { text:'Задания «найди / добудь» с оценкой опасности', date:'21.10.2024' },
-                        { text:'Поиск ресурсов в заданном радиусе (15–70 м)', date:'21.10.2024' },
-                        { text:'Рубка деревьев, копка камня и руды', date:'21.10.2024' },
-                    ]},
-                    { id:'training', icon:'target', name:'Тренировки', items:[
-                        { text:'Настраиваемые подходы, перерывы, время', date:'08.11.2024' },
-                        { text:'Стрельбище — лесенка дистанций и углов', date:'08.11.2024' },
-                        { text:'Стрельба из-за укрытия', date:'08.11.2024' },
-                        { text:'Манекены — отработка парирования и перекатов', date:'05.11.2024' },
-                    ]},
-                    { id:'mp', icon:'multi', name:'Мультиплеер', items:[
-                        { text:'Совместим с выделенными серверами', date:'22.10.2024' },
-                        { text:'Командует только хозяин', date:'22.10.2024' },
-                        { text:'Голос сжимается и идёт по сети (~16 КБ/с)', date:'22.10.2024' },
-                        { text:'Друг видит и слышит Валеру через ValeraListener.dll', date:'22.10.2024' },
-                    ]},
-                    { id:'ui', icon:'hud', name:'Интерфейс', items:[
-                        { text:'Автозапуск тренера и голоса с игрой', date:'10.11.2024' },
-                        { text:'«Сбросить Валеру» — полный сброс', date:'10.11.2024' },
-                        { text:'Иконки рун в кольцевом меню', date:'11.11.2024' },
-                        { text:'Кольцевое меню на [E] — приказы и подменю', date:'08.11.2024' },
-                        { text:'Окно навыков — вкладки: навыки, ящики, настройки', date:'27.10.2024' },
-                        { text:'Чувства и эмоции — радуется, огорчается, благодарит', date:'27.10.2024' },
-                        { text:'Эмоции по NumPad и голосом', date:'27.10.2024' },
-                        { text:'Сила босса — значок и таймер перезарядки', date:'25.10.2024' },
-                        { text:'HUD Валеры — здоровье, еда, выносливость, эффекты', date:'27.10.2024' },
-                    ]},
-                ];
+            /* ===== Категории ===== */
+            const CAT_META = [
+                { id:'companion', icon:'sword', name:'Компаньон' },
+                { id:'combat',    icon:'shield', name:'Боевая система' },
+                { id:'voice',     icon:'mic',    name:'Голос и мозг' },
+                { id:'base',      icon:'home',   name:'Работа на базе' },
+                { id:'mining',    icon:'pick',   name:'Добыча' },
+                { id:'training',  icon:'target', name:'Тренировки' },
+                { id:'mp',        icon:'multi',  name:'Мультиплеер' },
+                { id:'ui',        icon:'hud',    name:'Интерфейс' },
+            ];
 
+            /* ===== Единый массив возможностей (cat + ver) ===== */
+            const FEATURES = [
+                /* --- Компаньон --- */
+                { cat:'companion', ver:'v0.01', text:'Спавн рядом с игроком',                         date:'21.10.2024' },
+                { cat:'companion', ver:'v0.01', text:'Метка Валеры на карте',                          date:'21.10.2024' },
+                { cat:'companion', ver:'v0.01', text:'Догоняет бегом',                                 date:'21.10.2024' },
+                { cat:'companion', ver:'v0.01', text:'Команды: иди сюда, стой, за мной',               date:'21.10.2024' },
+                { cat:'companion', ver:'v0.02', text:'Авто-экипировка оружия и брони из сумки',         date:'21.10.2024' },
+                { cat:'companion', ver:'v0.02', text:'Сумка [E] — ванильное окно сундука 8×4',          date:'21.10.2024' },
+                { cat:'companion', ver:'v0.02', text:'Подбор добычи в 12 м — подходит и берёт',         date:'21.10.2024' },
+                { cat:'companion', ver:'v0.02', text:'Есть перегруз — замедление',                     date:'21.10.2024' },
+                { cat:'companion', ver:'v0.03', text:'Появляется у кровати после смерти',               date:'21.10.2024' },
+                { cat:'companion', ver:'v0.03', text:'Ждёт или идёт по команде после смерти',           date:'21.10.2024' },
+                { cat:'companion', ver:'v0.03', text:'Навыки падают как у игрока',                      date:'21.10.2024' },
+                { cat:'companion', ver:'v0.04', text:'Телепорт и подземелья с Валерой',                 date:'21.10.2024' },
+                { cat:'companion', ver:'v0.04', text:'Корабль и плот — залезает и сидит на лавке',      date:'01.11.2024' },
+                { cat:'companion', ver:'v0.04', text:'Обход препятствий — не лезет в костёр',           date:'21.10.2024' },
+                { cat:'companion', ver:'v0.05', text:'Сам следит за едой — ест до трёх блюд',           date:'21.10.2024' },
+                { cat:'companion', ver:'v0.05', text:'Ищет еду в сундуках',                            date:'21.10.2024' },
+                { cat:'companion', ver:'v0.05', text:'Отдыхает у огня',                                date:'21.10.2024' },
+                { cat:'companion', ver:'v0.06', text:'Не видит сквозь стены',                          date:'27.10.2024' },
+                { cat:'companion', ver:'v0.06', text:'Зрение под ноги — ступени, обрывы, вода',         date:'27.10.2024' },
+                { cat:'companion', ver:'v0.06', text:'Обходит огонь и опасные объекты',                 date:'27.10.2024' },
+                { cat:'companion', ver:'v0.08', text:'Крафтит по просьбе — говорит, чего не хватает',   date:'21.10.2024' },
+                { cat:'companion', ver:'v0.08', text:'Надевает скрафченное',                            date:'21.10.2024' },
+                { cat:'companion', ver:'v0.15', text:'Собирает добычу после боя',                      date:'21.10.2024' },
+                { cat:'companion', ver:'v0.15', text:'Не подбирает в бою — только после',               date:'21.10.2024' },
+                { cat:'companion', ver:'v0.15', text:'Подбирает стрелы с тел',                         date:'21.10.2024' },
+                /* --- Боевая система --- */
+                { cat:'combat', ver:'v0.12', text:'Нейросеть PPO выбирает приём по ситуации',           date:'21.10.2024' },
+                { cat:'combat', ver:'v0.12', text:'6 приёмов: удар, блок, уклон, отступ, кружение, особый', date:'21.10.2024' },
+                { cat:'combat', ver:'v0.12', text:'Танк-варианты: щит / перекаты / натиск / лук',       date:'02.11.2024' },
+                { cat:'combat', ver:'v0.12', text:'Серии ударов — как игрок «держит кнопку»',           date:'02.11.2024' },
+                { cat:'combat', ver:'v0.13', text:'Лук — баллистика, упреждение, самообучение',         date:'27.10.2024' },
+                { cat:'combat', ver:'v0.13', text:'Стрельба на ходу с поправкой по дистанции',          date:'27.10.2024' },
+                { cat:'combat', ver:'v0.14', text:'Спасение заранее по запомненному урону врага',        date:'26.10.2024' },
+                { cat:'combat', ver:'v0.14', text:'Парирование — учит замах каждого врага',             date:'26.10.2024' },
+                { cat:'combat', ver:'v0.14', text:'Медовуха в бою — по нехватке здоровья',              date:'26.10.2024' },
+                { cat:'combat', ver:'v0.14', text:'Меньше 20% HP — спасается, меняет оружие',           date:'26.10.2024' },
+                { cat:'combat', ver:'v0.27', text:'Масса костей — булава и ледяная медовуха',            date:'11.11.2024' },
+                { cat:'combat', ver:'v0.27', text:'Подготовка к каждому боссу: стрелы, медовухи, оружие', date:'08.11.2024' },
+                { cat:'combat', ver:'v0.28', text:'«Стой на месте» — охраняет позицию',                 date:'12.11.2024' },
+                { cat:'combat', ver:'v0.28', text:'Бьёт врагов в радиусе 10 м',                        date:'12.11.2024' },
+                /* --- Голос и мозг --- */
+                { cat:'voice', ver:'v0.16', text:'Whisper (офлайн) + Vosk — двойное распознавание',     date:'21.10.2024' },
+                { cat:'voice', ver:'v0.16', text:'Silero TTS — озвучка офлайн',                        date:'21.10.2024' },
+                { cat:'voice', ver:'v0.16', text:'40+ голосовых команд: бой, сбор, готовка, огород',    date:'21.10.2024' },
+                { cat:'voice', ver:'v0.16', text:'Три режима: по имени (wake), рация (ptt), всегда',    date:'22.10.2024' },
+                { cat:'voice', ver:'v0.16', text:'Обучение голосом — «запомни: X значит Y»',            date:'22.10.2024' },
+                { cat:'voice', ver:'v0.16', text:'Новый голос Silero TTS — мужской, чёткий',            date:'30.10.2024' },
+                { cat:'voice', ver:'v0.17', text:'Друзья могут давать команды через ValeraListener',     date:'22.10.2024' },
+                { cat:'voice', ver:'v0.19', text:'Claude Haiku — реплики по контексту и ситуации',      date:'28.10.2024' },
+                { cat:'voice', ver:'v0.20', text:'Ollama (локально, бесплатно) — qwen3:4b-instruct',   date:'04.11.2024' },
+                /* --- Работа на базе --- */
+                { cat:'base', ver:'v0.05', text:'Починка у верстака / кузницы',                         date:'21.10.2024' },
+                { cat:'base', ver:'v0.09', text:'Память ящиков — таблички и содержимое',                date:'21.10.2024' },
+                { cat:'base', ver:'v0.09', text:'Запоминает базу',                                     date:'21.10.2024' },
+                { cat:'base', ver:'v0.09', text:'«Отнеси добычу» / «Сложи в ящики»',                   date:'21.10.2024' },
+                { cat:'base', ver:'v0.24', text:'Переплавка руды, жжение угля',                        date:'01.11.2024' },
+                { cat:'base', ver:'v0.24', text:'Готовка — вертел, сковорода, котёл, бочка',            date:'02.11.2024' },
+                { cat:'base', ver:'v0.24', text:'Сортировка ящиков по табличкам',                      date:'03.11.2024' },
+                { cat:'base', ver:'v0.24', text:'Огород — сбор, пересадка, семена из ящиков',          date:'05.11.2024' },
+                { cat:'base', ver:'v0.24', text:'Домашние дела по порядку из настроек',                 date:'08.11.2024' },
+                { cat:'base', ver:'v0.24', text:'Патруль базы — обход и доклад',                       date:'08.11.2024' },
+                { cat:'base', ver:'v0.26', text:'Загоны — звери у табличек, кормёжка',                  date:'10.11.2024' },
+                { cat:'base', ver:'v0.26', text:'Светильники — заправка топливом',                     date:'10.11.2024' },
+                { cat:'base', ver:'v0.26', text:'«Где репа?» — ищет в ящиках по имени',                date:'10.11.2024' },
+                { cat:'base', ver:'v0.26', text:'Мёд из ульев и перья с птиц',                         date:'11.11.2024' },
+                /* --- Добыча --- */
+                { cat:'mining', ver:'v0.07', text:'Рубка деревьев, копка камня и руды',                 date:'21.10.2024' },
+                { cat:'mining', ver:'v0.07', text:'Поиск ресурсов в заданном радиусе (15–70 м)',        date:'21.10.2024' },
+                { cat:'mining', ver:'v0.07', text:'Задания «найди / добудь» с оценкой опасности',      date:'21.10.2024' },
+                { cat:'mining', ver:'v0.10', text:'Метки ресурсов на карте по команде',                 date:'25.10.2024' },
+                { cat:'mining', ver:'v0.10', text:'Пинг на карте — «встречаемся там»',                  date:'25.10.2024' },
+                { cat:'mining', ver:'v0.10', text:'Ведёт к могиле игрока',                             date:'25.10.2024' },
+                { cat:'mining', ver:'v0.11', text:'Силы боссов — своя сила, значок и перезарядка',      date:'25.10.2024' },
+                { cat:'mining', ver:'v0.11', text:'Берёт силу у камня, решает когда применить',         date:'25.10.2024' },
+                /* --- Тренировки --- */
+                { cat:'training', ver:'v0.25', text:'Манекены — отработка парирования и перекатов',     date:'05.11.2024' },
+                { cat:'training', ver:'v0.25', text:'Стрельбище — лесенка дистанций и углов',           date:'08.11.2024' },
+                { cat:'training', ver:'v0.25', text:'Стрельба из-за укрытия',                          date:'08.11.2024' },
+                { cat:'training', ver:'v0.25', text:'Настраиваемые подходы, перерывы, время',           date:'08.11.2024' },
+                /* --- Мультиплеер --- */
+                { cat:'mp', ver:'v0.17', text:'Друг видит и слышит Валеру через ValeraListener.dll',    date:'22.10.2024' },
+                { cat:'mp', ver:'v0.17', text:'Голос сжимается и идёт по сети (~16 КБ/с)',              date:'22.10.2024' },
+                { cat:'mp', ver:'v0.17', text:'Командует только хозяин',                               date:'22.10.2024' },
+                { cat:'mp', ver:'v0.17', text:'Совместим с выделенными серверами',                     date:'22.10.2024' },
+                /* --- Интерфейс --- */
+                { cat:'ui', ver:'v0.11', text:'Сила босса — значок и таймер перезарядки',               date:'25.10.2024' },
+                { cat:'ui', ver:'v0.18', text:'Чувства и эмоции — радуется, огорчается, благодарит',    date:'27.10.2024' },
+                { cat:'ui', ver:'v0.18', text:'Эмоции по NumPad и голосом',                            date:'27.10.2024' },
+                { cat:'ui', ver:'v0.21', text:'HUD Валеры — здоровье, еда, выносливость, эффекты',     date:'27.10.2024' },
+                { cat:'ui', ver:'v0.21', text:'Окно навыков — вкладки: навыки, ящики, настройки',       date:'27.10.2024' },
+                { cat:'ui', ver:'v0.21', text:'Кольцевое меню на [E] — приказы и подменю',              date:'08.11.2024' },
+                { cat:'ui', ver:'v0.22', text:'Автозапуск тренера и голоса с игрой',                    date:'10.11.2024' },
+                { cat:'ui', ver:'v0.22', text:'«Сбросить Валеру» — полный сброс',                      date:'10.11.2024' },
+                { cat:'ui', ver:'v0.23', text:'Каждый мир — свои данные',                              date:'29.10.2024' },
+                { cat:'ui', ver:'v0.23', text:'BackUp инвентаря — «Верни шмот»',                       date:'29.10.2024' },
+                { cat:'ui', ver:'v0.23', text:'Навыки сохраняются между сессиями',                     date:'29.10.2024' },
+                { cat:'ui', ver:'v0.28', text:'Иконки рун в кольцевом меню',                           date:'11.11.2024' },
+                { cat:'ui', ver:'v0.28', text:'Смерть: «идти к тебе?» — диалог',                      date:'12.11.2024' },
+            ];
+
+            /* ===== Метаданные этапов дорожной карты ===== */
+            const MILESTONE_META = [
+                { ver:'v0.01', title:'Запуск',           done:true,  date:'21.10.2024' },
+                { ver:'v0.02', title:'Инвентарь',        done:true,  date:'21.10.2024' },
+                { ver:'v0.03', title:'Смерть',           done:true,  date:'21.10.2024' },
+                { ver:'v0.04', title:'Движение',         done:true,  date:'21.10.2024' },
+                { ver:'v0.05', title:'Потребности',      done:true,  date:'21.10.2024' },
+                { ver:'v0.06', title:'Зрение',           done:true,  date:'27.10.2024' },
+                { ver:'v0.07', title:'Работа',           done:true,  date:'21.10.2024' },
+                { ver:'v0.08', title:'Крафт',            done:true,  date:'21.10.2024' },
+                { ver:'v0.09', title:'База (Дом)',       done:true,  date:'21.10.2024' },
+                { ver:'v0.10', title:'Карта',            done:true,  date:'25.10.2024' },
+                { ver:'v0.11', title:'Силы боссов',      done:true,  date:'25.10.2024' },
+                { ver:'v0.12', title:'Бой',              done:true,  date:'21.10.2024' },
+                { ver:'v0.13', title:'Бой: Лук',         done:true,  date:'27.10.2024' },
+                { ver:'v0.14', title:'Бой: Авария',      done:true,  date:'26.10.2024' },
+                { ver:'v0.15', title:'Бой: Лут',         done:true,  date:'21.10.2024' },
+                { ver:'v0.16', title:'Голос',            done:true,  date:'21.10.2024' },
+                { ver:'v0.17', title:'Мультиплеер',      done:true,  date:'22.10.2024' },
+                { ver:'v0.18', title:'Чувства',          done:true,  date:'27.10.2024' },
+                { ver:'v0.19', title:'Мозг: Claude',     done:true,  date:'28.10.2024' },
+                { ver:'v0.20', title:'Мозг: Бесплатно',  done:true,  date:'04.11.2024' },
+                { ver:'v0.21', title:'Интерфейс',        done:true,  date:'27.10.2024' },
+                { ver:'v0.22', title:'Автозапуск',       done:true,  date:'10.11.2024' },
+                { ver:'v0.23', title:'Сохранение',       done:true,  date:'29.10.2024' },
+                { ver:'v0.24', title:'Домашние дела',    done:true,  date:'08.11.2024' },
+                { ver:'v0.25', title:'Тренировки',       done:true,  date:'08.11.2024' },
+                { ver:'v0.26', title:'Загоны и Свет',    done:true,  date:'10.11.2024' },
+                { ver:'v0.27', title:'Бой с боссами',    done:true,  date:'11.11.2024' },
+                { ver:'v0.28', title:'Защита позиции',   done:true,  date:'12.11.2024' },
+                { ver:'v0.29', title:'Обучение вне боя', done:false, wip:true },
+                { ver:'v0.30', title:'Цепочки заданий',  done:false },
+                { ver:'v0.31', title:'ONNX режим',       done:false },
+                { ver:'v5.0',  title:'ВИКИНГ',           done:false, w:15 },
+            ];
+
+            /* ===== Хелпер: группировка FEATURES по полю ===== */
+            function groupBy(arr, key) {
+                const map = {};
+                arr.forEach(f => { (map[f[key]] = map[f[key]] || []).push(f); });
+                return map;
+            }
+
+            /* ===== Рендер секции «Возможности» ===== */
+            (function renderFeatures(){
                 const sidebar = document.getElementById('featSidebar');
                 const panel   = document.getElementById('featPanel');
+                const byCat   = groupBy(FEATURES, 'cat');
 
-                CATS.forEach((cat, ci) => {
+                CAT_META.forEach((cat, ci) => {
+                    const items = byCat[cat.id] || [];
                     /* Tab */
                     const btn = document.createElement('button');
                     btn.className = 'feat-tab' + (ci === 0 ? ' active' : '');
                     btn.dataset.cat = cat.id;
-                    btn.innerHTML = `<span class="ft-icon">${svgIcon(cat.icon)}</span> ${cat.name} <span class="ft-count">${cat.items.length}</span>`;
+                    btn.innerHTML = `<span class="ft-icon">${svgIcon(cat.icon)}</span> ${cat.name} <span class="ft-count">${items.length}</span>`;
                     btn.onclick = () => {
                         sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
                         btn.classList.add('active');
@@ -744,9 +814,9 @@
                     div.id = 'fp-' + cat.id;
 
                     let rows = '';
-                    cat.items.forEach(item => {
+                    items.forEach(item => {
                         rows += `<div class="feat-row">
-                            <span class="feat-row-check">✓</span>
+                            <span class="feat-row-check">\u2713</span>
                             <span class="feat-row-text">${item.text}</span>
                             <span class="feat-row-date">${item.date}</span>
                         </div>`;
@@ -790,41 +860,15 @@
     </main>
 
     <script>
-    /* ===== Roadmap milestones data ===== */
-    const MILESTONES = [
-        { ver:'v0.01', title:'Запуск', done:true, date:'21.10.2024', text:'Рождение Валеры\nСпавн рядом с игроком\nМетка на карте\nДогоняет бегом' },
-        { ver:'v0.02', title:'Инвентарь', done:true, date:'21.10.2024', text:'Сумка [E] — окно 8×4\nАвто-экипировка\nПодбор добычи в 12 м\nЕсть перегруз' },
-        { ver:'v0.03', title:'Смерть', done:true, date:'21.10.2024', text:'Появляется у кровати\nЖдёт или идёт по команде\nНавыки падают как у игрока' },
-        { ver:'v0.04', title:'Движение', done:true, date:'21.10.2024', text:'Бежит, не телепортируется\nПорталы и подземелья\nОбход препятствий\nНе лезет в костёр' },
-        { ver:'v0.05', title:'Потребности', done:true, date:'21.10.2024', text:'Ест до трёх блюд\nИщет еду в сундуках\nЧинится у верстака\nОтдыхает у огня' },
-        { ver:'v0.06', title:'Зрение', done:true, date:'27.10.2024', text:'Не видит сквозь стены\nЗрение под ноги\nСтупени, обрывы, вода\nОбходит огонь' },
-        { ver:'v0.07', title:'Работа', done:true, date:'21.10.2024', text:'Рубит деревья и камни\nДобывает руду\nПоиск ресурсов в радиусе\nМетки на карте' },
-        { ver:'v0.08', title:'Крафт', done:true, date:'21.10.2024', text:'Крафтит по просьбе\nГоворит, чего не хватает\nНадевает скрафченное' },
-        { ver:'v0.09', title:'База (Дом)', done:true, date:'21.10.2024', text:'Запоминает базу\n«Отнеси добычу»\n«Сложи в ящики»\nПамять ящиков и табличек' },
-        { ver:'v0.10', title:'Карта', done:true, date:'25.10.2024', text:'Метки ресурсов по команде\nИдёт на Ping по карте\nВедёт к могиле\n«Убери / верни метки»' },
-        { ver:'v0.11', title:'Силы боссов', done:true, date:'25.10.2024', text:'Берёт силу у камня\nСвоя перезарядка\nРешает, когда применить\nЗначок и таймер на HUD' },
-        { ver:'v0.12', title:'Бой', done:true, date:'21.10.2024', text:'Нейросеть PPO\n6 приёмов: удар, блок,\nуклон, отступ, кружение\nОбучение с игрой' },
-        { ver:'v0.13', title:'Бой: Лук', done:true, date:'27.10.2024', text:'Баллистика стрел\nСамообучение упреждения\nСтрельба на ходу\nПоправка по дистанции' },
-        { ver:'v0.14', title:'Бой: Авария', done:true, date:'26.10.2024', text:'Меньше 20% HP — спасается\nКончились стрелы — другое оружие\nСпасение заранее по памяти урона' },
-        { ver:'v0.15', title:'Бой: Лут', done:true, date:'21.10.2024', text:'Собирает добычу после боя\nНе подбирает в бою\nПодбирает стрелы с тел' },
-        { ver:'v0.16', title:'Голос', done:true, date:'21.10.2024', text:'Whisper + Vosk + словарь\nSilero TTS офлайн\n40+ голосовых команд\n3 режима: имя, рация, всегда' },
-        { ver:'v0.17', title:'Мультиплеер', done:true, date:'22.10.2024', text:'ValeraListener.dll для друзей\nГолос по сети ~16 КБ/с\nДрузья видят и слышат\nКомандует только хозяин' },
-        { ver:'v0.18', title:'Чувства', done:true, date:'27.10.2024', text:'Радость новым вещам\nОгорчение при потере\nЭмоции по NumPad и голосом\nБлагодарит за лучшую экипировку' },
-        { ver:'v0.19', title:'Мозг: Claude', done:true, date:'28.10.2024', text:'Claude Haiku для диалога\nРеплики по ходу игры\nПонимает контекст\nШутки и советы' },
-        { ver:'v0.20', title:'Мозг: Бесплатно', done:true, date:'04.11.2024', text:'Ollama локально на GPU\nqwen3:4b-instruct\nБез интернета и оплаты\n~3.2 ГБ видеопамяти' },
-        { ver:'v0.21', title:'Интерфейс', done:true, date:'27.10.2024', text:'HUD как у игрока\nКольцевое меню на [E]\nОкно навыков — зажать E\nВкладки: навыки, ящики, настройки' },
-        { ver:'v0.22', title:'Автозапуск', done:true, date:'10.11.2024', text:'Тренер и голос стартуют\nвместе с игрой\nОтслеживание падений\nНастройки в конфиге' },
-        { ver:'v0.23', title:'Сохранение', done:true, date:'29.10.2024', text:'Каждый мир — свои данные\nBackUp инвентаря\nНавыки между сессиями\n«Верни шмот» из backup' },
-        { ver:'v0.24', title:'Домашние дела', done:true, date:'08.11.2024', text:'Переплавка, уголь, готовка\nОгород — пересадка\nСортировка ящиков\nПатруль и порядок дел' },
-        { ver:'v0.25', title:'Тренировки', done:true, date:'08.11.2024', text:'Стрельбище — лесенка\nМанекены — парирование\nПерекаты — тайминги\nУчит замахи врагов' },
-        { ver:'v0.26', title:'Загоны и Свет', done:true, date:'10.11.2024', text:'Загоны: звери у табличек\nСветильники: топливо\nМёд из ульев и перья\n«Где репа?» — ищет в ящиках' },
-        { ver:'v0.27', title:'Бой с боссами', done:true, date:'11.11.2024', text:'Подготовка к каждому боссу\nМедовуха по уязвимости\nМасса костей — булава и лёд\nЭмоции на боссов и память' },
-        { ver:'v0.28', title:'Защита позиции', done:true, date:'12.11.2024', text:'«Стой на месте» — охраняет\nБьёт врагов в 10 м\nСмерть: «идти к тебе?»\nНовые иконки кольца' },
-        { ver:'v0.29', title:'Обучение вне боя', done:false, wip:true, text:'Исследование и сбор\nОтдельная ветка награды\nНейросеть вместо правил' },
-        { ver:'v0.30', title:'Цепочки заданий', done:false, text:'«Наруби и принеси»\nПодцели и приоритеты\nСложные просьбы' },
-        { ver:'v0.31', title:'ONNX режим', done:false, text:'Без Python\nВстроенный в мод\nMicrosoft.ML.OnnxRuntime' },
-        { ver:'v5.0', title:'ВИКИНГ', done:false, w:15, text:'Сам ставит себе цели\nХодит в походы\nНастоящий напарник\nДискутирует о вселенной' },
-    ];
+    /* ===== Roadmap: build MILESTONES from unified FEATURES + MILESTONE_META ===== */
+    const _byVer = groupBy(FEATURES, 'ver');
+    const MILESTONES = MILESTONE_META.map(m => {
+        const feats = _byVer[m.ver] || [];
+        const text = feats.length > 0
+            ? feats.slice(0, 4).map(f => f.text).join('\n')
+            : (m.title || '');
+        return { ...m, text };
+    });
 
     const rmInner  = document.getElementById('rmInner');
     const rmTrack  = document.getElementById('rmTrack');
@@ -1077,21 +1121,13 @@
                     <div class="admin-split-right">
                         <h3 style="margin-top:0">Добавить</h3>
                         <label>Категория</label>
-                        <select id="fCat">
-                            <option value="companion">Компаньон</option>
-                            <option value="inventory">Инвентарь</option>
-                            <option value="combat">Боевая система</option>
-                            <option value="voice">Голос и мозг</option>
-                            <option value="base">Работа на базе</option>
-                            <option value="mining">Добыча</option>
-                            <option value="training">Тренировки</option>
-                            <option value="mp">Мультиплеер</option>
-                            <option value="ui">Интерфейс</option>
-                        </select>
+                        <select id="fCat"></select>
+                        <label>Этап (версия)</label>
+                        <select id="fVer"></select>
                         <label>Описание</label>
                         <input id="fText" placeholder="Что реализовано">
-                        <label>Дата (ДД.ММ)</label>
-                        <input id="fDate" placeholder="01.11">
+                        <label>Дата (ДД.ММ.ГГГГ)</label>
+                        <input id="fDate" placeholder="01.11.2024">
                         <div class="btn-row">
                             <button class="btn-primary" id="fSave">Добавить возможность</button>
                         </div>
@@ -1154,6 +1190,24 @@
             adminBtn.classList.add('logged-in');
             if (isAdmin) {
                 ac.style.display = 'block';
+                /* Populate category dropdown from CAT_META */
+                const fCatSel = document.getElementById('fCat');
+                if (fCatSel.options.length === 0) {
+                    CAT_META.forEach(c => {
+                        const o = document.createElement('option');
+                        o.value = c.id; o.textContent = c.name;
+                        fCatSel.appendChild(o);
+                    });
+                }
+                /* Populate version dropdown from MILESTONE_META */
+                const fVerSel = document.getElementById('fVer');
+                if (fVerSel.options.length === 0) {
+                    MILESTONE_META.forEach(m => {
+                        const o = document.createElement('option');
+                        o.value = m.ver; o.textContent = m.ver + ' — ' + m.title;
+                        fVerSel.appendChild(o);
+                    });
+                }
                 refreshMilestoneList();
                 refreshFeatureList();
             }
@@ -1278,6 +1332,7 @@
             html += `<div style="font-size:.75rem;color:hsl(var(--primary));padding:6px 8px;font-weight:600;">${cat} (${items.length})</div>`;
             items.forEach(f => {
                 html += `<div class="item-row">
+                    <span style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:hsl(var(--secondary));width:45px;flex-shrink:0;">${f.ver||''}</span>
                     <span style="flex:1">${f.text}</span>
                     <span style="font-size:.7rem;color:hsl(var(--muted-foreground))">${f.date||''}</span>
                     <button class="btn-danger edit-btn" data-fdel="${f.id}" style="padding:2px 8px;">✕</button>
@@ -1301,6 +1356,7 @@
         if (!text) return alert('Укажите описание');
         const data = {
             cat: document.getElementById('fCat').value,
+            ver: document.getElementById('fVer').value,
             text,
             date: document.getElementById('fDate').value.trim(),
         };
@@ -1334,29 +1390,20 @@
                 addLog('  ✓ ' + m.ver + ' — ' + m.title);
             }
 
-            /* Features (from CATS) — read from page script variable */
+            /* Features — from unified FEATURES array */
             addLog('Загрузка возможностей...');
-            /* CATS is inside an IIFE, but we have the data in the page DOM.
-               Instead, we'll parse the items from the feat-panel */
-            const catNames = { companion:'companion', inventory:'inventory', combat:'combat',
-                voice:'voice', base:'base', mining:'mining', training:'training', mp:'mp', ui:'ui' };
-            const panels = document.querySelectorAll('.feat-panel-cat');
-            const sidebar = document.querySelectorAll('.feat-tab');
             let fCount = 0;
-            sidebar.forEach((tab, ci) => {
-                const catId = tab.dataset.cat;
-                const panel = document.getElementById('fp-' + catId);
-                if (!panel) return;
-                const rows = panel.querySelectorAll('.feat-row');
-                rows.forEach((row, ri) => {
-                    const text = row.querySelector('.feat-row-text')?.textContent?.trim() || '';
-                    const date = row.querySelector('.feat-row-date')?.textContent?.trim() || '';
-                    const fId = catId + '_' + String(ri).padStart(3, '0');
-                    setDoc(doc(db, 'features', fId), { cat: catId, text, date });
-                    fCount++;
-                });
-                addLog('  ✓ ' + catId + ': ' + rows.length + ' элементов');
-            });
+            const catCounts = {};
+            for (let i = 0; i < FEATURES.length; i++) {
+                const f = FEATURES[i];
+                const fId = f.cat + '_' + String(i).padStart(3, '0');
+                await setDoc(doc(db, 'features', fId), { cat: f.cat, ver: f.ver, text: f.text, date: f.date });
+                catCounts[f.cat] = (catCounts[f.cat] || 0) + 1;
+                fCount++;
+            }
+            for (const [cat, cnt] of Object.entries(catCounts)) {
+                addLog('  ✓ ' + cat + ': ' + cnt + ' элементов');
+            }
             addLog('Готово! Загружено ' + MILESTONES.length + ' этапов и ' + fCount + ' возможностей.');
             refreshMilestoneList();
             refreshFeatureList();
