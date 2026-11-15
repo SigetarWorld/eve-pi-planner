@@ -398,6 +398,11 @@
             stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
         }
         .feat-tab .ft-count { margin-left: auto; font-size: .7rem; opacity: .5; font-family: 'Share Tech Mono', monospace; }
+        .feat-tab .ft-new { width:8px; height:8px; border-radius:50%; background:hsl(150 70% 45%); flex-shrink:0; margin-left:6px; box-shadow:0 0 6px hsl(150 70% 45% / .6); }
+        .feat-tab.feat-tab--recent { color: hsl(150 70% 55%); }
+        .feat-tab.feat-tab--recent .ft-icon { color: hsl(150 70% 55%); }
+        .feat-row--new { background: hsl(150 70% 45% / .06); }
+        .feat-row-cat-icon { width:18px; height:18px; color:hsl(var(--primary)); flex-shrink:0; opacity:.7; }
         .feat-panel { flex: 1; overflow-y: auto; padding: 0; }
         .feat-panel-cat { display: none; }
         .feat-panel-cat.active { display: block; }
@@ -819,19 +824,73 @@
                 return map;
             }
 
+            /* ===== Хелпер: парсинг даты ДД.ММ.ГГГГ ===== */
+            function parseDate(s) {
+                if (!s) return null;
+                const p = s.split('.');
+                if (p.length < 3) return null;
+                return new Date(+p[2], +p[1] - 1, +p[0]);
+            }
+            function daysAgo(dateStr) {
+                const d = parseDate(dateStr);
+                if (!d) return Infinity;
+                const now = new Date(); now.setHours(0,0,0,0);
+                return Math.floor((now - d) / 86400000);
+            }
+
             /* ===== Рендер секции «Возможности» ===== */
             (function renderFeatures(){
                 const sidebar = document.getElementById('featSidebar');
                 const panel   = document.getElementById('featPanel');
                 const byCat   = groupBy(FEATURES, 'cat');
+                const catMap  = {};
+                CAT_META.forEach(c => { catMap[c.id] = c; });
 
+                /* --- Вкладка «Последние изменения» (7 дней) --- */
+                const recent7 = FEATURES.filter(f => daysAgo(f.date) <= 7)
+                    .sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
+
+                const hasRecent = recent7.length > 0;
+
+                if (hasRecent) {
+                    const recentBtn = document.createElement('button');
+                    recentBtn.className = 'feat-tab feat-tab--recent active';
+                    recentBtn.dataset.cat = '__recent';
+                    recentBtn.innerHTML = `<span class="ft-icon">${svgIcon('bolt')}</span> Последние <span class="ft-count">${recent7.length}</span>`;
+                    recentBtn.onclick = () => {
+                        sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
+                        recentBtn.classList.add('active');
+                        panel.querySelectorAll('.feat-panel-cat').forEach(p => p.classList.remove('active'));
+                        document.getElementById('fp-__recent').classList.add('active');
+                    };
+                    sidebar.appendChild(recentBtn);
+
+                    const recentDiv = document.createElement('div');
+                    recentDiv.className = 'feat-panel-cat active';
+                    recentDiv.id = 'fp-__recent';
+                    let rRows = '';
+                    recent7.forEach(item => {
+                        const cm = catMap[item.cat];
+                        const isNew = daysAgo(item.date) <= 3;
+                        rRows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
+                            <span class="feat-row-cat-icon" title="${cm ? cm.name : item.cat}">${cm ? svgIcon(cm.icon) : ''}</span>
+                            <span class="feat-row-text">${item.text}</span>
+                            <span class="feat-row-date">${item.date}</span>
+                        </div>`;
+                    });
+                    recentDiv.innerHTML = rRows;
+                    panel.appendChild(recentDiv);
+                }
+
+                /* --- Категории --- */
                 CAT_META.forEach((cat, ci) => {
                     const items = byCat[cat.id] || [];
+                    const has3d = items.some(f => daysAgo(f.date) <= 3);
                     /* Tab */
                     const btn = document.createElement('button');
-                    btn.className = 'feat-tab' + (ci === 0 ? ' active' : '');
+                    btn.className = 'feat-tab' + (!hasRecent && ci === 0 ? ' active' : '');
                     btn.dataset.cat = cat.id;
-                    btn.innerHTML = `<span class="ft-icon">${svgIcon(cat.icon)}</span> ${cat.name} <span class="ft-count">${items.length}</span>`;
+                    btn.innerHTML = `<span class="ft-icon">${svgIcon(cat.icon)}</span> ${cat.name}${has3d ? ' <span class="ft-new"></span>' : ''} <span class="ft-count">${items.length}</span>`;
                     btn.onclick = () => {
                         sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
                         btn.classList.add('active');
@@ -842,12 +901,13 @@
 
                     /* Panel */
                     const div = document.createElement('div');
-                    div.className = 'feat-panel-cat' + (ci === 0 ? ' active' : '');
+                    div.className = 'feat-panel-cat' + (!hasRecent && ci === 0 ? ' active' : '');
                     div.id = 'fp-' + cat.id;
 
                     let rows = '';
                     items.forEach(item => {
-                        rows += `<div class="feat-row">
+                        const isNew = daysAgo(item.date) <= 3;
+                        rows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
                             <span class="feat-row-check">\u2713</span>
                             <span class="feat-row-text">${item.text}</span>
                             <span class="feat-row-date">${item.date}</span>
@@ -1328,40 +1388,79 @@
         const cats = await loadCategoriesFromDB();
         if (cats && cats.length > 0) {
             CAT_META = cats.map(c => ({ id: c.id, icon: c.icon, name: c.name }));
-            /* Re-render features section */
-            const sidebar = document.getElementById('featSidebar');
-            const panel = document.getElementById('featPanel');
-            sidebar.innerHTML = '';
-            panel.innerHTML = '';
-            const byCat = groupBy(FEATURES, 'cat');
-            CAT_META.forEach((cat, ci) => {
-                const items = byCat[cat.id] || [];
-                const btn = document.createElement('button');
-                btn.className = 'feat-tab' + (ci === 0 ? ' active' : '');
-                btn.dataset.cat = cat.id;
-                btn.innerHTML = `<span class="ft-icon">${svgIcon(cat.icon)}</span> ${cat.name} <span class="ft-count">${items.length}</span>`;
-                btn.onclick = () => {
-                    sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
-                    btn.classList.add('active');
-                    panel.querySelectorAll('.feat-panel-cat').forEach(p => p.classList.remove('active'));
-                    document.getElementById('fp-' + cat.id).classList.add('active');
-                };
-                sidebar.appendChild(btn);
-                const div = document.createElement('div');
-                div.className = 'feat-panel-cat' + (ci === 0 ? ' active' : '');
-                div.id = 'fp-' + cat.id;
-                let rows = '';
-                items.forEach(item => {
-                    rows += `<div class="feat-row">
-                        <span class="feat-row-check">\u2713</span>
-                        <span class="feat-row-text">${item.text}</span>
-                        <span class="feat-row-date">${item.date}</span>
-                    </div>`;
-                });
-                div.innerHTML = rows;
-                panel.appendChild(div);
-            });
         }
+        /* Re-render features section with recent changes */
+        const sidebar = document.getElementById('featSidebar');
+        const panel = document.getElementById('featPanel');
+        sidebar.innerHTML = '';
+        panel.innerHTML = '';
+        const byCat = groupBy(FEATURES, 'cat');
+        const catMap = {};
+        CAT_META.forEach(c => { catMap[c.id] = c; });
+
+        /* Recent changes (7 days) */
+        const recent7 = FEATURES.filter(f => daysAgo(f.date) <= 7)
+            .sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
+        const hasRecent = recent7.length > 0;
+
+        if (hasRecent) {
+            const recentBtn = document.createElement('button');
+            recentBtn.className = 'feat-tab feat-tab--recent active';
+            recentBtn.dataset.cat = '__recent';
+            recentBtn.innerHTML = `<span class="ft-icon">${svgIcon('bolt')}</span> Последние <span class="ft-count">${recent7.length}</span>`;
+            recentBtn.onclick = () => {
+                sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
+                recentBtn.classList.add('active');
+                panel.querySelectorAll('.feat-panel-cat').forEach(p => p.classList.remove('active'));
+                document.getElementById('fp-__recent').classList.add('active');
+            };
+            sidebar.appendChild(recentBtn);
+            const recentDiv = document.createElement('div');
+            recentDiv.className = 'feat-panel-cat active';
+            recentDiv.id = 'fp-__recent';
+            let rRows = '';
+            recent7.forEach(item => {
+                const cm = catMap[item.cat];
+                const isNew = daysAgo(item.date) <= 3;
+                rRows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
+                    <span class="feat-row-cat-icon" title="${cm ? cm.name : item.cat}">${cm ? svgIcon(cm.icon) : ''}</span>
+                    <span class="feat-row-text">${item.text}</span>
+                    <span class="feat-row-date">${item.date}</span>
+                </div>`;
+            });
+            recentDiv.innerHTML = rRows;
+            panel.appendChild(recentDiv);
+        }
+
+        CAT_META.forEach((cat, ci) => {
+            const items = byCat[cat.id] || [];
+            const has3d = items.some(f => daysAgo(f.date) <= 3);
+            const btn = document.createElement('button');
+            btn.className = 'feat-tab' + (!hasRecent && ci === 0 ? ' active' : '');
+            btn.dataset.cat = cat.id;
+            btn.innerHTML = `<span class="ft-icon">${svgIcon(cat.icon)}</span> ${cat.name}${has3d ? ' <span class="ft-new"></span>' : ''} <span class="ft-count">${items.length}</span>`;
+            btn.onclick = () => {
+                sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                panel.querySelectorAll('.feat-panel-cat').forEach(p => p.classList.remove('active'));
+                document.getElementById('fp-' + cat.id).classList.add('active');
+            };
+            sidebar.appendChild(btn);
+            const div = document.createElement('div');
+            div.className = 'feat-panel-cat' + (!hasRecent && ci === 0 ? ' active' : '');
+            div.id = 'fp-' + cat.id;
+            let rows = '';
+            items.forEach(item => {
+                const isNew = daysAgo(item.date) <= 3;
+                rows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
+                    <span class="feat-row-check">\u2713</span>
+                    <span class="feat-row-text">${item.text}</span>
+                    <span class="feat-row-date">${item.date}</span>
+                </div>`;
+            });
+            div.innerHTML = rows;
+            panel.appendChild(div);
+        });
     }
 
     /* ---- Refresh milestone list in admin ---- */
