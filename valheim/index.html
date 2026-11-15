@@ -885,7 +885,7 @@
 
                 /* --- Категории --- */
                 CAT_META.forEach((cat, ci) => {
-                    const items = byCat[cat.id] || [];
+                    const items = (byCat[cat.id] || []).slice().sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
                     const has3d = items.some(f => daysAgo(f.date) <= 3);
                     /* Tab */
                     const btn = document.createElement('button');
@@ -1435,7 +1435,7 @@
         }
 
         CAT_META.forEach((cat, ci) => {
-            const items = byCat[cat.id] || [];
+            const items = (byCat[cat.id] || []).slice().sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
             const has3d = items.some(f => daysAgo(f.date) <= 3);
             const btn = document.createElement('button');
             btn.className = 'feat-tab' + (!hasRecent && ci === 0 ? ' active' : '');
