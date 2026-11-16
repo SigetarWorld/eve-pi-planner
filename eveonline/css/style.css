@@ -1488,6 +1488,9 @@ form button:focus-visible,
 /* Правая колонка: EVE-персонажи — своя панель */
 .planets-top > .eve-roster {
     margin-top: 0;
+    align-items: flex-start;
+    align-content: flex-start;
+    flex-wrap: wrap;
 }
 
 @media (max-width: 800px) {
