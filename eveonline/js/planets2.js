@@ -72,8 +72,14 @@
 
         dst.innerHTML = '';
         cards.forEach(function (uv) {
+            var parentCard = uv.closest('.card');
             var wrap = document.createElement('div');
             wrap.className = 'p2-card';
+            // Переносим data-name с .card, чтобы прокси-кнопки нашли оригинал
+            if (parentCard) {
+                wrap.dataset.name = parentCard.dataset.name || '';
+                if (parentCard.classList.contains('is-lit')) wrap.classList.add('is-lit');
+            }
             var clone = uv.cloneNode(true);
             wrap.appendChild(clone);
             dst.appendChild(wrap);
@@ -362,20 +368,24 @@
     /* ---------- Лампочка, восстановление, редактирование, удаление ---------- */
     /* Клик на этих кнопках в planets2 пробрасывается на оригинал в #accounts,
        потому что обработчики привязаны делегированием к #accounts. */
+    /* Находим имя карточки по data-name на .p2-card обёртке */
+    function cardNameOf(el) {
+        var p2 = el && el.closest('.p2-card');
+        return p2 ? (p2.dataset.name || '') : '';
+    }
+
     dst.addEventListener('click', function (event) {
         var light = event.target.closest('.card-light');
         if (light) {
-            var p2card = light.closest('.p2-card');
-            var name = p2card && p2card.querySelector('[data-name]');
-            var cardName = name ? name.dataset.name : '';
+            var cardName = cardNameOf(light);
             if (cardName) {
                 var orig = document.querySelector('#accounts .card[data-name="' + cardName + '"] .card-light');
                 if (orig) orig.click();
             }
             // Переключаем и на клоне визуально
-            var card = light.closest('.card') || light.closest('.p2-card');
-            if (card) {
-                var lit = card.classList.toggle('is-lit');
+            var p2card = light.closest('.p2-card');
+            if (p2card) {
+                var lit = p2card.classList.toggle('is-lit');
                 light.setAttribute('aria-pressed', String(lit));
             }
             return;
@@ -383,9 +393,7 @@
 
         var sync = event.target.closest('[data-role="card-sync"]');
         if (sync) {
-            var p2card = sync.closest('.p2-card');
-            var name = p2card && p2card.querySelector('[data-name]');
-            var cardName = name ? name.dataset.name : '';
+            var cardName = cardNameOf(sync);
             if (cardName) {
                 var orig = document.querySelector('#accounts .card[data-name="' + cardName + '"] [data-role="card-sync"]');
                 if (orig) orig.click();
@@ -395,9 +403,7 @@
 
         var edit = event.target.closest('[data-role="card-edit"]');
         if (edit) {
-            var p2card = edit.closest('.p2-card');
-            var name = p2card && p2card.querySelector('[data-name]');
-            var cardName = name ? name.dataset.name : '';
+            var cardName = cardNameOf(edit);
             if (cardName) {
                 var orig = document.querySelector('#accounts .card[data-name="' + cardName + '"] [data-role="card-edit"]');
                 if (orig) orig.click();
@@ -407,14 +413,12 @@
 
         var del = event.target.closest('[data-role="card-del"]');
         if (del) {
+            var cardName = cardNameOf(del);
             var p2card = del.closest('.p2-card');
-            var name = p2card && p2card.querySelector('[data-name]');
-            var cardName = name ? name.dataset.name : '';
             if (cardName) {
                 var orig = document.querySelector('#accounts .card[data-name="' + cardName + '"] [data-role="card-del"]');
                 if (orig) orig.click();
-                // Убираем карточку и из planets2
-                if (p2card) p2card.remove();
+                // MutationObserver обновит компактные карточки автоматически
             }
             return;
         }

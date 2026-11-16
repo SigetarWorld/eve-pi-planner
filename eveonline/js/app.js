@@ -1759,7 +1759,10 @@ const CARDS_ZOOM_KEY = 'evepi.cards.zoom';
     const apply = (v) => {
         const z = ['100', '90', '80'].includes(String(v)) ? String(v) : '100';
         sel.value = z;
-        accounts.style.zoom = z === '100' ? '' : String(Number(z) / 100);
+        var zv = z === '100' ? '' : String(Number(z) / 100);
+        accounts.style.zoom = zv;
+        var p2c = document.getElementById('planets2-cards');
+        if (p2c) p2c.style.zoom = zv;
     };
     apply(store.get(CARDS_ZOOM_KEY, '100'));
     sel.addEventListener('change', () => {

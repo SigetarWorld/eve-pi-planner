@@ -5809,31 +5809,31 @@ input.eve-plex-input {
 #planets2-cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.6rem;
-    padding: 0.5rem 0;
+    gap: 0.35rem;
+    padding: 0.3rem 0;
 }
 .p2-card {
     min-width: 0;
     background: var(--bg-panel);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 400;
-    line-height: 1.4;
+    line-height: 1.25;
 }
 
 /* Всё внутри — без жирного */
-#planets2 * { font-weight: 400 !important; }
+#planets2-cards * { font-weight: 400 !important; }
 
 /* Заголовок карточки */
-#planets2 .uv-head {
+#planets2-cards .uv-head {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.2rem 0.45rem;
+    gap: 0.25rem;
+    padding: 0.1rem 0.3rem;
     border-bottom: 1px solid var(--border);
 }
-#planets2 .ct-pilot-name {
+#planets2-cards .ct-pilot-name {
     margin: 0;
     font-size: 12px;
     overflow: hidden;
@@ -5842,31 +5842,31 @@ input.eve-plex-input {
 }
 
 /* Тело — колонии списком вниз */
-#planets2 .uv-body { padding: 0.1rem 0.45rem 0.2rem 0.7rem; }
-#planets2 .uv-colony { padding: 0.12rem 0; }
-#planets2 .uv-colony + .uv-colony { border-top: 1px solid var(--border); }
+#planets2-cards .uv-body { padding: 0.05rem 0.3rem 0.1rem 0.5rem; }
+#planets2-cards .uv-colony { padding: 0.06rem 0; }
+#planets2-cards .uv-colony + .uv-colony { border-top: 1px solid var(--border); }
 
 /* Строки данных */
-#planets2 .uv-line {
+#planets2-cards .uv-line {
     display: flex;
     align-items: center;
-    gap: 0.2rem;
-    min-height: 1rem;
+    gap: 0.15rem;
+    min-height: 0.85rem;
     white-space: nowrap;
     font-size: 12px;
 }
-#planets2 .uv-icon {
+#planets2-cards .uv-icon {
     width: 1.2rem;
     height: 1.2rem;
     flex: 0 0 auto;
     display: inline-flex;
 }
-#planets2 .uv-icon img {
+#planets2-cards .uv-icon img {
     width: 100%;
     height: 100%;
 }
 /* Бейджи тиров — базовые + цветные рамки (нет .uv-предка, нужны явно) */
-#planets2 .ct-tier {
+#planets2-cards .ct-tier {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
@@ -5881,56 +5881,56 @@ input.eve-plex-input {
     border-radius: 3px;
     background: rgba(255, 157, 46, 0.08);
 }
-#planets2 .ct-tier-p0 { color: var(--text-dim); border-color: var(--border); background: rgba(255, 255, 255, 0.04); }
-#planets2 .ct-tier-p2,
-#planets2 .ct-tier-p3 { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 55%, transparent); background: color-mix(in srgb, var(--cyan) 8%, transparent); }
-#planets2 .ct-tier-p4 { color: #c9a7ff; border-color: rgba(201, 167, 255, 0.55); background: rgba(201, 167, 255, 0.08); }
+#planets2-cards .ct-tier-p0 { color: var(--text-dim); border-color: var(--border); background: rgba(255, 255, 255, 0.04); }
+#planets2-cards .ct-tier-p2,
+#planets2-cards .ct-tier-p3 { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 55%, transparent); background: color-mix(in srgb, var(--cyan) 8%, transparent); }
+#planets2-cards .ct-tier-p4 { color: #c9a7ff; border-color: rgba(201, 167, 255, 0.55); background: rgba(201, 167, 255, 0.08); }
 
 /* Склады — размер как P0, интерактивные */
-#planets2 .uv-stores { display: inline-flex; align-items: center; gap: 2px; margin-left: 0.15rem; }
-#planets2 .uv-store {
+#planets2-cards .uv-stores { display: inline-flex; align-items: center; gap: 2px; margin-left: 0.15rem; }
+#planets2-cards .uv-store {
     width: 1.1rem;
     height: 1.1rem;
     border-radius: 2px;
 }
-#planets2 .uv-store svg { width: 0.7rem; height: 0.7rem; }
+#planets2-cards .uv-store svg { width: 0.7rem; height: 0.7rem; }
 /* Градиент переполнения — слева до середины */
-#planets2 .uv-colony.p2-warn { background: linear-gradient(to right, rgba(255,210,63,0.18), transparent 50%); }
-#planets2 .uv-colony.p2-full { background: linear-gradient(to right, rgba(255,107,107,0.22), transparent 50%); }
+#planets2-cards .uv-colony.p2-warn { background: linear-gradient(to right, rgba(255,210,63,0.18), transparent 50%); }
+#planets2-cards .uv-colony.p2-full { background: linear-gradient(to right, rgba(255,107,107,0.22), transparent 50%); }
 
 /* Тиры в заголовке */
-#planets2 .uv-tiers { display: none; }
+#planets2-cards .uv-tiers { display: none; }
 
 /* Количество и текст */
-#planets2 .uv-name,
-#planets2 .uv-qty,
-#planets2 .uv-ptype,
-#planets2 .uv-sys,
-#planets2 .uv-sep { font-size: 12px; }
+#planets2-cards .uv-name,
+#planets2-cards .uv-qty,
+#planets2-cards .uv-ptype,
+#planets2-cards .uv-sys,
+#planets2-cards .uv-sep { font-size: 12px; }
 
 /* Вложенные дочерние ноды */
-#planets2 .uv-kids { padding-left: 0.6rem; }
-#planets2 .uv-toggle-gap { width: 0; }
+#planets2-cards .uv-kids { padding-left: 0.6rem; }
+#planets2-cards .uv-toggle-gap { width: 0; }
 /* Дефицит P4 — цепочка P3→P2→P1 */
-#planets2 .p2-deficit { border-top: 1px dashed var(--border); margin-top: 0.3rem; padding-top: 0.3rem; }
-#planets2 .p2-deficit-title { color: var(--accent); font-size: 11px; font-weight: 600 !important; margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#planets2 .p2-deficit .uv-qty { font-size: 11px; }
-#planets2 .p2-def-row .uv-name { color: var(--red); }
-#planets2 .p2-def-row .uv-qty  { color: var(--red); }
-#planets2 .p2-chain-2 { padding-left: 1.2rem; }
-#planets2 .p2-chain-1 { padding-left: 2.4rem; }
-#planets2 .p2-chain-2 .uv-name,
-#planets2 .p2-chain-2 .uv-qty  { color: var(--cyan); }
-#planets2 .p2-chain-1 .uv-name,
-#planets2 .p2-chain-1 .uv-qty  { color: var(--text-dim); }
-#planets2 .p2-deficit .res-icon { width: 1rem; height: 1rem; margin: 0 0.15rem; vertical-align: middle; }
-#planets2 .p2-deficit-sub { color: var(--accent); font-size: 11px; font-weight: 600 !important; margin-top: 0.3rem; border-top: 1px dotted var(--border); padding-top: 0.2rem; }
-#planets2 .p2-deficit-sub.p2-ok { color: var(--green, #4caf50); }
-#planets2 .p2-have { color: var(--text-dim); font-size: 10px; margin-left: 0.3rem; }
-#planets2 .p2-add { color: var(--yellow, #ffc107) !important; font-weight: 600; }
-#planets2 .p2-warn-tag { color: var(--red); font-weight: 400; font-size: 10px; }
-#planets2 .p2-info-row .uv-name { color: var(--green, #4caf50); }
-#planets2 .p2-info-row .uv-qty  { color: var(--green, #4caf50); font-weight: 600; }
+#planets2-cards .p2-deficit { border-top: 1px dashed var(--border); margin-top: 0.3rem; padding-top: 0.3rem; }
+#planets2-cards .p2-deficit-title { color: var(--accent); font-size: 11px; font-weight: 600 !important; margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#planets2-cards .p2-deficit .uv-qty { font-size: 11px; }
+#planets2-cards .p2-def-row .uv-name { color: var(--red); }
+#planets2-cards .p2-def-row .uv-qty  { color: var(--red); }
+#planets2-cards .p2-chain-2 { padding-left: 1.2rem; }
+#planets2-cards .p2-chain-1 { padding-left: 2.4rem; }
+#planets2-cards .p2-chain-2 .uv-name,
+#planets2-cards .p2-chain-2 .uv-qty  { color: var(--cyan); }
+#planets2-cards .p2-chain-1 .uv-name,
+#planets2-cards .p2-chain-1 .uv-qty  { color: var(--text-dim); }
+#planets2-cards .p2-deficit .res-icon { width: 1rem; height: 1rem; margin: 0 0.15rem; vertical-align: middle; }
+#planets2-cards .p2-deficit-sub { color: var(--accent); font-size: 11px; font-weight: 600 !important; margin-top: 0.3rem; border-top: 1px dotted var(--border); padding-top: 0.2rem; }
+#planets2-cards .p2-deficit-sub.p2-ok { color: var(--green, #4caf50); }
+#planets2-cards .p2-have { color: var(--text-dim); font-size: 10px; margin-left: 0.3rem; }
+#planets2-cards .p2-add { color: var(--yellow, #ffc107) !important; font-weight: 600; }
+#planets2-cards .p2-warn-tag { color: var(--red); font-weight: 400; font-size: 10px; }
+#planets2-cards .p2-info-row .uv-name { color: var(--green, #4caf50); }
+#planets2-cards .p2-info-row .uv-qty  { color: var(--green, #4caf50); font-weight: 600; }
 
 /* ==================== Эскалации ==================== */
 #map-esc { display: flex; flex-direction: column; gap: 0; height: calc(100vh - 10rem); min-height: 400px; }
