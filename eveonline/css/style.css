@@ -1448,27 +1448,39 @@ form button:focus-visible,
    Справа «Статистика» — на всю оставшуюся ширину и ровно по высоте
    левой колонки (от заголовка до низа строки добавления). */
 .planets-top {
-    /* Три строки: Регион, Персонаж+Добавить, Статистика+Склад+Масштаб,
-       затем EVE-персонажи */
+    /* Общая панель: Регион, Персонаж+Добавить, Статистика+Склад+Масштаб */
     display: flex;
     flex-direction: column;
-    gap: 0;
+    gap: 0.5rem;
+    padding: 0.7rem 0.8rem;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
 }
 
-.planets-top > .defaults-head {
-    margin-bottom: 0;
-    width: fit-content;
-    max-width: 100%;
+/* Строки внутри planets-top — без собственных панелей */
+.planets-top > .card-head {
+    margin-top: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
 }
 
 .planets-top > .stats-panel {
     flex-direction: row;
     flex: initial;
     min-width: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
 }
 
 .planets-top > .eve-roster {
-    margin-top: 0.5rem;
+    margin-top: 0.3rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--border);
 }
 
 
