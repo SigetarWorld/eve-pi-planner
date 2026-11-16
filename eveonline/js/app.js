@@ -1488,23 +1488,7 @@ function initDefaults() {
     });
 }
 
-/* Ширина списка «Регион» — ровно как у поля «Название аккаунта» под ним:
-   поле сжимается вместе со строкой (рядом кнопка и счётчик), а у списка
-   соседей нет, поэтому без подгонки он бы выступал правее. Копируем
-   ширину поля при любом изменении размеров (окно, масштаб, шрифт). */
-function syncRegionWidth() {
-    if (!defRegion || !pilotNew) return;
-    const width = pilotNew.getBoundingClientRect().width;
-    if (width > 0) {
-        defRegion.style.flex = '0 0 auto';
-        defRegion.style.width = `${width}px`;
-    }
-}
-
-if (defRegion && pilotNew && window.ResizeObserver) {
-    new ResizeObserver(syncRegionWidth).observe(pilotNew);
-}
-window.addEventListener('load', syncRegionWidth);
+/* syncRegionWidth убран — Регион и Персонаж теперь в одной строке */
 
 // Регион для новой карточки или null, если стоит «Все регионы»
 function defaultsForNewCard() {
@@ -3592,8 +3576,6 @@ function whSumInnerHtml() {
     return `<div class="wh-filters">
             <span class="uv-tiers wh-tiers" role="group" aria-label="Уровни">${tierBtns}</span>
             <select class="ct-input wh-owner-sel" data-role="wh-owner" aria-label="Склад">${opts}</select>
-            <label class="wh-hub"><span class="chain-bar-label">Период</span>
-                <select class="ct-input wh-hub-sel" data-role="wh-days" aria-label="Период графиков">${WH_DAYS_OPTIONS.map((d) => `<option value="${d}"${d === whFilter.days ? ' selected' : ''}>${d} дней</option>`).join('')}</select></label>
             ${hubSel}
         </div>
         <div class="wh-sum-row">
@@ -3602,7 +3584,6 @@ function whSumInnerHtml() {
                 <tbody>${rows}</tbody>
                 <tfoot><tr><th scope="row" class="st-name">Итого</th><td colspan="${cols - 1}" class="wh-total">${whFmtM3(sumVol)}<span class="uv-sep">·</span>${whFmtIsk(sumIsk) || '0 ISK'}${pricePending ? ' …' : ''}</td></tr></tfoot>
             </table>` : '<p class="evt-dim">Планетарки на складе нет</p>'}</div>
-            ${whChartHtml([4, 3, 2, 1, 0].filter(whTierOn).flatMap((t) => names.filter((n) => piTierOf(n) === t).sort((a, b) => a.localeCompare(b))), owners)}
         </div>`;
 }
 
@@ -3781,26 +3762,11 @@ async function renderWarehouse() {
         const where = modal.querySelector('.wh-where-box');
         if (sum) sum.hidden = whView !== 'sum';
         if (where) where.hidden = whView !== 'where';
-        whFitCharts();
     };
     tabs.forEach((t) => t.addEventListener('click', () => {
         whView = t.dataset.view;
         showView();
     }));
-    // наведение на легенду или линию графика — выделяем эту линию
-    modal.addEventListener('mouseover', (event) => {
-        const it = event.target.closest && event.target.closest('.wh-lg-item, .wh-ch-series');
-        const chart = event.target.closest && event.target.closest('.wh-chart');
-        if (!chart) return;
-        const k = it ? it.dataset.s : '';
-        chart.classList.toggle('has-hl', !!k);
-        chart.querySelectorAll('[data-s]').forEach((el) => el.classList.toggle('is-hl', el.dataset.s === k));
-    });
-    modal.addEventListener('mouseout', (event) => {
-        const chart = event.target.closest && event.target.closest('.wh-chart');
-        if (!chart || (event.relatedTarget && chart.contains(event.relatedTarget))) return;
-        chart.classList.remove('has-hl');
-    });
     // имущество: поиск, уровни, выбор ресурсов
     modal.addEventListener('input', (event) => {
         const q = event.target.closest && event.target.closest('[data-role="wh-w-q"]');
@@ -3850,7 +3816,6 @@ async function renderWarehouse() {
     const redrawSum = () => {
         const box = modal.querySelector('.wh-sum-box');
         if (box) box.innerHTML = whSumInnerHtml();
-        whFitCharts();
     };
     // цены для товаров на складах — по хабу; пришли — перерисовываем
     whRedrawSum = () => {
@@ -3873,13 +3838,6 @@ async function renderWarehouse() {
         if (hubSel) {
             try { localStorage.setItem(typeof PI_HUB_STORAGE !== 'undefined' ? PI_HUB_STORAGE : 'eve-pi-hub', hubSel.value); } catch (e) { /* без памяти */ }
             whRedrawSum();
-            return;
-        }
-        const daysSel = event.target.closest('[data-role="wh-days"]');
-        if (daysSel) {
-            whFilter.days = Number(daysSel.value) || 10;
-            store.set(WH_DAYS_KEY, whFilter.days);
-            redrawSum();
             return;
         }
         const sel = event.target.closest('[data-role="wh-owner"]');

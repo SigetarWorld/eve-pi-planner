@@ -1448,43 +1448,34 @@ form button:focus-visible,
    Справа «Статистика» — на всю оставшуюся ширину и ровно по высоте
    левой колонки (от заголовка до низа строки добавления). */
 .planets-top {
-    /* Сетка 2×2: слева «Регион» и «Аккаунт», справа «Персонажи» и
-       «Статистика» — строки сетки общие, поэтому «Персонажи» стоят
-       вровень с «Регионом», а «Статистика» — с «Аккаунтом» */
+    /* Сетка 2×2: слева «Регион+Персонаж» и «Статистика+Склад»,
+       справа «Персонажи EVE» на обе строки */
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     column-gap: 0.7rem;
     align-items: start;
 }
 
-/* Левая колонка — сами строки «Регион» и «Аккаунт» в сетке */
+/* Левая колонка — строки в сетке */
 .planets-top-main {
     display: contents;
 }
 
-.planets-top-main .defaults-head {
+.planets-top-main .account-head {
     grid-column: 1;
     grid-row: 1;
 }
 
-.planets-top-main .account-head {
+.planets-top-main .stats-panel {
     grid-column: 1;
     grid-row: 2;
 }
 
 .planets-top > .eve-roster {
     grid-column: 2;
-    grid-row: 1;
+    grid-row: 1 / -1;
     align-self: stretch;
     margin-top: 0;
-}
-
-.planets-top > .stats-panel {
-    grid-column: 2;
-    grid-row: 2;
-    /* тот же отступ сверху, что у строки «Аккаунт» */
-    margin-top: 1.4rem;
-    align-self: stretch;
 }
 
 /* «Статистика» — строка как «Аккаунт»: та же подпись (кегль, ширина)
@@ -1900,10 +1891,9 @@ form button:focus-visible,
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .planets-top-main .defaults-head,
     .planets-top-main .account-head,
-    .planets-top > .eve-roster,
-    .planets-top > .stats-panel {
+    .planets-top-main .stats-panel,
+    .planets-top > .eve-roster {
         grid-column: 1;
         grid-row: auto;
     }

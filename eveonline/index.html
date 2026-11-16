@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=262">
+    <link rel="stylesheet" href="css/style.css?v=263">
 </head>
 <body>
     <header>
@@ -54,44 +54,44 @@
                  блок «Статистика» той же высоты. -->
             <div class="planets-top">
                 <div class="planets-top-main">
-                    <!-- Регион для новых карточек: выбран — новая карточка создаётся
-                         с ним (систему выбирают уже в карточке); «Все регионы» —
-                         и в карточке «Все регионы». Логика — js/app.js
-                         (раздел «Регион для новых карточек»). -->
-                    <div class="card-head defaults-head">
+                    <!-- Регион + Персонаж + Добавить — одна строка -->
+                    <div class="card-head account-head">
                         <label class="card-pilot-label" for="def-region">Регион</label>
                         <select id="def-region" class="ct-input defaults-select" aria-label="Регион для новых карточек"
                                 title="Регион, с которым создаются новые карточки">
                             <option value="">Все регионы</option>
                         </select>
-                    </div>
-
-                    <!-- Выбор персонажа: карточка встаёт в первый ряд, где меньше
-                         трёх карточек. Ряды и порядок — перетаскиванием карточек. -->
-                    <div class="card-head account-head">
                         <label class="card-pilot-label" for="pilot-new">Персонаж</label>
                         <select id="pilot-new" class="ct-input card-new pilot-select"></select>
                         <button type="button" id="pilot-add" class="btn card-add">Добавить</button>
-                        
                         <span id="account-counter" class="card-counter" aria-live="polite">Карточек: 0</span>
+                    </div>
+
+                    <!-- Кнопки: Статистика, Планетарный склад, Масштаб -->
+                    <div class="card-head stats-panel">
+                        <button type="button" id="stats-open" class="btn card-add" aria-haspopup="dialog"
+                                aria-controls="stats-modal">Статистика</button>
+                        <button type="button" id="wh-open" class="btn card-add" aria-haspopup="dialog"
+                                aria-controls="wh-modal">Планетарный склад</button>
+                        <label class="cards-zoom" title="Масштаб карточек персонажей">
+                            <span class="chain-bar-label">Масштаб</span>
+                            <select id="cards-zoom" class="ct-input" aria-label="Масштаб карточек">
+                                <option value="100">100%</option>
+                                <option value="90">90%</option>
+                                <option value="80">80%</option>
+                            </select>
+                        </label>
                     </div>
                 </div>
 
-                <!-- Подключённые персонажи EVE — над «Статистикой», на уровне
-                     строки «Регион». Заполняет app.js (renderEveAuth). -->
-                <!-- Подключённые персонажи: вместо подписи — список-меню «Персонажи»,
-                     справа портреты с именами.
-                     Внутри — портреты и крестик отключения; каждый вход кнопкой
-                     «LOG IN with EVE Online» вверху добавляет ещё персонажа. -->
+                <!-- Подключённые персонажи EVE -->
                 <div id="eve-roster" class="card-head eve-roster" aria-label="Подключённые персонажи">
                     <div class="eve-chars-wrap">
                         <button type="button" id="eve-chars-btn" class="ct-input card-new pilot-select eve-chars-select"
                                 aria-haspopup="true" aria-expanded="false" aria-controls="eve-chars"></button>
                         <div id="eve-chars" class="eve-chars" hidden></div>
                     </div>
-                    <!-- портреты подключённых персонажей, в два ряда (renderEveRoster) -->
                     <div id="eve-roster-list" class="eve-roster-list"></div>
-                    <!-- Сумма ISK: общая по всем персонажам + суточная по отмеченным -->
                     <div id="eve-isk-box" class="eve-isk-box" hidden>
                         <span id="eve-isk-total" class="eve-isk-total" title="Общий баланс всех персонажей"></span>
                         <button type="button" id="eve-isk-daily" class="eve-isk-daily" title="Нажмите для графика за 7 дней"></button>
@@ -101,32 +101,6 @@
                                    min="0" step="1" placeholder="0">
                         </span>
                     </div>
-                </div>
-
-                <!-- Таблицу подсчёта P1 строит и заполняет app.js (updateStats) -->
-                <div class="card-head stats-panel">
-                    <button type="button" id="stats-open" class="btn card-add" aria-haspopup="dialog"
-                            aria-controls="stats-modal">Статистика</button>
-                    <!-- Склад: планетарка P0–P4 всех персонажей и контейнеры [Sigetar]
-                         корпорации (app.js, раздел «Склад») -->
-                    <button type="button" id="wh-open" class="btn card-add" aria-haspopup="dialog"
-                            aria-controls="wh-modal">Склад</button>
-                    <!-- Тест: всё, что EVE отдаёт по планетарке персонажей
-                         Sigetar и CrazyJam (app.js, раздел «Тест EVE») -->
-                    <button type="button" id="evetest-open" class="btn card-add" aria-haspopup="dialog"
-                            aria-controls="evetest-modal">Тест</button>
-                    <!-- Тест2: имущество (склады) подключённых персонажей из EVE -->
-                    <button type="button" id="evetest2-open" class="btn card-add" aria-haspopup="dialog"
-                            aria-controls="evetest2-modal">Тест2</button>
-                    <!-- Масштаб карточек персонажей (app.js, «Масштаб карточек») -->
-                    <label class="cards-zoom" title="Масштаб карточек персонажей">
-                        <span class="chain-bar-label">Масштаб</span>
-                        <select id="cards-zoom" class="ct-input" aria-label="Масштаб карточек">
-                            <option value="100">100%</option>
-                            <option value="90">90%</option>
-                            <option value="80">80%</option>
-                        </select>
-                    </label>
                 </div>
             </div>
 
@@ -145,7 +119,7 @@
             <div id="wh-modal" class="ct-modal" role="dialog" aria-modal="true"
                  aria-labelledby="wh-modal-title" hidden>
                 <div class="ct-modal-box stats-modal-box">
-                    <h3 id="wh-modal-title" class="ct-modal-title">Склад</h3>
+                    <h3 id="wh-modal-title" class="ct-modal-title">Планетарный склад</h3>
                     <div class="wh-tabs" role="group" aria-label="Вид">
                         <button type="button" class="btn card-add wh-tab" data-role="wh-view" data-view="sum"
                                 aria-pressed="true">Сводная таблица</button>
@@ -157,25 +131,6 @@
                 </div>
             </div>
 
-            <div id="evetest-modal" class="ct-modal" role="dialog" aria-modal="true"
-                 aria-labelledby="evetest-title" hidden>
-                <div class="ct-modal-box evetest-box">
-                    <h3 id="evetest-title" class="ct-modal-title">Тест: данные EVE по планетарке</h3>
-                    <p id="evetest-version" class="evt-dim evt-version"></p>
-                    <div id="evetest-body" class="evetest-body"></div>
-                    <button type="button" class="ct-modal-close" aria-label="Закрыть">&times;</button>
-                </div>
-            </div>
-
-            <div id="evetest2-modal" class="ct-modal" role="dialog" aria-modal="true"
-                 aria-labelledby="evetest2-title" hidden>
-                <div class="ct-modal-box evetest-box">
-                    <h3 id="evetest2-title" class="ct-modal-title">Тест2: склады персонажей в EVE</h3>
-                    <label class="evt-dim evt-version"><input type="checkbox" id="evetest2-pi"> только планетарка</label>
-                    <div id="evetest2-body" class="evetest-body"></div>
-                    <button type="button" class="ct-modal-close" aria-label="Закрыть">&times;</button>
-                </div>
-            </div>
 
             <div id="cards-hint" class="card-hint">
                 Выберите персонажа и нажмите «Добавить» — появится его карточка. Карточки можно перетаскивать за шапку: в ряду до трёх
@@ -288,7 +243,7 @@
     <script src="js/calculator.js?v=36"></script>
     <script src="js/prices.js?v=7"></script>
     <script src="js/chains.js?v=22"></script>
-    <script src="js/app.js?v=244"></script>
+    <script src="js/app.js?v=246"></script>
     <script src="js/jumpdata.js?v=1"></script>
     <script src="js/jumpmap.js?v=22"></script>
     <script src="js/planmap.js?v=5"></script>
