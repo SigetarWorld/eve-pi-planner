@@ -1452,7 +1452,7 @@ form button:focus-visible,
     display: grid;
     grid-template-columns: auto 1fr;
     gap: 0.6rem;
-    align-items: start;
+    align-items: stretch;
 }
 
 /* Левая колонка: Регион, Персонаж+Добавить, Статистика+Склад+Масштаб */
