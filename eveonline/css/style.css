@@ -1448,43 +1448,26 @@ form button:focus-visible,
    Справа «Статистика» — на всю оставшуюся ширину и ровно по высоте
    левой колонки (от заголовка до низа строки добавления). */
 .planets-top {
-    /* Сетка 2×2: слева «Регион+Персонаж» и «Статистика+Склад»,
-       справа «Персонажи EVE» на обе строки */
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    column-gap: 0.7rem;
-    align-items: start;
+    /* Три строки: Регион, Персонаж+Добавить, Статистика+Склад+Масштаб,
+       затем EVE-персонажи */
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
-/* Левая колонка — строки в сетке */
-.planets-top-main {
-    display: contents;
+.planets-top > .defaults-head {
+    margin-bottom: 0;
 }
 
-.planets-top-main .account-head {
-    grid-column: 1;
-    grid-row: 1;
-}
-
-.planets-top-main .stats-panel {
-    grid-column: 1;
-    grid-row: 2;
+.planets-top > .stats-panel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .planets-top > .eve-roster {
-    grid-column: 2;
-    grid-row: 1 / -1;
-    align-self: stretch;
-    margin-top: 0;
-}
-
-/* «Статистика» — строка как «Аккаунт»: та же подпись (кегль, ширина)
-   и кнопка «Открыть» как «Добавить»; таблица — в окне */
-.card-head.stats-panel {
-    flex: none;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    padding: 0.7rem 0.8rem;
+    margin-top: 0.5rem;
 }
 
 
@@ -1885,22 +1868,9 @@ form button:focus-visible,
     padding-right: 0.55rem;
 }
 
-/* Узкий экран: статистика уходит под строку добавления */
+/* Узкий экран */
 @media (max-width: 800px) {
-    .planets-top {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .planets-top-main .account-head,
-    .planets-top-main .stats-panel,
-    .planets-top > .eve-roster {
-        grid-column: 1;
-        grid-row: auto;
-    }
-
-    .planets-top > .eve-roster {
-        margin-top: 1.4rem;
-    }
+    .planets-top > .stats-panel { flex-wrap: wrap; }
 }
 
 .card-hint {
@@ -5303,8 +5273,6 @@ input.eve-plex-input {
 /* Масштаб карточек — справа в строке кнопок */
 .stats-panel .cards-zoom { margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
 .stats-panel .cards-zoom select { width: auto; }
-/* строка кнопок переносится, если не помещается (иначе «Масштаб» уезжает за край) */
-.card-head.stats-panel { flex-wrap: wrap; row-gap: 0.5rem; }
 
 /* ---------- Вкладка «Карты»: переключатель и прыжковая карта ---------- */
 .maps-views { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 0.9rem; }
