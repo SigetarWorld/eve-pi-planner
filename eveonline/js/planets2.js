@@ -507,6 +507,10 @@
             }
 
             if (needFull) {
+                /* Если открыт редактор карточки (.card-slot = заглушка), пропускаем
+                   полную перерисовку — она уберёт редактируемую карточку и сломает
+                   остальные. Перерисуем при закрытии редактора (slot уйдёт → новый needFull). */
+                if (accountsEl.querySelector('.card-slot')) return;
                 clearTimeout(syncDebounce);
                 syncSet = {};
                 clearTimeout(debounce);
