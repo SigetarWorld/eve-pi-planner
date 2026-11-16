@@ -165,6 +165,9 @@ function eveAuthorizeUrl(state, challenge, extraScopes) {
     url.searchParams.set('state', state);
     url.searchParams.set('code_challenge', challenge);
     url.searchParams.set('code_challenge_method', 'S256');
+    // Принудительно показать экран разрешений, чтобы EVE запросил
+    // все scopes заново (иначе старые одобрения кэшируются)
+    url.searchParams.set('prompt', 'consent');
     return url.toString();
 }
 
