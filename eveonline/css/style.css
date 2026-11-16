@@ -1457,19 +1457,13 @@ form button:focus-visible,
 
 .planets-top > .defaults-head {
     margin-bottom: 0;
+    width: fit-content;
+    max-width: 100%;
 }
 
 .planets-top > .stats-panel {
-    display: flex;
     flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
     flex: initial;
-    padding: 0;
-    background: none;
-    border: none;
-    border-radius: 0;
     min-width: 0;
 }
 
