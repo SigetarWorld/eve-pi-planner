@@ -5727,10 +5727,20 @@ if (eveCharsBox) {
 /* Обновляем ISK каждые 5 минут, если вкладка видна */
 setInterval(() => { if (!document.hidden) eveIskRefresh(); }, 5 * 60 * 1000);
 
-/* ---- График дохода за 7 дней (popup по клику на «24ч») ---- */
-const ISK_CHART_COLORS = ['#2ecc40', '#3498db', '#e8a33d', '#e74c3c', '#9b59b6', '#1abc9c', '#f39c12', '#e67e22'];
+/* ---- График дохода за 7 дней (модальное окно по клику на «24ч») ---- */
+/* Градиенты для баров — сине-голубая гамма как в дизайне */
+const ISK_BAR_GRADIENTS = [
+    ['#48c6ef', '#6f86d6'],   // голубой → синий
+    ['#2193b0', '#1e6fa0'],   // бирюзовый → тёмно-синий
+    ['#1a3a5c', '#2f5f8f'],   // тёмно-синий → средний
+    ['#667eea', '#764ba2'],   // синий → фиолетовый
+    ['#0f4b6e', '#1b7a9e'],   // глубокий → бирюзовый
+    ['#36d1dc', '#5b86e5'],   // аква → синий
+    ['#4facfe', '#00f2fe'],   // синий → циан
+    ['#6a85b6', '#bac8e0'],   // стальной → серебро
+];
 
-/* Загрузка журнала за N дней для одного персонажа, с разбивкой по дням */
+/* Загрузка журнала за 7 дней — суммарный доход каждого дня */
 async function eveWalletJournal7d(charId) {
     const days = 7;
     const now = Date.now();
@@ -5750,7 +5760,7 @@ async function eveWalletJournal7d(charId) {
             const t = new Date(e.date).getTime();
             if (t < cutoff) { anyOld = true; continue; }
             const daysAgo = Math.floor((now - t) / (24 * 3600 * 1000));
-            const idx = days - 1 - daysAgo;  // 0=самый старый день, 6=сегодня
+            const idx = days - 1 - daysAgo;
             if (idx >= 0 && idx < days) dayBuckets[idx] += Number(e.amount) || 0;
         }
         if (anyOld || entries.length < 2500) break;
@@ -5760,171 +5770,128 @@ async function eveWalletJournal7d(charId) {
     return dayBuckets;
 }
 
-/* Рисуем график на canvas */
-function drawIskChart(canvas, datasets, labels) {
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width;
-    const H = canvas.height;
-    const pad = { top: 15, right: 10, bottom: 22, left: 55 };
-    const cW = W - pad.left - pad.right;
-    const cH = H - pad.top - pad.bottom;
+/* Модальное окно графика */
+let iskChartModal = null;
 
-    ctx.clearRect(0, 0, W, H);
-
-    // Находим min/max среди всех значений
-    let allVals = [];
-    datasets.forEach((ds) => ds.data.forEach((v) => allVals.push(v)));
-    let minV = Math.min(0, ...allVals);
-    let maxV = Math.max(0, ...allVals);
-    if (minV === maxV) { minV -= 1e6; maxV += 1e6; }
-    const range = maxV - minV || 1;
-
-    const toX = (i) => pad.left + (i / (labels.length - 1)) * cW;
-    const toY = (v) => pad.top + cH - ((v - minV) / range) * cH;
-
-    // Сетка
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = 1;
-    const gridSteps = 4;
-    for (let g = 0; g <= gridSteps; g++) {
-        const y = pad.top + (g / gridSteps) * cH;
-        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cW, y); ctx.stroke();
-    }
-
-    // Линия нуля
-    if (minV < 0 && maxV > 0) {
-        const y0 = toY(0);
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-        ctx.setLineDash([4, 3]);
-        ctx.beginPath(); ctx.moveTo(pad.left, y0); ctx.lineTo(pad.left + cW, y0); ctx.stroke();
-        ctx.setLineDash([]);
-    }
-
-    // Данные — линии
-    datasets.forEach((ds, di) => {
-        ctx.strokeStyle = ds.color;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ds.data.forEach((v, i) => {
-            const x = toX(i), y = toY(v);
-            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-        // Точки
-        ds.data.forEach((v, i) => {
-            ctx.fillStyle = ds.color;
-            ctx.beginPath();
-            ctx.arc(toX(i), toY(v), 3, 0, Math.PI * 2);
-            ctx.fill();
-        });
-    });
-
-    // Оси — подписи дней
-    ctx.fillStyle = 'rgba(200,210,230,0.6)';
-    ctx.font = '10px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    labels.forEach((lbl, i) => {
-        ctx.fillText(lbl, toX(i), H - 4);
-    });
-
-    // Ось Y — подписи значений
-    ctx.textAlign = 'right';
-    for (let g = 0; g <= gridSteps; g++) {
-        const v = maxV - (g / gridSteps) * range;
-        const y = pad.top + (g / gridSteps) * cH;
-        ctx.fillText(eveIskFmt(v), pad.left - 5, y + 3);
-    }
-}
-
-/* Показать/скрыть popup */
-let iskChartPopup = null;
 function closeIskChart() {
-    if (iskChartPopup) { iskChartPopup.remove(); iskChartPopup = null; }
+    if (iskChartModal) { iskChartModal.remove(); iskChartModal = null; }
 }
-// Закрытие по клику вне
-document.addEventListener('click', (e) => {
-    if (iskChartPopup && !iskChartPopup.contains(e.target) && e.target !== eveIskDailyEl && !eveIskDailyEl.contains(e.target)) {
-        closeIskChart();
-    }
-});
 
 if (eveIskDailyEl) {
-    eveIskDailyEl.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        // Toggle
-        if (iskChartPopup) { closeIskChart(); return; }
+    eveIskDailyEl.addEventListener('click', async () => {
+        if (iskChartModal) { closeIskChart(); return; }
 
         const chars = typeof eveChars === 'function' && eveConfigured() ? eveChars() : [];
         const dailySet = eveIskDailyChars();
         const dailyChars = chars.filter((c) => dailySet.has(c.characterId));
         if (!dailyChars.length) return;
 
-        // Создаём popup
-        const popup = document.createElement('div');
-        popup.className = 'isk-chart-popup';
-        popup.innerHTML = '<h4>Доход за 7 дней</h4><p style="color:var(--text-dim);font-size:0.72rem;">Загрузка…</p>';
-        eveIskDailyEl.style.position = 'relative';
-        eveIskDailyEl.appendChild(popup);
-        iskChartPopup = popup;
+        /* Создаём модальное окно */
+        const modal = document.createElement('div');
+        modal.className = 'isk-chart-modal';
+        modal.innerHTML = `
+            <div class="isk-chart-box">
+                <h3>Доход за 7 дней</h3>
+                <button type="button" class="ct-modal-close" aria-label="Закрыть">&times;</button>
+                <div class="isk-chart-days" id="isk-chart-days"></div>
+                <div class="isk-chart-rows" id="isk-chart-rows">
+                    <p style="color:var(--text-dim);font-size:0.78rem;padding:1rem 0;">Загрузка данных из EVE…</p>
+                </div>
+                <div class="isk-chart-footer" id="isk-chart-footer" hidden>
+                    <span class="isk-chart-total" id="isk-chart-total"></span>
+                    <span class="isk-chart-hint">Сумма journal за 7 суток</span>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+        iskChartModal = modal;
+
+        /* Закрытие */
+        modal.querySelector('.ct-modal-close').addEventListener('click', closeIskChart);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeIskChart(); });
+        document.addEventListener('keydown', function onEsc(e) {
+            if (e.key === 'Escape' && iskChartModal) { closeIskChart(); document.removeEventListener('keydown', onEsc); }
+        });
+
+        /* Шкала дней — кружки */
+        const daysRow = modal.querySelector('#isk-chart-days');
+        for (let d = 6; d >= 0; d--) {
+            const dt = new Date(Date.now() - d * 24 * 3600 * 1000);
+            const lbl = String(dt.getDate()).padStart(2, '0') + '.' + String(dt.getMonth() + 1).padStart(2, '0');
+            const isToday = d === 0;
+            daysRow.innerHTML += `<span class="isk-chart-day${isToday ? ' is-today' : ''}">${lbl}</span>`;
+        }
 
         try {
-            // Загружаем данные по всем персонажам параллельно
+            /* Загружаем данные параллельно */
             const results = await Promise.allSettled(
                 dailyChars.map((c) => eveWalletJournal7d(c.characterId))
             );
+            if (!iskChartModal) return;
 
-            if (!iskChartPopup) return; // popup уже закрыт
-
-            // Даты-лейблы (7 дней)
-            const labels = [];
-            for (let d = 6; d >= 0; d--) {
-                const dt = new Date(Date.now() - d * 24 * 3600 * 1000);
-                labels.push(String(dt.getDate()).padStart(2, '0') + '.' + String(dt.getMonth() + 1).padStart(2, '0'));
-            }
-
-            // Датасеты
-            const datasets = [];
+            /* Суммируем по персонажам */
+            const rows = [];
             let grandTotal = 0;
             dailyChars.forEach((c, i) => {
                 const r = results[i];
                 const data = r.status === 'fulfilled' ? r.value : new Array(7).fill(0);
-                const color = ISK_CHART_COLORS[i % ISK_CHART_COLORS.length];
-                data.forEach((v) => grandTotal += v);
-                datasets.push({ name: c.characterName || 'Персонаж', data, color });
+                const total = data.reduce((s, v) => s + v, 0);
+                grandTotal += total;
+                rows.push({ name: c.characterName || 'Персонаж', total, data, charId: c.characterId });
             });
 
-            // Рисуем
-            const dpr = window.devicePixelRatio || 1;
-            const cW = 380, cH = 150;
-            popup.innerHTML = '<h4>Доход за 7 дней</h4>';
-            const canvas = document.createElement('canvas');
-            canvas.className = 'isk-chart-canvas';
-            canvas.width = cW * dpr;
-            canvas.height = cH * dpr;
-            canvas.style.width = cW + 'px';
-            canvas.style.height = cH + 'px';
-            canvas.getContext('2d').scale(dpr, dpr);
-            popup.appendChild(canvas);
+            /* Находим максимум для масштабирования баров */
+            const maxAbs = Math.max(1, ...rows.map((r) => Math.abs(r.total)));
 
-            drawIskChart(canvas, datasets, labels);
+            /* Строим бары */
+            const rowsEl = modal.querySelector('#isk-chart-rows');
+            rowsEl.innerHTML = '';
+            rows.forEach((r, i) => {
+                const pct = Math.max(2, Math.abs(r.total) / maxAbs * 100);
+                const grad = ISK_BAR_GRADIENTS[i % ISK_BAR_GRADIENTS.length];
+                const isNeg = r.total < 0;
+                const sign = r.total >= 0 ? '+' : '';
+                const labelText = sign + eveIskFmt(r.total);
+                const isShort = pct < 35;
 
-            // Легенда
-            const legend = document.createElement('div');
-            legend.className = 'isk-chart-legend';
-            datasets.forEach((ds) => {
-                legend.innerHTML += `<span class="isk-chart-legend-item"><span class="isk-chart-legend-dot" style="background:${ds.color}"></span>${escapeHtml(ds.name)}</span>`;
+                const row = document.createElement('div');
+                row.className = 'isk-chart-row';
+                row.innerHTML = `
+                    <span class="isk-chart-name">${escapeHtml(r.name)}</span>
+                    <div class="isk-chart-bar-wrap">
+                        <div class="isk-chart-bar" style="width:0%;background:linear-gradient(90deg,${grad[0]},${grad[1]});${isNeg ? 'opacity:0.6;' : ''}">
+                            <span class="isk-chart-bar-label${isShort ? ' is-outside' : ''}">${escapeHtml(labelText)}</span>
+                        </div>
+                    </div>`;
+                row.title = r.data.map((v, d) => {
+                    const dt = new Date(Date.now() - (6 - d) * 24 * 3600 * 1000);
+                    const dl = String(dt.getDate()).padStart(2, '0') + '.' + String(dt.getMonth() + 1).padStart(2, '0');
+                    const sv = v >= 0 ? '+' : '';
+                    return dl + ': ' + sv + eveIskFmt(v);
+                }).join('\n');
+                rowsEl.appendChild(row);
+
+                /* Анимация бара */
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        const bar = row.querySelector('.isk-chart-bar');
+                        if (bar) bar.style.width = pct + '%';
+                    });
+                });
             });
-            popup.appendChild(legend);
 
-            // Итого
-            const totalDiv = document.createElement('div');
-            totalDiv.className = 'isk-chart-total';
-            const s = grandTotal >= 0 ? '+' : '';
-            totalDiv.textContent = `Итого за 7 дней: ${s}${eveIskFmt(grandTotal)}`;
-            popup.appendChild(totalDiv);
+            /* Итого */
+            const footer = modal.querySelector('#isk-chart-footer');
+            footer.hidden = false;
+            const totalEl = modal.querySelector('#isk-chart-total');
+            const gs = grandTotal >= 0 ? '+' : '';
+            totalEl.textContent = 'Итого: ' + gs + eveIskFmt(grandTotal);
+            totalEl.className = 'isk-chart-total' + (grandTotal > 0 ? ' is-positive' : grandTotal < 0 ? ' is-negative' : '');
 
         } catch (err) {
-            if (iskChartPopup) popup.innerHTML = '<h4>Доход за 7 дней</h4><p style="color:#e74c3c;font-size:0.72rem;">Ошибка: ' + escapeHtml(String(err)) + '</p>';
+            if (iskChartModal) {
+                modal.querySelector('#isk-chart-rows').innerHTML =
+                    '<p style="color:#e74c3c;font-size:0.78rem;">Ошибка: ' + escapeHtml(String(err)) + '</p>';
+            }
         }
     });
 }
