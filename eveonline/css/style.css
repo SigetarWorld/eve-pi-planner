@@ -1485,6 +1485,14 @@ form button:focus-visible,
     border-radius: 0;
 }
 
+/* Единая высота всех элементов управления в левой панели */
+.planets-top-controls select,
+.planets-top-controls button.card-add {
+    height: 2.3rem;
+    min-height: 2.3rem;
+    box-sizing: border-box;
+}
+
 /* Правая колонка: EVE-персонажи — своя панель */
 .planets-top > .eve-roster {
     margin-top: 0;
