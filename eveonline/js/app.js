@@ -5740,8 +5740,18 @@ const ISK_BAR_GRADIENTS = [
     ['#6a85b6', '#bac8e0'],   // стальной → серебро
 ];
 
-/* Загрузка журнала за 7 дней — суммарный доход каждого дня */
-async function eveWalletJournal7d(charId) {
+/* Загрузка журнала за 7 дней — все виды дохода.
+   Учитываются: рыночные продажи, баунти с аномалий, миссии, ESS.
+   Возвращает массив из 7 чисел: доход за каждый день. */
+const EVE_INCOME_TYPES = new Set([
+    'market_transaction',              // продажа на рынке
+    'bounty_prizes',                   // баунти с аномалий / ратинга
+    'ess_escrow_transfer',             // выплаты из ESS
+    'agent_mission_reward',            // награда за миссию
+    'agent_mission_time_bonus_reward', // бонус за скорость миссии
+]);
+
+async function eveWalletIncome7d(charId) {
     const days = 7;
     const now = Date.now();
     const cutoff = now - days * 24 * 3600 * 1000;
@@ -5759,9 +5769,12 @@ async function eveWalletJournal7d(charId) {
         for (const e of entries) {
             const t = new Date(e.date).getTime();
             if (t < cutoff) { anyOld = true; continue; }
+            const amt = Number(e.amount) || 0;
+            if (amt <= 0) continue;
+            if (!EVE_INCOME_TYPES.has(e.ref_type)) continue;
             const daysAgo = Math.floor((now - t) / (24 * 3600 * 1000));
             const idx = days - 1 - daysAgo;
-            if (idx >= 0 && idx < days) dayBuckets[idx] += Number(e.amount) || 0;
+            if (idx >= 0 && idx < days) dayBuckets[idx] += amt;
         }
         if (anyOld || entries.length < 2500) break;
         page++;
@@ -5793,13 +5806,12 @@ if (eveIskDailyEl) {
             <div class="isk-chart-box">
                 <h3>Доход за 7 дней</h3>
                 <button type="button" class="ct-modal-close" aria-label="Закрыть">&times;</button>
-                <div class="isk-chart-days" id="isk-chart-days"></div>
                 <div class="isk-chart-rows" id="isk-chart-rows">
                     <p style="color:var(--text-dim);font-size:0.78rem;padding:1rem 0;">Загрузка данных из EVE…</p>
                 </div>
                 <div class="isk-chart-footer" id="isk-chart-footer" hidden>
                     <span class="isk-chart-total" id="isk-chart-total"></span>
-                    <span class="isk-chart-hint">Сумма journal за 7 суток</span>
+                    <span class="isk-chart-hint">Продажи, баунти, миссии, ESS</span>
                 </div>
             </div>`;
         document.body.appendChild(modal);
@@ -5812,62 +5824,53 @@ if (eveIskDailyEl) {
             if (e.key === 'Escape' && iskChartModal) { closeIskChart(); document.removeEventListener('keydown', onEsc); }
         });
 
-        /* Шкала дней — кружки */
-        const daysRow = modal.querySelector('#isk-chart-days');
-        for (let d = 6; d >= 0; d--) {
-            const dt = new Date(Date.now() - d * 24 * 3600 * 1000);
-            const lbl = String(dt.getDate()).padStart(2, '0') + '.' + String(dt.getMonth() + 1).padStart(2, '0');
-            const isToday = d === 0;
-            daysRow.innerHTML += `<span class="isk-chart-day${isToday ? ' is-today' : ''}">${lbl}</span>`;
-        }
-
         try {
-            /* Загружаем данные параллельно */
+            /* Загружаем данные по всем персонажам параллельно */
             const results = await Promise.allSettled(
-                dailyChars.map((c) => eveWalletJournal7d(c.characterId))
+                dailyChars.map((c) => eveWalletIncome7d(c.characterId))
             );
             if (!iskChartModal) return;
 
-            /* Суммируем по персонажам */
-            const rows = [];
-            let grandTotal = 0;
-            dailyChars.forEach((c, i) => {
+            /* charData[i] = массив из 7 чисел (доход от продаж за каждый день) */
+            const charData = dailyChars.map((c, i) => {
                 const r = results[i];
-                const data = r.status === 'fulfilled' ? r.value : new Array(7).fill(0);
-                const total = data.reduce((s, v) => s + v, 0);
-                grandTotal += total;
-                rows.push({ name: c.characterName || 'Персонаж', total, data, charId: c.characterId });
+                return r.status === 'fulfilled' ? r.value : new Array(7).fill(0);
             });
 
-            /* Находим максимум для масштабирования баров */
-            const maxAbs = Math.max(1, ...rows.map((r) => Math.abs(r.total)));
+            /* Суммируем по дням: daySums[d] = сумма всех персонажей за день d */
+            const daySums = new Array(7).fill(0);
+            charData.forEach((data) => data.forEach((v, d) => daySums[d] += v));
+            const grandTotal = daySums.reduce((s, v) => s + v, 0);
+            const maxDay = Math.max(1, ...daySums);
 
-            /* Строим бары */
+            /* Строим 7 строк — по одной на день */
             const rowsEl = modal.querySelector('#isk-chart-rows');
             rowsEl.innerHTML = '';
-            rows.forEach((r, i) => {
-                const pct = Math.max(2, Math.abs(r.total) / maxAbs * 100);
-                const grad = ISK_BAR_GRADIENTS[i % ISK_BAR_GRADIENTS.length];
-                const isNeg = r.total < 0;
-                const sign = r.total >= 0 ? '+' : '';
-                const labelText = sign + eveIskFmt(r.total);
-                const isShort = pct < 35;
+
+            for (let d = 0; d < 7; d++) {
+                const dt = new Date(Date.now() - (6 - d) * 24 * 3600 * 1000);
+                const dayLabel = String(dt.getDate()).padStart(2, '0') + '.' + String(dt.getMonth() + 1).padStart(2, '0');
+                const isToday = d === 6;
+                const pct = Math.max(2, daySums[d] / maxDay * 100);
+                const grad = ISK_BAR_GRADIENTS[d % ISK_BAR_GRADIENTS.length];
+                const labelText = eveIskFmt(daySums[d]);
+                const isShort = pct < 30;
 
                 const row = document.createElement('div');
                 row.className = 'isk-chart-row';
                 row.innerHTML = `
-                    <span class="isk-chart-name">${escapeHtml(r.name)}</span>
+                    <span class="isk-chart-name${isToday ? ' is-today' : ''}">${dayLabel}</span>
                     <div class="isk-chart-bar-wrap">
-                        <div class="isk-chart-bar" style="width:0%;background:linear-gradient(90deg,${grad[0]},${grad[1]});${isNeg ? 'opacity:0.6;' : ''}">
+                        <div class="isk-chart-bar" style="width:0%;background:linear-gradient(90deg,${grad[0]},${grad[1]});">
                             <span class="isk-chart-bar-label${isShort ? ' is-outside' : ''}">${escapeHtml(labelText)}</span>
                         </div>
                     </div>`;
-                row.title = r.data.map((v, d) => {
-                    const dt = new Date(Date.now() - (6 - d) * 24 * 3600 * 1000);
-                    const dl = String(dt.getDate()).padStart(2, '0') + '.' + String(dt.getMonth() + 1).padStart(2, '0');
-                    const sv = v >= 0 ? '+' : '';
-                    return dl + ': ' + sv + eveIskFmt(v);
-                }).join('\n');
+                /* Tooltip — разбивка по персонажам */
+                const tips = dailyChars.map((c, ci) => {
+                    const v = charData[ci][d];
+                    return c.characterName + ': ' + eveIskFmt(v);
+                });
+                row.title = dayLabel + '\n' + tips.join('\n');
                 rowsEl.appendChild(row);
 
                 /* Анимация бара */
@@ -5877,15 +5880,14 @@ if (eveIskDailyEl) {
                         if (bar) bar.style.width = pct + '%';
                     });
                 });
-            });
+            }
 
             /* Итого */
             const footer = modal.querySelector('#isk-chart-footer');
             footer.hidden = false;
             const totalEl = modal.querySelector('#isk-chart-total');
-            const gs = grandTotal >= 0 ? '+' : '';
-            totalEl.textContent = 'Итого: ' + gs + eveIskFmt(grandTotal);
-            totalEl.className = 'isk-chart-total' + (grandTotal > 0 ? ' is-positive' : grandTotal < 0 ? ' is-negative' : '');
+            totalEl.textContent = 'Итого: +' + eveIskFmt(grandTotal);
+            totalEl.className = 'isk-chart-total is-positive';
 
         } catch (err) {
             if (iskChartModal) {

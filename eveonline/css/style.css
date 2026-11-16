@@ -4824,33 +4824,7 @@ input.chain-amount:focus {
     top: 0.6rem;
     right: 0.7rem;
 }
-/* Шкала дней — кружки сверху */
-.isk-chart-days {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 0.5rem;
-    margin-bottom: 0.5rem;
-}
-.isk-chart-day {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.65rem;
-    font-weight: 600;
-    color: var(--text-dim);
-    background: var(--bg-panel-2);
-    border: 1px solid var(--border);
-    transition: background 0.2s, color 0.2s;
-}
-.isk-chart-day.is-today {
-    background: var(--accent);
-    color: var(--bg-deep);
-    border-color: var(--accent);
-}
-/* Строки-бары персонажей */
+/* Строки-бары по дням */
 .isk-chart-rows {
     display: flex;
     flex-direction: column;
@@ -4863,17 +4837,19 @@ input.chain-amount:focus {
 }
 .isk-chart-name {
     flex: 0 0 auto;
-    min-width: 100px;
-    max-width: 130px;
+    width: 52px;
+    text-align: center;
     font-size: 0.72rem;
-    font-weight: 500;
-    color: var(--text);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-weight: 600;
+    color: var(--text-dim);
     background: var(--bg-panel-2);
-    padding: 0.3rem 0.55rem;
+    padding: 0.3rem 0.4rem;
     border-radius: 20px;
+    white-space: nowrap;
+}
+.isk-chart-name.is-today {
+    background: var(--accent);
+    color: var(--bg-deep);
 }
 .isk-chart-bar-wrap {
     flex: 1 1 0;
