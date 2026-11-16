@@ -1448,7 +1448,15 @@ form button:focus-visible,
    Справа «Статистика» — на всю оставшуюся ширину и ровно по высоте
    левой колонки (от заголовка до низа строки добавления). */
 .planets-top {
-    /* Общая панель: Регион, Персонаж+Добавить, Статистика+Склад+Масштаб */
+    /* Две колонки: управление слева, персонажи справа */
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.6rem;
+    align-items: start;
+}
+
+/* Левая колонка: Регион, Персонаж+Добавить, Статистика+Склад+Масштаб */
+.planets-top-controls {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -1458,8 +1466,8 @@ form button:focus-visible,
     border-radius: var(--radius-sm);
 }
 
-/* Строки внутри planets-top — без собственных панелей */
-.planets-top > .card-head {
+/* Строки внутри левой панели — без собственных панелей */
+.planets-top-controls > .card-head {
     margin-top: 0;
     padding: 0;
     background: none;
@@ -1467,7 +1475,7 @@ form button:focus-visible,
     border-radius: 0;
 }
 
-.planets-top > .stats-panel {
+.planets-top-controls > .stats-panel {
     flex-direction: row;
     flex: initial;
     min-width: 0;
@@ -1477,10 +1485,13 @@ form button:focus-visible,
     border-radius: 0;
 }
 
+/* Правая колонка: EVE-персонажи — своя панель */
 .planets-top > .eve-roster {
-    margin-top: 0.3rem;
-    padding-top: 0.4rem;
-    border-top: 1px solid var(--border);
+    margin-top: 0;
+}
+
+@media (max-width: 800px) {
+    .planets-top { grid-template-columns: 1fr; }
 }
 
 
