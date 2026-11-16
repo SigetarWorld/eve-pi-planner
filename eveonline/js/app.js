@@ -5836,56 +5836,77 @@ if (eveIskDailyEl) {
             );
             if (!iskChartModal) return;
 
-            /* charData[i] = массив из 7 чисел (доход от продаж за каждый день) */
+            /* charData[i] = массив из 7 чисел (доход за каждый день) */
             const charData = dailyChars.map((c, i) => {
                 const r = results[i];
                 return r.status === 'fulfilled' ? r.value : new Array(7).fill(0);
             });
 
-            /* Суммируем по дням: daySums[d] = сумма всех персонажей за день d */
-            const daySums = new Array(7).fill(0);
-            charData.forEach((data) => data.forEach((v, d) => daySums[d] += v));
-            const grandTotal = daySums.reduce((s, v) => s + v, 0);
-            const maxDay = Math.max(1, ...daySums);
+            /* Общий максимум для масштабирования баров */
+            let globalMax = 1;
+            charData.forEach((data) => data.forEach((v) => { if (v > globalMax) globalMax = v; }));
+            const grandTotal = charData.reduce((s, data) => s + data.reduce((a, b) => a + b, 0), 0);
 
-            /* Строим 7 строк — по одной на день */
+            /* Метки дат для шапки */
+            const dayLabels = [];
+            const todayIdx = 6;
+            for (let d = 0; d < 7; d++) {
+                const dt = new Date(Date.now() - (6 - d) * 24 * 3600 * 1000);
+                dayLabels.push(String(dt.getDate()).padStart(2, '0') + '.' + String(dt.getMonth() + 1).padStart(2, '0'));
+            }
+
             const rowsEl = modal.querySelector('#isk-chart-rows');
             rowsEl.innerHTML = '';
 
-            for (let d = 0; d < 7; d++) {
-                const dt = new Date(Date.now() - (6 - d) * 24 * 3600 * 1000);
-                const dayLabel = String(dt.getDate()).padStart(2, '0') + '.' + String(dt.getMonth() + 1).padStart(2, '0');
-                const isToday = d === 6;
-                const pct = Math.max(2, daySums[d] / maxDay * 100);
-                const grad = ISK_BAR_GRADIENTS[d % ISK_BAR_GRADIENTS.length];
-                const labelText = eveIskFmt(daySums[d]);
-                const isShort = pct < 30;
+            /* Шапка с датами */
+            const header = document.createElement('div');
+            header.className = 'isk-chart-header';
+            header.innerHTML = '<span class="isk-chart-char-label"></span>'
+                + dayLabels.map((lbl, d) =>
+                    `<span class="isk-chart-date${d === todayIdx ? ' is-today' : ''}">${lbl}</span>`
+                ).join('');
+            rowsEl.appendChild(header);
+
+            /* Строка на каждого персонажа */
+            const evePortrait = (id) => `https://images.evetech.net/characters/${encodeURIComponent(id)}/portrait?size=32`;
+
+            dailyChars.forEach((c, ci) => {
+                const data = charData[ci];
+                const charTotal = data.reduce((a, b) => a + b, 0);
+                const grad = ISK_BAR_GRADIENTS[ci % ISK_BAR_GRADIENTS.length];
 
                 const row = document.createElement('div');
                 row.className = 'isk-chart-row';
-                row.innerHTML = `
-                    <span class="isk-chart-name${isToday ? ' is-today' : ''}">${dayLabel}</span>
-                    <div class="isk-chart-bar-wrap">
-                        <div class="isk-chart-bar" style="width:0%;background:linear-gradient(90deg,${grad[0]},${grad[1]});">
-                            <span class="isk-chart-bar-label${isShort ? ' is-outside' : ''}">${escapeHtml(labelText)}</span>
-                        </div>
-                    </div>`;
-                /* Tooltip — разбивка по персонажам */
-                const tips = dailyChars.map((c, ci) => {
-                    const v = charData[ci][d];
-                    return c.characterName + ': ' + eveIskFmt(v);
-                });
-                row.title = dayLabel + '\n' + tips.join('\n');
-                rowsEl.appendChild(row);
 
-                /* Анимация бара */
-                requestAnimationFrame(() => {
+                /* Портрет + имя */
+                const charLabel = document.createElement('span');
+                charLabel.className = 'isk-chart-char-label';
+                charLabel.innerHTML = `<img class="isk-chart-avatar" src="${evePortrait(c.characterId)}" alt="" width="24" height="24">`
+                    + `<span class="isk-chart-char-name">${escapeHtml(c.characterName)}</span>`;
+                charLabel.title = c.characterName + ': ' + eveIskFmt(charTotal);
+                row.appendChild(charLabel);
+
+                /* 7 ячеек-баров */
+                for (let d = 0; d < 7; d++) {
+                    const v = data[d];
+                    const pct = Math.max(0, v / globalMax * 100);
+                    const cell = document.createElement('div');
+                    cell.className = 'isk-chart-cell';
+                    cell.title = dayLabels[d] + ': ' + eveIskFmt(v);
+                    cell.innerHTML = `<div class="isk-chart-vbar" style="height:0%;background:linear-gradient(0deg,${grad[0]},${grad[1]});"></div>`
+                        + (v > 0 ? `<span class="isk-chart-val">${eveIskFmt(v)}</span>` : '');
+                    row.appendChild(cell);
+
+                    /* Анимация */
                     requestAnimationFrame(() => {
-                        const bar = row.querySelector('.isk-chart-bar');
-                        if (bar) bar.style.width = pct + '%';
+                        requestAnimationFrame(() => {
+                            const bar = cell.querySelector('.isk-chart-vbar');
+                            if (bar) bar.style.height = Math.max(2, pct) + '%';
+                        });
                     });
-                });
-            }
+                }
+                rowsEl.appendChild(row);
+            });
 
             /* Итого */
             const footer = modal.querySelector('#isk-chart-footer');
