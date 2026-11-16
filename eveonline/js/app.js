@@ -5753,8 +5753,10 @@ const EVE_INCOME_TYPES = new Set([
 
 async function eveWalletIncome7d(charId) {
     const days = 7;
-    const now = Date.now();
-    const cutoff = now - days * 24 * 3600 * 1000;
+    const now = new Date();
+    /* Начало «сегодня» в локальном часовом поясе */
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const cutoff = todayStart - (days - 1) * 24 * 3600 * 1000;
     const dayBuckets = new Array(days).fill(0);
 
     let page = 1;
@@ -5772,7 +5774,10 @@ async function eveWalletIncome7d(charId) {
             const amt = Number(e.amount) || 0;
             if (amt <= 0) continue;
             if (!EVE_INCOME_TYPES.has(e.ref_type)) continue;
-            const daysAgo = Math.floor((now - t) / (24 * 3600 * 1000));
+            /* Начало дня транзакции в локальном часовом поясе */
+            const ed = new Date(t);
+            const entryDay = new Date(ed.getFullYear(), ed.getMonth(), ed.getDate()).getTime();
+            const daysAgo = Math.round((todayStart - entryDay) / (24 * 3600 * 1000));
             const idx = days - 1 - daysAgo;
             if (idx >= 0 && idx < days) dayBuckets[idx] += amt;
         }
