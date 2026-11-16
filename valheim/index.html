@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Companion AI — Valheim Mod — Sigetar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Companion AI — самообучающийся компаньон Валера для Valheim. Дорожная карта, возможности и план развития.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css?v=10">
+    <style>
+        /* ===== Roadmap horizontal timeline ===== */
+
+        .rm-wrap {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            background:
+                radial-gradient(ellipse at 60% 40%, rgba(47, 73, 125, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, hsl(36 95% 55% / .04) 0%, transparent 50%),
+                hsl(var(--space-deep));
+            border-top: 1px solid hsl(var(--border) / .5);
+            border-bottom: 1px solid hsl(var(--border) / .5);
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .rm-wrap:active { cursor: grabbing; }
+
+        /* Terminal header */
+        .rm-terminal {
+            padding: 20px 24px 0;
+            font-family: 'Share Tech Mono', monospace;
+            color: hsl(var(--secondary-ink));
+            font-size: 0.78rem;
+        }
+        .rm-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.3rem, 4vw, 2.2rem);
+            font-weight: 900;
+            color: hsl(var(--primary));
+            letter-spacing: 0.06em;
+            margin: 6px 0 0 24px;
+            text-shadow: 0 0 30px hsl(var(--primary) / .3);
+        }
+        .rm-title .blink {
+            animation: blink-cursor .8s step-end infinite;
+        }
+        @keyframes blink-cursor {
+            50% { opacity: 0; }
+        }
+
+        /* Scrollable track */
+        .rm-track {
+            position: relative;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding: 0 0 16px;
+        }
+        .rm-track::-webkit-scrollbar { display: none; }
+
+        .rm-inner {
+            display: flex;
+            align-items: center;
+            position: relative;
+            min-width: max-content;
+            padding: 0 60px;
+            height: 520px;
+        }
+
+        /* The horizontal line */
+        .rm-line {
+            position: absolute;
+            top: 50%;
+            left: 40px;
+            right: 40px;
+            height: 2px;
+            background: linear-gradient(90deg,
+                hsl(var(--secondary)),
+                hsl(var(--secondary)),
+                hsl(var(--secondary) / .5),
+                hsl(var(--border)));
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+        /* Glow on line */
+        .rm-line::after {
+            content: '';
+            position: absolute;
+            inset: -4px 0;
+            background: linear-gradient(90deg,
+                hsl(var(--secondary) / .3),
+                hsl(var(--secondary) / .2),
+                transparent);
+            filter: blur(8px);
+        }
+
+        /* Milestone nodes */
+        .rm-node {
+            position: relative;
+            flex-shrink: 0;
+            width: 370px;
+            z-index: 2;
+        }
+
+        /* Dot on the line */
+        .rm-dot {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid hsl(var(--secondary));
+            border-radius: var(--radius);
+            background: hsl(var(--card));
+            z-index: 3;
+        }
+        .rm-dot--done {
+            background: hsl(var(--primary));
+            border-color: hsl(var(--primary));
+            box-shadow: var(--glow-amber);
+        }
+        .rm-dot--wip {
+            background: hsl(var(--primary) / .5);
+            border-color: hsl(var(--primary));
+            animation: pulse-wip 2s ease-in-out infinite;
+        }
+        @keyframes pulse-wip {
+            0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / .5); }
+            50% { box-shadow: 0 0 16px 4px hsl(var(--primary) / .3); }
+        }
+        .rm-dot--plan {
+            background: hsl(var(--card));
+            border-color: hsl(var(--border));
+        }
+
+        /* Dashed connector from dot to card */
+        .rm-stem {
+            position: absolute;
+            left: 50%;
+            width: 1px;
+            border-left: 2px dashed hsl(var(--secondary) / .5);
+            z-index: 2;
+        }
+        /* Odd nodes: card above */
+        .rm-node:nth-child(odd) .rm-stem {
+            bottom: 50%;
+            height: 56px;
+        }
+        /* Even nodes: card below */
+        .rm-node:nth-child(even) .rm-stem {
+            top: 50%;
+            height: 56px;
+        }
+
+        /* Card */
+        .rm-card {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 350px;
+            padding: 14px 18px;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            z-index: 4;
+            transition: border-color .25s;
+        }
+        .rm-node:nth-child(odd) .rm-card {
+            bottom: calc(50% + 58px);
+        }
+        .rm-node:nth-child(even) .rm-card {
+            top: calc(50% + 58px);
+        }
+        .rm-card:hover {
+            border-color: hsl(var(--secondary));
+            box-shadow: var(--glow-teal);
+        }
+
+        .rm-ver {
+            font-family: var(--font-display);
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+            color: hsl(var(--primary));
+            margin-bottom: 5px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+        .rm-ver .check {
+            color: hsl(150 60% 50%);
+        }
+        .rm-ver .pending {
+            color: hsl(var(--muted-foreground));
+        }
+        .rm-ver-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .rm-date {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.58rem;
+            color: hsl(var(--muted-foreground));
+            opacity: 0.65;
+            white-space: nowrap;
+            letter-spacing: 0.02em;
+        }
+        .rm-card-title {
+            font-family: var(--font-heading);
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: hsl(var(--foreground));
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+        .rm-card-text {
+            font-family: var(--font-body);
+            font-size: 0.78rem;
+            line-height: 1.6;
+            color: hsl(var(--muted-foreground));
+        }
+
+        /* Viking avatar walking along */
+        .rm-viking {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            width: 60px;
+            height: 70px;
+            transition: left 0.3s ease;
+            pointer-events: none;
+        }
+        .rm-viking svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 12px hsl(var(--primary) / .5));
+        }
+
+        /* Progress bar at bottom */
+        .rm-progress-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 12px 24px 18px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.82rem;
+            color: hsl(var(--primary) / .7);
+        }
+        .rm-bar-track {
+            display: flex;
+            gap: 2px;
+        }
+        .rm-bar-block {
+            width: 10px;
+            height: 16px;
+            border: 1px solid hsl(var(--border));
+            border-radius: 2px;
+        }
+        .rm-bar-block--filled {
+            background: var(--gradient-amber);
+            border-color: hsl(var(--primary));
+            box-shadow: 0 0 4px hsl(var(--primary) / .4);
+        }
+        .rm-bar-block--half {
+            background: linear-gradient(90deg, hsl(var(--primary)) 50%, transparent 50%);
+            border-color: hsl(var(--primary) / .5);
+        }
+
+        /* Navigation arrows (inline in progress bar) */
+        .rm-nav-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 26px;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            color: hsl(var(--primary) / .7);
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all .2s;
+            font-family: 'Share Tech Mono', monospace;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .rm-nav-arrow:hover {
+            background: hsl(var(--primary) / .12);
+            border-color: hsl(var(--primary));
+            color: hsl(var(--primary));
+            box-shadow: 0 0 8px hsl(var(--primary) / .25);
+        }
+
+        /* Header row */
+        .rm-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding-right: 24px;
+        }
+
+        /* Auto-scroll toggle */
+        .rm-auto-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.72rem;
+            color: hsl(var(--muted-foreground));
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: all .2s;
+            padding: 5px 12px;
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            background: hsl(var(--card));
+            margin-bottom: 4px;
+            white-space: nowrap;
+        }
+        .rm-auto-toggle:hover {
+            border-color: hsl(var(--primary) / .5);
+            color: hsl(var(--primary) / .8);
+        }
+        .rm-toggle-box {
+            font-size: 0.6rem;
+            transition: all .2s;
+        }
+        .rm-auto-toggle.active {
+            border-color: hsl(var(--primary) / .5);
+            color: hsl(var(--primary) / .8);
+            background: hsl(var(--primary) / .08);
+        }
+
+        /* Scroll hint */
+        .rm-hint {
+            text-align: center;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.72rem;
+            color: hsl(var(--primary) / .3);
+            padding: 0 0 6px;
+            animation: hint-fade 3s ease-in-out infinite;
+        }
+        @keyframes hint-fade {
+            0%, 100% { opacity: .3; }
+            50% { opacity: .7; }
+        }
+
+        /* ===== Feature cards section (kept from before) ===== */
+        .vm-section {
+            padding: 48px 0 0;
+        }
+        .vm-section-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: hsl(var(--foreground));
+            margin-bottom: 24px;
+        }
+        .vm-section-title span {
+            color: hsl(var(--primary));
+        }
+        /* ===== Features: sidebar + panel ===== */
+        .feat-wrap {
+            display: flex; gap: 0; min-height: 380px;
+            border: 1px solid hsl(var(--border)); border-radius: var(--radius);
+            overflow: hidden; background: hsl(var(--card));
+        }
+        .feat-sidebar {
+            flex: 0 0 240px; display: flex; flex-direction: column;
+            border-right: 1px solid hsl(var(--border)); background: hsl(220 40% 5%);
+            overflow-y: auto;
+        }
+        .feat-tab {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; padding: 10px 14px;
+            font-family: var(--font-body); font-size: .82rem;
+            color: hsl(var(--muted-foreground)); background: transparent;
+            border: none; border-bottom: 1px solid hsl(var(--border) / .4);
+            cursor: pointer; text-align: left; transition: background .15s, color .15s;
+        }
+        .feat-tab:hover { background: hsl(220 40% 8%); color: hsl(var(--foreground)); }
+        .feat-tab.active { background: hsl(220 40% 9%); color: hsl(var(--primary)); border-left: 3px solid hsl(var(--primary)); }
+        .feat-tab .ft-icon { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; }
+        .feat-tab .ft-icon svg {
+            width: 18px; height: 18px;
+            stroke: currentColor; fill: none;
+            stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+        }
+        .feat-tab .ft-count { margin-left: auto; font-size: .7rem; opacity: .5; font-family: 'Share Tech Mono', monospace; }
+        .feat-tab .ft-new { width:8px; height:8px; border-radius:50%; background:hsl(150 70% 45%); flex-shrink:0; margin-left:6px; box-shadow:0 0 6px hsl(150 70% 45% / .6); }
+        .feat-tab.feat-tab--recent { color: hsl(150 70% 55%); }
+        .feat-tab.feat-tab--recent .ft-icon { color: hsl(150 70% 55%); }
+        .feat-row--new { background: hsl(150 70% 45% / .06); }
+        .feat-row-cat-icon { width:18px; height:18px; color:hsl(var(--primary)); flex-shrink:0; opacity:.7; }
+        .feat-panel { flex: 1; overflow-y: auto; padding: 0; }
+        .feat-panel-cat { display: none; }
+        .feat-panel-cat.active { display: block; }
+        .feat-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 16px;
+            border-bottom: 1px solid hsl(var(--border) / .2);
+            font-size: .82rem; line-height: 1.45;
+        }
+        .feat-row:hover { background: hsl(220 40% 6%); }
+        .feat-row-check { color: hsl(var(--primary)); font-size: .75rem; flex-shrink: 0; }
+        .feat-row-text  { flex: 1; color: hsl(var(--foreground) / .85); }
+        .feat-row-date  { font-family: 'Share Tech Mono', monospace; font-size: .7rem; color: hsl(var(--muted-foreground)); opacity: .6; white-space: nowrap; }
+        @media (max-width: 640px) {
+            .feat-wrap { flex-direction: column; }
+            .feat-sidebar { flex: none; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid hsl(var(--border)); }
+            .feat-tab { white-space: nowrap; border-bottom: none; border-right: 1px solid hsl(var(--border) / .4); padding: 8px 12px; font-size: .75rem; }
+            .feat-tab.active { border-left: none; border-bottom: 3px solid hsl(var(--primary)); }
+            .feat-tab .ft-count { display: none; }
+        }
+        .tech-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .tech-tag {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            color: rgba(255,255,255,0.55);
+            background: hsl(var(--card));
+        }
+        .vm-footer {
+            text-align: center;
+            padding: 48px 0 64px;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.82rem;
+        }
+        .vm-footer a {
+            color: hsl(var(--primary));
+            text-decoration: none;
+        }
+        .vm-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 640px) {
+            .rm-inner { height: 480px; }
+            .rm-node { width: 260px; }
+            .rm-card { width: 240px; padding: 10px 14px; }
+            .rm-card-title { font-size: 0.88rem; }
+            .rm-card-text { font-size: 0.72rem; }
+            .rm-progress-bar { flex-wrap: wrap; font-size: 0.72rem; }
+        }
+
+        /* ===== Admin Panel ===== */
+        .admin-btn {
+            position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+            width: 48px; height: 48px; border-radius: 50%;
+            background: hsl(var(--primary)); color: #000; border: none;
+            font-size: 1.4rem; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.4);
+            transition: transform .2s, opacity .2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .admin-btn:hover { transform: scale(1.1); }
+        .admin-btn.logged-in { background: hsl(120 60% 40%); }
+        .admin-overlay {
+            display: none; position: fixed; inset: 0; z-index: 10000;
+            background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
+            overflow-y: auto; padding: 40px 16px;
+        }
+        .admin-overlay.open { display: flex; justify-content: center; align-items: flex-start; }
+        .admin-panel {
+            background: hsl(220 40% 7%); border: 1px solid hsl(var(--border));
+            border-radius: 8px; width: 100%; max-width: 960px; padding: 24px;
+            color: hsl(var(--foreground)); font-family: var(--font-body);
+        }
+        .admin-split { display: flex; gap: 16px; }
+        .admin-split-left { flex: 1; min-width: 0; }
+        .admin-split-right { flex: 1; min-width: 0; }
+        @media (max-width: 700px) { .admin-split { flex-direction: column; } }
+        .admin-panel h2 { font-family: var(--font-display); color: hsl(var(--primary)); font-size: 1.3rem; margin: 0 0 16px; }
+        .admin-panel h3 { font-family: var(--font-display); color: hsl(var(--primary)); font-size: 1rem; margin: 16px 0 8px; }
+        .admin-panel label { display: block; font-size: .82rem; color: hsl(var(--muted-foreground)); margin: 8px 0 4px; }
+        .admin-panel input, .admin-panel textarea, .admin-panel select {
+            width: 100%; padding: 8px 10px; font-size: .85rem;
+            background: hsl(220 40% 10%); border: 1px solid hsl(var(--border));
+            border-radius: 4px; color: hsl(var(--foreground)); font-family: inherit;
+        }
+        .admin-panel textarea { min-height: 80px; resize: vertical; }
+        .admin-panel .btn-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .admin-panel button {
+            padding: 8px 16px; font-size: .82rem; border-radius: 4px; border: none;
+            cursor: pointer; font-family: var(--font-body); font-weight: 600;
+        }
+        .admin-panel .btn-primary { background: hsl(var(--primary)); color: #000; }
+        .admin-panel .btn-danger { background: hsl(0 60% 45%); color: #fff; }
+        .admin-panel .btn-secondary { background: hsl(220 40% 15%); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); }
+        .admin-panel .btn-close { position: absolute; top: 12px; right: 16px; background: none; color: hsl(var(--muted-foreground)); font-size: 1.4rem; border: none; cursor: pointer; }
+        .admin-panel .item-list { max-height: 500px; overflow-y: auto; margin: 8px 0; }
+        .admin-panel .item-row {
+            display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+            border-bottom: 1px solid hsl(var(--border) / .3); font-size: .8rem;
+        }
+        .admin-panel .item-row:hover { background: hsl(220 40% 9%); }
+        .admin-panel .item-row .edit-btn { margin-left: auto; padding: 2px 10px; font-size: .75rem; }
+        .admin-panel .tabs { display: flex; gap: 0; border-bottom: 1px solid hsl(var(--border)); margin-bottom: 16px; }
+        .admin-panel .tab-btn {
+            padding: 8px 16px; background: none; color: hsl(var(--muted-foreground));
+            border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: var(--font-body);
+        }
+        .admin-panel .tab-btn.active { color: hsl(var(--primary)); border-bottom-color: hsl(var(--primary)); }
+        .admin-panel .tab-content { display: none; }
+        .admin-panel .tab-content.active { display: block; }
+        .admin-status { font-family: 'Share Tech Mono', monospace; font-size: .75rem; color: hsl(120 60% 50%); margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <div class="home-box" style="display:flex;align-items:center;gap:12px;">
+                <a class="home-link" href="/" data-local="../Start/index.html" title="На главную sigetar.ru" style="color:hsl(var(--primary));text-decoration:none;font-family:var(--font-display);font-weight:700;letter-spacing:0.05em;">← Sigetar.ru</a>
+            </div>
+            <a class="brand" href="/valheim/" data-local="index.html">
+                <span class="brand-name">Companion AI</span>
+                <span class="brand-tag">[ Valheim Mod ]</span>
+            </a>
+        </div>
+    </header>
+
+    <main>
+
+    <!-- =============== HORIZONTAL ROADMAP =============== -->
+    <div class="rm-wrap" id="roadmapWrap">
+        <div class="rm-header">
+            <div>
+                <div class="rm-terminal">C:\GAMES\Valheim&gt;roadmap.exe</div>
+                <div class="rm-title">ДОРОЖНАЯ КАРТА &mdash; [AI] Валера<span class="blink">_</span></div>
+            </div>
+            <div class="rm-auto-toggle active" id="rmAutoToggle" title="Авто-прокрутка">
+                <span class="rm-toggle-box" id="rmToggleBox">▶</span>
+                <span>АВТО</span>
+            </div>
+        </div>
+
+        <div class="rm-hint" id="rmHint">◄ перетащите или прокрутите ►</div>
+
+        <div class="rm-track" id="rmTrack">
+            <div class="rm-inner" id="rmInner">
+                <!-- Line -->
+                <div class="rm-line"></div>
+
+                <!-- Viking avatar -->
+                <div class="rm-viking" id="rmViking">
+                    <svg viewBox="0 0 60 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Helmet -->
+                        <ellipse cx="30" cy="28" rx="18" ry="14" stroke="hsl(36,95%,55%)" stroke-width="2" fill="hsl(36,95%,55%,0.1)"/>
+                        <!-- Horns -->
+                        <path d="M12 28 C8 18, 2 12, 0 6" stroke="hsl(36,95%,55%)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <path d="M48 28 C52 18, 58 12, 60 6" stroke="hsl(36,95%,55%)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <!-- Face guard -->
+                        <rect x="18" y="30" width="24" height="10" rx="2" stroke="hsl(36,95%,55%)" stroke-width="1.5" fill="hsl(36,95%,55%,0.05)"/>
+                        <!-- Eyes -->
+                        <rect x="22" y="33" width="5" height="4" rx="1" fill="hsl(36,95%,55%)" opacity="0.8"/>
+                        <rect x="33" y="33" width="5" height="4" rx="1" fill="hsl(36,95%,55%)" opacity="0.8"/>
+                        <!-- Nose guard -->
+                        <line x1="30" y1="30" x2="30" y2="40" stroke="hsl(36,95%,55%)" stroke-width="1.5"/>
+                        <!-- Helmet rivet row -->
+                        <circle cx="16" cy="24" r="1.5" fill="hsl(36,95%,55%)" opacity="0.6"/>
+                        <circle cx="22" cy="20" r="1.5" fill="hsl(36,95%,55%)" opacity="0.6"/>
+                        <circle cx="30" cy="18" r="1.5" fill="hsl(36,95%,55%)" opacity="0.6"/>
+                        <circle cx="38" cy="20" r="1.5" fill="hsl(36,95%,55%)" opacity="0.6"/>
+                        <circle cx="44" cy="24" r="1.5" fill="hsl(36,95%,55%)" opacity="0.6"/>
+                        <!-- Body -->
+                        <rect x="22" y="42" width="16" height="18" rx="2" stroke="hsl(36,95%,55%)" stroke-width="1.5" fill="hsl(36,95%,55%,0.05)"/>
+                        <!-- Belt -->
+                        <line x1="22" y1="52" x2="38" y2="52" stroke="hsl(36,95%,55%)" stroke-width="1.5"/>
+                        <rect x="28" y="50" width="4" height="4" rx="0.5" fill="hsl(36,95%,55%)" opacity="0.7"/>
+                        <!-- Legs -->
+                        <line x1="26" y1="60" x2="26" y2="68" stroke="hsl(36,95%,55%)" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="34" y1="60" x2="34" y2="68" stroke="hsl(36,95%,55%)" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+
+                <!-- === MILESTONES === -->
+            </div>
+        </div>
+
+        <!-- Progress bar with navigation -->
+        <div class="rm-progress-bar">
+            <button class="rm-nav-arrow" id="rmNavLeft" title="Назад">◄</button>
+            <span>PROGRESS</span>
+            <div class="rm-bar-track" id="rmBarTrack"></div>
+            <span id="rmPercent">0%</span>
+            <span>|</span>
+            <span id="rmNext">NEXT: v0.29</span>
+            <button class="rm-nav-arrow" id="rmNavRight" title="Вперёд">►</button>
+        </div>
+    </div>
+
+    <!-- =============== FEATURES (kept) =============== -->
+    <div class="container">
+        <div class="vm-section">
+            <p class="eyebrow">// 01 — Что сделано</p>
+            <h2 class="vm-section-title"><span>✓</span> Реализованные возможности</h2>
+
+            <div class="feat-wrap" id="featWrap">
+                <!-- Sidebar -->
+                <div class="feat-sidebar" id="featSidebar"></div>
+                <!-- Panel -->
+                <div class="feat-panel" id="featPanel"></div>
+            </div>
+
+            <script>
+            /* ===== SVG icons (global) ===== */
+            const IC = {
+                sword:  '<path d="M14.5 3.5L21 10l-2 2-6.5-6.5z"/><path d="M10 14l-7 7"/><path d="M8 12l4 4"/><path d="M3 21l2-2"/>',
+                bag:    '<rect x="5" y="8" width="14" height="12" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/><path d="M5 14h14"/>',
+                shield: '<path d="M12 3l8 4v5c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V7z"/>',
+                mic:    '<rect x="9" y="2" width="6" height="10" rx="3"/><path d="M5 10a7 7 0 0014 0"/><path d="M12 17v5"/><path d="M8 22h8"/>',
+                home:   '<path d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V12h6v9"/>',
+                pick:   '<path d="M14 4l6 6-9 9-6-6z"/><path d="M5 19l-2 2"/><path d="M15 5l4-2"/>',
+                target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+                multi:  '<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 18v-1a5 5 0 0110 0v1"/><path d="M13 18v-1a5 5 0 0110 0v1"/>',
+                hud:    '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 12h4"/><path d="M14 12h4"/><path d="M12 8v8"/>',
+                axe:    '<path d="M14 12l-8.5 8.5a2.12 2.12 0 01-3-3L11 9"/><path d="M15 4l5 5-4 4"/><path d="M20 9l-4-4"/>',
+                hammer: '<path d="M15 12l-8.5 8.5a2.12 2.12 0 01-3-3L12 9"/><path d="M17.64 4.64a2.83 2.83 0 014 4L18 12l-4-4z"/>',
+                bow:    '<path d="M18 2l3 3-3 3"/><path d="M21 5H10a7 7 0 00-7 7v9"/><path d="M5 19l14-14"/>',
+                heart:  '<path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/>',
+                star:   '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+                fire:   '<path d="M12 22c-4.97 0-9-2.69-9-6s4.03-6 9-6c-.7-2.6 1-6 3-8 0 3.5 2 5.5 3.5 7.5C20.5 12 21 14.5 21 16c0 3.31-4.03 6-9 6z"/>',
+                bolt:   '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+                eye:    '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+                map:    '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
+                flag:   '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+                tree:   '<path d="M12 2L6 10h3l-2 6h3l-2 6h8l-2-6h3l-2-6h3z"/>',
+                skull:  '<circle cx="12" cy="10" r="8"/><path d="M8 22v-4"/><path d="M16 22v-4"/><circle cx="9" cy="9" r="1.5"/><circle cx="15" cy="9" r="1.5"/><path d="M9 15h6"/>',
+                crown:  '<path d="M2 17l3-9 4 4 3-7 3 7 4-4 3 9z"/><path d="M2 17h20v3H2z"/>',
+                gem:    '<polygon points="12 2 2 10 6 22 18 22 22 10 12 2"/><polyline points="2 10 12 14 22 10"/><line x1="12" y1="14" x2="12" y2="22"/>',
+                scroll: '<path d="M8 21h12a2 2 0 002-2V5a2 2 0 00-2-2H8"/><path d="M4 3a2 2 0 00-2 2v14a2 2 0 002 2h4V3H4z"/><path d="M12 8h6"/><path d="M12 12h6"/><path d="M12 16h4"/>',
+                potion: '<path d="M10 2v6.5L4 18a3 3 0 003 3h10a3 3 0 003-3l-6-9.5V2"/><path d="M8 2h8"/><path d="M7 15h10"/>',
+                shield2:'<path d="M12 3l8 4v5c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V7z"/><path d="M9 12l2 2 4-4"/>',
+                horse:  '<path d="M18 5l-3 6h3l-4 8"/><path d="M6 5l3 6H6l4 8"/><circle cx="12" cy="4" r="2"/>',
+                music:  '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+                gear:   '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>',
+                compass:'<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>',
+                anchor: '<circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0020 0h-3"/>',
+                fish:   '<path d="M6.5 12c2-5 6-7 12-7-1 3.5-1 7 0 10.5-6 0-10-2-12-7z"/><path d="M2 12c1.5 0 3-1 3.5-3C6 11 7.5 12 9 12c-1.5 0-3 1-3.5 3-.5-2-2-3-3.5-3z"/>',
+                paw:    '<circle cx="11" cy="4" r="2"/><circle cx="5" cy="8" r="2"/><circle cx="17" cy="8" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="14" cy="12" r="2"/><path d="M9 17c1.5 2 4.5 2 6 0"/>',
+                wolf:   '<path d="M12 20c-4 0-8-3-8-8l3-5 2 3h6l2-3 3 5c0 5-4 8-8 8z"/><circle cx="9" cy="11" r="1"/><circle cx="15" cy="11" r="1"/><path d="M10 15h4"/>',
+                ship:   '<path d="M2 20l1.5-3h17L22 20"/><path d="M5 17V9l7-5 7 5v8"/><path d="M12 4v13"/>',
+                chest:  '<rect x="3" y="10" width="18" height="10" rx="2"/><rect x="3" y="6" width="18" height="4" rx="1"/><circle cx="12" cy="15" r="1.5"/><line x1="12" y1="10" x2="12" y2="13"/>',
+                book:   '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>',
+                run:    '<circle cx="12" cy="4" r="2"/><path d="M7 22l3-7"/><path d="M10 15l4-5-3-2"/><path d="M14 10l3-1"/><path d="M11 8l-2-2"/>',
+                moon:   '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>',
+                sun:    '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
+                wrench: '<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94z"/>',
+            };
+            function svgIcon(key){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (IC[key]||'') + '</svg>'; }
+
+            /* ===== Категории ===== */
+            let CAT_META = [
+                { id:'companion', icon:'sword', name:'Компаньон' },
+                { id:'combat',    icon:'shield', name:'Боевая система' },
+                { id:'voice',     icon:'mic',    name:'Голос и мозг' },
+                { id:'base',      icon:'home',   name:'Работа на базе' },
+                { id:'mining',    icon:'pick',   name:'Добыча' },
+                { id:'training',  icon:'target', name:'Тренировки' },
+                { id:'mp',        icon:'multi',  name:'Мультиплеер' },
+                { id:'ui',        icon:'hud',    name:'Интерфейс' },
+            ];
+
+            /* ===== Единый массив возможностей (cat + ver) ===== */
+            const FEATURES = [
+                /* --- Компаньон --- */
+                { cat:'companion', ver:'v0.01', text:'Спавн рядом с игроком',                         date:'21.10.2026' },
+                { cat:'companion', ver:'v0.01', text:'Метка Валеры на карте',                          date:'21.10.2026' },
+                { cat:'companion', ver:'v0.01', text:'Догоняет бегом',                                 date:'21.10.2026' },
+                { cat:'companion', ver:'v0.01', text:'Команды: иди сюда, стой, за мной',               date:'21.10.2026' },
+                { cat:'companion', ver:'v0.02', text:'Авто-экипировка оружия и брони из сумки',         date:'21.10.2026' },
+                { cat:'companion', ver:'v0.02', text:'Сумка [E] — ванильное окно сундука 8×4',          date:'21.10.2026' },
+                { cat:'companion', ver:'v0.02', text:'Подбор добычи в 12 м — подходит и берёт',         date:'21.10.2026' },
+                { cat:'companion', ver:'v0.02', text:'Есть перегруз — замедление',                     date:'21.10.2026' },
+                { cat:'companion', ver:'v0.03', text:'Появляется у кровати после смерти',               date:'21.10.2026' },
+                { cat:'companion', ver:'v0.03', text:'Ждёт или идёт по команде после смерти',           date:'21.10.2026' },
+                { cat:'companion', ver:'v0.03', text:'Навыки падают как у игрока',                      date:'21.10.2026' },
+                { cat:'companion', ver:'v0.04', text:'Телепорт и подземелья с Валерой',                 date:'21.10.2026' },
+                { cat:'companion', ver:'v0.04', text:'Корабль и плот — залезает и сидит на лавке',      date:'01.11.2026' },
+                { cat:'companion', ver:'v0.04', text:'Обход препятствий — не лезет в костёр',           date:'21.10.2026' },
+                { cat:'companion', ver:'v0.05', text:'Сам следит за едой — ест до трёх блюд',           date:'21.10.2026' },
+                { cat:'companion', ver:'v0.05', text:'Ищет еду в сундуках',                            date:'21.10.2026' },
+                { cat:'companion', ver:'v0.05', text:'Отдыхает у огня',                                date:'21.10.2026' },
+                { cat:'companion', ver:'v0.06', text:'Не видит сквозь стены',                          date:'27.10.2026' },
+                { cat:'companion', ver:'v0.06', text:'Зрение под ноги — ступени, обрывы, вода',         date:'27.10.2026' },
+                { cat:'companion', ver:'v0.06', text:'Обходит огонь и опасные объекты',                 date:'27.10.2026' },
+                { cat:'companion', ver:'v0.08', text:'Крафтит по просьбе — говорит, чего не хватает',   date:'21.10.2026' },
+                { cat:'companion', ver:'v0.08', text:'Надевает скрафченное',                            date:'21.10.2026' },
+                { cat:'companion', ver:'v0.15', text:'Собирает добычу после боя',                      date:'21.10.2026' },
+                { cat:'companion', ver:'v0.15', text:'Не подбирает в бою — только после',               date:'21.10.2026' },
+                { cat:'companion', ver:'v0.15', text:'Подбирает стрелы с тел',                         date:'21.10.2026' },
+                /* --- Боевая система --- */
+                { cat:'combat', ver:'v0.12', text:'Нейросеть PPO выбирает приём по ситуации',           date:'21.10.2026' },
+                { cat:'combat', ver:'v0.12', text:'6 приёмов: удар, блок, уклон, отступ, кружение, особый', date:'21.10.2026' },
+                { cat:'combat', ver:'v0.12', text:'Танк-варианты: щит / перекаты / натиск / лук',       date:'02.11.2026' },
+                { cat:'combat', ver:'v0.12', text:'Серии ударов — как игрок «держит кнопку»',           date:'02.11.2026' },
+                { cat:'combat', ver:'v0.13', text:'Лук — баллистика, упреждение, самообучение',         date:'27.10.2026' },
+                { cat:'combat', ver:'v0.13', text:'Стрельба на ходу с поправкой по дистанции',          date:'27.10.2026' },
+                { cat:'combat', ver:'v0.14', text:'Спасение заранее по запомненному урону врага',        date:'26.10.2026' },
+                { cat:'combat', ver:'v0.14', text:'Парирование — учит замах каждого врага',             date:'26.10.2026' },
+                { cat:'combat', ver:'v0.14', text:'Медовуха в бою — по нехватке здоровья',              date:'26.10.2026' },
+                { cat:'combat', ver:'v0.14', text:'Меньше 20% HP — спасается, меняет оружие',           date:'26.10.2026' },
+                { cat:'combat', ver:'v0.27', text:'Масса костей — булава и ледяная медовуха',            date:'11.11.2026' },
+                { cat:'combat', ver:'v0.27', text:'Подготовка к каждому боссу: стрелы, медовухи, оружие', date:'08.11.2026' },
+                { cat:'combat', ver:'v0.28', text:'«Стой на месте» — охраняет позицию',                 date:'12.11.2026' },
+                { cat:'combat', ver:'v0.28', text:'Бьёт врагов в радиусе 10 м',                        date:'12.11.2026' },
+                /* --- Голос и мозг --- */
+                { cat:'voice', ver:'v0.16', text:'Whisper (офлайн) + Vosk — двойное распознавание',     date:'21.10.2026' },
+                { cat:'voice', ver:'v0.16', text:'Silero TTS — озвучка офлайн',                        date:'21.10.2026' },
+                { cat:'voice', ver:'v0.16', text:'40+ голосовых команд: бой, сбор, готовка, огород',    date:'21.10.2026' },
+                { cat:'voice', ver:'v0.16', text:'Три режима: по имени (wake), рация (ptt), всегда',    date:'22.10.2026' },
+                { cat:'voice', ver:'v0.16', text:'Обучение голосом — «запомни: X значит Y»',            date:'22.10.2026' },
+                { cat:'voice', ver:'v0.16', text:'Новый голос Silero TTS — мужской, чёткий',            date:'30.10.2026' },
+                { cat:'voice', ver:'v0.17', text:'Друзья могут давать команды через ValeraListener',     date:'22.10.2026' },
+                { cat:'voice', ver:'v0.19', text:'Claude Haiku — реплики по контексту и ситуации',      date:'28.10.2026' },
+                { cat:'voice', ver:'v0.20', text:'Ollama (локально, бесплатно) — qwen3:4b-instruct',   date:'04.11.2026' },
+                /* --- Работа на базе --- */
+                { cat:'base', ver:'v0.05', text:'Починка у верстака / кузницы',                         date:'21.10.2026' },
+                { cat:'base', ver:'v0.09', text:'Память ящиков — таблички и содержимое',                date:'21.10.2026' },
+                { cat:'base', ver:'v0.09', text:'Запоминает базу',                                     date:'21.10.2026' },
+                { cat:'base', ver:'v0.09', text:'«Отнеси добычу» / «Сложи в ящики»',                   date:'21.10.2026' },
+                { cat:'base', ver:'v0.24', text:'Переплавка руды, жжение угля',                        date:'01.11.2026' },
+                { cat:'base', ver:'v0.24', text:'Готовка — вертел, сковорода, котёл, бочка',            date:'02.11.2026' },
+                { cat:'base', ver:'v0.24', text:'Сортировка ящиков по табличкам',                      date:'03.11.2026' },
+                { cat:'base', ver:'v0.24', text:'Огород — сбор, пересадка, семена из ящиков',          date:'05.11.2026' },
+                { cat:'base', ver:'v0.24', text:'Домашние дела по порядку из настроек',                 date:'08.11.2026' },
+                { cat:'base', ver:'v0.24', text:'Патруль базы — обход и доклад',                       date:'08.11.2026' },
+                { cat:'base', ver:'v0.26', text:'Загоны — звери у табличек, кормёжка',                  date:'10.11.2026' },
+                { cat:'base', ver:'v0.26', text:'Светильники — заправка топливом',                     date:'10.11.2026' },
+                { cat:'base', ver:'v0.26', text:'«Где репа?» — ищет в ящиках по имени',                date:'10.11.2026' },
+                { cat:'base', ver:'v0.26', text:'Мёд из ульев и перья с птиц',                         date:'11.11.2026' },
+                /* --- Добыча --- */
+                { cat:'mining', ver:'v0.07', text:'Рубка деревьев, копка камня и руды',                 date:'21.10.2026' },
+                { cat:'mining', ver:'v0.07', text:'Поиск ресурсов в заданном радиусе (15–70 м)',        date:'21.10.2026' },
+                { cat:'mining', ver:'v0.07', text:'Задания «найди / добудь» с оценкой опасности',      date:'21.10.2026' },
+                { cat:'mining', ver:'v0.10', text:'Метки ресурсов на карте по команде',                 date:'25.10.2026' },
+                { cat:'mining', ver:'v0.10', text:'Пинг на карте — «встречаемся там»',                  date:'25.10.2026' },
+                { cat:'mining', ver:'v0.10', text:'Ведёт к могиле игрока',                             date:'25.10.2026' },
+                { cat:'mining', ver:'v0.11', text:'Силы боссов — своя сила, значок и перезарядка',      date:'25.10.2026' },
+                { cat:'mining', ver:'v0.11', text:'Берёт силу у камня, решает когда применить',         date:'25.10.2026' },
+                /* --- Тренировки --- */
+                { cat:'training', ver:'v0.25', text:'Манекены — отработка парирования и перекатов',     date:'05.11.2026' },
+                { cat:'training', ver:'v0.25', text:'Стрельбище — лесенка дистанций и углов',           date:'08.11.2026' },
+                { cat:'training', ver:'v0.25', text:'Стрельба из-за укрытия',                          date:'08.11.2026' },
+                { cat:'training', ver:'v0.25', text:'Настраиваемые подходы, перерывы, время',           date:'08.11.2026' },
+                /* --- Мультиплеер --- */
+                { cat:'mp', ver:'v0.17', text:'Друг видит и слышит Валеру через ValeraListener.dll',    date:'22.10.2026' },
+                { cat:'mp', ver:'v0.17', text:'Голос сжимается и идёт по сети (~16 КБ/с)',              date:'22.10.2026' },
+                { cat:'mp', ver:'v0.17', text:'Командует только хозяин',                               date:'22.10.2026' },
+                { cat:'mp', ver:'v0.17', text:'Совместим с выделенными серверами',                     date:'22.10.2026' },
+                /* --- Интерфейс --- */
+                { cat:'ui', ver:'v0.11', text:'Сила босса — значок и таймер перезарядки',               date:'25.10.2026' },
+                { cat:'ui', ver:'v0.18', text:'Чувства и эмоции — радуется, огорчается, благодарит',    date:'27.10.2026' },
+                { cat:'ui', ver:'v0.18', text:'Эмоции по NumPad и голосом',                            date:'27.10.2026' },
+                { cat:'ui', ver:'v0.21', text:'HUD Валеры — здоровье, еда, выносливость, эффекты',     date:'27.10.2026' },
+                { cat:'ui', ver:'v0.21', text:'Окно навыков — вкладки: навыки, ящики, настройки',       date:'27.10.2026' },
+                { cat:'ui', ver:'v0.21', text:'Кольцевое меню на [E] — приказы и подменю',              date:'08.11.2026' },
+                { cat:'ui', ver:'v0.22', text:'Автозапуск тренера и голоса с игрой',                    date:'10.11.2026' },
+                { cat:'ui', ver:'v0.22', text:'«Сбросить Валеру» — полный сброс',                      date:'10.11.2026' },
+                { cat:'ui', ver:'v0.23', text:'Каждый мир — свои данные',                              date:'29.10.2026' },
+                { cat:'ui', ver:'v0.23', text:'BackUp инвентаря — «Верни шмот»',                       date:'29.10.2026' },
+                { cat:'ui', ver:'v0.23', text:'Навыки сохраняются между сессиями',                     date:'29.10.2026' },
+                { cat:'ui', ver:'v0.28', text:'Иконки рун в кольцевом меню',                           date:'11.11.2026' },
+                { cat:'ui', ver:'v0.28', text:'Смерть: «идти к тебе?» — диалог',                      date:'12.11.2026' },
+            ];
+
+            /* ===== Метаданные этапов дорожной карты ===== */
+            const MILESTONE_META = [
+                { ver:'v0.01', title:'Запуск',           done:true,  date:'21.10.2026' },
+                { ver:'v0.02', title:'Инвентарь',        done:true,  date:'21.10.2026' },
+                { ver:'v0.03', title:'Смерть',           done:true,  date:'21.10.2026' },
+                { ver:'v0.04', title:'Движение',         done:true,  date:'21.10.2026' },
+                { ver:'v0.05', title:'Потребности',      done:true,  date:'21.10.2026' },
+                { ver:'v0.06', title:'Зрение',           done:true,  date:'27.10.2026' },
+                { ver:'v0.07', title:'Работа',           done:true,  date:'21.10.2026' },
+                { ver:'v0.08', title:'Крафт',            done:true,  date:'21.10.2026' },
+                { ver:'v0.09', title:'База (Дом)',       done:true,  date:'21.10.2026' },
+                { ver:'v0.10', title:'Карта',            done:true,  date:'25.10.2026' },
+                { ver:'v0.11', title:'Силы боссов',      done:true,  date:'25.10.2026' },
+                { ver:'v0.12', title:'Бой',              done:true,  date:'21.10.2026' },
+                { ver:'v0.13', title:'Бой: Лук',         done:true,  date:'27.10.2026' },
+                { ver:'v0.14', title:'Бой: Авария',      done:true,  date:'26.10.2026' },
+                { ver:'v0.15', title:'Бой: Лут',         done:true,  date:'21.10.2026' },
+                { ver:'v0.16', title:'Голос',            done:true,  date:'21.10.2026' },
+                { ver:'v0.17', title:'Мультиплеер',      done:true,  date:'22.10.2026' },
+                { ver:'v0.18', title:'Чувства',          done:true,  date:'27.10.2026' },
+                { ver:'v0.19', title:'Мозг: Claude',     done:true,  date:'28.10.2026' },
+                { ver:'v0.20', title:'Мозг: Бесплатно',  done:true,  date:'04.11.2026' },
+                { ver:'v0.21', title:'Интерфейс',        done:true,  date:'27.10.2026' },
+                { ver:'v0.22', title:'Автозапуск',       done:true,  date:'10.11.2026' },
+                { ver:'v0.23', title:'Сохранение',       done:true,  date:'29.10.2026' },
+                { ver:'v0.24', title:'Домашние дела',    done:true,  date:'08.11.2026' },
+                { ver:'v0.25', title:'Тренировки',       done:true,  date:'08.11.2026' },
+                { ver:'v0.26', title:'Загоны и Свет',    done:true,  date:'10.11.2026' },
+                { ver:'v0.27', title:'Бой с боссами',    done:true,  date:'11.11.2026' },
+                { ver:'v0.28', title:'Защита позиции',   done:true,  date:'12.11.2026' },
+                { ver:'v0.29', title:'Обучение вне боя', done:false, wip:true },
+                { ver:'v0.30', title:'Цепочки заданий',  done:false },
+                { ver:'v0.31', title:'ONNX режим',       done:false },
+                { ver:'v5.0',  title:'ВИКИНГ',           done:false, w:15 },
+            ];
+
+            /* ===== Хелпер: группировка FEATURES по полю ===== */
+            function groupBy(arr, key) {
+                const map = {};
+                arr.forEach(f => { (map[f[key]] = map[f[key]] || []).push(f); });
+                return map;
+            }
+
+            /* ===== Хелпер: парсинг даты ДД.ММ.ГГГГ ===== */
+            function parseDate(s) {
+                if (!s) return null;
+                const p = s.split('.');
+                if (p.length < 3) return null;
+                return new Date(+p[2], +p[1] - 1, +p[0]);
+            }
+            function daysAgo(dateStr) {
+                const d = parseDate(dateStr);
+                if (!d) return Infinity;
+                const now = new Date(); now.setHours(0,0,0,0);
+                return Math.floor((now - d) / 86400000);
+            }
+
+            /* ===== Рендер секции «Возможности» ===== */
+            (function renderFeatures(){
+                const sidebar = document.getElementById('featSidebar');
+                const panel   = document.getElementById('featPanel');
+                const byCat   = groupBy(FEATURES, 'cat');
+                const catMap  = {};
+                CAT_META.forEach(c => { catMap[c.id] = c; });
+
+                /* --- Вкладка «Последние изменения» (7 дней) --- */
+                const recent7 = FEATURES.filter(f => daysAgo(f.date) <= 7)
+                    .sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
+
+                const hasRecent = recent7.length > 0;
+
+                if (hasRecent) {
+                    const recentBtn = document.createElement('button');
+                    recentBtn.className = 'feat-tab feat-tab--recent active';
+                    recentBtn.dataset.cat = '__recent';
+                    recentBtn.innerHTML = `<span class="ft-icon">${svgIcon('bolt')}</span> Последние <span class="ft-count">${recent7.length}</span>`;
+                    recentBtn.onclick = () => {
+                        sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
+                        recentBtn.classList.add('active');
+                        panel.querySelectorAll('.feat-panel-cat').forEach(p => p.classList.remove('active'));
+                        document.getElementById('fp-__recent').classList.add('active');
+                    };
+                    sidebar.appendChild(recentBtn);
+
+                    const recentDiv = document.createElement('div');
+                    recentDiv.className = 'feat-panel-cat active';
+                    recentDiv.id = 'fp-__recent';
+                    let rRows = '';
+                    recent7.forEach(item => {
+                        const cm = catMap[item.cat];
+                        const isNew = daysAgo(item.date) <= 3;
+                        rRows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
+                            <span class="feat-row-cat-icon" title="${cm ? cm.name : item.cat}">${cm ? svgIcon(cm.icon) : ''}</span>
+                            <span style="font-size:.7rem;color:hsl(var(--primary));white-space:nowrap;flex-shrink:0;min-width:70px">${cm ? cm.name : item.cat}</span>
+                            <span class="feat-row-text">${item.text}</span>
+                            <span class="feat-row-date">${item.date}</span>
+                        </div>`;
+                    });
+                    recentDiv.innerHTML = rRows;
+                    panel.appendChild(recentDiv);
+                }
+
+                /* --- Категории --- */
+                CAT_META.forEach((cat, ci) => {
+                    const items = (byCat[cat.id] || []).slice().sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
+                    const has3d = items.some(f => daysAgo(f.date) <= 3);
+                    /* Tab */
+                    const btn = document.createElement('button');
+                    btn.className = 'feat-tab' + (!hasRecent && ci === 0 ? ' active' : '');
+                    btn.dataset.cat = cat.id;
+                    btn.innerHTML = `<span class="ft-icon">${svgIcon(cat.icon)}</span> ${cat.name}${has3d ? ' <span class="ft-new"></span>' : ''} <span class="ft-count">${items.length}</span>`;
+                    btn.onclick = () => {
+                        sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
+                        btn.classList.add('active');
+                        panel.querySelectorAll('.feat-panel-cat').forEach(p => p.classList.remove('active'));
+                        document.getElementById('fp-' + cat.id).classList.add('active');
+                    };
+                    sidebar.appendChild(btn);
+
+                    /* Panel */
+                    const div = document.createElement('div');
+                    div.className = 'feat-panel-cat' + (!hasRecent && ci === 0 ? ' active' : '');
+                    div.id = 'fp-' + cat.id;
+
+                    let rows = '';
+                    items.forEach(item => {
+                        const isNew = daysAgo(item.date) <= 3;
+                        rows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
+                            <span class="feat-row-check">\u2713</span>
+                            <span class="feat-row-text">${item.text}</span>
+                            <span class="feat-row-date">${item.date}</span>
+                        </div>`;
+                    });
+                    div.innerHTML = rows;
+                    panel.appendChild(div);
+                });
+            })();
+            </script>
+        </div>
+
+        <hr class="rule">
+
+        <div class="vm-section" style="padding-bottom: 16px;">
+            <p class="eyebrow">// 02 — Стек</p>
+            <h2 class="vm-section-title"><span>&lt;/&gt;</span> Технологии</h2>
+            <div class="tech-row">
+                <span class="tech-tag">C#</span>
+                <span class="tech-tag">BepInEx 5</span>
+                <span class="tech-tag">Harmony</span>
+                <span class="tech-tag">Python 3.12</span>
+                <span class="tech-tag">PyTorch</span>
+                <span class="tech-tag">PPO</span>
+                <span class="tech-tag">ONNX</span>
+                <span class="tech-tag">Whisper</span>
+                <span class="tech-tag">Vosk</span>
+                <span class="tech-tag">Ollama</span>
+                <span class="tech-tag">Silero TTS</span>
+                <span class="tech-tag">Claude API</span>
+                <span class="tech-tag">.NET SDK 8</span>
+                <span class="tech-tag">Gymnasium</span>
+            </div>
+        </div>
+
+        <div class="vm-footer">
+            Только одиночная игра / свои серверы &middot;
+            <a href="/" data-local="../Start/index.html">sigetar.ru</a>
+        </div>
+    </div>
+
+    </main>
+
+    <script>
+    /* ===== Roadmap: build MILESTONES from unified FEATURES + MILESTONE_META ===== */
+    const _byVer = groupBy(FEATURES, 'ver');
+    const MILESTONES = MILESTONE_META.map(m => {
+        const feats = _byVer[m.ver] || [];
+        const text = feats.length > 0
+            ? feats.slice(0, 4).map(f => f.text).join('\n')
+            : (m.title || '');
+        return { ...m, text };
+    });
+
+    const rmInner  = document.getElementById('rmInner');
+    const rmTrack  = document.getElementById('rmTrack');
+    const rmViking = document.getElementById('rmViking');
+    const rmBar    = document.getElementById('rmBarTrack');
+    const rmPct    = document.getElementById('rmPercent');
+
+    /* Weighted progress: v5.0 counts as 15 steps, not 1 */
+    let wDone = 0, wWip = 0, wTotal = 0;
+    MILESTONES.forEach(m => {
+        const w = m.w || 1;
+        wTotal += w;
+        if (m.done) wDone += w;
+        else if (m.wip) wWip += w * 0.5;
+    });
+    const pct = Math.round((wDone + wWip) / wTotal * 100);
+
+    /* Build nodes */
+    MILESTONES.forEach((m, i) => {
+        const node = document.createElement('div');
+        node.className = 'rm-node';
+
+        const status = m.done ? 'done' : (m.wip ? 'wip' : 'plan');
+        const check  = m.done ? '<span class="check">[x]</span>' : (m.wip ? '<span class="pending">[~]</span>' : '<span class="pending">[ ]</span>');
+
+        const dateTag = m.date ? `<span class="rm-date">[ ${m.date} ]</span>` : '';
+
+        node.innerHTML = `
+            <div class="rm-dot rm-dot--${status}"></div>
+            <div class="rm-stem"></div>
+            <div class="rm-card">
+                <div class="rm-ver"><span class="rm-ver-left">${check} ${m.ver}</span>${dateTag}</div>
+                <div class="rm-card-title">${m.title}</div>
+                <div class="rm-card-text">${m.text.replace(/\n/g, '<br>')}</div>
+            </div>
+        `;
+        /* Insert before viking */
+        rmInner.appendChild(node);
+    });
+
+    /* Move viking back into inner (it was placed before nodes, reappend at end) */
+    rmInner.appendChild(rmViking);
+
+    /* Position viking at last done/wip milestone */
+    function positionViking() {
+        const nodes = rmInner.querySelectorAll('.rm-node');
+        let lastIdx = 0;
+        MILESTONES.forEach((m, i) => { if (m.done || m.wip) lastIdx = i; });
+        const targetNode = nodes[lastIdx];
+        if (targetNode) {
+            const nodeLeft = targetNode.offsetLeft + targetNode.offsetWidth / 2;
+            rmViking.style.left = nodeLeft + 'px';
+        }
+    }
+    positionViking();
+
+    /* Build progress bar */
+    const barBlocks = 25;
+    const filledBlocks = Math.round(pct / 100 * barBlocks);
+    for (let i = 0; i < barBlocks; i++) {
+        const b = document.createElement('div');
+        b.className = 'rm-bar-block' + (i < filledBlocks ? ' rm-bar-block--filled' : '');
+        rmBar.appendChild(b);
+    }
+    rmPct.textContent = pct + '%';
+
+    /* Set NEXT milestone label */
+    const nextM = MILESTONES.find(m => !m.done && !m.wip);
+    if (nextM) document.getElementById('rmNext').textContent = 'NEXT: ' + nextM.ver + ' ' + nextM.title;
+
+    /* Auto-scroll animation */
+    let autoScroll = true;
+    let scrollSpeed = 0.6;
+    let animFrame;
+
+    const rmAutoToggle = document.getElementById('rmAutoToggle');
+    const rmToggleBox  = document.getElementById('rmToggleBox');
+
+    function updateToggleUI() {
+        if (autoScroll) {
+            rmAutoToggle.classList.add('active');
+            rmToggleBox.textContent = '▶';
+        } else {
+            rmAutoToggle.classList.remove('active');
+            rmToggleBox.textContent = '■';
+        }
+    }
+
+    function autoScrollTick() {
+        if (autoScroll && rmTrack.scrollLeft < rmTrack.scrollWidth - rmTrack.clientWidth - 10) {
+            rmTrack.scrollLeft += scrollSpeed;
+        }
+        animFrame = requestAnimationFrame(autoScrollTick);
+    }
+    /* Start after a small delay */
+    setTimeout(() => {
+        animFrame = requestAnimationFrame(autoScrollTick);
+    }, 1500);
+
+    /* Stop auto-scroll on user interaction (drag/touch/wheel) */
+    function stopAuto() {
+        autoScroll = false;
+        updateToggleUI();
+    }
+
+    /* Toggle auto-scroll on/off */
+    rmAutoToggle.addEventListener('click', () => {
+        autoScroll = !autoScroll;
+        updateToggleUI();
+    });
+
+    /* Arrow navigation — smooth scroll by ~300px */
+    const scrollStep = 300;
+    document.getElementById('rmNavLeft').addEventListener('click', (e) => {
+        e.stopPropagation();
+        stopAuto();
+        rmTrack.scrollBy({ left: -scrollStep, behavior: 'smooth' });
+    });
+    document.getElementById('rmNavRight').addEventListener('click', (e) => {
+        e.stopPropagation();
+        stopAuto();
+        rmTrack.scrollBy({ left: scrollStep, behavior: 'smooth' });
+    });
+
+    /* Drag scrolling */
+    let isDragging = false, startX, scrollStart;
+    rmTrack.addEventListener('mousedown', e => {
+        isDragging = true;
+        startX = e.pageX;
+        scrollStart = rmTrack.scrollLeft;
+        stopAuto();
+    });
+    document.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        rmTrack.scrollLeft = scrollStart - (e.pageX - startX);
+    });
+    document.addEventListener('mouseup', () => { isDragging = false; });
+
+    /* Touch drag */
+    rmTrack.addEventListener('touchstart', e => {
+        startX = e.touches[0].pageX;
+        scrollStart = rmTrack.scrollLeft;
+        stopAuto();
+    }, { passive: true });
+    rmTrack.addEventListener('touchmove', e => {
+        rmTrack.scrollLeft = scrollStart - (e.touches[0].pageX - startX);
+    }, { passive: true });
+
+    /* Wheel scroll also stops auto */
+    rmTrack.addEventListener('wheel', () => { stopAuto(); }, { passive: true });
+
+    /* Local links for file:// */
+    if (location.protocol === 'file:') {
+        document.querySelectorAll('[data-local]').forEach(a => {
+            a.href = a.dataset.local;
+        });
+    }
+    </script>
+
+    <!-- ===== FIREBASE SDK ===== -->
+    <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+    import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider }
+        from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+    import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, orderBy, query }
+        from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCeiNbpGazVpxUCAIWG8z_uoZ1v04d3iWU",
+        authDomain: "sigetar-world.firebaseapp.com",
+        projectId: "sigetar-world",
+        storageBucket: "sigetar-world.firebasestorage.app",
+        messagingSenderId: "576934228499",
+        appId: "1:576934228499:web:540802299ff613600b85e0"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+    const ADMIN_EMAIL = 'citadelclubperm@gmail.com';
+
+    /* ---- Admin button ---- */
+    const adminBtn = document.createElement('button');
+    adminBtn.className = 'admin-btn';
+    adminBtn.title = 'Админ-панель';
+    adminBtn.innerHTML = '⚙';
+    document.body.appendChild(adminBtn);
+
+    /* ---- Admin overlay ---- */
+    const overlay = document.createElement('div');
+    overlay.className = 'admin-overlay';
+    overlay.innerHTML = `
+    <div class="admin-panel" style="position:relative;">
+        <button class="btn-close" id="adminClose">✕</button>
+        <h2>⚙ Админ-панель</h2>
+        <div class="admin-status" id="adminStatus">не авторизован</div>
+        <div id="adminLoginArea">
+            <button class="btn-primary" id="adminLoginBtn">Войти через Google</button>
+        </div>
+        <div id="adminContent" style="display:none;">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="milestones">Дорожная карта</button>
+                <button class="tab-btn" data-tab="features">Возможности</button>
+                <button class="tab-btn" data-tab="categories">Категории</button>
+                <button class="tab-btn" data-tab="sync">Синхронизация</button>
+            </div>
+
+            <!-- TAB: Milestones -->
+            <div class="tab-content active" id="tab-milestones">
+                <div class="admin-split">
+                    <div class="admin-split-left">
+                        <h3 style="margin-top:0">Этапы</h3>
+                        <div class="item-list" id="milestoneList"></div>
+                    </div>
+                    <div class="admin-split-right">
+                        <h3 style="margin-top:0">Редактирование</h3>
+                        <div style="display:flex;gap:8px;">
+                            <div style="flex:1"><label>Версия</label><input id="mVer" placeholder="v0.XX"></div>
+                            <div style="flex:1"><label>Дата</label><input id="mDate" placeholder="01.11"></div>
+                        </div>
+                        <label>Название</label>
+                        <input id="mTitle" placeholder="Название этапа">
+                        <label>Текст (каждая строка с новой строки)</label>
+                        <textarea id="mText" placeholder="Описание&#10;Строка 2&#10;Строка 3" style="min-height:120px;"></textarea>
+                        <div style="display:flex;gap:8px;">
+                            <div style="flex:2"><label>Статус</label>
+                                <select id="mStatus">
+                                    <option value="done">Готово</option>
+                                    <option value="wip">В работе</option>
+                                    <option value="plan" selected>Запланировано</option>
+                                </select>
+                            </div>
+                            <div style="flex:1"><label>Вес</label><input id="mWeight" type="number" value="1" min="1"></div>
+                            <div style="flex:1"><label>Порядок</label><input id="mOrder" type="number" value="0" min="0"></div>
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn-primary" id="mSave">Сохранить</button>
+                            <button class="btn-secondary" id="mClear">Очистить</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: Features -->
+            <div class="tab-content" id="tab-features">
+                <div class="admin-split">
+                    <div class="admin-split-left">
+                        <h3 style="margin-top:0">Возможности</h3>
+                        <div class="item-list" id="featureList"></div>
+                    </div>
+                    <div class="admin-split-right">
+                        <h3 style="margin-top:0">Добавить</h3>
+                        <label>Категория</label>
+                        <select id="fCat"></select>
+                        <label>Этап (версия)</label>
+                        <select id="fVer"></select>
+                        <label>Описание</label>
+                        <input id="fText" placeholder="Что реализовано">
+                        <label>Дата (ДД.ММ.ГГГГ)</label>
+                        <input id="fDate" placeholder="01.11.2026">
+                        <div class="btn-row">
+                            <button class="btn-primary" id="fSave">Добавить возможность</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- TAB: Categories -->
+            <div class="tab-content" id="tab-categories">
+                <div class="admin-split">
+                    <div class="admin-split-left">
+                        <h3 style="margin-top:0">Категории</h3>
+                        <div class="item-list" id="categoryList"></div>
+                    </div>
+                    <div class="admin-split-right">
+                        <h3 style="margin-top:0">Добавить / редактировать</h3>
+                        <label>ID (латиница, без пробелов)</label>
+                        <input id="cId" placeholder="crafting">
+                        <label>Название</label>
+                        <input id="cName" placeholder="Крафт">
+                        <label>Иконка</label>
+                        <input type="hidden" id="cIcon">
+                        <div id="cIconPicker" style="position:relative;">
+                            <button type="button" id="cIconBtn" style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 12px;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:6px;color:hsl(var(--foreground));cursor:pointer;font-size:.85rem;">
+                                <span id="cIconPreview" style="width:20px;height:20px;color:hsl(var(--primary));flex-shrink:0"></span>
+                                <span id="cIconLabel">выберите иконку</span>
+                                <span style="margin-left:auto;font-size:.7rem;opacity:.5">▼</span>
+                            </button>
+                            <div id="cIconDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;max-height:200px;overflow-y:auto;background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:6px;z-index:10;margin-top:4px;box-shadow:0 4px 12px rgba(0,0,0,.3);"></div>
+                        </div>
+                        <label>Порядок</label>
+                        <input id="cOrder" type="number" value="0" min="0">
+                        <div class="btn-row">
+                            <button class="btn-primary" id="cSave">Сохранить категорию</button>
+                            <button class="btn-secondary" id="cClear">Очистить</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: Sync -->
+            <div class="tab-content" id="tab-sync">
+                <h3>Синхронизация данных</h3>
+                <p style="font-size:.82rem;color:hsl(var(--muted-foreground));margin:8px 0;">
+                    Перенести текущие данные со страницы в Firebase (первый раз), или очистить базу.
+                </p>
+                <div class="btn-row">
+                    <button class="btn-primary" id="syncPush">📤 Загрузить данные в Firebase</button>
+                    <button class="btn-danger" id="syncClear">🗑 Очистить базу</button>
+                </div>
+                <div id="syncLog" style="margin-top:12px;font-family:'Share Tech Mono',monospace;font-size:.75rem;color:hsl(var(--muted-foreground));max-height:200px;overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>`;
+    document.body.appendChild(overlay);
+
+    /* ---- Tabs ---- */
+    overlay.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            overlay.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            overlay.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    /* ---- Open/Close ---- */
+    adminBtn.addEventListener('click', () => overlay.classList.add('open'));
+    document.getElementById('adminClose').addEventListener('click', () => overlay.classList.remove('open'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+    /* ---- Auth ---- */
+    const provider = new GoogleAuthProvider();
+    let currentUser = null;
+    let isAdmin = false;
+
+    document.getElementById('adminLoginBtn').addEventListener('click', async () => {
+        try { await signInWithPopup(auth, provider); }
+        catch(e) { alert('Ошибка входа: ' + e.message); }
+    });
+
+    /* Try to load categories from Firebase on startup */
+    applyCategoriesFromDB();
+
+    onAuthStateChanged(auth, user => {
+        currentUser = user;
+        isAdmin = user && user.email === ADMIN_EMAIL;
+        const st = document.getElementById('adminStatus');
+        const la = document.getElementById('adminLoginArea');
+        const ac = document.getElementById('adminContent');
+
+        if (user) {
+            st.textContent = '✓ ' + user.email + (isAdmin ? ' (админ)' : ' (только чтение)');
+            la.innerHTML = `<button class="btn-secondary" id="adminLogoutBtn">Выйти</button>`;
+            document.getElementById('adminLogoutBtn').addEventListener('click', () => signOut(auth));
+            adminBtn.classList.add('logged-in');
+            if (isAdmin) {
+                ac.style.display = 'block';
+                /* Populate category dropdown from CAT_META */
+                const fCatSel = document.getElementById('fCat');
+                if (fCatSel.options.length === 0) {
+                    CAT_META.forEach(c => {
+                        const o = document.createElement('option');
+                        o.value = c.id; o.textContent = c.name;
+                        fCatSel.appendChild(o);
+                    });
+                }
+                /* Populate version dropdown from MILESTONE_META */
+                const fVerSel = document.getElementById('fVer');
+                if (fVerSel.options.length === 0) {
+                    MILESTONE_META.forEach(m => {
+                        const o = document.createElement('option');
+                        o.value = m.ver; o.textContent = m.ver + ' — ' + m.title;
+                        fVerSel.appendChild(o);
+                    });
+                }
+                refreshMilestoneList();
+                refreshFeatureList();
+                refreshCategoryList();
+            }
+        } else {
+            st.textContent = 'не авторизован';
+            la.innerHTML = `<button class="btn-primary" id="adminLoginBtn">Войти через Google</button>`;
+            document.getElementById('adminLoginBtn').addEventListener('click', async () => {
+                try { await signInWithPopup(auth, provider); }
+                catch(e) { alert('Ошибка входа: ' + e.message); }
+            });
+            ac.style.display = 'none';
+            adminBtn.classList.remove('logged-in');
+        }
+    });
+
+    /* ---- Firestore: load milestones ---- */
+    async function loadMilestonesFromDB() {
+        try {
+            const snap = await getDocs(query(collection(db, 'milestones'), orderBy('order')));
+            if (snap.empty) return null;
+            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch(e) { console.warn('Firestore milestones load error:', e); return null; }
+    }
+
+    /* ---- Firestore: load features ---- */
+    async function loadFeaturesFromDB() {
+        try {
+            const snap = await getDocs(collection(db, 'features'));
+            if (snap.empty) return null;
+            const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            return items;
+        } catch(e) { console.warn('Firestore features load error:', e); return null; }
+    }
+
+
+    /* ---- Firestore: load categories ---- */
+    async function loadCategoriesFromDB() {
+        try {
+            const snap = await getDocs(query(collection(db, 'categories'), orderBy('order')));
+            if (snap.empty) return null;
+            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch(e) { console.warn('Firestore categories load error:', e); return null; }
+    }
+
+    /* ---- Apply categories from DB to page ---- */
+    async function applyCategoriesFromDB() {
+        const cats = await loadCategoriesFromDB();
+        if (cats && cats.length > 0) {
+            CAT_META = cats.map(c => ({ id: c.id, icon: c.icon, name: c.name }));
+        }
+        /* Re-render features section with recent changes */
+        const sidebar = document.getElementById('featSidebar');
+        const panel = document.getElementById('featPanel');
+        sidebar.innerHTML = '';
+        panel.innerHTML = '';
+        const byCat = groupBy(FEATURES, 'cat');
+        const catMap = {};
+        CAT_META.forEach(c => { catMap[c.id] = c; });
+
+        /* Recent changes (7 days) */
+        const recent7 = FEATURES.filter(f => daysAgo(f.date) <= 7)
+            .sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
+        const hasRecent = recent7.length > 0;
+
+        if (hasRecent) {
+            const recentBtn = document.createElement('button');
+            recentBtn.className = 'feat-tab feat-tab--recent active';
+            recentBtn.dataset.cat = '__recent';
+            recentBtn.innerHTML = `<span class="ft-icon">${svgIcon('bolt')}</span> Последние <span class="ft-count">${recent7.length}</span>`;
+            recentBtn.onclick = () => {
+                sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
+                recentBtn.classList.add('active');
+                panel.querySelectorAll('.feat-panel-cat').forEach(p => p.classList.remove('active'));
+                document.getElementById('fp-__recent').classList.add('active');
+            };
+            sidebar.appendChild(recentBtn);
+            const recentDiv = document.createElement('div');
+            recentDiv.className = 'feat-panel-cat active';
+            recentDiv.id = 'fp-__recent';
+            let rRows = '';
+            recent7.forEach(item => {
+                const cm = catMap[item.cat];
+                const isNew = daysAgo(item.date) <= 3;
+                rRows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
+                    <span class="feat-row-cat-icon" title="${cm ? cm.name : item.cat}">${cm ? svgIcon(cm.icon) : ''}</span>
+                    <span style="font-size:.7rem;color:hsl(var(--primary));white-space:nowrap;flex-shrink:0;min-width:70px">${cm ? cm.name : item.cat}</span>
+                    <span class="feat-row-text">${item.text}</span>
+                    <span class="feat-row-date">${item.date}</span>
+                </div>`;
+            });
+            recentDiv.innerHTML = rRows;
+            panel.appendChild(recentDiv);
+        }
+
+        CAT_META.forEach((cat, ci) => {
+            const items = (byCat[cat.id] || []).slice().sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
+            const has3d = items.some(f => daysAgo(f.date) <= 3);
+            const btn = document.createElement('button');
+            btn.className = 'feat-tab' + (!hasRecent && ci === 0 ? ' active' : '');
+            btn.dataset.cat = cat.id;
+            btn.innerHTML = `<span class="ft-icon">${svgIcon(cat.icon)}</span> ${cat.name}${has3d ? ' <span class="ft-new"></span>' : ''} <span class="ft-count">${items.length}</span>`;
+            btn.onclick = () => {
+                sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                panel.querySelectorAll('.feat-panel-cat').forEach(p => p.classList.remove('active'));
+                document.getElementById('fp-' + cat.id).classList.add('active');
+            };
+            sidebar.appendChild(btn);
+            const div = document.createElement('div');
+            div.className = 'feat-panel-cat' + (!hasRecent && ci === 0 ? ' active' : '');
+            div.id = 'fp-' + cat.id;
+            let rows = '';
+            items.forEach(item => {
+                const isNew = daysAgo(item.date) <= 3;
+                rows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
+                    <span class="feat-row-check">\u2713</span>
+                    <span class="feat-row-text">${item.text}</span>
+                    <span class="feat-row-date">${item.date}</span>
+                </div>`;
+            });
+            div.innerHTML = rows;
+            panel.appendChild(div);
+        });
+    }
+
+    /* ---- Refresh milestone list in admin ---- */
+    async function refreshMilestoneList() {
+        const list = document.getElementById('milestoneList');
+        const data = await loadMilestonesFromDB();
+        if (!data || data.length === 0) {
+            list.innerHTML = '<div style="padding:8px;font-size:.8rem;color:hsl(var(--muted-foreground))">База пуста — загрузите данные во вкладке «Синхронизация»</div>';
+            return;
+        }
+        list.innerHTML = data.map(m => `
+            <div class="item-row">
+                <span style="color:hsl(var(--primary));font-family:'Share Tech Mono',monospace;font-size:.75rem;width:50px;">${m.ver}</span>
+                <span style="flex:1">${m.title}</span>
+                <span style="font-size:.7rem;color:hsl(var(--muted-foreground))">${m.done ? '✓' : m.wip ? '~' : '○'}</span>
+                <button class="btn-secondary edit-btn" data-id="${m.id}">✎</button>
+                <button class="btn-danger edit-btn" data-del="${m.id}" style="padding:2px 8px;">✕</button>
+            </div>
+        `).join('');
+        list.querySelectorAll('[data-id]').forEach(btn => {
+            btn.addEventListener('click', () => editMilestone(data.find(m => m.id === btn.dataset.id)));
+        });
+        list.querySelectorAll('[data-del]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (confirm('Удалить этот этап?')) {
+                    await deleteDoc(doc(db, 'milestones', btn.dataset.del));
+                    refreshMilestoneList();
+                }
+            });
+        });
+    }
+
+    function editMilestone(m) {
+        document.getElementById('mVer').value = m.ver;
+        document.getElementById('mTitle').value = m.title;
+        document.getElementById('mDate').value = m.date || '';
+        document.getElementById('mText').value = (m.text || '').replace(/<br>/g, '\n');
+        document.getElementById('mStatus').value = m.done ? 'done' : m.wip ? 'wip' : 'plan';
+        document.getElementById('mWeight').value = m.w || 1;
+        document.getElementById('mOrder').value = m.order || 0;
+    }
+
+    /* ---- Save milestone ---- */
+    document.getElementById('mSave').addEventListener('click', async () => {
+        const ver = document.getElementById('mVer').value.trim();
+        if (!ver) return alert('Укажите версию (v0.XX)');
+        const status = document.getElementById('mStatus').value;
+        const data = {
+            ver,
+            title: document.getElementById('mTitle').value.trim(),
+            date: document.getElementById('mDate').value.trim(),
+            text: document.getElementById('mText').value.trim(),
+            done: status === 'done',
+            wip: status === 'wip',
+            w: parseInt(document.getElementById('mWeight').value) || 1,
+            order: parseInt(document.getElementById('mOrder').value) || 0,
+        };
+        try {
+            await setDoc(doc(db, 'milestones', ver), data);
+            alert('Этап ' + ver + ' сохранён!');
+            clearMilestoneForm();
+            refreshMilestoneList();
+        } catch(e) { alert('Ошибка: ' + e.message); }
+    });
+
+    document.getElementById('mClear').addEventListener('click', clearMilestoneForm);
+    function clearMilestoneForm() {
+        ['mVer','mTitle','mDate','mText'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('mStatus').value = 'plan';
+        document.getElementById('mWeight').value = '1';
+        document.getElementById('mOrder').value = '0';
+    }
+
+    /* ---- Refresh feature list in admin ---- */
+    async function refreshFeatureList() {
+        const list = document.getElementById('featureList');
+        const data = await loadFeaturesFromDB();
+        if (!data || data.length === 0) {
+            list.innerHTML = '<div style="padding:8px;font-size:.8rem;color:hsl(var(--muted-foreground))">База пуста — загрузите данные во вкладке «Синхронизация»</div>';
+            return;
+        }
+        /* Group by category */
+        const grouped = {};
+        data.forEach(f => {
+            if (!grouped[f.cat]) grouped[f.cat] = [];
+            grouped[f.cat].push(f);
+        });
+        let html = '';
+        for (const [cat, items] of Object.entries(grouped)) {
+            html += `<div style="font-size:.75rem;color:hsl(var(--primary));padding:6px 8px;font-weight:600;">${cat} (${items.length})</div>`;
+            items.forEach(f => {
+                html += `<div class="item-row">
+                    <span style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:hsl(var(--secondary));width:45px;flex-shrink:0;">${f.ver||''}</span>
+                    <span style="flex:1">${f.text}</span>
+                    <span style="font-size:.7rem;color:hsl(var(--muted-foreground))">${f.date||''}</span>
+                    <button class="btn-danger edit-btn" data-fdel="${f.id}" style="padding:2px 8px;">✕</button>
+                </div>`;
+            });
+        }
+        list.innerHTML = html;
+        list.querySelectorAll('[data-fdel]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (confirm('Удалить эту возможность?')) {
+                    await deleteDoc(doc(db, 'features', btn.dataset.fdel));
+                    refreshFeatureList();
+                }
+            });
+        });
+    }
+
+    /* ---- Save feature ---- */
+    document.getElementById('fSave').addEventListener('click', async () => {
+        const text = document.getElementById('fText').value.trim();
+        if (!text) return alert('Укажите описание');
+        const data = {
+            cat: document.getElementById('fCat').value,
+            ver: document.getElementById('fVer').value,
+            text,
+            date: document.getElementById('fDate').value.trim(),
+        };
+        const id = data.cat + '_' + Date.now();
+        try {
+            await setDoc(doc(db, 'features', id), data);
+            alert('Возможность добавлена!');
+            document.getElementById('fText').value = '';
+            document.getElementById('fDate').value = '';
+            refreshFeatureList();
+        } catch(e) { alert('Ошибка: ' + e.message); }
+    });
+
+
+    /* ---- Refresh category list in admin ---- */
+    async function refreshCategoryList() {
+        const list = document.getElementById('categoryList');
+        const data = await loadCategoriesFromDB();
+        if (!data || data.length === 0) {
+            list.innerHTML = '<div style="padding:8px;font-size:.8rem;color:hsl(var(--muted-foreground))">Нет категорий в Firebase — загрузите данные во вкладке «Синхронизация»</div>';
+            return;
+        }
+        list.innerHTML = data.map(c => `
+            <div class="item-row">
+                <span style="width:24px;height:24px;color:hsl(var(--primary));flex-shrink:0">${svgIcon(c.icon)}</span>
+                <span style="font-family:'Share Tech Mono',monospace;font-size:.75rem;color:hsl(var(--secondary));width:80px;">${c.id}</span>
+                <span style="flex:1">${c.name}</span>
+                <span style="font-size:.7rem;color:hsl(var(--muted-foreground))">⇅${c.order || 0}</span>
+                <button class="btn-secondary edit-btn" data-cedit="${c.id}">✎</button>
+                <button class="btn-danger edit-btn" data-cdel="${c.id}" style="padding:2px 8px;">✕</button>
+            </div>
+        `).join('');
+        list.querySelectorAll('[data-cedit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const c = data.find(x => x.id === btn.dataset.cedit);
+                if (c) editCategory(c);
+            });
+        });
+        list.querySelectorAll('[data-cdel]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (confirm('Удалить категорию «' + btn.dataset.cdel + '»? Возможности в этой категории останутся, но не будут отображаться.')) {
+                    await deleteDoc(doc(db, 'categories', btn.dataset.cdel));
+                    refreshCategoryList();
+                    await applyCategoriesFromDB();
+                    rebuildCatDropdown();
+                }
+            });
+        });
+    }
+
+    function editCategory(c) {
+        document.getElementById('cId').value = c.id;
+        document.getElementById('cId').disabled = true; /* ID нельзя менять при редактировании */
+        document.getElementById('cName').value = c.name;
+        document.getElementById('cIcon').value = c.icon;
+        document.getElementById('cOrder').value = c.order || 0;
+        document.getElementById('cIconPreview').innerHTML = svgIcon(c.icon);
+        document.getElementById('cIconLabel').textContent = iconNames[c.icon] || c.icon;
+    }
+
+    /* Populate icon dropdown (custom with SVG previews) */
+    const cIconInput = document.getElementById('cIcon');
+    const cIconBtn = document.getElementById('cIconBtn');
+    const cIconDropdown = document.getElementById('cIconDropdown');
+    const cIconPreview = document.getElementById('cIconPreview');
+    const cIconLabel = document.getElementById('cIconLabel');
+    const iconNames = { sword:'Меч', bag:'Сумка', shield:'Щит', mic:'Микрофон', home:'Дом', pick:'Кирка', target:'Мишень', multi:'Группа', hud:'Экран', axe:'Топор', hammer:'Молот', bow:'Лук', heart:'Сердце', star:'Звезда', fire:'Огонь', bolt:'Молния', eye:'Глаз', map:'Карта', flag:'Флаг', tree:'Дерево', skull:'Череп', crown:'Корона', gem:'Кристалл', scroll:'Свиток', potion:'Зелье', shield2:'Щит+', horse:'Конь', music:'Музыка', gear:'Шестерня', compass:'Компас', anchor:'Якорь', fish:'Рыба', paw:'Лапа', wolf:'Волк', ship:'Корабль', chest:'Сундук', book:'Книга', run:'Бег', moon:'Луна', sun:'Солнце', wrench:'Ключ' };
+
+    Object.keys(IC).forEach(key => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;transition:background .15s;';
+        item.innerHTML = `<span style="width:20px;height:20px;color:hsl(var(--primary));flex-shrink:0">${svgIcon(key)}</span><span style="font-size:.85rem">${iconNames[key] || key}</span>`;
+        item.addEventListener('mouseenter', () => { item.style.background = 'hsl(var(--accent))'; });
+        item.addEventListener('mouseleave', () => { item.style.background = ''; });
+        item.addEventListener('click', () => {
+            cIconInput.value = key;
+            cIconPreview.innerHTML = svgIcon(key);
+            cIconLabel.textContent = iconNames[key] || key;
+            cIconDropdown.style.display = 'none';
+        });
+        cIconDropdown.appendChild(item);
+    });
+
+    cIconBtn.addEventListener('click', () => {
+        cIconDropdown.style.display = cIconDropdown.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', e => {
+        if (!document.getElementById('cIconPicker').contains(e.target)) cIconDropdown.style.display = 'none';
+    });
+
+    /* Save category */
+    document.getElementById('cSave').addEventListener('click', async () => {
+        const id = document.getElementById('cId').value.trim();
+        const name = document.getElementById('cName').value.trim();
+        const icon = document.getElementById('cIcon').value;
+        if (!id) return alert('Укажите ID категории');
+        if (!name) return alert('Укажите название');
+        if (!/^[a-z][a-z0-9_]*$/.test(id)) return alert('ID должен быть латиницей, начинаться с буквы (a-z, 0-9, _)');
+        const data = {
+            id, name, icon,
+            order: parseInt(document.getElementById('cOrder').value) || 0,
+        };
+        try {
+            await setDoc(doc(db, 'categories', id), data);
+            alert('Категория «' + name + '» сохранена!');
+            clearCategoryForm();
+            refreshCategoryList();
+            await applyCategoriesFromDB();
+            rebuildCatDropdown();
+        } catch(e) { alert('Ошибка: ' + e.message); }
+    });
+
+    document.getElementById('cClear').addEventListener('click', clearCategoryForm);
+    function clearCategoryForm() {
+        document.getElementById('cId').value = '';
+        document.getElementById('cId').disabled = false;
+        document.getElementById('cName').value = '';
+        document.getElementById('cIcon').value = '';
+        document.getElementById('cOrder').value = '0';
+        document.getElementById('cIconPreview').innerHTML = '';
+        document.getElementById('cIconLabel').textContent = 'выберите иконку';
+    }
+
+    /* Rebuild fCat dropdown from current CAT_META */
+    function rebuildCatDropdown() {
+        const fCatSel = document.getElementById('fCat');
+        fCatSel.innerHTML = '';
+        CAT_META.forEach(c => {
+            const o = document.createElement('option');
+            o.value = c.id; o.textContent = c.name;
+            fCatSel.appendChild(o);
+        });
+    }
+
+    /* ---- Sync: push hardcoded data to Firestore ---- */
+    document.getElementById('syncPush').addEventListener('click', async () => {
+        if (!isAdmin) return alert('Нет прав');
+        if (!confirm('Загрузить все текущие данные со страницы в Firebase?')) return;
+        const log = document.getElementById('syncLog');
+        log.innerHTML = '';
+        const addLog = msg => { log.innerHTML += msg + '<br>'; log.scrollTop = log.scrollHeight; };
+
+        try {
+            /* Categories */
+            addLog('Загрузка категорий...');
+            for (let i = 0; i < CAT_META.length; i++) {
+                const c = CAT_META[i];
+                await setDoc(doc(db, 'categories', c.id), {
+                    id: c.id, name: c.name, icon: c.icon, order: i,
+                });
+                addLog('  \u2713 ' + c.id + ' — ' + c.name);
+            }
+            addLog(CAT_META.length + ' категорий загружено.');
+
+            /* Milestones */
+            addLog('Загрузка этапов...');
+            for (let i = 0; i < MILESTONES.length; i++) {
+                const m = MILESTONES[i];
+                await setDoc(doc(db, 'milestones', m.ver), {
+                    ver: m.ver, title: m.title, done: !!m.done, wip: !!m.wip,
+                    date: m.date || '', text: m.text || '', w: m.w || 1, order: i,
+                });
+                addLog('  ✓ ' + m.ver + ' — ' + m.title);
+            }
+
+            /* Features — from unified FEATURES array */
+            addLog('Загрузка возможностей...');
+            let fCount = 0;
+            const catCounts = {};
+            for (let i = 0; i < FEATURES.length; i++) {
+                const f = FEATURES[i];
+                const fId = f.cat + '_' + String(i).padStart(3, '0');
+                await setDoc(doc(db, 'features', fId), { cat: f.cat, ver: f.ver, text: f.text, date: f.date });
+                catCounts[f.cat] = (catCounts[f.cat] || 0) + 1;
+                fCount++;
+            }
+            for (const [cat, cnt] of Object.entries(catCounts)) {
+                addLog('  ✓ ' + cat + ': ' + cnt + ' элементов');
+            }
+            addLog('Готово! Загружено ' + MILESTONES.length + ' этапов и ' + fCount + ' возможностей.');
+            refreshMilestoneList();
+            refreshFeatureList();
+        } catch(e) {
+            addLog('❌ Ошибка: ' + e.message);
+        }
+    });
+
+    /* ---- Sync: clear DB ---- */
+    document.getElementById('syncClear').addEventListener('click', async () => {
+        if (!isAdmin) return alert('Нет прав');
+        if (!confirm('УДАЛИТЬ ВСЕ данные из Firebase? Это действие необратимо!')) return;
+        const log = document.getElementById('syncLog');
+        log.innerHTML = 'Очистка...<br>';
+        try {
+            for (const col of ['milestones', 'features', 'categories']) {
+                const snap = await getDocs(collection(db, col));
+                for (const d of snap.docs) await deleteDoc(d.ref);
+                log.innerHTML += col + ': удалено ' + snap.docs.length + '<br>';
+            }
+            log.innerHTML += 'Готово!<br>';
+            refreshMilestoneList();
+            refreshFeatureList();
+        } catch(e) { log.innerHTML += '❌ ' + e.message + '<br>'; }
+    });
+
+    </script>
+</body>
+</html>

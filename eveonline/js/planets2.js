@@ -84,8 +84,17 @@
         });
 
         // Убираем интерактивные элементы, галочки плана и блок «Вне плана»
-        // (кнопки складов .uv-store-btn оставляем)
-        dst.querySelectorAll('button:not(.uv-store-btn), .uv-edit, .account-del, .uv-sync, .card-light, .uv-fold, .uv-fold-all, .uv-top, .uv-tier, .uv-plan, .uv-offplan').forEach(function (el) {
+        // (кнопки складов .uv-store-btn, card-light, card-sync, card-edit, card-del оставляем)
+        dst.querySelectorAll('.uv-fold, .uv-fold-all, .uv-top, .uv-tier, .uv-plan, .uv-offplan').forEach(function (el) {
+            el.remove();
+        });
+        // Убираем кнопки кроме нужных (склады, лампочка, синхр, редакт, удаление)
+        dst.querySelectorAll('button').forEach(function (el) {
+            if (el.classList.contains('uv-store-btn')) return;
+            if (el.classList.contains('card-light')) return;
+            if (el.dataset.role === 'card-sync') return;
+            if (el.dataset.role === 'card-edit') return;
+            if (el.dataset.role === 'card-del') return;
             el.remove();
         });
 
@@ -345,6 +354,67 @@
         var line = col.querySelector('.uv-node > .uv-line');
         if (line) line.insertAdjacentHTML('afterend', html);
         storeBtn.setAttribute('aria-expanded', 'true');
+    });
+
+    /* ---------- Лампочка, восстановление, редактирование, удаление ---------- */
+    /* Клик на этих кнопках в planets2 пробрасывается на оригинал в #accounts,
+       потому что обработчики привязаны делегированием к #accounts. */
+    dst.addEventListener('click', function (event) {
+        var light = event.target.closest('.card-light');
+        if (light) {
+            var p2card = light.closest('.p2-card');
+            var name = p2card && p2card.querySelector('[data-name]');
+            var cardName = name ? name.dataset.name : '';
+            if (cardName) {
+                var orig = document.querySelector('#accounts .card[data-name="' + cardName + '"] .card-light');
+                if (orig) orig.click();
+            }
+            // Переключаем и на клоне визуально
+            var card = light.closest('.card') || light.closest('.p2-card');
+            if (card) {
+                var lit = card.classList.toggle('is-lit');
+                light.setAttribute('aria-pressed', String(lit));
+            }
+            return;
+        }
+
+        var sync = event.target.closest('[data-role="card-sync"]');
+        if (sync) {
+            var p2card = sync.closest('.p2-card');
+            var name = p2card && p2card.querySelector('[data-name]');
+            var cardName = name ? name.dataset.name : '';
+            if (cardName) {
+                var orig = document.querySelector('#accounts .card[data-name="' + cardName + '"] [data-role="card-sync"]');
+                if (orig) orig.click();
+            }
+            return;
+        }
+
+        var edit = event.target.closest('[data-role="card-edit"]');
+        if (edit) {
+            var p2card = edit.closest('.p2-card');
+            var name = p2card && p2card.querySelector('[data-name]');
+            var cardName = name ? name.dataset.name : '';
+            if (cardName) {
+                var orig = document.querySelector('#accounts .card[data-name="' + cardName + '"] [data-role="card-edit"]');
+                if (orig) orig.click();
+            }
+            return;
+        }
+
+        var del = event.target.closest('[data-role="card-del"]');
+        if (del) {
+            var p2card = del.closest('.p2-card');
+            var name = p2card && p2card.querySelector('[data-name]');
+            var cardName = name ? name.dataset.name : '';
+            if (cardName) {
+                var orig = document.querySelector('#accounts .card[data-name="' + cardName + '"] [data-role="card-del"]');
+                if (orig) orig.click();
+                // Убираем карточку и из planets2
+                if (p2card) p2card.remove();
+            }
+            return;
+        }
     });
 
     // Слушаем переключение на вкладку
