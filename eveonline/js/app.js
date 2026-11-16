@@ -5627,6 +5627,17 @@ function eveIskFmt(v) {
     return Math.round(v).toLocaleString('ru-RU') + ' ISK';
 }
 
+/* Формат без «ISK», пробелы: «12 000 545» */
+function eveIskShort(v) {
+    if (v == null || !isFinite(v)) return '…';
+    const abs = Math.abs(v);
+    const sign = v < 0 ? '−' : '';
+    if (abs >= 1e12) return sign + (abs / 1e12).toFixed(2).replace('.', ',') + ' трлн';
+    if (abs >= 1e9)  return sign + (abs / 1e9).toFixed(2).replace('.', ',') + ' млрд';
+    if (abs >= 1e6)  return sign + (abs / 1e6).toFixed(1).replace('.', ',') + ' млн';
+    return sign + Math.round(abs).toLocaleString('ru-RU').replace(/ /g, ' ');
+}
+
 /* Запрос баланса одного персонажа */
 async function eveWalletBalance(charId) {
     return eveFetchJson(`${ESI_BASE}/characters/${charId}/wallet/?datasource=tranquility`, {}, charId);
@@ -5858,12 +5869,16 @@ if (eveIskDailyEl) {
             const rowsEl = modal.querySelector('#isk-chart-rows');
             rowsEl.innerHTML = '';
 
-            /* Шапка с датами */
+            /* Суммы по дням (для шапки) */
+            const daySums = new Array(7).fill(0);
+            charData.forEach(data => { for (let d = 0; d < 7; d++) daySums[d] += data[d]; });
+
+            /* Шапка с датами + суммой за день */
             const header = document.createElement('div');
             header.className = 'isk-chart-header';
             header.innerHTML = '<span class="isk-chart-char-label"></span>'
                 + dayLabels.map((lbl, d) =>
-                    `<span class="isk-chart-date${d === todayIdx ? ' is-today' : ''}">${lbl}</span>`
+                    `<span class="isk-chart-date${d === todayIdx ? ' is-today' : ''}">${lbl}<br><span class="isk-chart-daysum">${eveIskShort(daySums[d])}</span></span>`
                 ).join('');
             rowsEl.appendChild(header);
 
@@ -5883,7 +5898,7 @@ if (eveIskDailyEl) {
                 charLabel.className = 'isk-chart-char-label';
                 charLabel.innerHTML = `<img class="isk-chart-avatar" src="${evePortrait(c.characterId).replace('size=32','size=64')}" alt="" width="40" height="40">`
                     + `<span class="isk-chart-char-name">${escapeHtml(c.characterName)}</span>`;
-                charLabel.title = c.characterName + ': ' + eveIskFmt(charTotal);
+                charLabel.title = c.characterName + ': ' + eveIskShort(charTotal);
                 row.appendChild(charLabel);
 
                 /* 7 ячеек-баров */
@@ -5892,9 +5907,9 @@ if (eveIskDailyEl) {
                     const pct = Math.max(0, v / globalMax * 100);
                     const cell = document.createElement('div');
                     cell.className = 'isk-chart-cell';
-                    cell.title = dayLabels[d] + ': ' + eveIskFmt(v);
+                    cell.title = dayLabels[d] + ': ' + eveIskShort(v);
                     cell.innerHTML = `<div class="isk-chart-vbar" style="height:0%;background:linear-gradient(0deg,${grad[0]},${grad[1]});"></div>`
-                        + (v > 0 ? `<span class="isk-chart-val">${eveIskFmt(v)}</span>` : '');
+                        + (v > 0 ? `<span class="isk-chart-val">${eveIskShort(v)}</span>` : '');
                     row.appendChild(cell);
 
                     /* Анимация */
@@ -5912,7 +5927,7 @@ if (eveIskDailyEl) {
             const footer = modal.querySelector('#isk-chart-footer');
             footer.hidden = false;
             const totalEl = modal.querySelector('#isk-chart-total');
-            totalEl.textContent = 'Итого: +' + eveIskFmt(grandTotal);
+            totalEl.textContent = 'Итого: +' + eveIskShort(grandTotal);
             totalEl.className = 'isk-chart-total is-positive';
 
         } catch (err) {

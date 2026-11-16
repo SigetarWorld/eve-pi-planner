@@ -4856,6 +4856,12 @@ input.chain-amount:focus {
 .isk-chart-date.is-today {
     color: var(--accent);
 }
+.isk-chart-daysum {
+    font-size: 0.62rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    opacity: 0.7;
+}
 /* Строка персонажа */
 .isk-chart-row {
     display: flex;
