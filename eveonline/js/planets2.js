@@ -426,17 +426,39 @@
 
     /* ---------- Автообновление ---------- */
     /* Компактные карточки живут прямо на вкладке «Планеты».
-       Обновляем их при любом изменении полных карточек в #accounts
-       (добавление, удаление, редактирование). */
+       Обновляем их только при структурных изменениях: добавлении/удалении
+       карточек (.card) или линий аккаунтов (.account-line).
+       Глубокие изменения (загрузка иконок складов, обновление таймеров)
+       НЕ вызывают перерисовку — иначе store-кнопки мерцают и пропадают. */
     if (accountsEl) {
         var debounce = null;
-        var observer = new MutationObserver(function () {
+        var observer = new MutationObserver(function (mutations) {
+            /* Пропускаем обновление если открыт popup склада */
+            if (dst.querySelector('.uv-store-list')) return;
+
+            /* Проверяем: есть ли среди мутаций структурные изменения?
+               Структурные = добавление/удаление узлов на уровне
+               #accounts, .account-line или [data-role="cards"]. */
+            var dominated = false;
+            for (var i = 0; i < mutations.length; i++) {
+                var m = mutations[i];
+                if (m.type !== 'childList') continue;
+                var t = m.target;
+                if (t === accountsEl ||
+                    (t.classList && (t.classList.contains('account-line') ||
+                     t.dataset && t.dataset.role === 'cards'))) {
+                    dominated = true;
+                    break;
+                }
+            }
+            if (!dominated) return;
+
             clearTimeout(debounce);
-            debounce = setTimeout(refreshPlanets2, 150);
+            debounce = setTimeout(refreshPlanets2, 400);
         });
         observer.observe(accountsEl, { childList: true, subtree: true });
     }
 
     // Первичная отрисовка с небольшой задержкой (карточки создаются в app.js)
-    setTimeout(refreshPlanets2, 300);
+    setTimeout(refreshPlanets2, 400);
 })();
