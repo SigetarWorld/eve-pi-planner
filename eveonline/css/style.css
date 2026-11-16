@@ -4806,7 +4806,7 @@ input.chain-amount:focus {
 .isk-chart-modal[hidden] { display: none; }
 .isk-chart-box {
     position: relative;
-    width: min(640px, calc(100vw - 2rem));
+    width: min(680px, calc(100vw - 2rem));
     padding: 1.15rem 1.25rem 1.25rem;
     background: var(--bg-panel);
     border: 1px solid var(--border-lit);
@@ -4814,8 +4814,8 @@ input.chain-amount:focus {
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
 }
 .isk-chart-box h3 {
-    margin: 0 0 0.6rem;
-    font-size: 0.95rem;
+    margin: 0 0 0.75rem;
+    font-size: 1.05rem;
     font-weight: 600;
     color: var(--accent);
 }
@@ -4835,17 +4835,23 @@ input.chain-amount:focus {
     display: flex;
     align-items: center;
     gap: 0;
-    padding-bottom: 0.35rem;
+    padding-bottom: 0.4rem;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
+}
+/* Пустое место под аватар в шапке */
+.isk-chart-header .isk-chart-char-label {
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
 }
 .isk-chart-date {
     flex: 1 1 0;
     text-align: center;
-    font-size: 0.68rem;
+    font-size: 0.78rem;
     font-weight: 600;
     color: var(--text-dim);
-    padding: 0.2rem 0;
+    padding: 0.25rem 0;
 }
 .isk-chart-date.is-today {
     color: var(--accent);
@@ -4855,31 +4861,34 @@ input.chain-amount:focus {
     display: flex;
     align-items: flex-end;
     gap: 0;
-    padding: 0.4rem 0;
+    padding: 0.6rem 0;
     border-bottom: 1px solid var(--border-dim, rgba(255,255,255,0.04));
 }
 .isk-chart-row:last-child { border-bottom: none; }
-/* Портрет + имя */
+/* Портрет + имя (вертикально: аватар сверху, имя снизу) */
 .isk-chart-char-label {
-    flex: 0 0 90px;
+    flex: 0 0 72px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.25rem;
     overflow: hidden;
 }
 .isk-chart-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
     flex-shrink: 0;
 }
 .isk-chart-char-name {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 600;
     color: var(--text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 72px;
+    text-align: center;
 }
 /* Ячейка с вертикальным баром */
 .isk-chart-cell {
@@ -4888,21 +4897,21 @@ input.chain-amount:focus {
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    height: 80px;
+    height: 100px;
     position: relative;
     padding: 0 2px;
 }
 .isk-chart-vbar {
     width: 70%;
     min-height: 2px;
-    border-radius: 6px 6px 2px 2px;
+    border-radius: 8px 8px 2px 2px;
     transition: height 0.6s cubic-bezier(.4,0,.2,1);
 }
 .isk-chart-val {
-    font-size: 0.55rem;
+    font-size: 0.62rem;
     font-weight: 600;
     color: var(--text-dim);
-    margin-top: 2px;
+    margin-top: 3px;
     white-space: nowrap;
     text-align: center;
     line-height: 1;
@@ -4917,7 +4926,7 @@ input.chain-amount:focus {
     border-top: 1px solid var(--border);
 }
 .isk-chart-total {
-    font-size: 0.78rem;
+    font-size: 0.88rem;
     font-weight: 600;
     color: var(--text);
 }

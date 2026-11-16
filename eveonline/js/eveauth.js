@@ -40,7 +40,7 @@ const EVE_AUTH = {
        с зеркала Netlify, по http или как /eveonline/index.html — EVE
        вернёт только сюда. */
     redirectUri: 'https://sigetar.ru/eveonline/',
-    authorizeUrl: 'https://login.eveonline.com/v2/oauth/authorize',
+    authorizeUrl: 'https://login.eveonline.com/oauth/authorize',
     tokenUrl: 'https://login.eveonline.com/v2/oauth/token',
     revokeUrl: 'https://login.eveonline.com/oauth/revoke',
     verifyUrl: 'https://login.eveonline.com/oauth/verify',
@@ -165,9 +165,6 @@ function eveAuthorizeUrl(state, challenge, extraScopes) {
     url.searchParams.set('state', state);
     url.searchParams.set('code_challenge', challenge);
     url.searchParams.set('code_challenge_method', 'S256');
-    // Принудительно показать экран разрешений, чтобы EVE запросил
-    // все scopes заново (иначе старые одобрения кэшируются)
-    url.searchParams.set('prompt', 'consent');
     return url.toString();
 }
 

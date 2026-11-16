@@ -5881,7 +5881,7 @@ if (eveIskDailyEl) {
                 /* Портрет + имя */
                 const charLabel = document.createElement('span');
                 charLabel.className = 'isk-chart-char-label';
-                charLabel.innerHTML = `<img class="isk-chart-avatar" src="${evePortrait(c.characterId)}" alt="" width="24" height="24">`
+                charLabel.innerHTML = `<img class="isk-chart-avatar" src="${evePortrait(c.characterId).replace('size=32','size=64')}" alt="" width="40" height="40">`
                     + `<span class="isk-chart-char-name">${escapeHtml(c.characterName)}</span>`;
                 charLabel.title = c.characterName + ': ' + eveIskFmt(charTotal);
                 row.appendChild(charLabel);
