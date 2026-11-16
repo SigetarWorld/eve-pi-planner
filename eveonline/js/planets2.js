@@ -424,37 +424,106 @@
         }
     });
 
+    /* ---------- Инкрементальный синк одной карточки ---------- */
+    /* Когда ESI-данные приходят (склады, количества), перерисовываем
+       только затронутую компактную карточку, а не все сразу. */
+    function syncCard(cardName) {
+        var origCard = accountsEl.querySelector('.card[data-name="' + cardName + '"]');
+        if (!origCard) return;
+        var origUv = origCard.querySelector(':scope > .uv');
+        if (!origUv) return;
+        var p2card = dst.querySelector('.p2-card[data-name="' + cardName + '"]');
+        if (!p2card) return;
+
+        /* Пересоздаём содержимое этой одной карточки */
+        var clone = origUv.cloneNode(true);
+        p2card.innerHTML = '';
+        p2card.appendChild(clone);
+        if (origCard.classList.contains('is-lit')) p2card.classList.add('is-lit');
+        else p2card.classList.remove('is-lit');
+
+        /* Переносим storeData */
+        var origCols = origUv.querySelectorAll('.uv-colony');
+        var cloneCols = clone.querySelectorAll('.uv-colony');
+        for (var ci = 0; ci < origCols.length && ci < cloneCols.length; ci++) {
+            if (origCols[ci].storeData) cloneCols[ci].storeData = origCols[ci].storeData;
+        }
+
+        /* Чистка: убираем лишние элементы (как в refreshPlanets2) */
+        p2card.querySelectorAll('.uv-fold, .uv-fold-all, .uv-top, .uv-tier, .uv-plan, .uv-offplan').forEach(function (el) { el.remove(); });
+        p2card.querySelectorAll('button').forEach(function (el) {
+            if (el.classList.contains('uv-store-btn')) return;
+            if (el.classList.contains('card-light')) return;
+            if (el.dataset.role === 'card-sync') return;
+            if (el.dataset.role === 'card-edit') return;
+            if (el.dataset.role === 'card-del') return;
+            el.remove();
+        });
+        p2card.querySelectorAll('.uv-kids').forEach(function (el) { el.remove(); });
+
+        /* Градиенты переполнения */
+        p2card.querySelectorAll('.uv-store-btn.is-full').forEach(function (btn) {
+            var col = btn.closest('.uv-colony');
+            if (col) col.classList.add('p2-full');
+        });
+        p2card.querySelectorAll('.uv-store-btn.is-warn').forEach(function (btn) {
+            var col = btn.closest('.uv-colony');
+            if (col && !col.classList.contains('p2-full')) col.classList.add('p2-warn');
+        });
+    }
+
     /* ---------- Автообновление ---------- */
-    /* Компактные карточки живут прямо на вкладке «Планеты».
-       Обновляем их только при структурных изменениях: добавлении/удалении
-       карточек (.card) или линий аккаунтов (.account-line).
-       Глубокие изменения (загрузка иконок складов, обновление таймеров)
-       НЕ вызывают перерисовку — иначе store-кнопки мерцают и пропадают. */
+    /* Два режима реакции на мутации в #accounts:
+       1) Структурные (добавление/удаление карточек или линий) → полная перерисовка.
+       2) Глубокие (ESI-данные по складам, qty) → инкрементальный синк одной карточки.
+       Это решает проблему мерцания: склады не пропадают при подгрузке. */
     if (accountsEl) {
         var debounce = null;
+        var syncDebounce = null;
+        var syncSet = {};
         var observer = new MutationObserver(function (mutations) {
-            /* Пропускаем обновление если открыт popup склада */
+            /* Пропускаем если открыт popup склада */
             if (dst.querySelector('.uv-store-list')) return;
 
-            /* Проверяем: есть ли среди мутаций структурные изменения?
-               Структурные = добавление/удаление узлов на уровне
-               #accounts, .account-line или [data-role="cards"]. */
-            var dominated = false;
+            var needFull = false;
             for (var i = 0; i < mutations.length; i++) {
                 var m = mutations[i];
                 if (m.type !== 'childList') continue;
                 var t = m.target;
+
+                /* Структурные изменения на уровне аккаунтов/линий/карточек */
                 if (t === accountsEl ||
                     (t.classList && (t.classList.contains('account-line') ||
-                     t.dataset && t.dataset.role === 'cards'))) {
-                    dominated = true;
+                     (t.dataset && t.dataset.role === 'cards')))) {
+                    needFull = true;
                     break;
                 }
-            }
-            if (!dominated) return;
 
-            clearTimeout(debounce);
-            debounce = setTimeout(refreshPlanets2, 400);
+                /* Глубокие изменения (склады, qty) → определяем какую карточку обновить */
+                var card = t.closest && t.closest('.card');
+                if (card && card.dataset.name) {
+                    syncSet[card.dataset.name] = true;
+                }
+            }
+
+            if (needFull) {
+                clearTimeout(syncDebounce);
+                syncSet = {};
+                clearTimeout(debounce);
+                debounce = setTimeout(refreshPlanets2, 400);
+                return;
+            }
+
+            /* Инкрементальный синк затронутых карточек */
+            var names = Object.keys(syncSet);
+            if (names.length) {
+                clearTimeout(syncDebounce);
+                syncDebounce = setTimeout(function () {
+                    var todo = Object.keys(syncSet);
+                    syncSet = {};
+                    for (var j = 0; j < todo.length; j++) syncCard(todo[j]);
+                }, 200);
+            }
         });
         observer.observe(accountsEl, { childList: true, subtree: true });
     }

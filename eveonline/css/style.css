@@ -5841,13 +5841,9 @@ input.eve-plex-input {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-/* Кнопки (лампочка, синхр, редакт, удаление) прижаты вправо */
-#planets2-cards .uv-head .card-light,
-#planets2-cards .uv-head [data-role="card-sync"],
-#planets2-cards .uv-head [data-role="card-edit"],
-#planets2-cards .uv-head [data-role="card-del"] {
-    flex: 0 0 auto;
-    margin-left: 0;
+/* Первая кнопка (лампочка) прижимает всю группу вправо */
+#planets2-cards .uv-head .card-light {
+    margin-left: auto;
 }
 
 /* Тело — колонии списком вниз */
