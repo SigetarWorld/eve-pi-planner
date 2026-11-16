@@ -1,6 +1,8 @@
-/* Планеты2 — облегчённая копия карточек из вкладки «Планеты».
-   При переключении на вкладку клонирует текущее состояние карточек
-   и показывает статично. Склады интерактивны (клик — содержимое). */
+/* Компактные карточки — облегчённая копия полных карточек из #accounts.
+   Показываются прямо на вкладке «Планеты» вместо полных карточек.
+   Автообновление через MutationObserver при изменении #accounts.
+   Склады интерактивны (клик — содержимое). Кнопки лампочки, восстановления,
+   редактирования и удаления пробрасываются на оригиналы в #accounts. */
 (function () {
     'use strict';
 
@@ -60,12 +62,13 @@
     }
 
     /* ---------- Клонирование ---------- */
-    function refreshPlanets2() {
-        var src = document.getElementById('accounts');
-        if (!src) { dst.innerHTML = '<p style="color:var(--text-dim);padding:1rem;">Карточек нет.</p>'; return; }
+    var accountsEl = document.getElementById('accounts');
 
-        var cards = src.querySelectorAll('.card > .uv');
-        if (!cards.length) { dst.innerHTML = '<p style="color:var(--text-dim);padding:1rem;">Карточек нет — откройте «Планеты» и добавьте.</p>'; return; }
+    function refreshPlanets2() {
+        if (!accountsEl) { dst.innerHTML = '<p style="color:var(--text-dim);padding:1rem;">Карточек нет.</p>'; return; }
+
+        var cards = accountsEl.querySelectorAll('.card > .uv');
+        if (!cards.length) { dst.innerHTML = '<p style="color:var(--text-dim);padding:1rem;">Карточек нет — добавьте персонажа выше.</p>'; return; }
 
         dst.innerHTML = '';
         cards.forEach(function (uv) {
@@ -417,10 +420,19 @@
         }
     });
 
-    // Слушаем переключение на вкладку
-    document.querySelectorAll('nav button').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            if (btn.dataset.tab === 'planets2') refreshPlanets2();
+    /* ---------- Автообновление ---------- */
+    /* Компактные карточки живут прямо на вкладке «Планеты».
+       Обновляем их при любом изменении полных карточек в #accounts
+       (добавление, удаление, редактирование). */
+    if (accountsEl) {
+        var debounce = null;
+        var observer = new MutationObserver(function () {
+            clearTimeout(debounce);
+            debounce = setTimeout(refreshPlanets2, 150);
         });
-    });
+        observer.observe(accountsEl, { childList: true, subtree: true });
+    }
+
+    // Первичная отрисовка с небольшой задержкой (карточки создаются в app.js)
+    setTimeout(refreshPlanets2, 300);
 })();

@@ -39,7 +39,6 @@
             </div>
             <nav class="tabs">
                 <button data-tab="planets">Планеты</button>
-                <button data-tab="planets2">Планеты2</button>
                 <button data-tab="chains">Цепочки производства</button>
                 <button data-tab="calculator">Карты</button>
                 <button data-tab="production">Производство</button>
@@ -189,16 +188,9 @@
                  строка системы с кнопкой подсветки справа, под ней
                  заголовки и 6 строк данных.
                  «Корабль» объединён на 6 строк (rowspan). -->
-            <div id="accounts">
+            <div id="accounts" style="display:none">
                 <!-- линии аккаунтов создаются в app.js -->
             </div>
-        </section>
-
-        <!-- Вкладка «Планеты2» — облегчённая копия карточек персонажей.
-             Не взаимодействует с другими вкладками: при открытии клонирует
-             текущее содержимое карточек из «Планеты» и показывает статично.
-             Стили: мелкий шрифт, без жирного, без рамок у картинок. -->
-        <section id="planets2" class="tab-content">
             <div id="planets2-cards"></div>
         </section>
 
@@ -301,7 +293,7 @@
     <script src="js/jumpmap.js?v=22"></script>
     <script src="js/planmap.js?v=5"></script>
     <script src="js/escalations.js?v=11"></script>
-    <script src="js/planets2.js?v=17"></script>
+    <script src="js/planets2.js?v=18"></script>
     <script>
         /* С диска (file://) ссылки вида /... не работают — подставляем data-local */
         if (location.protocol === "file:") {
