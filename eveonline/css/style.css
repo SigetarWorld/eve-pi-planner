@@ -1461,9 +1461,16 @@ form button:focus-visible,
 
 .planets-top > .stats-panel {
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 0.5rem;
     flex-wrap: wrap;
+    flex: initial;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    min-width: 0;
 }
 
 .planets-top > .eve-roster {
