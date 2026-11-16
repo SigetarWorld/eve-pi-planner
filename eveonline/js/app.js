@@ -5727,6 +5727,208 @@ if (eveCharsBox) {
 /* Обновляем ISK каждые 5 минут, если вкладка видна */
 setInterval(() => { if (!document.hidden) eveIskRefresh(); }, 5 * 60 * 1000);
 
+/* ---- График дохода за 7 дней (popup по клику на «24ч») ---- */
+const ISK_CHART_COLORS = ['#2ecc40', '#3498db', '#e8a33d', '#e74c3c', '#9b59b6', '#1abc9c', '#f39c12', '#e67e22'];
+
+/* Загрузка журнала за N дней для одного персонажа, с разбивкой по дням */
+async function eveWalletJournal7d(charId) {
+    const days = 7;
+    const now = Date.now();
+    const cutoff = now - days * 24 * 3600 * 1000;
+    const dayBuckets = new Array(days).fill(0);
+
+    let page = 1;
+    for (;;) {
+        let entries;
+        try {
+            entries = await eveFetchJson(
+                `${ESI_BASE}/characters/${charId}/wallet/journal/?datasource=tranquility&page=${page}`, {}, charId);
+        } catch { break; }
+        if (!Array.isArray(entries) || !entries.length) break;
+        let anyOld = false;
+        for (const e of entries) {
+            const t = new Date(e.date).getTime();
+            if (t < cutoff) { anyOld = true; continue; }
+            const daysAgo = Math.floor((now - t) / (24 * 3600 * 1000));
+            const idx = days - 1 - daysAgo;  // 0=самый старый день, 6=сегодня
+            if (idx >= 0 && idx < days) dayBuckets[idx] += Number(e.amount) || 0;
+        }
+        if (anyOld || entries.length < 2500) break;
+        page++;
+        if (page > 20) break;
+    }
+    return dayBuckets;
+}
+
+/* Рисуем график на canvas */
+function drawIskChart(canvas, datasets, labels) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+    const pad = { top: 15, right: 10, bottom: 22, left: 55 };
+    const cW = W - pad.left - pad.right;
+    const cH = H - pad.top - pad.bottom;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Находим min/max среди всех значений
+    let allVals = [];
+    datasets.forEach((ds) => ds.data.forEach((v) => allVals.push(v)));
+    let minV = Math.min(0, ...allVals);
+    let maxV = Math.max(0, ...allVals);
+    if (minV === maxV) { minV -= 1e6; maxV += 1e6; }
+    const range = maxV - minV || 1;
+
+    const toX = (i) => pad.left + (i / (labels.length - 1)) * cW;
+    const toY = (v) => pad.top + cH - ((v - minV) / range) * cH;
+
+    // Сетка
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    const gridSteps = 4;
+    for (let g = 0; g <= gridSteps; g++) {
+        const y = pad.top + (g / gridSteps) * cH;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cW, y); ctx.stroke();
+    }
+
+    // Линия нуля
+    if (minV < 0 && maxV > 0) {
+        const y0 = toY(0);
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(pad.left, y0); ctx.lineTo(pad.left + cW, y0); ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    // Данные — линии
+    datasets.forEach((ds, di) => {
+        ctx.strokeStyle = ds.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ds.data.forEach((v, i) => {
+            const x = toX(i), y = toY(v);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        // Точки
+        ds.data.forEach((v, i) => {
+            ctx.fillStyle = ds.color;
+            ctx.beginPath();
+            ctx.arc(toX(i), toY(v), 3, 0, Math.PI * 2);
+            ctx.fill();
+        });
+    });
+
+    // Оси — подписи дней
+    ctx.fillStyle = 'rgba(200,210,230,0.6)';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    labels.forEach((lbl, i) => {
+        ctx.fillText(lbl, toX(i), H - 4);
+    });
+
+    // Ось Y — подписи значений
+    ctx.textAlign = 'right';
+    for (let g = 0; g <= gridSteps; g++) {
+        const v = maxV - (g / gridSteps) * range;
+        const y = pad.top + (g / gridSteps) * cH;
+        ctx.fillText(eveIskFmt(v), pad.left - 5, y + 3);
+    }
+}
+
+/* Показать/скрыть popup */
+let iskChartPopup = null;
+function closeIskChart() {
+    if (iskChartPopup) { iskChartPopup.remove(); iskChartPopup = null; }
+}
+// Закрытие по клику вне
+document.addEventListener('click', (e) => {
+    if (iskChartPopup && !iskChartPopup.contains(e.target) && e.target !== eveIskDailyEl && !eveIskDailyEl.contains(e.target)) {
+        closeIskChart();
+    }
+});
+
+if (eveIskDailyEl) {
+    eveIskDailyEl.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        // Toggle
+        if (iskChartPopup) { closeIskChart(); return; }
+
+        const chars = typeof eveChars === 'function' && eveConfigured() ? eveChars() : [];
+        const dailySet = eveIskDailyChars();
+        const dailyChars = chars.filter((c) => dailySet.has(c.characterId));
+        if (!dailyChars.length) return;
+
+        // Создаём popup
+        const popup = document.createElement('div');
+        popup.className = 'isk-chart-popup';
+        popup.innerHTML = '<h4>Доход за 7 дней</h4><p style="color:var(--text-dim);font-size:0.72rem;">Загрузка…</p>';
+        eveIskDailyEl.style.position = 'relative';
+        eveIskDailyEl.appendChild(popup);
+        iskChartPopup = popup;
+
+        try {
+            // Загружаем данные по всем персонажам параллельно
+            const results = await Promise.allSettled(
+                dailyChars.map((c) => eveWalletJournal7d(c.characterId))
+            );
+
+            if (!iskChartPopup) return; // popup уже закрыт
+
+            // Даты-лейблы (7 дней)
+            const labels = [];
+            for (let d = 6; d >= 0; d--) {
+                const dt = new Date(Date.now() - d * 24 * 3600 * 1000);
+                labels.push(String(dt.getDate()).padStart(2, '0') + '.' + String(dt.getMonth() + 1).padStart(2, '0'));
+            }
+
+            // Датасеты
+            const datasets = [];
+            let grandTotal = 0;
+            dailyChars.forEach((c, i) => {
+                const r = results[i];
+                const data = r.status === 'fulfilled' ? r.value : new Array(7).fill(0);
+                const color = ISK_CHART_COLORS[i % ISK_CHART_COLORS.length];
+                data.forEach((v) => grandTotal += v);
+                datasets.push({ name: c.characterName || 'Персонаж', data, color });
+            });
+
+            // Рисуем
+            const dpr = window.devicePixelRatio || 1;
+            const cW = 380, cH = 150;
+            popup.innerHTML = '<h4>Доход за 7 дней</h4>';
+            const canvas = document.createElement('canvas');
+            canvas.className = 'isk-chart-canvas';
+            canvas.width = cW * dpr;
+            canvas.height = cH * dpr;
+            canvas.style.width = cW + 'px';
+            canvas.style.height = cH + 'px';
+            canvas.getContext('2d').scale(dpr, dpr);
+            popup.appendChild(canvas);
+
+            drawIskChart(canvas, datasets, labels);
+
+            // Легенда
+            const legend = document.createElement('div');
+            legend.className = 'isk-chart-legend';
+            datasets.forEach((ds) => {
+                legend.innerHTML += `<span class="isk-chart-legend-item"><span class="isk-chart-legend-dot" style="background:${ds.color}"></span>${escapeHtml(ds.name)}</span>`;
+            });
+            popup.appendChild(legend);
+
+            // Итого
+            const totalDiv = document.createElement('div');
+            totalDiv.className = 'isk-chart-total';
+            const s = grandTotal >= 0 ? '+' : '';
+            totalDiv.textContent = `Итого за 7 дней: ${s}${eveIskFmt(grandTotal)}`;
+            popup.appendChild(totalDiv);
+
+        } catch (err) {
+            if (iskChartPopup) popup.innerHTML = '<h4>Доход за 7 дней</h4><p style="color:#e74c3c;font-size:0.72rem;">Ошибка: ' + escapeHtml(String(err)) + '</p>';
+        }
+    });
+}
+
 /* ---- PLEX: ручной ввод, хранится в localStorage ---- */
 const evePlexInput = document.getElementById('eve-plex-input');
 const EVE_PLEX_KEY = 'evepi.plexCount';
