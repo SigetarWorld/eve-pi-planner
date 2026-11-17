@@ -40,9 +40,9 @@ const EVE_AUTH = {
        с зеркала Netlify, по http или как /eveonline/index.html — EVE
        вернёт только сюда. */
     redirectUri: 'https://sigetar.ru/eveonline/',
-    authorizeUrl: 'https://login.eveonline.com/oauth/authorize',
+    authorizeUrl: 'https://login.eveonline.com/v2/oauth/authorize',
     tokenUrl: 'https://login.eveonline.com/v2/oauth/token',
-    revokeUrl: 'https://login.eveonline.com/oauth/revoke',
+    revokeUrl: 'https://login.eveonline.com/v2/oauth/revoke',
     verifyUrl: 'https://login.eveonline.com/oauth/verify',
     // планеты; имущество (склады), названия структур, офисы корпорации
     // и названия её отделов — для «Тест2»; кошелёк — для «Сумма ISK»
