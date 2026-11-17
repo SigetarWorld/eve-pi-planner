@@ -205,7 +205,12 @@ async function eveTokenRequest(params) {
     });
 
     if (!res.ok) {
-        const error = new Error(await eveErrorText(res));
+        const errBody = await res.text();
+        try { localStorage.setItem('evepi.lastTokenError', JSON.stringify({
+            status: res.status, body: errBody.substring(0, 500),
+            url: EVE_AUTH.tokenUrl, ts: new Date().toISOString()
+        })); } catch(e) {}
+        const error = new Error(errBody || res.status);
         error.status = res.status;
         throw error;
     }
@@ -255,6 +260,14 @@ async function eveHandleCallback() {
 
     const pending = eveJsonGet(localStorage, EVE_AUTH.pendingKey);
     eveJsonDrop(localStorage, EVE_AUTH.pendingKey);
+
+    try { localStorage.setItem('evepi.debugCallback', JSON.stringify({
+        hasPending: !!pending,
+        stateMatch: pending ? pending.state === params.get('state') : false,
+        hasVerifier: pending ? !!pending.verifier : false,
+        codeLen: (params.get('code') || '').length,
+        ts: new Date().toISOString()
+    })); } catch(e) {}
 
     if (!pending || pending.state !== params.get('state')) {
         throw new Error('state не совпал — вход отменён');
