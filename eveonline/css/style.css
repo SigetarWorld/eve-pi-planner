@@ -6025,11 +6025,11 @@ input.eve-plex-input {
     line-height: 1.25;
 }
 
-/* Вторая колония на той же планете — с отступом и разделителем */
-.p2-same-planet {
-    border-top: 1px dashed var(--border);
-    padding-left: 1.8rem;
-    margin-top: -1px; /* склеиваем с предыдущей колонией */
+/* Разделитель между двумя продуктами на одной планете */
+.p2-prod-sep {
+    margin: 0 0.3rem;
+    color: var(--text-dim);
+    opacity: 0.5;
 }
 
 /* Разделитель между группами аккаунтов */

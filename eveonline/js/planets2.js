@@ -167,31 +167,35 @@
         });
 
         // Если на одной планете 2 продукта (P1-колонии с 2 парами P0→P1) —
-        // у второй колонии скрываем дублирование планеты и показываем разделитель
+        // сливаем в одну строку через разделитель «|»
         dst.querySelectorAll('.p2-card').forEach(function (card) {
             var cols = card.querySelectorAll('.uv-colony');
-            for (var i = 1; i < cols.length; i++) {
+            for (var i = cols.length - 1; i >= 1; i--) {
                 var prev = cols[i - 1].dataset.planet;
                 var cur  = cols[i].dataset.planet;
-                if (prev && cur && prev === cur) {
-                    cols[i].classList.add('p2-same-planet');
-                    // Скрываем иконку планеты и название — оставляем только продукт
-                    var where = cols[i].querySelector('.uv-where');
-                    if (where) {
-                        var icon = where.querySelector('.uv-planet-icon');
-                        if (icon) icon.style.display = 'none';
-                        var sys = where.querySelector('.uv-sys');
-                        if (sys) sys.style.display = 'none';
-                        var ptype = where.querySelector('.uv-ptype');
-                        if (ptype) ptype.style.display = 'none';
-                        // Убираем разделитель · перед продуктом
-                        var seps = where.querySelectorAll('.uv-sep');
-                        seps.forEach(function (s) { s.style.display = 'none'; });
-                        // Убираем склады (они уже на первой строке)
-                        var stores = where.querySelector('.uv-stores');
-                        if (stores) stores.style.display = 'none';
-                    }
+                if (!prev || !cur || prev !== cur) continue;
+                // Берём продуктовую часть из второй колонии
+                var srcLine = cols[i].querySelector('.uv-line');
+                if (!srcLine) { cols[i].remove(); continue; }
+                // Собираем элементы продукта (всё кроме .uv-where и .uv-toggle*)
+                var parts = [];
+                for (var j = 0; j < srcLine.childNodes.length; j++) {
+                    var n = srcLine.childNodes[j];
+                    if (n.nodeType !== 1) continue;
+                    if (n.classList.contains('uv-where')) continue;
+                    if (n.classList.contains('uv-toggle') || n.classList.contains('uv-toggle-gap')) continue;
+                    parts.push(n);
                 }
+                // Вставляем разделитель и части в первую колонию
+                var dstLine = cols[i - 1].querySelector('.uv-line');
+                if (dstLine && parts.length) {
+                    var sep = document.createElement('span');
+                    sep.className = 'p2-prod-sep';
+                    sep.textContent = '|';
+                    dstLine.appendChild(sep);
+                    parts.forEach(function (el) { dstLine.appendChild(el); });
+                }
+                cols[i].remove();
             }
         });
 
