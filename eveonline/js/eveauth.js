@@ -181,9 +181,10 @@ async function eveLogin(extraScopes) {
     const state = b64url(eveBytes(16));
     const verifier = b64url(eveBytes(48));
 
-    // localStorage вместо sessionStorage: встроенные браузеры (Claude,
-    // WebView) могут терять sessionStorage при переходе на другой домен.
-    // Запись одноразовая — удаляется сразу после чтения.
+    // Сохраняем в оба хранилища: sessionStorage для обычных браузеров,
+    // localStorage как fallback для встроенных (Claude, WebView),
+    // которые могут терять sessionStorage при переходе на другой домен.
+    eveJsonSet(sessionStorage, EVE_AUTH.pendingKey, { state, verifier });
     eveJsonSet(localStorage, EVE_AUTH.pendingKey, { state, verifier });
 
     location.assign(eveAuthorizeUrl(state, await eveChallengeOf(verifier), typeof extraScopes === 'string' ? extraScopes : ''));
@@ -198,17 +199,6 @@ async function eveTokenRequest(params) {
     body.set('client_id', EVE_AUTH.clientId);
     if (EVE_AUTH.clientSecret) body.set('client_secret', EVE_AUTH.clientSecret);
 
-    // Debug: сохраняем параметры запроса (без code и verifier — они длинные)
-    try { localStorage.setItem('evepi.debugTokenReq', JSON.stringify({
-        grant_type: body.get('grant_type'),
-        hasCode: !!body.get('code'),
-        codeLen: (body.get('code') || '').length,
-        redirect_uri: body.get('redirect_uri'),
-        hasVerifier: !!body.get('code_verifier'),
-        verifierLen: (body.get('code_verifier') || '').length,
-        ts: new Date().toISOString()
-    })); } catch(e) {}
-
     const res = await fetch(EVE_AUTH.tokenUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -216,12 +206,7 @@ async function eveTokenRequest(params) {
     });
 
     if (!res.ok) {
-        const errBody = await res.text();
-        try { localStorage.setItem('evepi.lastTokenError', JSON.stringify({
-            status: res.status, body: errBody.substring(0, 500),
-            url: EVE_AUTH.tokenUrl, ts: new Date().toISOString()
-        })); } catch(e) {}
-        const error = new Error(errBody || res.status);
+        const error = new Error(await eveErrorText(res));
         error.status = res.status;
         throw error;
     }
@@ -269,16 +254,10 @@ async function eveHandleCallback() {
     const failed = params.get('error');
     if (failed) throw new Error(params.get('error_description') || failed);
 
-    const pending = eveJsonGet(localStorage, EVE_AUTH.pendingKey);
+    const pending = eveJsonGet(sessionStorage, EVE_AUTH.pendingKey)
+                 || eveJsonGet(localStorage, EVE_AUTH.pendingKey);
+    eveJsonDrop(sessionStorage, EVE_AUTH.pendingKey);
     eveJsonDrop(localStorage, EVE_AUTH.pendingKey);
-
-    try { localStorage.setItem('evepi.debugCallback', JSON.stringify({
-        hasPending: !!pending,
-        stateMatch: pending ? pending.state === params.get('state') : false,
-        hasVerifier: pending ? !!pending.verifier : false,
-        codeLen: (params.get('code') || '').length,
-        ts: new Date().toISOString()
-    })); } catch(e) {}
 
     if (!pending || pending.state !== params.get('state')) {
         throw new Error('state не совпал — вход отменён');
