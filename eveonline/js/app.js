@@ -5552,11 +5552,6 @@ function eveCharGroupsSave(groups) {
     document.dispatchEvent(new CustomEvent('evepi:groups'));
 }
 
-/* Возвращает имя персонажа по charId из текущего списка */
-function eveCharById(list, id) {
-    return list.find((c) => Number(c.characterId) === Number(id));
-}
-
 /* Перестроить группы: убрать отключённых персонажей, добавить новых в «без группы» */
 function eveReconcileGroups(list) {
     const groups = eveCharGroups();
@@ -5587,7 +5582,7 @@ function renderEveRoster(list) {
                       ondragleave="this.classList.remove('eve-group-over')"
                       ondrop="window._eveDropChar(event,${gi})">`;
         g.forEach((id) => {
-            const c = eveCharById(list, id);
+            const c = eveCharById(Number(id));
             if (!c) return;
             html += `<span class="eve-roster-char eve-group-char" draggable="true"
                            data-charid="${c.characterId}"
