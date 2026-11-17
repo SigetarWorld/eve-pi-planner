@@ -166,6 +166,35 @@
             el.remove();
         });
 
+        // Если на одной планете 2 продукта (P1-колонии с 2 парами P0→P1) —
+        // у второй колонии скрываем дублирование планеты и показываем разделитель
+        dst.querySelectorAll('.p2-card').forEach(function (card) {
+            var cols = card.querySelectorAll('.uv-colony');
+            for (var i = 1; i < cols.length; i++) {
+                var prev = cols[i - 1].dataset.planet;
+                var cur  = cols[i].dataset.planet;
+                if (prev && cur && prev === cur) {
+                    cols[i].classList.add('p2-same-planet');
+                    // Скрываем иконку планеты и название — оставляем только продукт
+                    var where = cols[i].querySelector('.uv-where');
+                    if (where) {
+                        var icon = where.querySelector('.uv-planet-icon');
+                        if (icon) icon.style.display = 'none';
+                        var sys = where.querySelector('.uv-sys');
+                        if (sys) sys.style.display = 'none';
+                        var ptype = where.querySelector('.uv-ptype');
+                        if (ptype) ptype.style.display = 'none';
+                        // Убираем разделитель · перед продуктом
+                        var seps = where.querySelectorAll('.uv-sep');
+                        seps.forEach(function (s) { s.style.display = 'none'; });
+                        // Убираем склады (они уже на первой строке)
+                        var stores = where.querySelector('.uv-stores');
+                        if (stores) stores.style.display = 'none';
+                    }
+                }
+            }
+        });
+
         // Градиент переполнения: помечаем колонии с is-warn / is-full
         dst.querySelectorAll('.uv-store-btn.is-full').forEach(function (btn) {
             var col = btn.closest('.uv-colony');
