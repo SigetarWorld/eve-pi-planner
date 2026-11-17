@@ -181,8 +181,10 @@ async function eveLogin(extraScopes) {
     const state = b64url(eveBytes(16));
     const verifier = b64url(eveBytes(48));
 
-    // Живёт только в этой вкладке: возврат из EVE случится в ней же
-    eveJsonSet(sessionStorage, EVE_AUTH.pendingKey, { state, verifier });
+    // localStorage вместо sessionStorage: встроенные браузеры (Claude,
+    // WebView) могут терять sessionStorage при переходе на другой домен.
+    // Запись одноразовая — удаляется сразу после чтения.
+    eveJsonSet(localStorage, EVE_AUTH.pendingKey, { state, verifier });
 
     location.assign(eveAuthorizeUrl(state, await eveChallengeOf(verifier), typeof extraScopes === 'string' ? extraScopes : ''));
 }
@@ -251,8 +253,8 @@ async function eveHandleCallback() {
     const failed = params.get('error');
     if (failed) throw new Error(params.get('error_description') || failed);
 
-    const pending = eveJsonGet(sessionStorage, EVE_AUTH.pendingKey);
-    eveJsonDrop(sessionStorage, EVE_AUTH.pendingKey);
+    const pending = eveJsonGet(localStorage, EVE_AUTH.pendingKey);
+    eveJsonDrop(localStorage, EVE_AUTH.pendingKey);
 
     if (!pending || pending.state !== params.get('state')) {
         throw new Error('state не совпал — вход отменён');
