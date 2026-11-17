@@ -84,6 +84,35 @@
         return map;
     }
 
+    /* Сливаем колонии одной планеты (2 продукта P1) в одну строку через «|» */
+    function mergeSamePlanet(container) {
+        var cols = container.querySelectorAll('.uv-colony');
+        for (var i = cols.length - 1; i >= 1; i--) {
+            var prev = cols[i - 1].dataset.planet;
+            var cur  = cols[i].dataset.planet;
+            if (!prev || !cur || prev !== cur) continue;
+            var srcLine = cols[i].querySelector('.uv-line');
+            if (!srcLine) { cols[i].remove(); continue; }
+            var parts = [];
+            for (var j = 0; j < srcLine.childNodes.length; j++) {
+                var n = srcLine.childNodes[j];
+                if (n.nodeType !== 1) continue;
+                if (n.classList.contains('uv-where')) continue;
+                if (n.classList.contains('uv-toggle') || n.classList.contains('uv-toggle-gap')) continue;
+                parts.push(n);
+            }
+            var dstLine = cols[i - 1].querySelector('.uv-line');
+            if (dstLine && parts.length) {
+                var sep = document.createElement('span');
+                sep.className = 'p2-prod-sep';
+                sep.textContent = '|';
+                dstLine.appendChild(sep);
+                parts.forEach(function (el) { dstLine.appendChild(el); });
+            }
+            cols[i].remove();
+        }
+    }
+
     function refreshPlanets2() {
         if (!accountsEl) { dst.innerHTML = '<p style="color:var(--text-dim);padding:1rem;">Карточек нет.</p>'; return; }
 
@@ -166,37 +195,9 @@
             el.remove();
         });
 
-        // Если на одной планете 2 продукта (P1-колонии с 2 парами P0→P1) —
-        // сливаем в одну строку через разделитель «|»
+        // Если на одной планете 2 продукта — сливаем в одну строку
         dst.querySelectorAll('.p2-card').forEach(function (card) {
-            var cols = card.querySelectorAll('.uv-colony');
-            for (var i = cols.length - 1; i >= 1; i--) {
-                var prev = cols[i - 1].dataset.planet;
-                var cur  = cols[i].dataset.planet;
-                if (!prev || !cur || prev !== cur) continue;
-                // Берём продуктовую часть из второй колонии
-                var srcLine = cols[i].querySelector('.uv-line');
-                if (!srcLine) { cols[i].remove(); continue; }
-                // Собираем элементы продукта (всё кроме .uv-where и .uv-toggle*)
-                var parts = [];
-                for (var j = 0; j < srcLine.childNodes.length; j++) {
-                    var n = srcLine.childNodes[j];
-                    if (n.nodeType !== 1) continue;
-                    if (n.classList.contains('uv-where')) continue;
-                    if (n.classList.contains('uv-toggle') || n.classList.contains('uv-toggle-gap')) continue;
-                    parts.push(n);
-                }
-                // Вставляем разделитель и части в первую колонию
-                var dstLine = cols[i - 1].querySelector('.uv-line');
-                if (dstLine && parts.length) {
-                    var sep = document.createElement('span');
-                    sep.className = 'p2-prod-sep';
-                    sep.textContent = '|';
-                    dstLine.appendChild(sep);
-                    parts.forEach(function (el) { dstLine.appendChild(el); });
-                }
-                cols[i].remove();
-            }
+            mergeSamePlanet(card);
         });
 
         // Градиент переполнения: помечаем колонии с is-warn / is-full
@@ -547,6 +548,9 @@
             el.remove();
         });
         p2card.querySelectorAll('.uv-kids').forEach(function (el) { el.remove(); });
+
+        /* Сливаем колонии одной планеты в одну строку (как в refreshPlanets2) */
+        mergeSamePlanet(p2card);
 
         /* Градиенты переполнения */
         p2card.querySelectorAll('.uv-store-btn.is-full').forEach(function (btn) {
