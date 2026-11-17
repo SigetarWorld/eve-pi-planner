@@ -4739,14 +4739,66 @@ input.chain-amount:focus {
 }
 .eve-chars-wrap .eve-chars { top: calc(100% + 4px); left: 0; right: auto; min-width: 16rem; }
 .eve-roster-list {
-    display: grid;
-    grid-template-rows: repeat(3, auto);
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    align-content: center;
-    gap: 0.2rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1 1 0;
+    min-width: 0;
 }
-.eve-roster-list .eve-roster-empty { grid-row: 1 / 4; }
+.eve-roster-list .eve-roster-empty { font-size: 0.78rem; color: var(--text-faint); }
+
+/* Группировка персонажей по аккаунтам: горизонтальный ряд столбцов */
+.eve-groups {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+.eve-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.35rem 0.5rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    min-width: 7rem;
+    min-height: 1.8rem;
+    transition: border-color 0.15s;
+}
+.eve-group-over {
+    border-color: var(--accent) !important;
+}
+.eve-group-char {
+    cursor: grab;
+    user-select: none;
+    padding: 0.15rem 0.2rem;
+    border-radius: 3px;
+    transition: background 0.1s;
+}
+.eve-group-char:hover {
+    background: var(--bg-hover);
+}
+.eve-group-char:active {
+    cursor: grabbing;
+}
+.eve-group-ungrouped {
+    border-style: dashed;
+    opacity: 0.7;
+}
+.eve-group-new {
+    border-style: dashed;
+    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+    cursor: default;
+}
+.eve-group-new-label {
+    font-size: 1.2rem;
+    color: var(--text-dim);
+}
 
 /* ---------- Сумма ISK: общий баланс + суточная ---------- */
 .eve-isk-box {
@@ -5971,6 +6023,14 @@ input.eve-plex-input {
     font-size: 12px;
     font-weight: 400;
     line-height: 1.25;
+}
+
+/* Разделитель между группами аккаунтов */
+.p2-group-sep {
+    grid-column: 1 / -1;
+    height: 0;
+    border-top: 1px dashed var(--border);
+    margin: 0.15rem 0;
 }
 
 /* Всё внутри — без жирного */

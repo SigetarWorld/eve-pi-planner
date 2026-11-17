@@ -64,17 +64,71 @@
     /* ---------- Клонирование ---------- */
     var accountsEl = document.getElementById('accounts');
 
+    /* Получить группы и построить карту charName → groupIndex.
+       Используем eveChars() для маппинга charId→charName. */
+    function getCharGroupMap() {
+        var map = {};
+        try {
+            var groups = JSON.parse(localStorage.getItem('evepi.charGroups') || '[]');
+            var chars = typeof eveChars === 'function' ? eveChars() : [];
+            for (var gi = 0; gi < groups.length; gi++) {
+                for (var ci = 0; ci < groups[gi].length; ci++) {
+                    var id = Number(groups[gi][ci]);
+                    var ch = chars.find(function(c) { return Number(c.characterId) === id; });
+                    if (ch && ch.characterName) {
+                        map[ch.characterName.toLowerCase()] = gi;
+                    }
+                }
+            }
+        } catch(e) { /* */ }
+        return map;
+    }
+
     function refreshPlanets2() {
         if (!accountsEl) { dst.innerHTML = '<p style="color:var(--text-dim);padding:1rem;">Карточек нет.</p>'; return; }
 
         var cards = accountsEl.querySelectorAll('.card > .uv');
         if (!cards.length) { dst.innerHTML = '<p style="color:var(--text-dim);padding:1rem;">Карточек нет — добавьте персонажа выше.</p>'; return; }
 
-        dst.innerHTML = '';
+        /* Собираем карточки в массив для сортировки по группам */
+        var cardArr = [];
         cards.forEach(function (uv) {
             var parentCard = uv.closest('.card');
+            var name = parentCard ? (parentCard.dataset.name || '') : '';
+            cardArr.push({ uv: uv, parentCard: parentCard, name: name });
+        });
+
+        /* Сортировка по группам: сгруппированные идут первыми, по порядку групп,
+           внутри группы — по порядку персонажей в группе,
+           негруппированные — в конце в исходном порядке */
+        var groupMap = getCharGroupMap();
+        cardArr.sort(function(a, b) {
+            var ga = groupMap.hasOwnProperty(a.name.toLowerCase()) ? groupMap[a.name.toLowerCase()] : 9999;
+            var gb = groupMap.hasOwnProperty(b.name.toLowerCase()) ? groupMap[b.name.toLowerCase()] : 9999;
+            return ga - gb;
+        });
+
+        dst.innerHTML = '';
+
+        /* Рендер с разделителями между группами */
+        var prevGroup = -1;
+        cardArr.forEach(function (item) {
+            var uv = item.uv;
+            var parentCard = item.parentCard;
+            var curGroup = groupMap.hasOwnProperty(item.name.toLowerCase())
+                ? groupMap[item.name.toLowerCase()] : -1;
+
+            /* Разделитель между группами */
+            if (prevGroup !== -1 && curGroup !== prevGroup) {
+                var sep = document.createElement('div');
+                sep.className = 'p2-group-sep';
+                dst.appendChild(sep);
+            }
+            prevGroup = curGroup;
+
             var wrap = document.createElement('div');
             wrap.className = 'p2-card';
+            if (curGroup >= 0) wrap.dataset.group = curGroup;
             // Переносим data-name с .card, чтобы прокси-кнопки нашли оригинал
             if (parentCard) {
                 wrap.dataset.name = parentCard.dataset.name || '';
@@ -531,6 +585,12 @@
         });
         observer.observe(accountsEl, { childList: true, subtree: true });
     }
+
+    // При изменении группировки персонажей — пересортировка карточек
+    document.addEventListener('evepi:groups', function() {
+        clearTimeout(debounce);
+        debounce = setTimeout(refreshPlanets2, 300);
+    });
 
     // Первичная отрисовка с небольшой задержкой (карточки создаются в app.js)
     setTimeout(refreshPlanets2, 400);

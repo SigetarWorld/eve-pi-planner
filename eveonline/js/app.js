@@ -5532,16 +5532,140 @@ function renderEveAuth(message) {
 /* Блок «Персонажи» внизу — список-меню (кнопка eve-chars-btn и окно
    eve-chars под ней); всё содержимое заполняет renderEveAuth */
 const eveRosterList = document.getElementById('eve-roster-list');
+
+/* ---- Группировка персонажей по аккаунтам (drag-and-drop) ----
+   localStorage: evepi.charGroups = [[charId, charId, charId], [charId], ...]
+   Каждый массив — один аккаунт (до 3 персонажей). */
+const EVE_GROUPS_KEY = 'evepi.charGroups';
+
+function eveCharGroups() {
+    try {
+        const raw = localStorage.getItem(EVE_GROUPS_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch { /* */ }
+    return [];
+}
+
+function eveCharGroupsSave(groups) {
+    try { localStorage.setItem(EVE_GROUPS_KEY, JSON.stringify(groups)); } catch { /* */ }
+    // сигнал для planets2.js
+    document.dispatchEvent(new CustomEvent('evepi:groups'));
+}
+
+/* Возвращает имя персонажа по charId из текущего списка */
+function eveCharById(list, id) {
+    return list.find((c) => Number(c.characterId) === Number(id));
+}
+
+/* Перестроить группы: убрать отключённых персонажей, добавить новых в «без группы» */
+function eveReconcileGroups(list) {
+    const groups = eveCharGroups();
+    const activeIds = new Set(list.map((c) => Number(c.characterId)));
+    // убрать отключённых
+    const clean = groups.map((g) => g.filter((id) => activeIds.has(Number(id))))
+                        .filter((g) => g.length > 0);
+    // найти негруппированных
+    const grouped = new Set(clean.flat().map(Number));
+    const ungrouped = list.filter((c) => !grouped.has(Number(c.characterId)));
+    return { groups: clean, ungrouped };
+}
+
 function renderEveRoster(list) {
     if (!eveRosterList) return;
-    eveRosterList.innerHTML = list.length
-        ? list.map((c) => `
-            <span class="eve-roster-char">
-                ${c.characterId ? `<img class="eve-char-img" src="${evePortrait(c.characterId)}" alt="" width="24" height="24">` : ''}
+    if (!list.length) {
+        eveRosterList.innerHTML = '<span class="eve-roster-empty">не подключены — «LOG IN with EVE Online» вверху</span>';
+        return;
+    }
+
+    const { groups, ungrouped } = eveReconcileGroups(list);
+    let html = '<div class="eve-groups">';
+
+    // Группы (аккаунты)
+    groups.forEach((g, gi) => {
+        html += `<div class="eve-group" data-group="${gi}"
+                      ondragover="event.preventDefault();this.classList.add('eve-group-over')"
+                      ondragleave="this.classList.remove('eve-group-over')"
+                      ondrop="window._eveDropChar(event,${gi})">`;
+        g.forEach((id) => {
+            const c = eveCharById(list, id);
+            if (!c) return;
+            html += `<span class="eve-roster-char eve-group-char" draggable="true"
+                           data-charid="${c.characterId}"
+                           ondragstart="window._eveDragStart(event)">
+                ${c.characterId ? `<img class="eve-char-img" src="${evePortrait(c.characterId)}" alt="" width="24" height="24" draggable="false">` : ''}
                 <span class="eve-roster-name">${escapeHtml(c.characterName || 'Персонаж')}</span>
-            </span>`).join('')
-        : '<span class="eve-roster-empty">не подключены — «LOG IN with EVE Online» вверху</span>';
+            </span>`;
+        });
+        html += '</div>';
+    });
+
+    // Негруппированные персонажи
+    if (ungrouped.length) {
+        html += `<div class="eve-group eve-group-ungrouped" data-group="-1"
+                      ondragover="event.preventDefault();this.classList.add('eve-group-over')"
+                      ondragleave="this.classList.remove('eve-group-over')"
+                      ondrop="window._eveDropChar(event,-1)">`;
+        ungrouped.forEach((c) => {
+            html += `<span class="eve-roster-char eve-group-char" draggable="true"
+                           data-charid="${c.characterId}"
+                           ondragstart="window._eveDragStart(event)">
+                ${c.characterId ? `<img class="eve-char-img" src="${evePortrait(c.characterId)}" alt="" width="24" height="24" draggable="false">` : ''}
+                <span class="eve-roster-name">${escapeHtml(c.characterName || 'Персонаж')}</span>
+            </span>`;
+        });
+        html += '</div>';
+    }
+
+    // Зона «+» для создания нового аккаунта
+    html += `<div class="eve-group eve-group-new"
+                  ondragover="event.preventDefault();this.classList.add('eve-group-over')"
+                  ondragleave="this.classList.remove('eve-group-over')"
+                  ondrop="window._eveDropChar(event,-2)">
+                <span class="eve-group-new-label">+</span>
+             </div>`;
+    html += '</div>';
+
+    eveRosterList.innerHTML = html;
 }
+
+/* DnD: глобальные обработчики */
+window._eveDragStart = function(e) {
+    e.dataTransfer.setData('text/plain', e.target.closest('[data-charid]').dataset.charid);
+    e.dataTransfer.effectAllowed = 'move';
+};
+
+window._eveDropChar = function(e, targetGroup) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('eve-group-over');
+    const charId = Number(e.dataTransfer.getData('text/plain'));
+    if (!charId) return;
+
+    const list = typeof eveChars === 'function' ? eveChars() : [];
+    const { groups, ungrouped } = eveReconcileGroups(list);
+
+    // Убираем персонажа из текущей группы
+    groups.forEach((g) => {
+        const idx = g.indexOf(charId);
+        if (idx >= 0) g.splice(idx, 1);
+    });
+
+    if (targetGroup === -2) {
+        // Новая группа
+        groups.push([charId]);
+    } else if (targetGroup === -1) {
+        // Убрать из группы (негруппированные) — просто не добавляем ни в какую
+    } else if (targetGroup >= 0 && targetGroup < groups.length) {
+        // Добавить в существующую группу (макс 3)
+        if (groups[targetGroup].length < 3) {
+            groups[targetGroup].push(charId);
+        }
+    }
+
+    // Убрать пустые группы
+    const clean = groups.filter((g) => g.length > 0);
+    eveCharGroupsSave(clean);
+    renderEveRoster(list);
+};
 
 function closeEveChars() {
     eveCharsBox.hidden = true;
