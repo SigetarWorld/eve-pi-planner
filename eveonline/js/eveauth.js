@@ -198,6 +198,17 @@ async function eveTokenRequest(params) {
     body.set('client_id', EVE_AUTH.clientId);
     if (EVE_AUTH.clientSecret) body.set('client_secret', EVE_AUTH.clientSecret);
 
+    // Debug: сохраняем параметры запроса (без code и verifier — они длинные)
+    try { localStorage.setItem('evepi.debugTokenReq', JSON.stringify({
+        grant_type: body.get('grant_type'),
+        hasCode: !!body.get('code'),
+        codeLen: (body.get('code') || '').length,
+        redirect_uri: body.get('redirect_uri'),
+        hasVerifier: !!body.get('code_verifier'),
+        verifierLen: (body.get('code_verifier') || '').length,
+        ts: new Date().toISOString()
+    })); } catch(e) {}
+
     const res = await fetch(EVE_AUTH.tokenUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
