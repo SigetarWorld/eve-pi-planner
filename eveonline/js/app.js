@@ -37,7 +37,7 @@ const iconFor = (name) => {
    ============================================================ */
 
 const CARDS_LIMIT = 3;
-const COLONY_ROWS = 6;
+const COLONY_ROWS = 12;
 
 // Римские номера планет: I..XII
 const ROMAN_NUMBERS = ['I', 'II', 'III', 'IV', 'V', 'VI',
