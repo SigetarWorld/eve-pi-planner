@@ -1306,10 +1306,10 @@
         catch(e) { alert('Ошибка входа: ' + e.message); }
     });
 
-    /* Render features section with inline CAT_META (no Firebase read before auth) */
-    renderFeaturesSection();
+    /* Load categories from Firebase (public read allowed) and render features */
+    applyCategoriesFromDB();
 
-    onAuthStateChanged(auth, user => {
+    onAuthStateChanged(auth, async user => {
         currentUser = user;
         isAdmin = user && user.email === ADMIN_EMAIL;
         const st = document.getElementById('adminStatus');
@@ -1344,6 +1344,7 @@
                 refreshMilestoneList();
                 refreshFeatureList();
                 refreshCategoryList();
+                await applyCategoriesFromDB();
             }
         } else {
             st.textContent = 'не авторизован';
