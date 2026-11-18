@@ -1345,6 +1345,7 @@
                 refreshFeatureList();
                 refreshCategoryList();
                 await applyCategoriesFromDB();
+                rebuildCatDropdown();
             }
         } else {
             st.textContent = 'не авторизован';
