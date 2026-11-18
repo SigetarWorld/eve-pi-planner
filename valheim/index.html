@@ -968,9 +968,12 @@
         const _byVer = groupBy(FEATURES, 'ver');
         MILESTONES = MILESTONE_META.map(m => {
             const feats = _byVer[m.ver] || [];
-            const text = feats.length > 0
-                ? feats.slice(0, 4).map(f => f.text).join('\n')
-                : (m.title || '');
+            /* Milestone's own text field takes priority; fall back to features list */
+            const text = m.text
+                ? m.text
+                : feats.length > 0
+                    ? feats.slice(0, 4).map(f => f.text).join('\n')
+                    : (m.title || '');
             return { ...m, text };
         });
 
