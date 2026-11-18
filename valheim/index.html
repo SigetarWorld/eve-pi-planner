@@ -1022,8 +1022,9 @@
                 featHtml = '<div class="rm-card-feats">' + shown.map(f => {
                     const cm = catMap[f.cat];
                     const ic = cm ? svgIcon(cm.icon) : '';
-                    const dk = f.done === true ? ' rm-feat-done' : '';
-                    return `<div class="rm-feat-row${dk}">${f.done ? '<span class="check">[x]</span>' : '<span class="pending">[ ]</span>'} <span class="rm-feat-icon">${ic}</span> ${f.text}</div>`;
+                    const isDone = f.done !== false;
+                    const dk = isDone ? ' rm-feat-done' : '';
+                    return `<div class="rm-feat-row${dk}">${isDone ? '<span class="check">[x]</span>' : '<span class="pending">[ ]</span>'} <span class="rm-feat-icon">${ic}</span> ${f.text}</div>`;
                 }).join('') + (m.feats.length > 6 ? `<div class="rm-feat-more">+${m.feats.length - 6} ещё...</div>` : '') + '</div>';
             } else {
                 featHtml = `<div class="rm-card-text">${m.title}</div>`;
@@ -1236,13 +1237,18 @@
 
                         <!-- Features sub-section (shown when editing a milestone) -->
                         <div id="mFeaturesSection" style="display:none; margin-top:16px; border-top:1px solid hsl(var(--border)); padding-top:12px;">
-                            <h4 style="margin:0 0 8px; color:hsl(var(--primary)); font-size:.85rem;">Строки этапа <span id="mFeatCount" style="opacity:.5"></span></h4>
-                            <div class="item-list" id="mFeaturesList" style="max-height:200px;"></div>
-                            <div style="margin-top:8px; display:flex; gap:6px; align-items:end; flex-wrap:wrap;">
-                                <div style="flex:2;min-width:120px;"><label style="font-size:.7rem;">Описание</label><input id="mfText" placeholder="Что реализовано" style="font-size:.8rem;padding:5px 8px;"></div>
-                                <div style="flex:1;min-width:80px;"><label style="font-size:.7rem;">Категория</label><select id="mfCat" style="font-size:.8rem;padding:5px 4px;"></select></div>
-                                <div style="flex:0 0 90px;"><label style="font-size:.7rem;">Дата</label><input id="mfDate" placeholder="01.11.2026" style="font-size:.8rem;padding:5px 8px;"></div>
-                                <button class="btn-primary" id="mfAdd" style="padding:5px 12px;font-size:.8rem;flex-shrink:0;">+</button>
+                            <h4 style="margin:0 0 8px; color:hsl(var(--primary));">Строки этапа <span id="mFeatCount" style="opacity:.5"></span></h4>
+                            <div class="item-list" id="mFeaturesList" style="max-height:260px;"></div>
+                            <div style="margin-top:10px;">
+                                <label>Описание</label>
+                                <input id="mfText" placeholder="Что реализовано">
+                                <div style="display:flex;gap:8px;margin-top:6px;">
+                                    <div style="flex:1"><label>Категория</label><select id="mfCat"></select></div>
+                                    <div style="flex:1"><label>Дата</label><input id="mfDate" placeholder="01.11.2026"></div>
+                                </div>
+                                <div class="btn-row" style="margin-top:8px;">
+                                    <button class="btn-primary" id="mfAdd">+ Добавить строку</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1426,8 +1432,9 @@
         const panel = document.getElementById('featPanel');
         sidebar.innerHTML = '';
         panel.innerHTML = '';
-        /* Show only completed features on the public page */
-        const DONE_FEATURES = FEATURES.filter(f => f.done === true);
+        /* Show only completed features on the public page.
+           Legacy features without 'done' field are treated as done. */
+        const DONE_FEATURES = FEATURES.filter(f => f.done !== false);
         const byCat = groupBy(DONE_FEATURES, 'cat');
         const catMap = {};
         CAT_META.forEach(c => { catMap[c.id] = c; });
@@ -1513,7 +1520,7 @@
         allFeats.forEach(f => { if (!featsByVer[f.ver]) featsByVer[f.ver] = []; featsByVer[f.ver].push(f); });
         list.innerHTML = data.map(m => {
             const vf = featsByVer[m.ver] || [];
-            const doneCount = vf.filter(f => f.done === true).length;
+            const doneCount = vf.filter(f => f.done !== false).length;
             const statusIcon = m.done ? '✓' : m.wip ? '⟳' : '○';
             const featInfo = vf.length > 0 ? `<span style="font-size:.65rem;color:hsl(var(--muted-foreground));margin-left:4px;">${doneCount}/${vf.length}</span>` : '';
             return `<div class="item-row">
@@ -1569,8 +1576,8 @@
         const feats = await loadFeaturesFromDB();
         const verFeats = feats ? feats.filter(f => f.ver === ver) : [];
         if (verFeats.length > 0) {
-            const allDone = verFeats.every(f => f.done === true);
-            const someDone = verFeats.some(f => f.done === true);
+            const allDone = verFeats.every(f => f.done !== false);
+            const someDone = verFeats.some(f => f.done !== false);
             data.done = allDone;
             data.wip = !allDone && someDone;
         } else {
@@ -1603,7 +1610,7 @@
         const list = document.getElementById('mFeaturesList');
         const allFeats = await loadFeaturesFromDB();
         const feats = allFeats ? allFeats.filter(f => f.ver === ver) : [];
-        const doneCount = feats.filter(f => f.done === true).length;
+        const doneCount = feats.filter(f => f.done !== false).length;
         document.getElementById('mFeatCount').textContent = `(${doneCount}/${feats.length})`;
 
         if (feats.length === 0) {
@@ -1613,7 +1620,7 @@
             CAT_META.forEach(c => { catMap[c.id] = c; });
             list.innerHTML = feats.map(f => {
                 const cm = catMap[f.cat];
-                const isDone = f.done === true;
+                const isDone = f.done !== false;
                 return `<div class="item-row${isDone ? ' feat-done' : ''}" style="font-size:.8rem;">
                     <input type="checkbox" class="cb-done" data-fid="${f.id}" ${isDone ? 'checked' : ''}>
                     <span style="width:20px;height:20px;color:hsl(var(--primary));flex-shrink:0">${cm ? svgIcon(cm.icon) : ''}</span>
@@ -1663,8 +1670,8 @@
         const allFeats = await loadFeaturesFromDB();
         const verFeats = allFeats ? allFeats.filter(f => f.ver === ver) : [];
         if (verFeats.length === 0) return;
-        const allDone = verFeats.every(f => f.done === true);
-        const someDone = verFeats.some(f => f.done === true);
+        const allDone = verFeats.every(f => f.done !== false);
+        const someDone = verFeats.some(f => f.done !== false);
         await setDoc(doc(db, 'milestones', ver), { done: allDone, wip: !allDone && someDone }, { merge: true });
     }
 
