@@ -226,6 +226,21 @@
             line-height: 1.6;
             color: hsl(var(--muted-foreground));
         }
+        .rm-card-feats { margin-top: 4px; }
+        .rm-feat-row {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            line-height: 1.5;
+            color: hsl(var(--muted-foreground));
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .rm-feat-row .check, .rm-feat-row .pending { font-size: .65rem; flex-shrink: 0; }
+        .rm-feat-icon { width: 14px; height: 14px; flex-shrink: 0; color: hsl(var(--primary)); }
+        .rm-feat-icon svg { width: 14px; height: 14px; }
+        .rm-feat-done { opacity: 0.5; text-decoration: line-through; }
+        .rm-feat-more { font-size: .65rem; color: hsl(var(--primary)); opacity: .6; padding-left: 18px; }
 
         /* Viking avatar walking along */
         .rm-viking {
@@ -513,6 +528,9 @@
         .admin-panel .item-row:hover { background: hsl(220 40% 9%); }
         .admin-panel .item-row.cat-hidden { opacity: 0.45; }
         .admin-panel .item-row.cat-hidden:hover { opacity: 0.7; }
+        .admin-panel .feat-done { opacity: 0.5; text-decoration: line-through; }
+        .admin-panel .feat-done:hover { opacity: 0.7; }
+        .admin-panel .item-row .cb-done { width:18px; height:18px; cursor:pointer; accent-color:hsl(var(--primary)); flex-shrink:0; }
         .admin-panel .item-row .edit-btn { margin-left: auto; padding: 2px 10px; font-size: .75rem; }
         .admin-panel .tabs { display: flex; gap: 0; border-bottom: 1px solid hsl(var(--border)); margin-bottom: 16px; }
         .admin-panel .tab-btn {
@@ -968,13 +986,7 @@
         const _byVer = groupBy(FEATURES, 'ver');
         MILESTONES = MILESTONE_META.map(m => {
             const feats = _byVer[m.ver] || [];
-            /* Milestone's own text field takes priority; fall back to features list */
-            const text = m.text
-                ? m.text
-                : feats.length > 0
-                    ? feats.slice(0, 4).map(f => f.text).join('\n')
-                    : (m.title || '');
-            return { ...m, text };
+            return { ...m, feats };
         });
 
         /* Clear previous nodes (keep viking) */
@@ -991,6 +1003,9 @@
         });
         const pct = wTotal > 0 ? Math.round((wDone + wWip) / wTotal * 100) : 0;
 
+        const catMap = {};
+        CAT_META.forEach(c => { catMap[c.id] = c; });
+
         /* Build nodes */
         MILESTONES.forEach((m, i) => {
             const node = document.createElement('div');
@@ -1000,13 +1015,27 @@
             const check  = m.done ? '<span class="check">[x]</span>' : (m.wip ? '<span class="pending">[~]</span>' : '<span class="pending">[ ]</span>');
             const dateTag = m.date ? `<span class="rm-date">[ ${m.date} ]</span>` : '';
 
+            /* Build feature list HTML for card */
+            let featHtml = '';
+            if (m.feats.length > 0) {
+                const shown = m.feats.slice(0, 6);
+                featHtml = '<div class="rm-card-feats">' + shown.map(f => {
+                    const cm = catMap[f.cat];
+                    const ic = cm ? svgIcon(cm.icon) : '';
+                    const dk = f.done === true ? ' rm-feat-done' : '';
+                    return `<div class="rm-feat-row${dk}">${f.done ? '<span class="check">[x]</span>' : '<span class="pending">[ ]</span>'} <span class="rm-feat-icon">${ic}</span> ${f.text}</div>`;
+                }).join('') + (m.feats.length > 6 ? `<div class="rm-feat-more">+${m.feats.length - 6} ещё...</div>` : '') + '</div>';
+            } else {
+                featHtml = `<div class="rm-card-text">${m.title}</div>`;
+            }
+
             node.innerHTML = `
                 <div class="rm-dot rm-dot--${status}"></div>
                 <div class="rm-stem"></div>
                 <div class="rm-card">
                     <div class="rm-ver"><span class="rm-ver-left">${check} ${m.ver}</span>${dateTag}</div>
                     <div class="rm-card-title">${m.title}</div>
-                    <div class="rm-card-text">${m.text.replace(/\n/g, '<br>')}</div>
+                    ${featHtml}
                 </div>
             `;
             rmInner.appendChild(node);
@@ -1177,12 +1206,11 @@
         <div id="adminContent" style="display:none;">
             <div class="tabs">
                 <button class="tab-btn active" data-tab="milestones">Дорожная карта</button>
-                <button class="tab-btn" data-tab="features">Возможности</button>
                 <button class="tab-btn" data-tab="categories">Категории</button>
                 <button class="tab-btn" data-tab="sync">Синхронизация</button>
             </div>
 
-            <!-- TAB: Milestones -->
+            <!-- TAB: Milestones (unified with features) -->
             <div class="tab-content active" id="tab-milestones">
                 <div class="admin-split">
                     <div class="admin-split-left">
@@ -1190,54 +1218,32 @@
                         <div class="item-list" id="milestoneList"></div>
                     </div>
                     <div class="admin-split-right">
-                        <h3 style="margin-top:0">Редактирование</h3>
+                        <h3 style="margin-top:0" id="mEditorTitle">Редактирование</h3>
                         <div style="display:flex;gap:8px;">
                             <div style="flex:1"><label>Версия</label><input id="mVer" placeholder="v0.XX"></div>
                             <div style="flex:1"><label>Дата</label><input id="mDate" placeholder="01.11"></div>
                         </div>
                         <label>Название</label>
                         <input id="mTitle" placeholder="Название этапа">
-                        <label>Текст (каждая строка с новой строки)</label>
-                        <textarea id="mText" placeholder="Описание&#10;Строка 2&#10;Строка 3" style="min-height:120px;"></textarea>
                         <div style="display:flex;gap:8px;">
-                            <div style="flex:2"><label>Статус</label>
-                                <select id="mStatus">
-                                    <option value="done">Готово</option>
-                                    <option value="wip">В работе</option>
-                                    <option value="plan" selected>Запланировано</option>
-                                </select>
-                            </div>
                             <div style="flex:1"><label>Вес</label><input id="mWeight" type="number" value="1" min="1"></div>
                             <div style="flex:1"><label>Порядок</label><input id="mOrder" type="number" value="0" min="0"></div>
                         </div>
                         <div class="btn-row">
-                            <button class="btn-primary" id="mSave">Сохранить</button>
-                            <button class="btn-secondary" id="mClear">Очистить</button>
+                            <button class="btn-primary" id="mSave">Сохранить этап</button>
+                            <button class="btn-secondary" id="mClear">Новый этап</button>
                         </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- TAB: Features -->
-            <div class="tab-content" id="tab-features">
-                <div class="admin-split">
-                    <div class="admin-split-left">
-                        <h3 style="margin-top:0">Возможности</h3>
-                        <div class="item-list" id="featureList"></div>
-                    </div>
-                    <div class="admin-split-right">
-                        <h3 style="margin-top:0">Добавить</h3>
-                        <label>Категория</label>
-                        <select id="fCat"></select>
-                        <label>Этап (версия)</label>
-                        <select id="fVer"></select>
-                        <label>Описание</label>
-                        <input id="fText" placeholder="Что реализовано">
-                        <label>Дата (ДД.ММ.ГГГГ)</label>
-                        <input id="fDate" placeholder="01.11.2026">
-                        <div class="btn-row">
-                            <button class="btn-primary" id="fSave">Добавить</button>
-                            <button class="btn-secondary" id="fClear">Сброс</button>
+                        <!-- Features sub-section (shown when editing a milestone) -->
+                        <div id="mFeaturesSection" style="display:none; margin-top:16px; border-top:1px solid hsl(var(--border)); padding-top:12px;">
+                            <h4 style="margin:0 0 8px; color:hsl(var(--primary)); font-size:.85rem;">Строки этапа <span id="mFeatCount" style="opacity:.5"></span></h4>
+                            <div class="item-list" id="mFeaturesList" style="max-height:200px;"></div>
+                            <div style="margin-top:8px; display:flex; gap:6px; align-items:end; flex-wrap:wrap;">
+                                <div style="flex:2;min-width:120px;"><label style="font-size:.7rem;">Описание</label><input id="mfText" placeholder="Что реализовано" style="font-size:.8rem;padding:5px 8px;"></div>
+                                <div style="flex:1;min-width:80px;"><label style="font-size:.7rem;">Категория</label><select id="mfCat" style="font-size:.8rem;padding:5px 4px;"></select></div>
+                                <div style="flex:0 0 90px;"><label style="font-size:.7rem;">Дата</label><input id="mfDate" placeholder="01.11.2026" style="font-size:.8rem;padding:5px 8px;"></div>
+                                <button class="btn-primary" id="mfAdd" style="padding:5px 12px;font-size:.8rem;flex-shrink:0;">+</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1335,17 +1341,7 @@
             adminBtn.classList.add('logged-in');
             if (isAdmin) {
                 ac.style.display = 'block';
-                /* Populate category dropdown from CAT_META */
-                const fCatSel = document.getElementById('fCat');
-                if (fCatSel.options.length === 0) {
-                    CAT_META.forEach(c => {
-                        const o = document.createElement('option');
-                        o.value = c.id; o.textContent = c.name;
-                        fCatSel.appendChild(o);
-                    });
-                }
                 refreshMilestoneList();
-                refreshFeatureList();
                 refreshCategoryList();
                 await applyAllFromDB();
                 rebuildCatDropdown();
@@ -1430,13 +1426,15 @@
         const panel = document.getElementById('featPanel');
         sidebar.innerHTML = '';
         panel.innerHTML = '';
-        const byCat = groupBy(FEATURES, 'cat');
+        /* Show only completed features on the public page */
+        const DONE_FEATURES = FEATURES.filter(f => f.done === true);
+        const byCat = groupBy(DONE_FEATURES, 'cat');
         const catMap = {};
         CAT_META.forEach(c => { catMap[c.id] = c; });
 
         /* Recent changes (7 days) — only from visible categories */
         const hiddenCatIds = new Set(CAT_META.filter(c => c.visible === false).map(c => c.id));
-        const recent7 = FEATURES.filter(f => daysAgo(f.date) <= 7 && !hiddenCatIds.has(f.cat))
+        const recent7 = DONE_FEATURES.filter(f => daysAgo(f.date) <= 7 && !hiddenCatIds.has(f.cat))
             .sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
         const hasRecent = recent7.length > 0;
 
@@ -1510,15 +1508,22 @@
             list.innerHTML = '<div style="padding:8px;font-size:.8rem;color:hsl(var(--muted-foreground))">База пуста — загрузите данные во вкладке «Синхронизация»</div>';
             return;
         }
-        list.innerHTML = data.map(m => `
-            <div class="item-row">
+        const allFeats = await loadFeaturesFromDB() || [];
+        const featsByVer = {};
+        allFeats.forEach(f => { if (!featsByVer[f.ver]) featsByVer[f.ver] = []; featsByVer[f.ver].push(f); });
+        list.innerHTML = data.map(m => {
+            const vf = featsByVer[m.ver] || [];
+            const doneCount = vf.filter(f => f.done === true).length;
+            const statusIcon = m.done ? '✓' : m.wip ? '⟳' : '○';
+            const featInfo = vf.length > 0 ? `<span style="font-size:.65rem;color:hsl(var(--muted-foreground));margin-left:4px;">${doneCount}/${vf.length}</span>` : '';
+            return `<div class="item-row">
                 <span style="color:hsl(var(--primary));font-family:'Share Tech Mono',monospace;font-size:.75rem;width:50px;">${m.ver}</span>
-                <span style="flex:1">${m.title}</span>
-                <span style="font-size:.7rem;color:hsl(var(--muted-foreground))">${m.done ? '✓' : m.wip ? '~' : '○'}</span>
+                <span style="flex:1">${m.title}${featInfo}</span>
+                <span style="font-size:.7rem;color:hsl(var(--muted-foreground))">${statusIcon}</span>
                 <button class="btn-secondary edit-btn" data-id="${m.id}">✎</button>
                 <button class="btn-danger edit-btn" data-del="${m.id}" style="padding:2px 8px;">✕</button>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
         list.querySelectorAll('[data-id]').forEach(btn => {
             btn.addEventListener('click', () => editMilestone(data.find(m => m.id === btn.dataset.id)));
         });
@@ -1534,35 +1539,49 @@
         });
     }
 
+    let editingMilestoneVer = null;
+
     function editMilestone(m) {
+        editingMilestoneVer = m.ver;
         document.getElementById('mVer').value = m.ver;
         document.getElementById('mTitle').value = m.title;
         document.getElementById('mDate').value = m.date || '';
-        document.getElementById('mText').value = (m.text || '').replace(/<br>/g, '\n');
-        document.getElementById('mStatus').value = m.done ? 'done' : m.wip ? 'wip' : 'plan';
         document.getElementById('mWeight').value = m.w || 1;
         document.getElementById('mOrder').value = m.order || 0;
+        document.getElementById('mEditorTitle').textContent = 'Этап ' + m.ver;
+        /* Show features sub-section and populate */
+        document.getElementById('mFeaturesSection').style.display = 'block';
+        refreshMilestoneFeatures(m.ver);
     }
 
     /* ---- Save milestone ---- */
     document.getElementById('mSave').addEventListener('click', async () => {
         const ver = document.getElementById('mVer').value.trim();
         if (!ver) return alert('Укажите версию (v0.XX)');
-        const status = document.getElementById('mStatus').value;
         const data = {
             ver,
             title: document.getElementById('mTitle').value.trim(),
             date: document.getElementById('mDate').value.trim(),
-            text: document.getElementById('mText').value.trim(),
-            done: status === 'done',
-            wip: status === 'wip',
             w: parseInt(document.getElementById('mWeight').value) || 1,
             order: parseInt(document.getElementById('mOrder').value) || 0,
         };
+        /* Auto-compute done/wip from features */
+        const feats = await loadFeaturesFromDB();
+        const verFeats = feats ? feats.filter(f => f.ver === ver) : [];
+        if (verFeats.length > 0) {
+            const allDone = verFeats.every(f => f.done === true);
+            const someDone = verFeats.some(f => f.done === true);
+            data.done = allDone;
+            data.wip = !allDone && someDone;
+        } else {
+            data.done = false;
+            data.wip = false;
+        }
         try {
             await setDoc(doc(db, 'milestones', ver), data);
-            alert('Этап ' + ver + ' сохранён!');
-            clearMilestoneForm();
+            editingMilestoneVer = ver;
+            document.getElementById('mFeaturesSection').style.display = 'block';
+            refreshMilestoneFeatures(ver);
             refreshMilestoneList();
             rebuildVerDropdown();
             await applyAllFromDB();
@@ -1571,96 +1590,105 @@
 
     document.getElementById('mClear').addEventListener('click', clearMilestoneForm);
     function clearMilestoneForm() {
-        ['mVer','mTitle','mDate','mText'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('mStatus').value = 'plan';
+        editingMilestoneVer = null;
+        ['mVer','mTitle','mDate'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('mWeight').value = '1';
         document.getElementById('mOrder').value = '0';
+        document.getElementById('mEditorTitle').textContent = 'Новый этап';
+        document.getElementById('mFeaturesSection').style.display = 'none';
     }
 
-    /* ---- Refresh feature list in admin ---- */
-    async function refreshFeatureList() {
-        const list = document.getElementById('featureList');
-        const data = await loadFeaturesFromDB();
-        if (!data || data.length === 0) {
-            list.innerHTML = '<div style="padding:8px;font-size:.8rem;color:hsl(var(--muted-foreground))">База пуста — загрузите данные во вкладке «Синхронизация»</div>';
-            return;
-        }
-        /* Group by category */
-        const grouped = {};
-        data.forEach(f => {
-            if (!grouped[f.cat]) grouped[f.cat] = [];
-            grouped[f.cat].push(f);
-        });
-        let html = '';
-        for (const [cat, items] of Object.entries(grouped)) {
-            html += `<div style="font-size:.75rem;color:hsl(var(--primary));padding:6px 8px;font-weight:600;">${cat} (${items.length})</div>`;
-            items.forEach(f => {
-                html += `<div class="item-row">
-                    <span style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:hsl(var(--secondary));width:45px;flex-shrink:0;">${f.ver||''}</span>
+    /* ---- Features within a milestone ---- */
+    async function refreshMilestoneFeatures(ver) {
+        const list = document.getElementById('mFeaturesList');
+        const allFeats = await loadFeaturesFromDB();
+        const feats = allFeats ? allFeats.filter(f => f.ver === ver) : [];
+        const doneCount = feats.filter(f => f.done === true).length;
+        document.getElementById('mFeatCount').textContent = `(${doneCount}/${feats.length})`;
+
+        if (feats.length === 0) {
+            list.innerHTML = '<div style="padding:6px;font-size:.75rem;color:hsl(var(--muted-foreground))">Нет строк — добавьте ниже</div>';
+        } else {
+            const catMap = {};
+            CAT_META.forEach(c => { catMap[c.id] = c; });
+            list.innerHTML = feats.map(f => {
+                const cm = catMap[f.cat];
+                const isDone = f.done === true;
+                return `<div class="item-row${isDone ? ' feat-done' : ''}" style="font-size:.8rem;">
+                    <input type="checkbox" class="cb-done" data-fid="${f.id}" ${isDone ? 'checked' : ''}>
+                    <span style="width:20px;height:20px;color:hsl(var(--primary));flex-shrink:0">${cm ? svgIcon(cm.icon) : ''}</span>
                     <span style="flex:1">${f.text}</span>
-                    <span style="font-size:.7rem;color:hsl(var(--muted-foreground))">${f.date||''}</span>
-                    <button class="btn-secondary edit-btn" data-fedit="${f.id}">✎</button>
-                    <button class="btn-danger edit-btn" data-fdel="${f.id}" style="padding:2px 8px;">✕</button>
+                    <span style="font-size:.65rem;color:hsl(var(--muted-foreground));flex-shrink:0">${f.date||''}</span>
+                    <button class="btn-danger edit-btn" data-fdel2="${f.id}" style="padding:1px 6px;font-size:.7rem;">✕</button>
                 </div>`;
-            });
+            }).join('');
         }
-        list.innerHTML = html;
-        list.querySelectorAll('[data-fedit]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const f = data.find(x => x.id === btn.dataset.fedit);
-                if (f) editFeature(f);
+
+        /* Toggle done */
+        list.querySelectorAll('.cb-done').forEach(cb => {
+            cb.addEventListener('change', async () => {
+                const fid = cb.dataset.fid;
+                await setDoc(doc(db, 'features', fid), { done: cb.checked }, { merge: true });
+                await autoComputeMilestoneStatus(ver);
+                refreshMilestoneFeatures(ver);
+                refreshMilestoneList();
+                await applyAllFromDB();
             });
         });
-        list.querySelectorAll('[data-fdel]').forEach(btn => {
+
+        /* Delete feature */
+        list.querySelectorAll('[data-fdel2]').forEach(btn => {
             btn.addEventListener('click', async () => {
-                if (confirm('Удалить эту возможность?')) {
-                    await deleteDoc(doc(db, 'features', btn.dataset.fdel));
-                    refreshFeatureList();
-                    await applyAllFromDB();
-                }
+                if (!confirm('Удалить строку?')) return;
+                await deleteDoc(doc(db, 'features', btn.dataset.fdel2));
+                await autoComputeMilestoneStatus(ver);
+                refreshMilestoneFeatures(ver);
+                refreshMilestoneList();
+                await applyAllFromDB();
             });
+        });
+
+        /* Populate category dropdown */
+        const mfCat = document.getElementById('mfCat');
+        mfCat.innerHTML = '';
+        CAT_META.forEach(c => {
+            const o = document.createElement('option');
+            o.value = c.id; o.textContent = c.name;
+            mfCat.appendChild(o);
         });
     }
 
-    /* ---- Edit feature: fill form ---- */
-    let editingFeatureId = null;
-    function editFeature(f) {
-        editingFeatureId = f.id;
-        document.getElementById('fCat').value = f.cat || '';
-        document.getElementById('fVer').value = f.ver || '';
-        document.getElementById('fText').value = f.text || '';
-        document.getElementById('fDate').value = f.date || '';
-        document.getElementById('fSave').textContent = 'Обновить';
+    /* Auto-compute milestone done/wip from features */
+    async function autoComputeMilestoneStatus(ver) {
+        const allFeats = await loadFeaturesFromDB();
+        const verFeats = allFeats ? allFeats.filter(f => f.ver === ver) : [];
+        if (verFeats.length === 0) return;
+        const allDone = verFeats.every(f => f.done === true);
+        const someDone = verFeats.some(f => f.done === true);
+        await setDoc(doc(db, 'milestones', ver), { done: allDone, wip: !allDone && someDone }, { merge: true });
     }
 
-    function clearFeatureForm() {
-        editingFeatureId = null;
-        document.getElementById('fText').value = '';
-        document.getElementById('fDate').value = '';
-        document.getElementById('fSave').textContent = 'Добавить';
-    }
-
-    /* ---- Save / update feature ---- */
-    document.getElementById('fSave').addEventListener('click', async () => {
-        const text = document.getElementById('fText').value.trim();
+    /* Add feature to current milestone */
+    document.getElementById('mfAdd').addEventListener('click', async () => {
+        const ver = editingMilestoneVer || document.getElementById('mVer').value.trim();
+        if (!ver) return alert('Сначала сохраните этап');
+        const text = document.getElementById('mfText').value.trim();
         if (!text) return alert('Укажите описание');
-        const data = {
-            cat: document.getElementById('fCat').value,
-            ver: document.getElementById('fVer').value,
-            text,
-            date: document.getElementById('fDate').value.trim(),
-        };
-        const id = editingFeatureId || (data.cat + '_' + Date.now());
+        const cat = document.getElementById('mfCat').value;
+        const date = document.getElementById('mfDate').value.trim();
+        const id = cat + '_' + Date.now();
         try {
-            await setDoc(doc(db, 'features', id), data);
-            alert(editingFeatureId ? 'Возможность обновлена!' : 'Возможность добавлена!');
-            clearFeatureForm();
-            refreshFeatureList();
+            await setDoc(doc(db, 'features', id), { cat, ver, text, date, done: false });
+            document.getElementById('mfText').value = '';
+            document.getElementById('mfDate').value = '';
+            refreshMilestoneFeatures(ver);
+            refreshMilestoneList();
             await applyAllFromDB();
         } catch(e) { alert('Ошибка: ' + e.message); }
     });
 
-    document.getElementById('fClear').addEventListener('click', clearFeatureForm);
+    /* Legacy: refreshFeatureList is no longer needed but keep stub for sync tab */
+    async function refreshFeatureList() { }
 
     /* ---- Refresh category list in admin ---- */
     async function refreshCategoryList() {
@@ -1788,29 +1816,11 @@
         document.getElementById('cIconLabel').textContent = 'выберите иконку';
     }
 
-    /* Rebuild fCat dropdown from current CAT_META */
-    function rebuildCatDropdown() {
-        const fCatSel = document.getElementById('fCat');
-        fCatSel.innerHTML = '';
-        CAT_META.forEach(c => {
-            const o = document.createElement('option');
-            o.value = c.id; o.textContent = c.name;
-            fCatSel.appendChild(o);
-        });
-    }
+    /* rebuildCatDropdown: fCat element removed; stub kept for compatibility */
+    function rebuildCatDropdown() { }
 
-    /* Rebuild fVer dropdown from Firestore milestones (falls back to MILESTONE_META) */
-    async function rebuildVerDropdown() {
-        const data = await loadMilestonesFromDB();
-        const list = (data && data.length > 0) ? data : MILESTONE_META;
-        const fVerSel = document.getElementById('fVer');
-        fVerSel.innerHTML = '';
-        list.forEach(m => {
-            const o = document.createElement('option');
-            o.value = m.ver; o.textContent = m.ver + ' — ' + m.title;
-            fVerSel.appendChild(o);
-        });
-    }
+    /* rebuildVerDropdown: no longer needed (fVer element removed), kept as stub */
+    async function rebuildVerDropdown() { }
 
     /* ---- Sync: push hardcoded data to Firestore ---- */
     document.getElementById('syncPush').addEventListener('click', async () => {
@@ -1850,7 +1860,7 @@
             for (let i = 0; i < FEATURES.length; i++) {
                 const f = FEATURES[i];
                 const fId = f.cat + '_' + String(i).padStart(3, '0');
-                await setDoc(doc(db, 'features', fId), { cat: f.cat, ver: f.ver, text: f.text, date: f.date });
+                await setDoc(doc(db, 'features', fId), { cat: f.cat, ver: f.ver, text: f.text, date: f.date, done: f.done || false });
                 catCounts[f.cat] = (catCounts[f.cat] || 0) + 1;
                 fCount++;
             }
