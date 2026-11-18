@@ -1233,7 +1233,8 @@
                         <label>Дата (ДД.ММ.ГГГГ)</label>
                         <input id="fDate" placeholder="01.11.2026">
                         <div class="btn-row">
-                            <button class="btn-primary" id="fSave">Добавить возможность</button>
+                            <button class="btn-primary" id="fSave">Добавить</button>
+                            <button class="btn-secondary" id="fClear">Сброс</button>
                         </div>
                     </div>
                 </div>
@@ -1595,11 +1596,18 @@
                     <span style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:hsl(var(--secondary));width:45px;flex-shrink:0;">${f.ver||''}</span>
                     <span style="flex:1">${f.text}</span>
                     <span style="font-size:.7rem;color:hsl(var(--muted-foreground))">${f.date||''}</span>
+                    <button class="btn-secondary edit-btn" data-fedit="${f.id}">✎</button>
                     <button class="btn-danger edit-btn" data-fdel="${f.id}" style="padding:2px 8px;">✕</button>
                 </div>`;
             });
         }
         list.innerHTML = html;
+        list.querySelectorAll('[data-fedit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const f = data.find(x => x.id === btn.dataset.fedit);
+                if (f) editFeature(f);
+            });
+        });
         list.querySelectorAll('[data-fdel]').forEach(btn => {
             btn.addEventListener('click', async () => {
                 if (confirm('Удалить эту возможность?')) {
@@ -1611,7 +1619,25 @@
         });
     }
 
-    /* ---- Save feature ---- */
+    /* ---- Edit feature: fill form ---- */
+    let editingFeatureId = null;
+    function editFeature(f) {
+        editingFeatureId = f.id;
+        document.getElementById('fCat').value = f.cat || '';
+        document.getElementById('fVer').value = f.ver || '';
+        document.getElementById('fText').value = f.text || '';
+        document.getElementById('fDate').value = f.date || '';
+        document.getElementById('fSave').textContent = 'Обновить';
+    }
+
+    function clearFeatureForm() {
+        editingFeatureId = null;
+        document.getElementById('fText').value = '';
+        document.getElementById('fDate').value = '';
+        document.getElementById('fSave').textContent = 'Добавить';
+    }
+
+    /* ---- Save / update feature ---- */
     document.getElementById('fSave').addEventListener('click', async () => {
         const text = document.getElementById('fText').value.trim();
         if (!text) return alert('Укажите описание');
@@ -1621,17 +1647,17 @@
             text,
             date: document.getElementById('fDate').value.trim(),
         };
-        const id = data.cat + '_' + Date.now();
+        const id = editingFeatureId || (data.cat + '_' + Date.now());
         try {
             await setDoc(doc(db, 'features', id), data);
-            alert('Возможность добавлена!');
-            document.getElementById('fText').value = '';
-            document.getElementById('fDate').value = '';
+            alert(editingFeatureId ? 'Возможность обновлена!' : 'Возможность добавлена!');
+            clearFeatureForm();
             refreshFeatureList();
             await applyAllFromDB();
         } catch(e) { alert('Ошибка: ' + e.message); }
     });
 
+    document.getElementById('fClear').addEventListener('click', clearFeatureForm);
 
     /* ---- Refresh category list in admin ---- */
     async function refreshCategoryList() {
