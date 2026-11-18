@@ -955,59 +955,79 @@
     </main>
 
     <script>
-    /* ===== Roadmap: build MILESTONES from unified FEATURES + MILESTONE_META ===== */
-    const _byVer = groupBy(FEATURES, 'ver');
-    const MILESTONES = MILESTONE_META.map(m => {
-        const feats = _byVer[m.ver] || [];
-        const text = feats.length > 0
-            ? feats.slice(0, 4).map(f => f.text).join('\n')
-            : (m.title || '');
-        return { ...m, text };
-    });
-
+    /* ===== Roadmap: render from current data ===== */
     const rmInner  = document.getElementById('rmInner');
     const rmTrack  = document.getElementById('rmTrack');
     const rmViking = document.getElementById('rmViking');
     const rmBar    = document.getElementById('rmBarTrack');
     const rmPct    = document.getElementById('rmPercent');
 
-    /* Weighted progress: v5.0 counts as 15 steps, not 1 */
-    let wDone = 0, wWip = 0, wTotal = 0;
-    MILESTONES.forEach(m => {
-        const w = m.w || 1;
-        wTotal += w;
-        if (m.done) wDone += w;
-        else if (m.wip) wWip += w * 0.5;
-    });
-    const pct = Math.round((wDone + wWip) / wTotal * 100);
+    let MILESTONES = [];
 
-    /* Build nodes */
-    MILESTONES.forEach((m, i) => {
-        const node = document.createElement('div');
-        node.className = 'rm-node';
+    function renderRoadmap() {
+        const _byVer = groupBy(FEATURES, 'ver');
+        MILESTONES = MILESTONE_META.map(m => {
+            const feats = _byVer[m.ver] || [];
+            const text = feats.length > 0
+                ? feats.slice(0, 4).map(f => f.text).join('\n')
+                : (m.title || '');
+            return { ...m, text };
+        });
 
-        const status = m.done ? 'done' : (m.wip ? 'wip' : 'plan');
-        const check  = m.done ? '<span class="check">[x]</span>' : (m.wip ? '<span class="pending">[~]</span>' : '<span class="pending">[ ]</span>');
+        /* Clear previous nodes (keep viking) */
+        rmInner.querySelectorAll('.rm-node').forEach(n => n.remove());
+        rmBar.innerHTML = '';
 
-        const dateTag = m.date ? `<span class="rm-date">[ ${m.date} ]</span>` : '';
+        /* Weighted progress */
+        let wDone = 0, wWip = 0, wTotal = 0;
+        MILESTONES.forEach(m => {
+            const w = m.w || 1;
+            wTotal += w;
+            if (m.done) wDone += w;
+            else if (m.wip) wWip += w * 0.5;
+        });
+        const pct = wTotal > 0 ? Math.round((wDone + wWip) / wTotal * 100) : 0;
 
-        node.innerHTML = `
-            <div class="rm-dot rm-dot--${status}"></div>
-            <div class="rm-stem"></div>
-            <div class="rm-card">
-                <div class="rm-ver"><span class="rm-ver-left">${check} ${m.ver}</span>${dateTag}</div>
-                <div class="rm-card-title">${m.title}</div>
-                <div class="rm-card-text">${m.text.replace(/\n/g, '<br>')}</div>
-            </div>
-        `;
-        /* Insert before viking */
-        rmInner.appendChild(node);
-    });
+        /* Build nodes */
+        MILESTONES.forEach((m, i) => {
+            const node = document.createElement('div');
+            node.className = 'rm-node';
 
-    /* Move viking back into inner (it was placed before nodes, reappend at end) */
-    rmInner.appendChild(rmViking);
+            const status = m.done ? 'done' : (m.wip ? 'wip' : 'plan');
+            const check  = m.done ? '<span class="check">[x]</span>' : (m.wip ? '<span class="pending">[~]</span>' : '<span class="pending">[ ]</span>');
+            const dateTag = m.date ? `<span class="rm-date">[ ${m.date} ]</span>` : '';
 
-    /* Position viking at last done/wip milestone */
+            node.innerHTML = `
+                <div class="rm-dot rm-dot--${status}"></div>
+                <div class="rm-stem"></div>
+                <div class="rm-card">
+                    <div class="rm-ver"><span class="rm-ver-left">${check} ${m.ver}</span>${dateTag}</div>
+                    <div class="rm-card-title">${m.title}</div>
+                    <div class="rm-card-text">${m.text.replace(/\n/g, '<br>')}</div>
+                </div>
+            `;
+            rmInner.appendChild(node);
+        });
+
+        /* Viking at end */
+        rmInner.appendChild(rmViking);
+        positionViking();
+
+        /* Progress bar */
+        const barBlocks = 25;
+        const filledBlocks = Math.round(pct / 100 * barBlocks);
+        for (let i = 0; i < barBlocks; i++) {
+            const b = document.createElement('div');
+            b.className = 'rm-bar-block' + (i < filledBlocks ? ' rm-bar-block--filled' : '');
+            rmBar.appendChild(b);
+        }
+        rmPct.textContent = pct + '%';
+
+        /* NEXT milestone label */
+        const nextM = MILESTONES.find(m => !m.done && !m.wip);
+        document.getElementById('rmNext').textContent = nextM ? 'NEXT: ' + nextM.ver + ' ' + nextM.title : '';
+    }
+
     function positionViking() {
         const nodes = rmInner.querySelectorAll('.rm-node');
         let lastIdx = 0;
@@ -1018,21 +1038,9 @@
             rmViking.style.left = nodeLeft + 'px';
         }
     }
-    positionViking();
 
-    /* Build progress bar */
-    const barBlocks = 25;
-    const filledBlocks = Math.round(pct / 100 * barBlocks);
-    for (let i = 0; i < barBlocks; i++) {
-        const b = document.createElement('div');
-        b.className = 'rm-bar-block' + (i < filledBlocks ? ' rm-bar-block--filled' : '');
-        rmBar.appendChild(b);
-    }
-    rmPct.textContent = pct + '%';
-
-    /* Set NEXT milestone label */
-    const nextM = MILESTONES.find(m => !m.done && !m.wip);
-    if (nextM) document.getElementById('rmNext').textContent = 'NEXT: ' + nextM.ver + ' ' + nextM.title;
+    /* Initial render from hardcoded data */
+    renderRoadmap();
 
     /* Auto-scroll animation */
     let autoScroll = true;
@@ -1306,8 +1314,8 @@
         catch(e) { alert('Ошибка входа: ' + e.message); }
     });
 
-    /* Load categories from Firebase (public read allowed) and render features */
-    applyCategoriesFromDB();
+    /* Load all data from Firebase (public read allowed) and re-render */
+    applyAllFromDB();
 
     onAuthStateChanged(auth, async user => {
         currentUser = user;
@@ -1335,7 +1343,7 @@
                 refreshMilestoneList();
                 refreshFeatureList();
                 refreshCategoryList();
-                await applyCategoriesFromDB();
+                await applyAllFromDB();
                 rebuildCatDropdown();
                 await rebuildVerDropdown();
             }
@@ -1386,6 +1394,29 @@
         if (cats && cats.length > 0) {
             CAT_META = cats.map(c => ({ id: c.id, icon: c.icon, name: c.name, visible: c.visible !== false }));
         }
+        renderFeaturesSection();
+    }
+
+    /* ---- Load ALL data from Firebase and re-render everything ---- */
+    async function applyAllFromDB() {
+        /* Categories */
+        const cats = await loadCategoriesFromDB();
+        if (cats && cats.length > 0) {
+            CAT_META = cats.map(c => ({ id: c.id, icon: c.icon, name: c.name, visible: c.visible !== false }));
+        }
+        /* Milestones */
+        const miles = await loadMilestonesFromDB();
+        if (miles && miles.length > 0) {
+            MILESTONE_META.length = 0;
+            miles.forEach(m => MILESTONE_META.push(m));
+        }
+        /* Features */
+        const feats = await loadFeaturesFromDB();
+        if (feats && feats.length > 0) {
+            FEATURES.length = 0;
+            feats.forEach(f => FEATURES.push(f));
+        }
+        renderRoadmap();
         renderFeaturesSection();
     }
 
@@ -1493,6 +1524,7 @@
                     await deleteDoc(doc(db, 'milestones', btn.dataset.del));
                     refreshMilestoneList();
                     rebuildVerDropdown();
+                    await applyAllFromDB();
                 }
             });
         });
@@ -1529,6 +1561,7 @@
             clearMilestoneForm();
             refreshMilestoneList();
             rebuildVerDropdown();
+            await applyAllFromDB();
         } catch(e) { alert('Ошибка: ' + e.message); }
     });
 
@@ -1572,6 +1605,7 @@
                 if (confirm('Удалить эту возможность?')) {
                     await deleteDoc(doc(db, 'features', btn.dataset.fdel));
                     refreshFeatureList();
+                    await applyAllFromDB();
                 }
             });
         });
@@ -1594,6 +1628,7 @@
             document.getElementById('fText').value = '';
             document.getElementById('fDate').value = '';
             refreshFeatureList();
+            await applyAllFromDB();
         } catch(e) { alert('Ошибка: ' + e.message); }
     });
 
