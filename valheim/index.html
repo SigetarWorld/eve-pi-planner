@@ -511,6 +511,8 @@
             border-bottom: 1px solid hsl(var(--border) / .3); font-size: .8rem;
         }
         .admin-panel .item-row:hover { background: hsl(220 40% 9%); }
+        .admin-panel .item-row.cat-hidden { opacity: 0.45; }
+        .admin-panel .item-row.cat-hidden:hover { opacity: 0.7; }
         .admin-panel .item-row .edit-btn { margin-left: auto; padding: 2px 10px; font-size: .75rem; }
         .admin-panel .tabs { display: flex; gap: 0; border-bottom: 1px solid hsl(var(--border)); margin-bottom: 16px; }
         .admin-panel .tab-btn {
@@ -1304,8 +1306,8 @@
         catch(e) { alert('Ошибка входа: ' + e.message); }
     });
 
-    /* Try to load categories from Firebase on startup */
-    applyCategoriesFromDB();
+    /* Render features section with inline CAT_META (no Firebase read before auth) */
+    renderFeaturesSection();
 
     onAuthStateChanged(auth, user => {
         currentUser = user;
@@ -1388,9 +1390,13 @@
     async function applyCategoriesFromDB() {
         const cats = await loadCategoriesFromDB();
         if (cats && cats.length > 0) {
-            CAT_META = cats.map(c => ({ id: c.id, icon: c.icon, name: c.name }));
+            CAT_META = cats.map(c => ({ id: c.id, icon: c.icon, name: c.name, visible: c.visible !== false }));
         }
-        /* Re-render features section with recent changes */
+        renderFeaturesSection();
+    }
+
+    /* ---- Render features section (no Firebase call) ---- */
+    function renderFeaturesSection() {
         const sidebar = document.getElementById('featSidebar');
         const panel = document.getElementById('featPanel');
         sidebar.innerHTML = '';
@@ -1399,8 +1405,9 @@
         const catMap = {};
         CAT_META.forEach(c => { catMap[c.id] = c; });
 
-        /* Recent changes (7 days) */
-        const recent7 = FEATURES.filter(f => daysAgo(f.date) <= 7)
+        /* Recent changes (7 days) — only from visible categories */
+        const hiddenCatIds = new Set(CAT_META.filter(c => c.visible === false).map(c => c.id));
+        const recent7 = FEATURES.filter(f => daysAgo(f.date) <= 7 && !hiddenCatIds.has(f.cat))
             .sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
         const hasRecent = recent7.length > 0;
 
@@ -1434,7 +1441,8 @@
             panel.appendChild(recentDiv);
         }
 
-        CAT_META.forEach((cat, ci) => {
+        const visibleCats = CAT_META.filter(c => c.visible !== false);
+        visibleCats.forEach((cat, ci) => {
             const items = (byCat[cat.id] || []).slice().sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
             const has3d = items.some(f => daysAgo(f.date) <= 3);
             const btn = document.createElement('button');
@@ -1602,16 +1610,33 @@
             list.innerHTML = '<div style="padding:8px;font-size:.8rem;color:hsl(var(--muted-foreground))">Нет категорий в Firebase — загрузите данные во вкладке «Синхронизация»</div>';
             return;
         }
-        list.innerHTML = data.map(c => `
-            <div class="item-row">
+        list.innerHTML = data.map(c => {
+            const vis = c.visible !== false;
+            return `
+            <div class="item-row${vis ? '' : ' cat-hidden'}">
+                <button class="btn-eye" data-cvis="${c.id}" title="${vis ? 'Скрыть категорию' : 'Показать категорию'}" style="background:none;border:none;cursor:pointer;width:24px;height:24px;padding:0;color:${vis ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'};opacity:${vis ? '1' : '0.4'};flex-shrink:0">${svgIcon('eye')}</button>
                 <span style="width:24px;height:24px;color:hsl(var(--primary));flex-shrink:0">${svgIcon(c.icon)}</span>
                 <span style="font-family:'Share Tech Mono',monospace;font-size:.75rem;color:hsl(var(--secondary));width:80px;">${c.id}</span>
                 <span style="flex:1">${c.name}</span>
                 <span style="font-size:.7rem;color:hsl(var(--muted-foreground))">⇅${c.order || 0}</span>
                 <button class="btn-secondary edit-btn" data-cedit="${c.id}">✎</button>
                 <button class="btn-danger edit-btn" data-cdel="${c.id}" style="padding:2px 8px;">✕</button>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
+        /* Eye toggle — show/hide category */
+        list.querySelectorAll('[data-cvis]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const catId = btn.dataset.cvis;
+                const c = data.find(x => x.id === catId);
+                if (!c) return;
+                const newVis = c.visible === false; /* toggle: was hidden → show, or was visible → hide */
+                try {
+                    await setDoc(doc(db, 'categories', catId), { visible: newVis }, { merge: true });
+                    refreshCategoryList();
+                    await applyCategoriesFromDB();
+                } catch(e) { alert('Ошибка: ' + e.message); }
+            });
+        });
         list.querySelectorAll('[data-cedit]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const c = data.find(x => x.id === btn.dataset.cedit);
@@ -1683,7 +1708,7 @@
             order: parseInt(document.getElementById('cOrder').value) || 0,
         };
         try {
-            await setDoc(doc(db, 'categories', id), data);
+            await setDoc(doc(db, 'categories', id), data, { merge: true });
             alert('Категория «' + name + '» сохранена!');
             clearCategoryForm();
             refreshCategoryList();
