@@ -239,7 +239,8 @@
         .rm-feat-row .check, .rm-feat-row .pending { font-size: .65rem; flex-shrink: 0; }
         .rm-feat-icon { width: 14px; height: 14px; flex-shrink: 0; color: hsl(var(--primary)); }
         .rm-feat-icon svg { width: 14px; height: 14px; }
-        .rm-feat-done { opacity: 0.5; text-decoration: line-through; }
+        .rm-feat-done { color: hsl(var(--accent)); }
+        .rm-feat-done .check { color: hsl(var(--accent)); }
         .rm-feat-more { font-size: .65rem; color: hsl(var(--primary)); opacity: .6; padding-left: 18px; }
 
         /* Viking avatar walking along */
@@ -1441,8 +1442,8 @@
 
         /* Recent changes (7 days) — only from visible categories */
         const hiddenCatIds = new Set(CAT_META.filter(c => c.visible === false).map(c => c.id));
-        const recent7 = DONE_FEATURES.filter(f => daysAgo(f.date) <= 7 && !hiddenCatIds.has(f.cat))
-            .sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
+        const recent7 = DONE_FEATURES.filter(f => daysAgo(f.doneDate || f.date) <= 7 && !hiddenCatIds.has(f.cat))
+            .sort((a, b) => (parseDate(b.doneDate || b.date) || 0) - (parseDate(a.doneDate || a.date) || 0));
         const hasRecent = recent7.length > 0;
 
         if (hasRecent) {
@@ -1463,12 +1464,16 @@
             let rRows = '';
             recent7.forEach(item => {
                 const cm = catMap[item.cat];
-                const isNew = daysAgo(item.date) <= 3;
+                const checkDate = item.doneDate || item.date;
+                const isNew = daysAgo(checkDate) <= 3;
+                const dates = item.doneDate && item.date && item.doneDate !== item.date
+                    ? `${item.date} → ${item.doneDate}`
+                    : (item.doneDate || item.date || '');
                 rRows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
                     <span class="feat-row-cat-icon" title="${cm ? cm.name : item.cat}">${cm ? svgIcon(cm.icon) : ''}</span>
                     <span style="font-size:.7rem;color:hsl(var(--primary));white-space:nowrap;flex-shrink:0;min-width:70px">${cm ? cm.name : item.cat}</span>
                     <span class="feat-row-text">${item.text}</span>
-                    <span class="feat-row-date">${item.date}</span>
+                    <span class="feat-row-date">${dates}</span>
                 </div>`;
             });
             recentDiv.innerHTML = rRows;
@@ -1495,11 +1500,15 @@
             div.id = 'fp-' + cat.id;
             let rows = '';
             items.forEach(item => {
-                const isNew = daysAgo(item.date) <= 3;
+                const checkDate = item.doneDate || item.date;
+                const isNew = daysAgo(checkDate) <= 3;
+                const dates = item.doneDate && item.date && item.doneDate !== item.date
+                    ? `${item.date} \u2192 ${item.doneDate}`
+                    : (item.doneDate || item.date || '');
                 rows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
                     <span class="feat-row-check">\u2713</span>
                     <span class="feat-row-text">${item.text}</span>
-                    <span class="feat-row-date">${item.date}</span>
+                    <span class="feat-row-date">${dates}</span>
                 </div>`;
             });
             div.innerHTML = rows;
@@ -1626,6 +1635,7 @@
                     <span style="width:20px;height:20px;color:hsl(var(--primary));flex-shrink:0">${cm ? svgIcon(cm.icon) : ''}</span>
                     <span style="flex:1">${f.text}</span>
                     <span style="font-size:.65rem;color:hsl(var(--muted-foreground));flex-shrink:0">${f.date||''}</span>
+                    <button class="btn-secondary edit-btn" data-fedit2="${f.id}" style="padding:1px 6px;font-size:.7rem;">✎</button>
                     <button class="btn-danger edit-btn" data-fdel2="${f.id}" style="padding:1px 6px;font-size:.7rem;">✕</button>
                 </div>`;
             }).join('');
@@ -1635,11 +1645,29 @@
         list.querySelectorAll('.cb-done').forEach(cb => {
             cb.addEventListener('change', async () => {
                 const fid = cb.dataset.fid;
-                await setDoc(doc(db, 'features', fid), { done: cb.checked }, { merge: true });
+                const now = new Date();
+                const dd = String(now.getDate()).padStart(2,'0') + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear();
+                const upd = { done: cb.checked };
+                if (cb.checked) upd.doneDate = dd; else upd.doneDate = '';
+                await setDoc(doc(db, 'features', fid), upd, { merge: true });
                 await autoComputeMilestoneStatus(ver);
                 refreshMilestoneFeatures(ver);
                 refreshMilestoneList();
                 await applyAllFromDB();
+            });
+        });
+
+        /* Edit feature — fill form */
+        list.querySelectorAll('[data-fedit2]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const f = feats.find(x => x.id === btn.dataset.fedit2);
+                if (!f) return;
+                editingFeatureId = f.id;
+                document.getElementById('mfText').value = f.text || '';
+                document.getElementById('mfDate').value = f.date || '';
+                document.getElementById('mfAdd').textContent = 'Обновить';
+                /* Set category after dropdown is populated */
+                setTimeout(() => { document.getElementById('mfCat').value = f.cat || ''; }, 50);
             });
         });
 
@@ -1675,7 +1703,8 @@
         await setDoc(doc(db, 'milestones', ver), { done: allDone, wip: !allDone && someDone }, { merge: true });
     }
 
-    /* Add feature to current milestone */
+    /* Add / update feature in current milestone */
+    let editingFeatureId = null;
     document.getElementById('mfAdd').addEventListener('click', async () => {
         const ver = editingMilestoneVer || document.getElementById('mVer').value.trim();
         if (!ver) return alert('Сначала сохраните этап');
@@ -1683,11 +1712,19 @@
         if (!text) return alert('Укажите описание');
         const cat = document.getElementById('mfCat').value;
         const date = document.getElementById('mfDate').value.trim();
-        const id = cat + '_' + Date.now();
+        const id = editingFeatureId || (cat + '_' + Date.now());
         try {
-            await setDoc(doc(db, 'features', id), { cat, ver, text, date, done: false });
+            if (editingFeatureId) {
+                /* Update existing feature */
+                await setDoc(doc(db, 'features', id), { cat, text, date }, { merge: true });
+            } else {
+                /* New feature */
+                await setDoc(doc(db, 'features', id), { cat, ver, text, date, done: false });
+            }
+            editingFeatureId = null;
             document.getElementById('mfText').value = '';
             document.getElementById('mfDate').value = '';
+            document.getElementById('mfAdd').textContent = '+ Добавить строку';
             refreshMilestoneFeatures(ver);
             refreshMilestoneList();
             await applyAllFromDB();
