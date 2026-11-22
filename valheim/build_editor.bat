@@ -1,42 +1,36 @@
 @echo off
-chcp 65001 >nul
-echo ═══════════════════════════════════════════
-echo   Сборка: Валера - Редактор дорожной карты
-echo ═══════════════════════════════════════════
+echo ==========================================
+echo   Build ValheimEditor.exe
+echo ==========================================
 echo.
 
-:: Проверяем Python
-python --version >nul 2>&1
+where python >nul 2>&1
 if errorlevel 1 (
-    echo [ОШИБКА] Python не найден! Установите Python 3.8+ с python.org
-    pause
-    exit /b 1
-)
-
-:: Устанавливаем PyInstaller если нет
-pip show pyinstaller >nul 2>&1
-if errorlevel 1 (
-    echo Устанавливаем PyInstaller...
-    pip install pyinstaller
-)
-
-echo.
-echo Собираем EXE...
-echo.
-
-pyinstaller --onefile --windowed --name "ValheimEditor" --icon=NONE editor.py
-
-if errorlevel 1 (
+    echo ERROR: Python not found in PATH!
+    echo Install Python 3.8+ from https://python.org
+    echo Check "Add Python to PATH" during install!
     echo.
-    echo [ОШИБКА] Сборка не удалась!
     pause
     exit /b 1
 )
 
+echo Python found:
+python --version
 echo.
-echo ✅ Готово! EXE файл: dist\ValheimEditor.exe
+
+echo Installing PyInstaller...
+pip install pyinstaller
 echo.
-echo Скопируйте ValheimEditor.exe в папку E:\WebSite\Valheim\
-echo (рядом с index.html и папкой data\)
+
+echo Building EXE...
+echo.
+python -m PyInstaller --onefile --windowed --name "ValheimEditor" editor.py
+
+echo.
+if exist "dist\ValheimEditor.exe" (
+    echo SUCCESS! File: %cd%\dist\ValheimEditor.exe
+) else (
+    echo BUILD FAILED - check errors above
+)
 echo.
 pause
