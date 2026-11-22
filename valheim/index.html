@@ -653,9 +653,12 @@
             }
 
             /* ===== Рендер секции «Возможности» ===== */
-            (function renderFeatures(){
+            function renderFeaturesSection(){
                 const sidebar = document.getElementById('featSidebar');
                 const panel   = document.getElementById('featPanel');
+                if (!sidebar || !panel) return;
+                sidebar.innerHTML = '';
+                panel.innerHTML = '';
                 const byCat   = groupBy(FEATURES, 'cat');
                 const catMap  = {};
                 CAT_META.forEach(c => { catMap[c.id] = c; });
@@ -731,7 +734,7 @@
                     div.innerHTML = rows;
                     panel.appendChild(div);
                 });
-            })();
+            /* renderFeaturesSection вызывается из загрузчика JSON */
             </script>
         </div>
 
@@ -866,8 +869,7 @@
         }
     }
 
-    /* Initial render from hardcoded data */
-    renderRoadmap();
+    /* renderRoadmap вызывается из загрузчика JSON */
 
     /* Auto-scroll animation */
     let autoScroll = true;

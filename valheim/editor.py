@@ -639,41 +639,56 @@ class EditorApp(tk.Tk):
         # Save first
         save_all()
 
-        # Copy data files and index.html to publish dir
+        GIT = r'C:\Program Files\Git\cmd\git.exe'
+
         try:
+            # Reset _publish git repo to match remote (fixes conflicts)
+            publish_git = os.path.join(PUBLISH_DIR, '..', '.git')
+            if os.path.exists(publish_git) or os.path.exists(os.path.join(PUBLISH_DIR, '..', '.git')):
+                pub_root = os.path.normpath(os.path.join(PUBLISH_DIR, '..'))
+                if os.path.exists(os.path.join(pub_root, '.git')):
+                    self._status('Синхронизация _publish с GitHub...')
+                    self.update_idletasks()
+                    subprocess.run([GIT, 'fetch', 'origin'], cwd=pub_root,
+                                   capture_output=True, timeout=30)
+                    subprocess.run([GIT, 'reset', '--hard', 'origin/main'], cwd=pub_root,
+                                   capture_output=True, timeout=15)
+                    subprocess.run([GIT, 'clean', '-fd'], cwd=pub_root,
+                                   capture_output=True, timeout=15)
+
+            # Copy files to _publish/valheim/
             pub_data = os.path.join(PUBLISH_DIR, 'data')
             os.makedirs(pub_data, exist_ok=True)
 
-            # Copy index.html
             src_html = os.path.join(BASE_DIR, 'index.html')
             if os.path.exists(src_html):
                 shutil.copy2(src_html, os.path.join(PUBLISH_DIR, 'index.html'))
 
-            # Copy JSON data files
             for fname in ['milestones.json', 'features.json', 'categories.json']:
                 src = os.path.join(DATA_DIR, fname)
                 if os.path.exists(src):
                     shutil.copy2(src, os.path.join(pub_data, fname))
 
-            self._status('📁 Файлы скопированы в _publish/valheim/')
+            self._status('Файлы скопированы, запускаю publish.bat...')
+            self.update_idletasks()
 
-            # Run publish.bat if it exists
+            # Run publish.bat in a separate console window
             if os.path.exists(PUBLISH_BAT):
-                result = subprocess.run([PUBLISH_BAT], cwd=os.path.dirname(PUBLISH_BAT),
-                                        capture_output=True, text=True, shell=True, timeout=60)
-                if result.returncode == 0:
-                    self._status('🚀 Опубликовано на сайт!')
-                    messagebox.showinfo('Публикация', 'Сайт успешно опубликован!')
-                else:
-                    self._status(f'❌ Ошибка публикации: {result.stderr[:200]}')
-                    messagebox.showerror('Ошибка', f'publish.bat завершился с ошибкой:\n{result.stderr[:500]}')
-            else:
-                self._status('📁 Файлы скопированы. publish.bat не найден.')
+                subprocess.Popen(
+                    ['cmd', '/c', 'start', 'cmd', '/k', PUBLISH_BAT],
+                    cwd=os.path.dirname(PUBLISH_BAT),
+                    shell=False
+                )
+                self._status('publish.bat запущен')
                 messagebox.showinfo('Публикация',
-                    f'Файлы скопированы в:\n{PUBLISH_DIR}\n\npublish.bat не найден — опубликуйте вручную.')
+                    'publish.bat запущен в отдельном окне.\nСледите за ходом в консоли.')
+            else:
+                self._status('Файлы скопированы. publish.bat не найден.')
+                messagebox.showinfo('Публикация',
+                    f'Файлы скопированы в:\n{PUBLISH_DIR}\n\npublish.bat не найден.')
 
         except Exception as e:
-            self._status(f'❌ Ошибка: {e}')
+            self._status(f'Ошибка: {e}')
             messagebox.showerror('Ошибка', str(e))
 
     def _status(self, text):
