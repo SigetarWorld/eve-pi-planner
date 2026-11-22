@@ -1,0 +1,10 @@
+[
+  { "id": "companion", "icon": "sword", "name": "Компаньон", "visible": true, "order": 0 },
+  { "id": "combat",    "icon": "shield", "name": "Боевая система", "visible": true, "order": 1 },
+  { "id": "voice",     "icon": "mic",    "name": "Голос и мозг", "visible": true, "order": 2 },
+  { "id": "base",      "icon": "home",   "name": "Работа на базе", "visible": true, "order": 3 },
+  { "id": "mining",    "icon": "pick",   "name": "Добыча", "visible": true, "order": 4 },
+  { "id": "training",  "icon": "target", "name": "Тренировки", "visible": true, "order": 5 },
+  { "id": "mp",        "icon": "multi",  "name": "Мультиплеер", "visible": true, "order": 6 },
+  { "id": "ui",        "icon": "hud",    "name": "Интерфейс", "visible": true, "order": 7 }
+]
