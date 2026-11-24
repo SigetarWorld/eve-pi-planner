@@ -112,6 +112,13 @@ class EditorApp(tk.Tk):
         self.minsize(900, 550)
 
         reload_data()
+
+        # Цвета выпадающих списков (Combobox Listbox)
+        self.option_add('*TCombobox*Listbox.background', BG2)
+        self.option_add('*TCombobox*Listbox.foreground', FG)
+        self.option_add('*TCombobox*Listbox.selectBackground', '#1f6feb')
+        self.option_add('*TCombobox*Listbox.selectForeground', '#fff')
+
         self._apply_styles()
 
         # Notebook
@@ -325,14 +332,16 @@ class EditorApp(tk.Tk):
         self.stage_tree.delete(*self.stage_tree.get_children())
 
         # Обновляем фильтр
-        cat_names = ['Все'] + [c['name'] for c in sorted(categories, key=lambda x: x.get('order', 0))]
+        sorted_cats = sorted(categories, key=lambda x: x.get('order', 0))
+        cat_names = ['Все'] + [f"{c.get('icon', '')} {c['name']}" for c in sorted_cats]
         self.filter_combo['values'] = cat_names
 
         # Фильтр категории
         filt = self.filter_var.get()
         filt_id = None
         if filt != 'Все':
-            c = next((x for x in categories if x['name'] == filt), None)
+            c = next((x for x in categories if f"{x.get('icon', '')} {x['name']}" == filt
+                       or x['name'] == filt), None)
             if c:
                 filt_id = c['id']
 
