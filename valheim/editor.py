@@ -102,6 +102,18 @@ BORDER = '#30363d'
 STATUS_ICON = {'done': '[+]', 'wip': '[~]', 'planned': '[ ]'}
 STATUS_LABEL = {'done': 'Выполнено', 'wip': 'В работе', 'planned': 'В планах'}
 
+# Base64 PNG иконки категорий (20x20, из valera-icons SVG)
+CAT_ICONS_B64 = {
+    'sword': 'iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAABlklEQVQ4jc2RP2tTURyGnzcNvfYmIgrSxdEOersI9QNotxscrH4AQaRdmujUTYKTW+tp0VAKhc4WBPtnEV0cHESl3KaUDn4AsVM9JWnszyENtGrC5drBdzz8eHjO+8L/HqU9NEObs+ET4JJ2/XhUpZkZaIbqrjBtskr7gZVA/u5Qmcbvt7k0wPpc8YbJKgZvBBOIUsPClzuOIBOQ73vvBauCUQyTdYemAkZVmuz6MeC1iZrlyJt4gIgbhK++LnKmc5t6FIAdR9AkXDaIZUwAmKgJ1vYDf3tknIN0Xz7KUJlGP/6OYM1EDVk/sGEQB754uavhuyr5ixcKS5IWosm9tz1MS9DuNKr4eXp2KLuCHa7U58K4h+kL0L0OrKshwMbzc+f7WgdbBoMScTTp19PU0tUw12o9NhgUfMNY3pwt3swMTNzAU7CHoJl8s++qiW07/Hk/DTD/d5imQDPD5R+PaI90PQ3sT7NnAx8SF1riCtOZAMdHSVzhE9g14ONw2Wcz6nT4xRXH2jB9/hfYiSTu7K1TAZ12fgENy5j54ikARwAAAABJRU5ErkJggg==',
+    'shield': 'iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAAB/klEQVQ4jcWTv2tTURTHP+e+KHlJpg7SDqkIojRpKwjOwc1FXLRLMWAUh1aNFQe7xandSkyzaScF7T9Qt4LoYMRB0hcRfyC6FAdF29AG8u5xyLM2fWkaEfGO53y/n/u953Dhf5zaXGygNhcb6EUr3Zpe0R1E5JbCxUB8D9XZdH7j0x8BvaI7CDKtQm4LBGyBlQXQmU7gNmC17CaNb24qehkwgj7yfS2MTm1+6NB3BH1osbdHrjXeh4ArxcRJxD4GVGDBOjozMrnxudMLWmCZVsgBgppTw/n1ZYDIb5lNAfvFmOH0lXWv22yDiya8+URZrV0JvMsAZqe4YfnSDbaXNgT82/PvgCJSB4iaZqxXsyPNRGBeCydUVgHUl2SvwH0+yZa15W0H+k4FsBbJ9Aq0jskI+BqJvAgB0zd+fAV5JiJZ1e5fEkALGJQsyNPRie/fwgkBFVsGPeKV4uf3Atb64lngsIotba+3JdECxuuLPQGOOr49MTS1+bET7FUpeshRUwF5nb5az4igHRNKAWvUvwAY35GlatkNLag2Hz0YUVkCRJxmbjssBARI5RtvRfUMSL/4UvHuuGd/9bySe85a81yRA9bo6fRk491O/67Dr84lhnDsfYHjgBdoUwIvm9YZP3Z97U0nX9dtLi7ipFbj48CloHS31l9/MDaGv5vnJ89Av1L3rHl3AAAAAElFTkSuQmCC',
+    'mic': 'iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAACMklEQVQ4ja2TwUtUURTGf+fecZyZN5ow1aJFoFRgOLmppYtCaBUhroRaCEUgjGXiroURtKrEp4vctSk31X9QAwNFCyGcnkZIUCsjKiiaN47Ou6eFUKbzbIrO6vK+8/3ud8+9D5qo4iSJ4iSJZnplN/HNrba99aSbVfQs6AYi89FaeLV3gkqcZ9ddN5LRfYE+VH0Rk1LVEZvy2qEy9NcJl6bTB1XkvYpeyReq0wCBn7kG3DARB46OhauNfCYOGIl2bq7s4s+Pap4B1K07EueLBYokdqRXg8ZpfwT+a/0GLE+lupZ9rx9AJaoBCNr6K6Imt2rLvtdfnkp1xQKttZcVfQCg1WoZCFEdWZijRScxBncOWE+79BKAQ+eNtYX4IysfFHIvpzo6eieoqDAOnEnVMm+XcpkVRc4rXD88+uXb69m2HJBDWN0F6J4CJmHXhwDyhfCuGjkNFHH6wggD+dHwJoBz9SFAnNMnWxE7bivwvRJot43cie6xtXeNBr84k+q0ahZAF3tGq6fiEwLW1C8ANrKmFExnT27Xl32v36opbU7IXdyuN3xPge/1gj4EDgFlhY+CiiD7FfIgK04YPFaovGoKCPD8Dun2lsywKgOC9gGISskZHmez4b3OYdbivH+swE8XAz9dbKb3v/8psUcOZtKD4iQHoOj4ZrPcBlCjn3sK1UdNA1d8WmtkPgHZmP2+e23hvkZzjE24MEcmGe1pBajXowRAImHrAOv2a+34JcJGvh9jhtHMlHsa1QAAAABJRU5ErkJggg==',
+    'home': 'iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAAB4UlEQVQ4jeWUP2hTYRTFf/d7r2l8rZhHQaiLcxNDsDoUHHRTmtlBBCGCWKGtFgQHl7c4B5OinRT8szl1c2oHByelxsTZSRTSVNIkat77rkurafrnRRcHz3juuYf7nY974V+gVvTGa0VvfBCtiRNUSl7eOlStQ7VS8vJxetmvoAGm6nsBwl1gbYvOodzLNNqBBNiBDT8sHh6LbPQMuCDo085wZ2YsgW01vRJwDXRFrbmUvdX6HGtYW/Qm1fJC4ZiK3snOde731t+XRq4IuqRQN+jF9HzndW/d9IvV8krBFatn+80ATsy3ngBnBLoWWa2UD93cNWE1IGF9b0mEAvDSMc7lidlmfa84+mJ5DpxX5bFptGcyAT8MgKSSUyIUUClm1tvTcWYAE7PNema9PY1KUYSCpJJTAC5A5LhG1KJGlrd/b+3h6FG3ax9ZGO7L6Hs4ZK7mbmx+kQBbKcuyqC5Ejmt2ZbijMSStkDfg95j5CnkTkt6vz417mhVzOzu3uQpQKY+eE7UrB+ljN+VP8R8augCqoQoGo3qqVhrZ4jSnMDDnRKFle1PePTjim7BbBQa6eXvgUzdKpE8ubGz8Og5vi6lUwg0nRfV3DGKOo/bjjtY+zqpE35JDb05fb3z9y2EOxk9C7Mxi6qu6gwAAAABJRU5ErkJggg==',
+    'pick': 'iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAABhklEQVQ4jc3Sv0sCYRgH8O/zquh5uTkELdESddY/UFQYgTRV/0W/tBpqdHBJKNSL+kMKaXKoaA+7K6O2lggaSrQg754G0fTSuxMcesaHhw/v87xf4D/VfSYwXEqHQ609by/AbU5aFobvwvAZQ8LkpEFYgVRNAUj2DGqqnAF4y/QZ74I5RIQyAyk/AodAtTlHvWAAzgHEALxSzTut7Hw8WWeFMybt1zHKRuLVRWGacwBk9tVO9WN50Dpv+8I6Rnt1rLLd6N9lAzOmEHkQnklQVFmvvDiCv2u2Y43Sc/I8iM8YePQIT3Rso/zWdWUnDACURKXAQB7AZM2szdquqalBrqP253Cc03PSpqYGWVeDJ/aYnOmGta9MfEPAJwNTDwehcDfM7hxtoBL/uiLTjAEY+fYbl9ZYtEeo8207/nKnWHSLkCcYllgQcM3AqhP2B9RyUhpEo5F4dcmCSm4wtN5QU+UMiHYBLjV6SqJSYOIFBtbcYM0XFo/kCcFcdPsKV6WrA+N9gfpdP4ahwcI3gF0pAAAAAElFTkSuQmCC',
+    'target': 'iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAADAklEQVQ4jb2TT2tcVRjGf+8dm8zcOxAoaF0Y3cQskrkpSBfaVmoDVQQXyQcopYptY5pJ/ABCVNxKMzN1DFWD+gGMG6Ea0FYsXQQhvXMrEqHidFP/VKxzZzJTcx4XM5mOTbQI4rs75733d57nvM+B/7jsXj9EZ4I9Mj0EYLLr4Vxy418Dry2Rrt/KvOTMjhvk7mqIhN7rp1F+NE/znsC4lB2Vc8vAkGEXhFuWZ98BmNOQ4U0IHQJbN2xiNF+7+rfAuJQdxbmvMGpy3tHcbO3znRzExey45D40CMDb3wvtAq8tkU5+9yMzMs7TE+F0oxoVgqc9eF4oBIRZ5Il3R/LJSnQ2M2ibdhms1k8ytmXf2wImtcwUMCTnHQ2nG9W44L9h6LzQAbAY7KqhJx36rLLgvxZON6oedgw0vGGZU9sURgU/MvRzLt84HBf9ZyU+MSg3+uuz+05yG2B1kV3pll9CnBD2TJhPPq0UgouggVy+vrerMDoT7OlM82MAiVPA9z/erOcHmnjxgn+iUvBfHGjibfTVTwM/gKYATG4ZGFsrZx+4YzmlQdqXtN6RHQIXD8/zx4aCGRlvA4stgtP7TnLb0AUzxgBknZ6WG+wC5RDt1T8HXU53b5m1e1KGA7iPzgvAhDkNtZVyBTi0usiudDMpNvF/Q4hfGx/E8/QJe8pgFQCnIcxo4l3vKgznkhsGkeRNdo4tA4+kW36pdRPl8vVzudn6OwDa7Z8FBk32VsfyJLD2WL72U1dh+4OWDN6Mi9nx0Zna+cqC/zrwinb7z1UKXOooPwA8KPHqyGyyEpWCIzgdlGluW2zWC/Q3CSJQoJQeD6cb1biYHZfbfEFmY+2r0RV5qXPhTO2LeCHzsMwuG7rVR2PvVrD/+vQK2RFwlwSJhx0byScrO80mKgVHzOl9IKNNb3/4cu2bbQp7oUIfgYbBvjS55W40sGGhCeCgoW/dZmqyF7Yj8I79zBTYcWjnrafWZFryfmmUR+dpbYvRTsDe+rqQvT/ttUO74bzq1jT/t/oTAkNbDGxSd30AAAAASUVORK5CYII=',
+    'multi': 'iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAACPElEQVQ4je2RPWiTURSGn3O/kJoflRRFpC5Fiv1JqI0Ibs71Dynq4KCjIu3XLroJ2YoIpTbgoIsUBY2gDi1acHJyqo1NhNouSkCltiJtvo+kyT0ODRJiAu76wlnOe85zD++Ff07S2NAUJhcLnRM4guGrI4HpnuGNNYD8xK52DWxdQtmvhvn4mv9UUtiWQE1h8u3hGWAQKAIR4LtSPbY97LwF9tR5L/vWvVP1UFMP/NAeGgIGRbkSd71o1TrdgBUC40JgHLCOqR6Ku15U4CowWNuhKdCKJAX8Xte7D9A/trEk6BxoEjQp6FzPcOkjQO+Id0/AtyLJlkCBgkIoNxntBshkcFQkIUhBkIKKJDIZHIDcZLRbISRQaJnh/FR0bxCbBYLALNAP9KvqEICIPAOytToJlMqYw0l3c7XphUl3c9ViryP8VPS8qHSoctf88GcTo/7zGrgMnAbKqroSVDuyMBHq+ONCTWHysXAa4RqwLsiiogeAgwgLpsIJDXBUlUdAG/Cutj8A6quRi4lhb+Y3MJeO3ED1lqC3g/g3u1xKAPl0+IyqPhTMiqI9CFmxeqFv1P8MkE3v6HTUPBGIV6wzIADLU7SVCH8B3sRd7ywNyt2JXEb0AarFsjid9ZkBLE5G9omxy6KSMQC+huNATNHpRhhAmxQfi6AY86kRBpAYK34D80qF4wZAjNm5naiz3gzY5VJCUYFqM3/7E3RVYHcAwKnYparDC6dil1rPy3usnWvpo69FzVbLB//rr/ULxfvr/ncIU5cAAAAASUVORK5CYII=',
+    'hud': 'iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAABUElEQVQ4jc2UP0tCURjGn/d6bnivgijWl1CHampsaBWaIvoEDd5sDsKWxsBrQ32AaGppawi3hiii0C+RIhF5Jbyep8G0IsFj/+iZ3nN4z+/9wTkc4L9HBsXdvrNgackK3/ZMQkCL4DrjBTdDYN13twnsfEOMBIs5r+PL1SHs6LP7SPCki8imUpFwIpL0bBXqAxJLjVaQVLaOJwEdFZGLucJTY9ShagkKABZLGDmsVnbPIVhOpOJJZWKRTsWO+lV7ZVyvEVCgZ0z6AMAybTTNJ8N62SlokfxgLSJN0VoAoFaJHZNMD23I08xGp/K3hq8TP0yt+U4VALKF9uo44O8bjgph3f8osNlqr5kCpVqCmk65DwDOera1Lox0TQ8DQBj21JTQB5lvtIJE/zn4ThGQvfe/z6QhsJXzgt0hoO67syTmZcKLooAC3ma8zuVXZf42L+zxbwcdmfz4AAAAAElFTkSuQmCC',
+}
+
 # --- Главное окно -----------------------------------------------------------
 class EditorApp(tk.Tk):
     def __init__(self):
@@ -559,14 +571,44 @@ class EditorApp(tk.Tk):
         self.stage_tree.see(sid)
 
     # === Категории ==========================================================
+    def _load_cat_icons(self):
+        """Загрузка PNG-иконок из base64 для категорий."""
+        import base64
+        self._cat_photo_images = {}
+        for key, b64 in CAT_ICONS_B64.items():
+            try:
+                data = base64.b64decode(b64)
+                img = tk.PhotoImage(data=data)
+                self._cat_photo_images[key] = img
+            except Exception:
+                pass
+
     def _build_categories_tab(self):
         f = self.tab_categories
+        self._load_cat_icons()
 
         left = ttk.Frame(f)
         left.pack(side='left', fill='both', expand=True, padx=(8, 4), pady=8)
 
         ttk.Label(left, text='Категории', font=('Segoe UI', 11, 'bold'),
                   foreground=ACCENT).pack(anchor='w')
+
+        # Панель иконок категорий
+        icons_frame = tk.Frame(left, bg=BG2, bd=1, relief='solid')
+        icons_frame.pack(fill='x', pady=(6, 0))
+        self._cat_icon_buttons = {}
+        for c in sorted(categories, key=lambda x: x.get('order', 0)):
+            icon_key = c.get('icon', '')
+            img = self._cat_photo_images.get(icon_key)
+            btn = tk.Button(icons_frame, text=c['name'], bg=BG2, fg=FG,
+                            activebackground=BG3, activeforeground=ACCENT,
+                            bd=0, padx=8, pady=4, font=('Segoe UI', 8),
+                            compound='left', cursor='hand2',
+                            command=lambda cid=c['id']: self._select_category_by_id(cid))
+            if img:
+                btn.config(image=img)
+            btn.pack(side='left', padx=2, pady=2)
+            self._cat_icon_buttons[c['id']] = btn
 
         tree_frame = ttk.Frame(left)
         tree_frame.pack(fill='both', expand=True, pady=(6, 0))
@@ -651,6 +693,15 @@ class EditorApp(tk.Tk):
         r = tk.Frame(ef, bg=BG); r.pack(fill='x', padx=10, pady=(4, 10))
         ttk.Button(r, text='Сохранить категорию', style='Accent.TButton',
                    command=self._save_category).pack(side='left')
+
+    def _select_category_by_id(self, cid):
+        """Выбрать категорию по ID (клик по иконке)."""
+        try:
+            self.cat_tree.selection_set(cid)
+            self.cat_tree.see(cid)
+            self._on_category_select()
+        except Exception:
+            pass
 
     def _refresh_categories(self):
         self.cat_tree.delete(*self.cat_tree.get_children())
