@@ -98,7 +98,7 @@ YELLOW = '#f0ad4e'
 RED    = '#f85149'
 BORDER = '#30363d'
 
-STATUS_ICON = {'done': '\u2705', 'wip': '\U0001f527', 'planned': '\u2b1c'}
+STATUS_ICON = {'done': '[+]', 'wip': '[~]', 'planned': '[ ]'}
 STATUS_LABEL = {'done': 'Выполнено', 'wip': 'В работе', 'planned': 'В планах'}
 
 # --- Главное окно -----------------------------------------------------------
@@ -135,10 +135,10 @@ class EditorApp(tk.Tk):
         # Кнопки
         bottom = tk.Frame(self, bg=BG, height=48)
         bottom.pack(fill='x', padx=8, pady=8)
-        ttk.Button(bottom, text='\U0001f4be Сохранить все', style='Accent.TButton',
+        ttk.Button(bottom, text='Сохранить все', style='Accent.TButton',
                    command=self._save_all).pack(side='left', padx=(0, 8))
-        ttk.Button(bottom, text='\U0001f504 Перезагрузить', command=self._reload).pack(side='left', padx=(0, 8))
-        ttk.Button(bottom, text='\U0001f680 Опубликовать на сайт', style='Green.TButton',
+        ttk.Button(bottom, text='Перезагрузить', command=self._reload).pack(side='left', padx=(0, 8))
+        ttk.Button(bottom, text='Опубликовать на сайт', style='Green.TButton',
                    command=self._publish).pack(side='right')
         self._status_var = tk.StringVar(value='Готово')
         tk.Label(bottom, textvariable=self._status_var, bg=BG, fg=FG2,
