@@ -102,6 +102,18 @@ BORDER = '#30363d'
 STATUS_ICON = {'done': '[+]', 'wip': '[~]', 'planned': '[ ]'}
 STATUS_LABEL = {'done': 'Выполнено', 'wip': 'В работе', 'planned': 'В планах'}
 
+# Unicode-иконки для категорий в выпадающем списке
+CAT_UNICODE = {
+    'sword': '⚔',   # ⚔
+    'shield': '⛡',  # ⛡
+    'mic': '♪',     # ♪
+    'home': '⌂',    # ⌂
+    'pick': '⛏',    # ⛏
+    'target': '◎',  # ◎
+    'multi': '☻',   # ☻
+    'hud': '▣',     # ▣
+}
+
 # --- Главное окно -----------------------------------------------------------
 class EditorApp(tk.Tk):
     def __init__(self):
@@ -333,14 +345,15 @@ class EditorApp(tk.Tk):
 
         # Обновляем фильтр
         sorted_cats = sorted(categories, key=lambda x: x.get('order', 0))
-        cat_names = ['Все'] + [f"{c.get('icon', '')} {c['name']}" for c in sorted_cats]
+        cat_names = ['Все'] + [f"{CAT_UNICODE.get(c.get('icon',''), '')} {c['name']}" for c in sorted_cats]
         self.filter_combo['values'] = cat_names
 
         # Фильтр категории
         filt = self.filter_var.get()
         filt_id = None
         if filt != 'Все':
-            c = next((x for x in categories if f"{x.get('icon', '')} {x['name']}" == filt
+            c = next((x for x in categories
+                       if f"{CAT_UNICODE.get(x.get('icon',''), '')} {x['name']}" == filt
                        or x['name'] == filt), None)
             if c:
                 filt_id = c['id']
