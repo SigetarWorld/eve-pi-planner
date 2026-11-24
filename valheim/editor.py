@@ -174,6 +174,7 @@ class EditorApp(tk.Tk):
         btn_row = tk.Frame(left, bg=BG)
         btn_row.pack(fill='x', pady=(6, 0))
         ttk.Button(btn_row, text='+ Новый этап', command=self._new_milestone).pack(side='left')
+        ttk.Button(btn_row, text='Объединить', command=self._merge_milestone).pack(side='left', padx=8)
         ttk.Button(btn_row, text='Удалить', style='Danger.TButton',
                    command=self._delete_milestone).pack(side='left', padx=8)
 
@@ -451,6 +452,53 @@ class EditorApp(tk.Tk):
         self._refresh_milestones()
         self._status(f'Этап {ver} удалён')
 
+    def _merge_milestone(self):
+        """Объединить выбранный этап с другим: все строки переносятся в целевой."""
+        sel = self.ms_tree.selection()
+        if not sel:
+            messagebox.showinfo('Объединение', 'Выберите этап, который хотите объединить с другим.')
+            return
+        src_ver = sel[0]
+        src_m = next((x for x in milestones if x['ver'] == src_ver), None)
+        if not src_m:
+            return
+
+        # Build list of other milestones as targets
+        others = [m for m in milestones if m['ver'] != src_ver]
+        if not others:
+            messagebox.showinfo('Объединение', 'Нет других этапов для объединения.')
+            return
+
+        MergeMilestoneDialog(self, src_m=src_m, others=others,
+                             callback=self._on_merge_done)
+
+    def _on_merge_done(self, src_ver, dst_ver):
+        """Перенести все features из src в dst, удалить src milestone."""
+        global features
+        moved = 0
+        for f in features:
+            if f.get('ver') == src_ver:
+                f['ver'] = dst_ver
+                moved += 1
+
+        # Remove source milestone
+        src_m = next((x for x in milestones if x['ver'] == src_ver), None)
+        if src_m:
+            milestones.remove(src_m)
+
+        # Auto-compute target milestone status
+        self._auto_compute_milestone(dst_ver)
+        self._refresh_milestones()
+
+        # Select target
+        try:
+            self.ms_tree.selection_set(dst_ver)
+            self._on_milestone_select()
+        except Exception:
+            pass
+
+        self._status(f'Этап {src_ver} объединён с {dst_ver} ({moved} строк перенесено)')
+
     # ─── Features logic ──────────────────────────────────────────────────
     def _refresh_features(self, ver=None):
         self.feat_tree.delete(*self.feat_tree.get_children())
@@ -696,6 +744,79 @@ class EditorApp(tk.Tk):
 
 
 # ─── Feature edit dialog ─────────────────────────────────────────────────
+# ─── Merge milestone dialog ──────────────────────────────────────────────
+class MergeMilestoneDialog(tk.Toplevel):
+    def __init__(self, parent, src_m, others, callback=None):
+        super().__init__(parent)
+        self.title('Объединение этапов')
+        self.configure(bg=BG)
+        self.geometry('450x360')
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+
+        self.src_m = src_m
+        self.others = sorted(others, key=lambda m: m.get('order', 0))
+        self.callback = callback
+
+        pad = {'padx': 16, 'pady': 6}
+
+        tk.Label(self, text=f'Объединить этап:', bg=BG, fg=FG,
+                 font=('Segoe UI', 10)).pack(anchor='w', **pad)
+        tk.Label(self, text=f'{src_m["ver"]}  —  {src_m["title"]}',
+                 bg=BG, fg=ACCENT, font=('Segoe UI', 11, 'bold')).pack(anchor='w', padx=16)
+
+        src_feat_count = len([f for f in features if f.get('ver') == src_m['ver']])
+        tk.Label(self, text=f'Строк в этапе: {src_feat_count}', bg=BG, fg=FG2,
+                 font=('Segoe UI', 9)).pack(anchor='w', padx=16, pady=(2, 8))
+
+        tk.Label(self, text='Перенести все строки в:', bg=BG, fg=FG,
+                 font=('Segoe UI', 10)).pack(anchor='w', **pad)
+
+        # Listbox with target milestones
+        lb_frame = tk.Frame(self, bg=BG)
+        lb_frame.pack(fill='both', expand=True, padx=16, pady=(0, 8))
+
+        self.target_lb = tk.Listbox(lb_frame, bg=BG2, fg=FG, selectbackground='#1f6feb',
+                                     selectforeground='#fff', font=('Segoe UI', 9),
+                                     bd=1, relief='solid', highlightthickness=0)
+        self.target_lb.pack(side='left', fill='both', expand=True)
+        sb = ttk.Scrollbar(lb_frame, orient='vertical', command=self.target_lb.yview)
+        self.target_lb.configure(yscrollcommand=sb.set)
+        sb.pack(side='right', fill='y')
+
+        for m in self.others:
+            status = '✅' if m.get('done') else ('🔧' if m.get('wip') else '⬜')
+            feat_count = len([f for f in features if f.get('ver') == m['ver']])
+            self.target_lb.insert('end', f'{status} {m["ver"]}  —  {m["title"]}  ({feat_count} строк)')
+
+        tk.Label(self, text='Выбранный этап будет удалён после объединения.',
+                 bg=BG, fg=RED, font=('Segoe UI', 9)).pack(anchor='w', padx=16)
+
+        btn_row = tk.Frame(self, bg=BG)
+        btn_row.pack(fill='x', padx=16, pady=12)
+        ttk.Button(btn_row, text='Объединить', style='Accent.TButton',
+                   command=self._do_merge).pack(side='left')
+        ttk.Button(btn_row, text='Отмена', command=self.destroy).pack(side='left', padx=8)
+
+    def _do_merge(self):
+        sel = self.target_lb.curselection()
+        if not sel:
+            messagebox.showinfo('Объединение', 'Выберите целевой этап.')
+            return
+        dst_m = self.others[sel[0]]
+
+        if not messagebox.askyesno('Подтверждение',
+                f'Перенести все строки из {self.src_m["ver"]} «{self.src_m["title"]}»\n'
+                f'в {dst_m["ver"]} «{dst_m["title"]}»?\n\n'
+                f'Этап {self.src_m["ver"]} будет удалён.'):
+            return
+
+        if self.callback:
+            self.callback(self.src_m['ver'], dst_m['ver'])
+        self.destroy()
+
+
 class FeatureDialog(tk.Toplevel):
     def __init__(self, parent, ver, feature=None, callback=None):
         super().__init__(parent)
