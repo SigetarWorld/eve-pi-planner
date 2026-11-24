@@ -320,7 +320,12 @@ class EditorApp(tk.Tk):
             if c:
                 filt_id = c['id']
 
-        sorted_ms = sorted(milestones, key=lambda m: m.get('order', 0))
+        # Сортировка: сначала "в работе", потом "в планах", потом "выполнено" (свежие сверху)
+        status_priority = {'wip': 0, 'planned': 1, 'done': 2}
+        sorted_ms = sorted(milestones, key=lambda m: (
+            status_priority.get(m.get('status', 'planned'), 1),
+            m.get('order', 0)
+        ))
         cat_map = {c['id']: c['name'] for c in categories}
 
         for m in sorted_ms:
