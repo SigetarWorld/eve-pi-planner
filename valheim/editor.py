@@ -76,8 +76,9 @@ def next_id():
     return max(nums, default=0) + 1
 
 def cat_version(cat_id):
-    """Количество выполненных этапов в категории = номер версии."""
-    return sum(1 for m in milestones if m.get('cat') == cat_id and m.get('status') == 'done')
+    """Версия категории: кол-во выполненных * 0.1."""
+    count = sum(1 for m in milestones if m.get('cat') == cat_id and m.get('status') == 'done')
+    return round(count * 0.1, 1)
 
 def get_subcats(cat_id):
     """Подкатегории для категории."""
@@ -183,10 +184,19 @@ class EditorApp(tk.Tk):
     def _build_roadmap_tab(self):
         f = self.tab_roadmap
 
-        # Фильтр по категории
+        # Фильтры
         filt = tk.Frame(f, bg=BG)
         filt.pack(fill='x', padx=8, pady=(8, 4))
-        tk.Label(filt, text='Фильтр:', bg=BG, fg=FG, font=('Segoe UI', 9)).pack(side='left')
+
+        tk.Label(filt, text='Статус:', bg=BG, fg=FG, font=('Segoe UI', 9)).pack(side='left')
+        self.filter_status_var = tk.StringVar(value='В работе')
+        self.filter_status_combo = ttk.Combobox(filt, textvariable=self.filter_status_var,
+                                                 state='readonly', font=('Segoe UI', 9), width=14)
+        self.filter_status_combo['values'] = ['Все', 'В работе', 'В планах', 'Выполнено']
+        self.filter_status_combo.pack(side='left', padx=6)
+        self.filter_status_combo.bind('<<ComboboxSelected>>', lambda e: self._refresh_stages())
+
+        tk.Label(filt, text='Категория:', bg=BG, fg=FG, font=('Segoe UI', 9)).pack(side='left', padx=(12, 0))
         self.filter_var = tk.StringVar(value='Все')
         self.filter_combo = ttk.Combobox(filt, textvariable=self.filter_var,
                                           state='readonly', font=('Segoe UI', 9), width=25)
@@ -313,6 +323,7 @@ class EditorApp(tk.Tk):
         cat_names = ['Все'] + [c['name'] for c in sorted(categories, key=lambda x: x.get('order', 0))]
         self.filter_combo['values'] = cat_names
 
+        # Фильтр категории
         filt = self.filter_var.get()
         filt_id = None
         if filt != 'Все':
@@ -320,7 +331,11 @@ class EditorApp(tk.Tk):
             if c:
                 filt_id = c['id']
 
-        # Сортировка: сначала "в работе", потом "в планах", потом "выполнено" (свежие сверху)
+        # Фильтр статуса
+        status_filter_map = {'В работе': 'wip', 'В планах': 'planned', 'Выполнено': 'done'}
+        filt_status = status_filter_map.get(self.filter_status_var.get(), None)
+
+        # Сортировка: сначала "в работе", потом "в планах", потом "выполнено"
         status_priority = {'wip': 0, 'planned': 1, 'done': 2}
         sorted_ms = sorted(milestones, key=lambda m: (
             status_priority.get(m.get('status', 'planned'), 1),
@@ -330,6 +345,8 @@ class EditorApp(tk.Tk):
 
         for m in sorted_ms:
             if filt_id and m.get('cat') != filt_id:
+                continue
+            if filt_status and m.get('status') != filt_status:
                 continue
             status = STATUS_ICON.get(m.get('status', 'planned'), '\u2b1c')
             cat_name = cat_map.get(m.get('cat', ''), m.get('cat', ''))
@@ -343,7 +360,7 @@ class EditorApp(tk.Tk):
         for c in sorted(categories, key=lambda x: x.get('order', 0)):
             v = cat_version(c['id'])
             if v > 0:
-                parts.append(f"{c['name']} v0.{v:02d}")
+                parts.append(f"{c['name']} v{v}")
         total = sum(1 for m in milestones if m.get('status') == 'done')
         self.ver_label.config(text=f"Версии:  {' | '.join(parts)}     Всего выполнено: {total}/{len(milestones)}")
 

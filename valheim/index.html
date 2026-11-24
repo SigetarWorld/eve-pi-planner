@@ -767,7 +767,8 @@
                 return Math.floor((now - d) / 86400000);
             }
             function catVersion(catId) {
-                return STAGES.filter(s => s.cat === catId && s.status === 'done').length;
+                const count = STAGES.filter(s => s.cat === catId && s.status === 'done').length;
+                return (count * 0.1).toFixed(1);
             }
 
             /* ===== Рендер секции «Возможности» ===== */
