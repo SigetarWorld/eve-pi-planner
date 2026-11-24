@@ -479,6 +479,119 @@
         }
 
         /* Admin panel removed — editing done via desktop app */
+
+        /* ===== Tree panel (date detail) ===== */
+        .rm-tree-wrap {
+            display: none;
+            padding: 24px 32px;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-top: none;
+        }
+        .rm-tree-header {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: hsl(var(--primary));
+            margin-bottom: 16px;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .rm-tree-close {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.75rem;
+            color: hsl(var(--muted-foreground));
+            cursor: pointer;
+            padding: 4px 10px;
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            background: transparent;
+            transition: all .2s;
+        }
+        .rm-tree-close:hover {
+            border-color: hsl(var(--primary));
+            color: hsl(var(--primary));
+        }
+        .rm-tree-cat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 0 4px;
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: hsl(var(--foreground));
+        }
+        .rm-tree-icon { display: inline-flex; width: 20px; height: 20px; color: hsl(var(--primary)); flex-shrink: 0; }
+        .rm-tree-icon svg { width: 20px; height: 20px; }
+        .rm-tree-ver { font-family: var(--font-display); font-size: 0.7rem; color: hsl(var(--primary)); letter-spacing: 0.06em; }
+        .rm-tree-subcat {
+            padding: 6px 0 2px 32px;
+            font-family: var(--font-heading);
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: hsl(var(--secondary-ink));
+            position: relative;
+        }
+        .rm-tree-subcat::before {
+            content: '';
+            position: absolute;
+            left: 14px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: hsl(var(--border));
+        }
+        .rm-tree-subcat::after {
+            content: '';
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            width: 10px;
+            height: 1px;
+            background: hsl(var(--border));
+        }
+        .rm-tree-stage {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 0 3px 56px;
+            font-family: var(--font-body);
+            font-size: 0.78rem;
+            color: hsl(var(--muted-foreground));
+            position: relative;
+        }
+        .rm-tree-stage::before {
+            content: '';
+            position: absolute;
+            left: 14px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: hsl(var(--border) / .4);
+        }
+        .rm-tree-stage::after {
+            content: '';
+            position: absolute;
+            left: 38px;
+            top: 50%;
+            width: 10px;
+            height: 1px;
+            background: hsl(var(--border) / .4);
+        }
+        .rm-tree-status {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.68rem;
+            flex-shrink: 0;
+        }
+        .rm-tree-status--done { color: hsl(150 60% 50%); }
+        .rm-tree-status--wip  { color: hsl(var(--primary)); }
+        .rm-tree-status--plan { color: hsl(var(--muted-foreground)); }
+        .rm-card.active {
+            border-color: hsl(var(--primary));
+            box-shadow: var(--glow-amber);
+        }
     </style>
 </head>
 <body>
@@ -497,6 +610,9 @@
     <main>
 
     <!-- =============== HORIZONTAL ROADMAP =============== -->
+    <div class="container" style="padding-top:48px">
+        <p class="eyebrow">// 01 — Дорожная карта</p>
+    </div>
     <div class="rm-wrap" id="roadmapWrap">
         <div class="rm-header">
             <div>
@@ -564,10 +680,13 @@
         </div>
     </div>
 
+    <!-- Tree detail panel -->
+    <div class="rm-tree-wrap" id="rmTree"></div>
+
     <!-- =============== FEATURES (kept) =============== -->
     <div class="container">
         <div class="vm-section">
-            <p class="eyebrow">// 01 — Что сделано</p>
+            <p class="eyebrow">// 02 — Что сделано</p>
             <h2 class="vm-section-title"><span>✓</span> Реализованные возможности</h2>
 
             <div class="feat-wrap" id="featWrap">
@@ -626,19 +745,15 @@
 
             /* ===== Данные (загружаются из JSON) ===== */
             let CAT_META = [];
+            let STAGES = [];
 
-            let FEATURES = [];
-
-            let MILESTONE_META = [];
-
-            /* ===== Хелпер: группировка FEATURES по полю ===== */
+            /* ===== Хелперы ===== */
             function groupBy(arr, key) {
                 const map = {};
                 arr.forEach(f => { (map[f[key]] = map[f[key]] || []).push(f); });
                 return map;
             }
 
-            /* ===== Хелпер: парсинг даты ДД.ММ.ГГГГ ===== */
             function parseDate(s) {
                 if (!s) return null;
                 const p = s.split('.');
@@ -651,6 +766,9 @@
                 const now = new Date(); now.setHours(0,0,0,0);
                 return Math.floor((now - d) / 86400000);
             }
+            function catVersion(catId) {
+                return STAGES.filter(s => s.cat === catId && s.status === 'done').length;
+            }
 
             /* ===== Рендер секции «Возможности» ===== */
             function renderFeaturesSection(){
@@ -659,12 +777,13 @@
                 if (!sidebar || !panel) return;
                 sidebar.innerHTML = '';
                 panel.innerHTML = '';
-                const byCat   = groupBy(FEATURES, 'cat');
+                const doneStages = STAGES.filter(s => s.status === 'done');
+                const byCat   = groupBy(doneStages, 'cat');
                 const catMap  = {};
                 CAT_META.forEach(c => { catMap[c.id] = c; });
 
                 /* --- Вкладка «Последние изменения» (7 дней) --- */
-                const recent7 = FEATURES.filter(f => daysAgo(f.date) <= 7)
+                const recent7 = doneStages.filter(f => daysAgo(f.date) <= 7)
                     .sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
 
                 const hasRecent = recent7.length > 0;
@@ -704,11 +823,11 @@
                 CAT_META.forEach((cat, ci) => {
                     const items = (byCat[cat.id] || []).slice().sort((a, b) => (parseDate(b.date) || 0) - (parseDate(a.date) || 0));
                     const has3d = items.some(f => daysAgo(f.date) <= 3);
-                    /* Tab */
+                    const ver = catVersion(cat.id);
                     const btn = document.createElement('button');
                     btn.className = 'feat-tab' + (!hasRecent && ci === 0 ? ' active' : '');
                     btn.dataset.cat = cat.id;
-                    btn.innerHTML = `<span class="ft-icon">${svgIcon(cat.icon)}</span> ${cat.name}${has3d ? ' <span class="ft-new"></span>' : ''} <span class="ft-count">${items.length}</span>`;
+                    btn.innerHTML = `<span class="ft-icon">${svgIcon(cat.icon)}</span> ${cat.name}${has3d ? ' <span class="ft-new"></span>' : ''} <span class="ft-count">v${ver}</span>`;
                     btn.onclick = () => {
                         sidebar.querySelectorAll('.feat-tab').forEach(t => t.classList.remove('active'));
                         btn.classList.add('active');
@@ -717,7 +836,6 @@
                     };
                     sidebar.appendChild(btn);
 
-                    /* Panel */
                     const div = document.createElement('div');
                     div.className = 'feat-panel-cat' + (!hasRecent && ci === 0 ? ' active' : '');
                     div.id = 'fp-' + cat.id;
@@ -735,7 +853,6 @@
                     panel.appendChild(div);
                 });
             }
-            /* renderFeaturesSection вызывается из загрузчика JSON */
             </script>
         </div>
 
@@ -777,70 +894,101 @@
     const rmViking = document.getElementById('rmViking');
     const rmBar    = document.getElementById('rmBarTrack');
     const rmPct    = document.getElementById('rmPercent');
+    const rmTree   = document.getElementById('rmTree');
 
-    let MILESTONES = [];
+    let DATE_GROUPS = [];
 
     function renderRoadmap() {
-        const _byVer = groupBy(FEATURES, 'ver');
-        MILESTONES = MILESTONE_META.map(m => {
-            const feats = _byVer[m.ver] || [];
-            return { ...m, feats };
-        });
-
-        /* Clear previous nodes (keep viking) */
-        rmInner.querySelectorAll('.rm-node').forEach(n => n.remove());
-        rmBar.innerHTML = '';
-
-        /* Weighted progress */
-        let wDone = 0, wWip = 0, wTotal = 0;
-        MILESTONES.forEach(m => {
-            const w = m.w || 1;
-            wTotal += w;
-            if (m.done) wDone += w;
-            else if (m.wip) wWip += w * 0.5;
-        });
-        const pct = wTotal > 0 ? Math.round((wDone + wWip) / wTotal * 100) : 0;
-
         const catMap = {};
         CAT_META.forEach(c => { catMap[c.id] = c; });
 
+        /* Group stages by date */
+        const byDate = {};
+        STAGES.forEach(s => {
+            const d = s.date || '';
+            (byDate[d] = byDate[d] || []).push(s);
+        });
+
+        /* Sort dates chronologically; empty dates (wip/planned) at end */
+        const dates = Object.keys(byDate).sort((a, b) => {
+            if (!a) return 1;
+            if (!b) return -1;
+            const da = parseDate(a), db = parseDate(b);
+            if (!da && !db) return 0;
+            if (!da) return 1;
+            if (!db) return -1;
+            return da - db;
+        });
+
+        /* Build date groups */
+        DATE_GROUPS = dates.map(date => {
+            const stages = byDate[date];
+            const byCat = {};
+            stages.forEach(s => {
+                (byCat[s.cat] = byCat[s.cat] || []).push(s);
+            });
+            /* Status: wip > planned > done */
+            let status = 'done';
+            stages.forEach(s => {
+                if (s.status === 'wip') status = 'wip';
+                else if (s.status === 'planned' && status !== 'wip') status = 'planned';
+            });
+            return { date, stages, byCat, status };
+        });
+
+        /* Clear previous nodes */
+        rmInner.querySelectorAll('.rm-node').forEach(n => n.remove());
+        rmBar.innerHTML = '';
+
+        /* Progress */
+        const totalStages = STAGES.length;
+        const doneCount = STAGES.filter(s => s.status === 'done').length;
+        const wipCount  = STAGES.filter(s => s.status === 'wip').length;
+        const pct = totalStages > 0 ? Math.round((doneCount + wipCount * 0.5) / totalStages * 100) : 0;
+
         /* Build nodes */
-        MILESTONES.forEach((m, i) => {
+        DATE_GROUPS.forEach((g, i) => {
             const node = document.createElement('div');
             node.className = 'rm-node';
 
-            const status = m.done ? 'done' : (m.wip ? 'wip' : 'plan');
-            const check  = m.done ? '<span class="check">[x]</span>' : (m.wip ? '<span class="pending">[~]</span>' : '<span class="pending">[ ]</span>');
-            const dateTag = m.date ? `<span class="rm-date">[ ${m.date} ]</span>` : '';
+            const statusCls = g.status === 'done' ? 'done' : (g.status === 'wip' ? 'wip' : 'plan');
+            const displayDate = g.date || 'В планах';
 
-            /* Build feature list HTML for card */
-            let featHtml = '';
-            if (m.feats.length > 0) {
-                const shown = m.feats.slice(0, 6);
-                featHtml = '<div class="rm-card-feats">' + shown.map(f => {
-                    const cm = catMap[f.cat];
-                    const ic = cm ? svgIcon(cm.icon) : '';
-                    const isDone = f.done !== false;
-                    const dk = isDone ? ' rm-feat-done' : '';
-                    return `<div class="rm-feat-row${dk}">${isDone ? '<span class="check">[x]</span>' : '<span class="pending">[ ]</span>'} <span class="rm-feat-icon">${ic}</span> ${f.text}</div>`;
-                }).join('') + (m.feats.length > 6 ? `<div class="rm-feat-more">+${m.feats.length - 6} ещё...</div>` : '') + '</div>';
-            } else {
-                featHtml = `<div class="rm-card-text">${m.title}</div>`;
-            }
+            /* Category lines inside card */
+            let catLines = '';
+            const catIds = Object.keys(g.byCat);
+            catIds.forEach(catId => {
+                const cm = catMap[catId];
+                if (!cm) return;
+                const ver = catVersion(catId);
+                catLines += `<div class="rm-feat-row">
+                    <span class="rm-feat-icon">${svgIcon(cm.icon)}</span>
+                    <span style="color:hsl(var(--primary));font-size:.7rem;font-family:var(--font-display);letter-spacing:.05em">v${ver}</span>
+                    ${cm.name}
+                </div>`;
+            });
 
             node.innerHTML = `
-                <div class="rm-dot rm-dot--${status}"></div>
+                <div class="rm-dot rm-dot--${statusCls}"></div>
                 <div class="rm-stem"></div>
-                <div class="rm-card">
-                    <div class="rm-ver"><span class="rm-ver-left">${check} ${m.ver}</span>${dateTag}</div>
-                    <div class="rm-card-title">${m.title}</div>
-                    ${featHtml}
+                <div class="rm-card" data-idx="${i}">
+                    <div class="rm-ver"><span class="rm-ver-left">${displayDate}</span></div>
+                    <div class="rm-card-feats">${catLines}</div>
                 </div>
             `;
+
+            /* Click handler */
+            node.querySelector('.rm-card').addEventListener('click', function() {
+                /* Toggle active card */
+                rmInner.querySelectorAll('.rm-card').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                showDateTree(g);
+            });
+
             rmInner.appendChild(node);
         });
 
-        /* Viking at end */
+        /* Viking */
         rmInner.appendChild(rmViking);
         positionViking();
 
@@ -854,23 +1002,71 @@
         }
         rmPct.textContent = pct + '%';
 
-        /* NEXT milestone label */
-        const nextM = MILESTONES.find(m => !m.done && !m.wip);
-        document.getElementById('rmNext').textContent = nextM ? 'NEXT: ' + nextM.ver + ' ' + nextM.title : '';
+        /* Status label */
+        const plannedCount = STAGES.filter(s => s.status === 'planned').length;
+        const nextLabel = wipCount > 0 ? `WIP: ${wipCount} | PLAN: ${plannedCount}` : (plannedCount > 0 ? `PLAN: ${plannedCount}` : 'DONE');
+        document.getElementById('rmNext').textContent = nextLabel;
+    }
+
+    /* Show tree detail below roadmap */
+    function showDateTree(group) {
+        const catMap = {};
+        CAT_META.forEach(c => { catMap[c.id] = c; });
+        const displayDate = group.date || 'В планах';
+
+        let html = `<div class="rm-tree-header">
+            <span>${displayDate}</span>
+            <button class="rm-tree-close" onclick="rmTree.style.display='none';rmInner.querySelectorAll('.rm-card').forEach(c=>c.classList.remove('active'))">X</button>
+        </div>`;
+
+        const catIds = Object.keys(group.byCat);
+        catIds.forEach(catId => {
+            const cm = catMap[catId];
+            if (!cm) return;
+            const ver = catVersion(catId);
+            const stages = group.byCat[catId];
+
+            html += `<div class="rm-tree-cat">
+                <span class="rm-tree-icon">${svgIcon(cm.icon)}</span>
+                <span class="rm-tree-ver">v${ver}</span>
+                <span>${cm.name}</span>
+            </div>`;
+
+            /* Group by subcategory */
+            const bySubcat = {};
+            stages.forEach(s => {
+                (bySubcat[s.subcat] = bySubcat[s.subcat] || []).push(s);
+            });
+
+            Object.keys(bySubcat).forEach(subcat => {
+                html += `<div class="rm-tree-subcat">${subcat}</div>`;
+                bySubcat[subcat].forEach(s => {
+                    const stCls = s.status === 'done' ? 'done' : (s.status === 'wip' ? 'wip' : 'plan');
+                    const stIcon = s.status === 'done' ? '[x]' : (s.status === 'wip' ? '[~]' : '[ ]');
+                    html += `<div class="rm-tree-stage">
+                        <span class="rm-tree-status rm-tree-status--${stCls}">${stIcon}</span>
+                        <span>${s.text}</span>
+                    </div>`;
+                });
+            });
+        });
+
+        rmTree.innerHTML = html;
+        rmTree.style.display = 'block';
+        rmTree.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function positionViking() {
         const nodes = rmInner.querySelectorAll('.rm-node');
+        if (nodes.length === 0) return;
         let lastIdx = 0;
-        MILESTONES.forEach((m, i) => { if (m.done || m.wip) lastIdx = i; });
+        DATE_GROUPS.forEach((g, i) => { if (g.status === 'done' || g.status === 'wip') lastIdx = i; });
         const targetNode = nodes[lastIdx];
         if (targetNode) {
             const nodeLeft = targetNode.offsetLeft + targetNode.offsetWidth / 2;
             rmViking.style.left = nodeLeft + 'px';
         }
     }
-
-    /* renderRoadmap вызывается из загрузчика JSON */
 
     /* Auto-scroll animation */
     let autoScroll = true;
@@ -965,14 +1161,12 @@
     <script>
     (async function loadData() {
         try {
-            const [cats, feats, miles] = await Promise.all([
+            const [cats, stages] = await Promise.all([
                 fetch('data/categories.json').then(r => r.json()),
-                fetch('data/features.json').then(r => r.json()),
                 fetch('data/milestones.json').then(r => r.json())
             ]);
             CAT_META = cats;
-            FEATURES = feats;
-            MILESTONE_META = miles;
+            STAGES = stages;
             renderRoadmap();
             renderFeaturesSection();
         } catch(e) {
