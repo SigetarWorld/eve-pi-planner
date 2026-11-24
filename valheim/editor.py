@@ -895,10 +895,19 @@ class FeatureDialog(tk.Toplevel):
         if self.feature:
             f = self.feature
         else:
-            # Generate new ID
-            max_id = max((feat.get('id', 0) for feat in features), default=0)
-            if isinstance(max_id, str):
-                max_id = 0
+            # Generate new numeric ID (existing IDs may be strings like 'companion_001')
+            numeric_ids = []
+            for feat in features:
+                fid = feat.get('id', 0)
+                if isinstance(fid, int):
+                    numeric_ids.append(fid)
+                elif isinstance(fid, str):
+                    # Try to extract trailing number
+                    import re
+                    m = re.search(r'(\d+)$', fid)
+                    if m:
+                        numeric_ids.append(int(m.group(1)))
+            max_id = max(numeric_ids, default=0)
             f = {'id': max_id + 1, 'ver': self.ver}
             features.append(f)
 
