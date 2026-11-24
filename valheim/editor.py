@@ -145,6 +145,11 @@ class EditorApp(tk.Tk):
         tk.Label(bottom, textvariable=self._status_var, bg=BG, fg=FG2,
                  font=('Segoe UI', 9)).pack(side='right', padx=16)
 
+        # Если нет этапов "В работе", показать все
+        has_wip = any(m.get('status') == 'wip' for m in milestones)
+        if not has_wip:
+            self.filter_status_var.set('Все')
+
         self._refresh_all()
 
     # --- Стили --------------------------------------------------------------
