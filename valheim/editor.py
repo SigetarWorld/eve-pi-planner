@@ -651,7 +651,7 @@ class EditorApp(tk.Tk):
             subcats = ', '.join(c.get('subcategories', []))
             self.cat_tree.insert('', 'end', iid=c['id'],
                                  values=(c['id'], c.get('icon', ''), c['name'],
-                                         f'v0.{v:02d}', subcats))
+                                         f'v{v}', subcats))
 
     def _on_category_select(self, event=None):
         sel = self.cat_tree.selection()
