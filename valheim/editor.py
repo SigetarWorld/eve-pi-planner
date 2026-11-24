@@ -791,5 +791,17 @@ class EditorApp(tk.Tk):
 
 # --- Entry point ------------------------------------------------------------
 if __name__ == '__main__':
-    app = EditorApp()
-    app.mainloop()
+    try:
+        app = EditorApp()
+        app.mainloop()
+    except Exception as e:
+        import traceback
+        err = traceback.format_exc()
+        log_path = os.path.join(get_base_dir(), 'editor_error.log')
+        with open(log_path, 'w', encoding='utf-8') as f:
+            f.write(err)
+        try:
+            import tkinter.messagebox as mb
+            mb.showerror('Ошибка запуска', f'{e}\n\nЛог: {log_path}')
+        except Exception:
+            print(err)
