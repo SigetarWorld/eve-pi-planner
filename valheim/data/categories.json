@@ -1,10 +1,106 @@
 [
-  { "id": "companion", "icon": "sword", "name": "Компаньон", "visible": true, "order": 0 },
-  { "id": "combat",    "icon": "shield", "name": "Боевая система", "visible": true, "order": 1 },
-  { "id": "voice",     "icon": "mic",    "name": "Голос и мозг", "visible": true, "order": 2 },
-  { "id": "base",      "icon": "home",   "name": "Работа на базе", "visible": true, "order": 3 },
-  { "id": "mining",    "icon": "pick",   "name": "Добыча", "visible": true, "order": 4 },
-  { "id": "training",  "icon": "target", "name": "Тренировки", "visible": true, "order": 5 },
-  { "id": "mp",        "icon": "multi",  "name": "Мультиплеер", "visible": true, "order": 6 },
-  { "id": "ui",        "icon": "hud",    "name": "Интерфейс", "visible": true, "order": 7 }
+  {
+    "id": "companion",
+    "icon": "sword",
+    "name": "Компаньон",
+    "visible": true,
+    "order": 0,
+    "subcategories": [
+      "Бой: Лут",
+      "Движение",
+      "Запуск",
+      "Зрение",
+      "Инвентарь",
+      "Крафт",
+      "Потребности",
+      "Смерть"
+    ]
+  },
+  {
+    "id": "combat",
+    "icon": "shield",
+    "name": "Боевая система",
+    "visible": true,
+    "order": 1,
+    "subcategories": [
+      "Бой",
+      "Бой с боссами",
+      "Бой: Авария",
+      "Бой: Лук",
+      "Защита позиции"
+    ]
+  },
+  {
+    "id": "voice",
+    "icon": "mic",
+    "name": "Голос и мозг",
+    "visible": true,
+    "order": 2,
+    "subcategories": [
+      "Голос",
+      "Мозг: Claude",
+      "Мозг: Бесплатно",
+      "Мультиплеер"
+    ]
+  },
+  {
+    "id": "base",
+    "icon": "home",
+    "name": "Работа на базе",
+    "visible": true,
+    "order": 3,
+    "subcategories": [
+      "База (Дом)",
+      "Домашние дела",
+      "Загоны и Свет",
+      "Потребности"
+    ]
+  },
+  {
+    "id": "mining",
+    "icon": "pick",
+    "name": "Добыча",
+    "visible": true,
+    "order": 4,
+    "subcategories": [
+      "Карта",
+      "Работа",
+      "Силы боссов"
+    ]
+  },
+  {
+    "id": "training",
+    "icon": "target",
+    "name": "Тренировки",
+    "visible": true,
+    "order": 5,
+    "subcategories": [
+      "Тренировки"
+    ]
+  },
+  {
+    "id": "mp",
+    "icon": "multi",
+    "name": "Мультиплеер",
+    "visible": true,
+    "order": 6,
+    "subcategories": [
+      "Мультиплеер"
+    ]
+  },
+  {
+    "id": "ui",
+    "icon": "hud",
+    "name": "Интерфейс",
+    "visible": true,
+    "order": 7,
+    "subcategories": [
+      "Автозапуск",
+      "Защита позиции",
+      "Интерфейс",
+      "Силы боссов",
+      "Сохранение",
+      "Чувства"
+    ]
+  }
 ]
