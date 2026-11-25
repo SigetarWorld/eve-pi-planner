@@ -716,8 +716,11 @@ class EditorApp(tk.Tk):
 
         self.subcat_listbox = tk.Listbox(sf, bg=BG2, fg=FG, selectbackground='#1f6feb',
                                           selectforeground='#fff', font=('Segoe UI', 9),
-                                          bd=0, highlightthickness=0, height=6)
+                                          bd=0, highlightthickness=0, height=6,
+                                          exportselection=False)
         self.subcat_listbox.pack(fill='both', expand=True, padx=6, pady=(4, 2))
+        self.subcat_listbox.bind('<<ListboxSelect>>', self._on_subcat_select)
+        self._subcat_renames = []  # [(старое, новое)] — применяются к этапам при сохранении
 
         sc_btns = tk.Frame(sf, bg=BG)
         sc_btns.pack(fill='x', padx=6, pady=(0, 6))
@@ -726,6 +729,7 @@ class EditorApp(tk.Tk):
         self.sc_entry.pack(side='left')
         ttk.Button(sc_btns, text='+', command=self._add_subcat, width=3).pack(side='left', padx=4)
         ttk.Button(sc_btns, text='\u2212', command=self._remove_subcat, width=3).pack(side='left')
+        ttk.Button(sc_btns, text='\u270e', command=self._rename_subcat, width=3).pack(side='left', padx=4)
 
         r = tk.Frame(ef, bg=BG); r.pack(fill='x', padx=10, pady=(4, 10))
         ttk.Button(r, text='Сохранить категорию', style='Accent.TButton',
@@ -768,6 +772,34 @@ class EditorApp(tk.Tk):
         self.subcat_listbox.delete(0, 'end')
         for sc in c.get('subcategories', []):
             self.subcat_listbox.insert('end', sc)
+        self._subcat_renames = []
+        self.sc_entry.delete(0, 'end')
+
+    def _on_subcat_select(self, event=None):
+        sel = self.subcat_listbox.curselection()
+        if not sel:
+            return
+        self.sc_entry.delete(0, 'end')
+        self.sc_entry.insert(0, self.subcat_listbox.get(sel[0]))
+
+    def _rename_subcat(self):
+        sel = self.subcat_listbox.curselection()
+        if not sel:
+            messagebox.showinfo('Переименование', 'Выберите подкатегорию в списке')
+            return
+        idx = sel[0]
+        old = self.subcat_listbox.get(idx)
+        new = self.sc_entry.get().strip()
+        if not new or new == old:
+            return
+        if new in self.subcat_listbox.get(0, 'end'):
+            messagebox.showwarning('Ошибка', f'Подкатегория «{new}» уже есть')
+            return
+        self.subcat_listbox.delete(idx)
+        self.subcat_listbox.insert(idx, new)
+        self.subcat_listbox.selection_set(idx)
+        self._subcat_renames.append((old, new))
+        self._status(f'«{old}» → «{new}». Нажмите «Сохранить категорию»')
 
     def _add_subcat(self):
         name = self.sc_entry.get().strip()
@@ -799,6 +831,12 @@ class EditorApp(tk.Tk):
             c['order'] = 0
         # Подкатегории из листбокса
         c['subcategories'] = list(self.subcat_listbox.get(0, 'end'))
+        # Переименовать подкатегорию у этапов этой категории
+        for old, new in self._subcat_renames:
+            for m in milestones:
+                if m.get('cat') == cid and m.get('subcat') == old:
+                    m['subcat'] = new
+        self._subcat_renames = []
 
         self._refresh_all()
         self._status('Категория сохранена (в памяти)')
@@ -812,6 +850,7 @@ class EditorApp(tk.Tk):
         mx = max((c.get('order', 0) for c in categories), default=-1) + 1
         self.c_order.delete(0, 'end'); self.c_order.insert(0, str(mx))
         self.subcat_listbox.delete(0, 'end')
+        self._subcat_renames = []
 
     def _delete_category(self):
         sel = self.cat_tree.selection()
