@@ -1979,14 +1979,16 @@
   "redrawn": "нарисована по стандарту вместо символа «PLEX»"
  },
  {
-  "file": "nubyra/ai-chip.svg",
-  "group": "nubyra",
+  "file": "ai-chip.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «ai-chip» (IC) и выбор иконки в editor.py"
   ],
@@ -1994,14 +1996,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/ashlands.svg",
-  "group": "nubyra",
+  "file": "ashlands.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «ashlands» (IC) и выбор иконки в editor.py"
   ],
@@ -2009,29 +2013,33 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/axe.svg",
-  "group": "nubyra",
+  "file": "nb-axe.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «nb-axe» (IC) и выбор иконки в editor.py"
   ],
   "standard": true,
-  "redrawn": "в общем наборе есть свой axe.svg — другой рисунок"
+  "redrawn": ""
  },
  {
-  "file": "nubyra/bed.svg",
-  "group": "nubyra",
+  "file": "bed.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «bed» (IC) и выбор иконки в editor.py"
   ],
@@ -2039,14 +2047,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/blackforest.svg",
-  "group": "nubyra",
+  "file": "blackforest.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «blackforest» (IC) и выбор иконки в editor.py"
   ],
@@ -2054,14 +2064,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/boar.svg",
-  "group": "nubyra",
+  "file": "boar.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «boar» (IC) и выбор иконки в editor.py"
   ],
@@ -2069,14 +2081,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/bonemass.svg",
-  "group": "nubyra",
+  "file": "bonemass.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «bonemass» (IC) и выбор иконки в editor.py"
   ],
@@ -2084,29 +2098,33 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/bow.svg",
-  "group": "nubyra",
+  "file": "nb-bow.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «nb-bow» (IC) и выбор иконки в editor.py"
   ],
   "standard": true,
-  "redrawn": "в общем наборе есть свой bow.svg — другой рисунок"
+  "redrawn": ""
  },
  {
-  "file": "nubyra/campfire.svg",
-  "group": "nubyra",
+  "file": "campfire.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «campfire» (IC) и выбор иконки в editor.py"
   ],
@@ -2114,29 +2132,33 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/chest.svg",
-  "group": "nubyra",
+  "file": "nb-chest.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «nb-chest» (IC) и выбор иконки в editor.py"
   ],
   "standard": true,
-  "redrawn": "в общем наборе есть свой chest.svg — другой рисунок"
+  "redrawn": ""
  },
  {
-  "file": "nubyra/coin.svg",
-  "group": "nubyra",
+  "file": "coin.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «coin» (IC) и выбор иконки в editor.py"
   ],
@@ -2144,14 +2166,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/colosseum.svg",
-  "group": "nubyra",
+  "file": "colosseum.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «colosseum» (IC) и выбор иконки в editor.py"
   ],
@@ -2159,14 +2183,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/deaths.svg",
-  "group": "nubyra",
+  "file": "deaths.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «deaths» (IC) и выбор иконки в editor.py"
   ],
@@ -2174,14 +2200,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/deepnorth.svg",
-  "group": "nubyra",
+  "file": "deepnorth.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «deepnorth» (IC) и выбор иконки в editor.py"
   ],
@@ -2189,14 +2217,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/draugr.svg",
-  "group": "nubyra",
+  "file": "draugr.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «draugr» (IC) и выбор иконки в editor.py"
   ],
@@ -2204,14 +2234,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/eikthyr.svg",
-  "group": "nubyra",
+  "file": "eikthyr.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «eikthyr» (IC) и выбор иконки в editor.py"
   ],
@@ -2219,14 +2251,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/elder.svg",
-  "group": "nubyra",
+  "file": "elder.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «elder» (IC) и выбор иконки в editor.py"
   ],
@@ -2234,14 +2268,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/fader.svg",
-  "group": "nubyra",
+  "file": "fader.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «fader» (IC) и выбор иконки в editor.py"
   ],
@@ -2249,14 +2285,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/gladiator.svg",
-  "group": "nubyra",
+  "file": "gladiator.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «gladiator» (IC) и выбор иконки в editor.py"
   ],
@@ -2264,29 +2302,33 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/hammer.svg",
-  "group": "nubyra",
+  "file": "nb-hammer.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «nb-hammer» (IC) и выбор иконки в editor.py"
   ],
   "standard": true,
-  "redrawn": "в общем наборе есть свой hammer.svg — другой рисунок"
+  "redrawn": ""
  },
  {
-  "file": "nubyra/helmet.svg",
-  "group": "nubyra",
+  "file": "helmet.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «helmet» (IC) и выбор иконки в editor.py"
   ],
@@ -2294,14 +2336,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/laurel.svg",
-  "group": "nubyra",
+  "file": "laurel.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «laurel» (IC) и выбор иконки в editor.py"
   ],
@@ -2309,14 +2353,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/logo.svg",
-  "group": "nubyra",
+  "file": "logo.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «logo» (IC) и выбор иконки в editor.py"
   ],
@@ -2324,14 +2370,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/longship.svg",
-  "group": "nubyra",
+  "file": "longship.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «longship» (IC) и выбор иконки в editor.py"
   ],
@@ -2339,14 +2387,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/mead.svg",
-  "group": "nubyra",
+  "file": "mead.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «mead» (IC) и выбор иконки в editor.py"
   ],
@@ -2354,14 +2404,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/meadows.svg",
-  "group": "nubyra",
+  "file": "meadows.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «meadows» (IC) и выбор иконки в editor.py"
   ],
@@ -2369,14 +2421,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/microphone.svg",
-  "group": "nubyra",
+  "file": "microphone.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «microphone» (IC) и выбор иконки в editor.py"
   ],
@@ -2384,14 +2438,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/mistlands.svg",
-  "group": "nubyra",
+  "file": "mistlands.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «mistlands» (IC) и выбор иконки в editor.py"
   ],
@@ -2399,14 +2455,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/moder.svg",
-  "group": "nubyra",
+  "file": "moder.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «moder» (IC) и выбор иконки в editor.py"
   ],
@@ -2414,14 +2472,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/mountains.svg",
-  "group": "nubyra",
+  "file": "mountains.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «mountains» (IC) и выбор иконки в editor.py"
   ],
@@ -2429,14 +2489,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/ocean.svg",
-  "group": "nubyra",
+  "file": "ocean.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «ocean» (IC) и выбор иконки в editor.py"
   ],
@@ -2444,14 +2506,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/plains.svg",
-  "group": "nubyra",
+  "file": "plains.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «plains» (IC) и выбор иконки в editor.py"
   ],
@@ -2459,29 +2523,33 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/portal.svg",
-  "group": "nubyra",
+  "file": "nb-portal.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «nb-portal» (IC) и выбор иконки в editor.py"
   ],
   "standard": true,
-  "redrawn": "в общем наборе есть свой portal.svg — другой рисунок"
+  "redrawn": ""
  },
  {
-  "file": "nubyra/queen.svg",
-  "group": "nubyra",
+  "file": "queen.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «queen» (IC) и выбор иконки в editor.py"
   ],
@@ -2489,29 +2557,33 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/rune.svg",
-  "group": "nubyra",
+  "file": "nb-rune.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «nb-rune» (IC) и выбор иконки в editor.py"
   ],
   "standard": true,
-  "redrawn": "в общем наборе есть свой rune.svg — другой рисунок"
+  "redrawn": ""
  },
  {
-  "file": "nubyra/serpent.svg",
-  "group": "nubyra",
+  "file": "serpent.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «serpent» (IC) и выбор иконки в editor.py"
   ],
@@ -2519,29 +2591,33 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/shield.svg",
-  "group": "nubyra",
+  "file": "nb-shield.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «nb-shield» (IC) и выбор иконки в editor.py"
   ],
   "standard": true,
-  "redrawn": "в общем наборе есть свой shield.svg — другой рисунок"
+  "redrawn": ""
  },
  {
-  "file": "nubyra/sigetar.svg",
-  "group": "nubyra",
+  "file": "sigetar.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «sigetar» (IC) и выбор иконки в editor.py"
   ],
@@ -2549,14 +2625,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/subscribe.svg",
-  "group": "nubyra",
+  "file": "subscribe.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «subscribe» (IC) и выбор иконки в editor.py"
   ],
@@ -2564,14 +2642,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/swamp.svg",
-  "group": "nubyra",
+  "file": "swamp.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «swamp» (IC) и выбор иконки в editor.py"
   ],
@@ -2579,29 +2659,33 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/swords.svg",
-  "group": "nubyra",
+  "file": "nb-swords.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «swords» (IC) и выбор иконки в editor.py"
   ],
   "standard": true,
-  "redrawn": "в общем наборе есть свой swords.svg — другой рисунок"
+  "redrawn": ""
  },
  {
-  "file": "nubyra/terminal.svg",
-  "group": "nubyra",
+  "file": "terminal.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «terminal» (IC) и выбор иконки в editor.py"
   ],
@@ -2609,14 +2693,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/torch.svg",
-  "group": "nubyra",
+  "file": "torch.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «torch» (IC) и выбор иконки в editor.py"
   ],
@@ -2624,14 +2710,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/troll.svg",
-  "group": "nubyra",
+  "file": "troll.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «troll» (IC) и выбор иконки в editor.py"
   ],
@@ -2639,14 +2727,16 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/valera.svg",
-  "group": "nubyra",
+  "file": "valera.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «valera» (IC) и выбор иконки в editor.py"
   ],
@@ -2654,44 +2744,50 @@
   "redrawn": ""
  },
  {
-  "file": "nubyra/video.svg",
-  "group": "nubyra",
+  "file": "nb-video.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «video» (IC) и выбор иконки в editor.py"
   ],
   "standard": true,
-  "redrawn": "в общем наборе есть свой video.svg — другой рисунок"
+  "redrawn": ""
  },
  {
-  "file": "nubyra/wolf.svg",
-  "group": "nubyra",
+  "file": "nb-wolf.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «nb-wolf» (IC) и выбор иконки в editor.py"
   ],
   "standard": true,
-  "redrawn": "в общем наборе есть свой wolf.svg — другой рисунок"
+  "redrawn": ""
  },
  {
-  "file": "nubyra/yagluth.svg",
-  "group": "nubyra",
+  "file": "yagluth.svg",
+  "group": "site",
   "aliases": [],
   "viewBox": "0 0 24 24",
   "fill": "none",
   "stroke_width": "1.8",
   "linecap": "round",
-  "styles_in_use": [],
+  "styles_in_use": [
+   "0 0 24 24 · контур 1.8 round"
+  ],
   "used_in": [
    "valheim/index.html: иконка категории «yagluth» (IC) и выбор иконки в editor.py"
   ],
