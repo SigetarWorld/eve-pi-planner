@@ -623,6 +623,10 @@ main {
     --shared-img: url("../img/ClashRoyale.jpg");
 }
 
+.grid--shared-bg--vh {
+    --shared-img: url("../img/valheim.jpg");
+}
+
 .panel--shared {
     background-color: hsl(var(--card));
     background-image:

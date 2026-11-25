@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=8">
+    <link rel="stylesheet" href="css/style.css?v=11">
 </head>
 <body>
     <header class="site-header">
@@ -90,8 +90,9 @@
                 .vh-updates .ship-val { flex: 0 0 auto; }
             </style>
 
-            <div class="grid">
-                <div class="panel">
+            <!-- Одна общая картинка на все карточки ряда (см. .grid--shared-bg--vh в style.css) -->
+            <div class="grid grid--shared-bg grid--shared-bg--vh">
+                <div class="panel panel--shared">
                     <h3 class="h-split">[AI] Валера <span>companion</span></h3>
                     <ul class="ships">
                         <li>
@@ -134,7 +135,7 @@
 
                 <!-- Прогресс и последние этапы: значения ниже — запасные (на 25.11.2026),
                      при загрузке страницы подставляются актуальные из valheim/data/milestones.json -->
-                <div class="panel">
+                <div class="panel panel--shared">
                     <h3 class="h-split">Прогресс <span>roadmap</span></h3>
                     <ul class="ships">
                         <li>
@@ -175,7 +176,7 @@
                     </ul>
                 </div>
 
-                <div class="panel vh-updates">
+                <div class="panel panel--shared vh-updates">
                     <h3 class="h-split">Последнее <span>updates</span></h3>
                     <ul class="ships" id="vhUpdates">
                         <li><a class="ship" href="/valheim/" data-local="../Valheim/index.html"><span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12l5 5 9-10"/></svg></span><span class="ship-name">Вход друзей через портал на моём сервере</span><span class="ship-val">23.11</span></a></li>
