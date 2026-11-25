@@ -20,7 +20,8 @@
                 radial-gradient(ellipse at 60% 40%, rgba(47, 73, 125, 0.15) 0%, transparent 60%),
                 radial-gradient(ellipse at 20% 80%, hsl(36 95% 55% / .04) 0%, transparent 50%),
                 hsl(var(--space-deep));
-            border: 1px solid hsl(var(--border));
+            border-top: 1px solid hsl(var(--border) / .5);
+            border-bottom: 1px solid hsl(var(--border) / .5);
             cursor: grab;
             user-select: none;
             -webkit-user-select: none;
@@ -66,7 +67,7 @@
             align-items: center;
             position: relative;
             min-width: max-content;
-            padding: 0 100px;
+            padding: 0 60px;
             height: 520px;
         }
 
@@ -101,7 +102,7 @@
         .rm-node {
             position: relative;
             flex-shrink: 0;
-            width: 200px; /* карточки чередуются сверху/снизу, поэтому соседние не перекрываются */
+            width: 370px;
             z-index: 2;
         }
 
@@ -470,8 +471,7 @@
 
         @media (max-width: 640px) {
             .rm-inner { height: 480px; }
-            .rm-node { width: 150px; }
-            .rm-range { padding: 10px 16px 4px; }
+            .rm-node { width: 260px; }
             .rm-card { width: 240px; padding: 10px 14px; }
             .rm-card-title { font-size: 0.88rem; }
             .rm-card-text { font-size: 0.72rem; }
@@ -584,7 +584,6 @@
             font-family: 'Share Tech Mono', monospace;
             font-size: 0.68rem;
             flex-shrink: 0;
-            min-width: 11.5ch;
         }
         .rm-tree-status--done { color: hsl(150 60% 50%); }
         .rm-tree-status--wip  { color: hsl(var(--primary)); }
@@ -593,91 +592,9 @@
             border-color: hsl(var(--primary));
             box-shadow: var(--glow-amber);
         }
-
-        /* ===== Фильтр периода над картой ===== */
-        .rm-range {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px 4px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.78rem;
-            color: hsl(var(--muted-foreground));
-            cursor: default;
-        }
-        .rm-range label { display: inline-flex; align-items: center; gap: 6px; }
-        .rm-range input[type="date"] {
-            color-scheme: dark;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.78rem;
-            color: hsl(var(--foreground));
-            background: hsl(var(--card));
-            border: 1px solid hsl(var(--border));
-            border-radius: var(--radius);
-            padding: 4px 8px;
-        }
-        .rm-range input[type="date"]:focus { outline: none; border-color: hsl(var(--primary)); }
-        .rm-range-btn {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.72rem;
-            color: hsl(var(--muted-foreground));
-            background: hsl(var(--card));
-            border: 1px solid hsl(var(--border));
-            border-radius: var(--radius);
-            padding: 5px 12px;
-            cursor: pointer;
-            transition: border-color .2s, color .2s, background .2s;
-        }
-        .rm-range-btn:hover { border-color: hsl(var(--primary) / .5); color: hsl(var(--primary) / .8); }
-        .rm-range-btn.active {
-            border-color: hsl(var(--primary) / .5);
-            color: hsl(var(--primary));
-            background: hsl(var(--primary) / .08);
-        }
-        .rm-range-count { margin-left: 4px; opacity: .7; }
-        .rm-empty {
-            position: absolute;
-            left: 0; right: 0; top: 50%;
-            transform: translateY(-50%);
-            text-align: center;
-            font-family: 'Share Tech Mono', monospace;
-            color: hsl(var(--muted-foreground));
-            z-index: 5;
-        }
-
-        /* Подкатегория перед описанием в «Возможностях» */
-        .feat-row-sub {
-            flex-shrink: 0;
-            font-family: var(--font-heading);
-            font-size: .72rem;
-            font-weight: 600;
-            color: hsl(var(--secondary-ink));
-            white-space: nowrap;
-            padding: 1px 8px;
-            border: 1px solid hsl(var(--border) / .6);
-            border-radius: var(--radius);
-        }
-
-        /* ===== Против мигания при прокрутке =====
-           Фон с background-attachment: fixed перерисовывается на каждом шаге прокрутки.
-           Переносим его в отдельный закреплённый слой, а слои звёзд/сканлайнов
-           выносим на собственный композитный слой. */
-        body { background: hsl(var(--space-deep)); background-attachment: scroll; }
-        .vm-bg {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            background: var(--gradient-hero);
-            pointer-events: none;
-            will-change: transform;
-            transform: translateZ(0);
-        }
-        body::before, body::after { will-change: transform; transform: translateZ(0); }
     </style>
 </head>
 <body>
-    <div class="vm-bg" aria-hidden="true"></div>
     <header class="site-header">
         <div class="container header-inner">
             <div class="home-box" style="display:flex;align-items:center;gap:12px;">
@@ -706,17 +623,6 @@
                 <span class="rm-toggle-box" id="rmToggleBox">▶</span>
                 <span>АВТО</span>
             </div>
-        </div>
-
-        <!-- Период: показать на карте только события между датами -->
-        <div class="rm-range" id="rmRange">
-            <span>ПЕРИОД:</span>
-            <label>с <input type="date" id="rmFrom"></label>
-            <label>до <input type="date" id="rmTo"></label>
-            <button class="rm-range-btn" data-days="7">7 дней</button>
-            <button class="rm-range-btn" data-days="30">30 дней</button>
-            <button class="rm-range-btn active" data-days="all">Всё</button>
-            <span class="rm-range-count" id="rmRangeCount"></span>
         </div>
 
         <div class="rm-hint" id="rmHint">◄ перетащите или прокрутите ►</div>
@@ -793,90 +699,47 @@
             <script>
             /* ===== SVG icons (global) ===== */
             const IC = {
-                /* Иконки из valera-icons/ (те же, что в редакторе) + дополнительные */
-                anchor:  '<circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0020 0h-3"/>',
-                assist:  '<path d="M12 8v8"/><path d="M8 12h8"/><circle cx="12" cy="12" r="9"/>',
-                axe:     '<path d="M12 2v20"/><path d="M5 7c0 3 3 5 7 5"/><path d="M19 7c0 3-3 5-7 5"/>',
-                bag:     '<rect x="5" y="8" width="14" height="12" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/><path d="M5 14h14"/>',
-                bolt:    '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
-                book:    '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>',
-                boss:    '<path d="M12 2l3 6h6l-5 4 2 7-6-4-6 4 2-7-5-4h6z"/>',
-                bow:     '<path d="M18 4c-4 0-6 4-6 8s2 8 6 8"/><path d="M18 4L6 12l12 8"/>',
-                brain:   '<path d="M12 2a8 8 0 00-5 14.3V20h10v-3.7A8 8 0 0012 2z"/><path d="M9 20h6v2H9z"/><path d="M9 10h6"/><path d="M12 7v6"/>',
-                chest:   '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 14h18"/><path d="M7 3h10l3 5H4z"/><circle cx="12" cy="17" r="1.5"/>',
-                cmd:     '<path d="M4 17l6-10"/><path d="M14 17l6-10"/><path d="M2 12h20"/>',
-                collect: '<path d="M5 12l5 5L20 7"/>',
-                combo:   '<path d="M5 12h14"/><path d="M12 5l7 7-7 7"/><circle cx="5" cy="12" r="2"/>',
-                compass: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>',
-                cook:    '<circle cx="12" cy="14" r="5"/><path d="M12 3v5"/><path d="M8 5l1 3"/><path d="M16 5l-1 3"/>',
-                cover:   '<path d="M4 20h16"/><path d="M4 20V10l8-6 8 6v10"/><path d="M12 14v6"/>',
-                craft:   '<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3-3a1 1 0 000-1.4l-1.6-1.6a1 1 0 00-1.4 0z"/><path d="M3 21l7-7"/><path d="M10 14L6.3 17.7"/>',
-                crown:   '<path d="M2 17l3-9 4 4 3-7 3 7 4-4 3 9z"/><path d="M2 17h20v3H2z"/>',
-                dummy:   '<circle cx="12" cy="5" r="3"/><path d="M12 8v8"/><path d="M8 12h8"/><path d="M8 22l4-6 4 6"/>',
-                emotion: '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>',
-                equip:   '<path d="M12 2l2 5h5l-4 3.5L16.5 16 12 12.5 7.5 16 9 10.5 5 7h5z"/>',
-                eye:     '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
-                fire:    '<path d="M12 22c-4.97 0-9-2.69-9-6s4.03-6 9-6c-.7-2.6 1-6 3-8 0 3.5 2 5.5 3.5 7.5C20.5 12 21 14.5 21 16c0 3.31-4.03 6-9 6z"/>',
-                fish:    '<path d="M6.5 12c2-5 6-7 12-7-1 3.5-1 7 0 10.5-6 0-10-2-12-7z"/><path d="M2 12c1.5 0 3-1 3.5-3C6 11 7.5 12 9 12c-1.5 0-3 1-3.5 3-.5-2-2-3-3.5-3z"/>',
-                flag:    '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
-                follow:  '<path d="M12 4a4 4 0 100 8 4 4 0 000-8z"/><path d="M6 20v-2a6 6 0 0112 0v2"/><path d="M19 11l3 3-3 3"/>',
-                food:    '<path d="M5 12c0-4 3-8 7-8s7 4 7 8"/><ellipse cx="12" cy="14" rx="7" ry="4"/><path d="M12 6V3"/>',
-                garden:  '<path d="M12 22V12"/><path d="M8 16c-4-2-4-8 4-8"/><path d="M16 16c4-2 4-8-4-8"/><path d="M12 6a3 3 0 100-6 3 3 0 000 6z"/>',
-                gear:    '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>',
-                gem:     '<polygon points="12 2 2 10 6 22 18 22 22 10 12 2"/><polyline points="2 10 12 14 22 10"/><line x1="12" y1="14" x2="12" y2="22"/>',
-                guard:   '<path d="M12 3l8 4v5c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V7z"/><path d="M12 8v4"/><circle cx="12" cy="15" r="1"/>',
-                hammer:  '<path d="M15 12l-8.5 8.5a2.12 2.12 0 01-3-3L12 9"/><path d="M17.64 4.64a2.83 2.83 0 014 4L18 12l-4-4z"/>',
-                heal:    '<path d="M12 3v18"/><path d="M3 12h18"/><rect x="5" y="5" width="14" height="14" rx="3"/>',
-                heart:   '<path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/>',
-                home:    '<path d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V12h6v9"/>',
-                honey:   '<path d="M12 2l4 4v4l-4 4-4-4V6z"/><path d="M12 14v6"/><path d="M8 18h8"/>',
-                horse:   '<path d="M18 5l-3 6h3l-4 8"/><path d="M6 5l3 6H6l4 8"/><circle cx="12" cy="4" r="2"/>',
-                hud:     '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 12h4"/><path d="M14 12h4"/><path d="M12 8v8"/>',
-                lamp:    '<path d="M12 2v3"/><path d="M12 19v3"/><circle cx="12" cy="12" r="5"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M2 12h3"/><path d="M19 12h3"/>',
-                launch:  '<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>',
-                loot:    '<path d="M12 5v14"/><path d="M5 12h14"/><circle cx="12" cy="12" r="9"/>',
-                map:     '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
-                marker:  '<path d="M12 2C8 2 5 5.6 5 10c0 6 7 12 7 12s7-6 7-12c0-4.4-3-8-7-8z"/><circle cx="12" cy="10" r="3"/>',
-                memory:  '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16"/><path d="M9 4v16"/>',
-                mic:     '<rect x="9" y="2" width="6" height="10" rx="3"/><path d="M5 10a7 7 0 0014 0"/><path d="M12 17v5"/><path d="M8 22h8"/>',
-                mine:    '<path d="M4 20l7-7"/><path d="M15 9l5-5"/><path d="M11 13l4 4"/><rect x="13" y="3" width="8" height="8" rx="1" transform="rotate(45 17 7)"/>',
-                moon:    '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>',
-                multi:   '<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 18v-1a5 5 0 0110 0v1"/><path d="M13 18v-1a5 5 0 0110 0v1"/>',
-                music:   '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
-                nav:     '<circle cx="12" cy="12" r="9"/><path d="M12 3v4"/><path d="M12 17v4"/><path d="M3 12h4"/><path d="M17 12h4"/><path d="M12 12l3-5"/>',
-                net:     '<path d="M12 2v20"/><path d="M2 12h20"/><circle cx="12" cy="12" r="9"/>',
-                npc:     '<circle cx="12" cy="7" r="4"/><path d="M5 21v-3a7 7 0 0114 0v3"/><path d="M8 14l4 2 4-2"/>',
-                patrol:  '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
-                paw:     '<circle cx="11" cy="4" r="2"/><circle cx="5" cy="8" r="2"/><circle cx="17" cy="8" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="14" cy="12" r="2"/><path d="M9 17c1.5 2 4.5 2 6 0"/>',
-                pen:     '<rect x="3" y="10" width="18" height="10" rx="1"/><path d="M3 10l9-6 9 6"/><path d="M8 15h2"/><path d="M14 15h2"/>',
-                pick:    '<path d="M14 4l6 6-9 9-6-6z"/><path d="M5 19l-2 2"/><path d="M15 5l4-2"/>',
-                portal:  '<rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 8v8"/><circle cx="12" cy="12" r="2"/>',
-                potion:  '<path d="M10 2v6.5L4 18a3 3 0 003 3h10a3 3 0 003-3l-6-9.5V2"/><path d="M8 2h8"/><path d="M7 15h10"/>',
-                ppo:     '<circle cx="12" cy="12" r="4"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/>',
-                reset:   '<path d="M3 12a9 9 0 119 9"/><path d="M3 21v-5h5"/><path d="M12 8v4l2 2"/>',
-                ring:    '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v5"/><path d="M21 12h-5"/>',
-                run:     '<circle cx="12" cy="4" r="2"/><path d="M7 22l3-7"/><path d="M10 15l4-5-3-2"/><path d="M14 10l3-1"/><path d="M11 8l-2-2"/>',
-                rune:    '<path d="M12 2l6 20"/><path d="M6 22l6-20"/><path d="M4 12h16"/>',
-                scroll:  '<path d="M8 21h12a2 2 0 002-2V5a2 2 0 00-2-2H8"/><path d="M4 3a2 2 0 00-2 2v14a2 2 0 002 2h4V3H4z"/><path d="M12 8h6"/><path d="M12 12h6"/><path d="M12 16h4"/>',
-                search:  '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>',
-                shield:  '<path d="M12 3l8 4v5c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V7z"/>',
-                shield2: '<path d="M12 3l8 4v5c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V7z"/><path d="M9 12l2 2 4-4"/>',
-                ship:    '<path d="M3 18l2-4h14l2 4"/><path d="M5 14V8l7-4 7 4v6"/><path d="M12 4v10"/>',
-                sit:     '<path d="M5 20h14"/><path d="M9 16V8"/><path d="M15 16V8"/><path d="M7 12h10"/><path d="M9 8h6"/>',
-                skill:   '<path d="M4 20l4-4"/><path d="M8 16l8-12"/><path d="M20 4l-4 4"/><circle cx="12" cy="12" r="3"/>',
-                skull:   '<circle cx="12" cy="10" r="7"/><path d="M9 14v4"/><path d="M15 14v4"/><path d="M8 21h8"/><circle cx="9" cy="9" r="1.5"/><circle cx="15" cy="9" r="1.5"/><path d="M10 13h4"/>',
-                smelt:   '<path d="M5 18h14"/><path d="M8 18V8l4-4 4 4v10"/><path d="M10 14h4"/><path d="M12 10v4"/>',
-                sort:    '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M10 4v16"/><path d="M14 13l2 2 2-2"/>',
-                speaker: '<path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18 6a8 8 0 010 12"/>',
-                star:    '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
-                store:   '<rect x="4" y="8" width="16" height="12" rx="2"/><path d="M8 8V5a4 4 0 018 0v3"/><path d="M12 14v3"/>',
-                sun:     '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
-                sword:   '<path d="M14.5 3.5L21 10l-2 2-6.5-6.5z"/><path d="M10 14l-7 7"/><path d="M8 12l4 4"/><path d="M3 21l2-2"/>',
-                target:  '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
-                timer:   '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M10 2h4"/>',
-                tree:    '<path d="M12 2L6 10h3l-2 6h3l-2 6h8l-2-6h3l-2-6h3z"/>',
-                wolf:    '<path d="M12 20c-4 0-8-3-8-8l3-5 2 3h6l2-3 3 5c0 5-4 8-8 8z"/><circle cx="9" cy="11" r="1"/><circle cx="15" cy="11" r="1"/><path d="M10 15h4"/>',
-                wrench:  '<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94z"/>',
+                sword:  '<path d="M14.5 3.5L21 10l-2 2-6.5-6.5z"/><path d="M10 14l-7 7"/><path d="M8 12l4 4"/><path d="M3 21l2-2"/>',
+                bag:    '<rect x="5" y="8" width="14" height="12" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/><path d="M5 14h14"/>',
+                shield: '<path d="M12 3l8 4v5c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V7z"/>',
+                mic:    '<rect x="9" y="2" width="6" height="10" rx="3"/><path d="M5 10a7 7 0 0014 0"/><path d="M12 17v5"/><path d="M8 22h8"/>',
+                home:   '<path d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V12h6v9"/>',
+                pick:   '<path d="M14 4l6 6-9 9-6-6z"/><path d="M5 19l-2 2"/><path d="M15 5l4-2"/>',
+                target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+                multi:  '<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 18v-1a5 5 0 0110 0v1"/><path d="M13 18v-1a5 5 0 0110 0v1"/>',
+                hud:    '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 12h4"/><path d="M14 12h4"/><path d="M12 8v8"/>',
+                axe:    '<path d="M14 12l-8.5 8.5a2.12 2.12 0 01-3-3L11 9"/><path d="M15 4l5 5-4 4"/><path d="M20 9l-4-4"/>',
+                hammer: '<path d="M15 12l-8.5 8.5a2.12 2.12 0 01-3-3L12 9"/><path d="M17.64 4.64a2.83 2.83 0 014 4L18 12l-4-4z"/>',
+                bow:    '<path d="M18 2l3 3-3 3"/><path d="M21 5H10a7 7 0 00-7 7v9"/><path d="M5 19l14-14"/>',
+                heart:  '<path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/>',
+                star:   '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+                fire:   '<path d="M12 22c-4.97 0-9-2.69-9-6s4.03-6 9-6c-.7-2.6 1-6 3-8 0 3.5 2 5.5 3.5 7.5C20.5 12 21 14.5 21 16c0 3.31-4.03 6-9 6z"/>',
+                bolt:   '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+                eye:    '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+                map:    '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
+                flag:   '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+                tree:   '<path d="M12 2L6 10h3l-2 6h3l-2 6h8l-2-6h3l-2-6h3z"/>',
+                skull:  '<circle cx="12" cy="10" r="8"/><path d="M8 22v-4"/><path d="M16 22v-4"/><circle cx="9" cy="9" r="1.5"/><circle cx="15" cy="9" r="1.5"/><path d="M9 15h6"/>',
+                crown:  '<path d="M2 17l3-9 4 4 3-7 3 7 4-4 3 9z"/><path d="M2 17h20v3H2z"/>',
+                gem:    '<polygon points="12 2 2 10 6 22 18 22 22 10 12 2"/><polyline points="2 10 12 14 22 10"/><line x1="12" y1="14" x2="12" y2="22"/>',
+                scroll: '<path d="M8 21h12a2 2 0 002-2V5a2 2 0 00-2-2H8"/><path d="M4 3a2 2 0 00-2 2v14a2 2 0 002 2h4V3H4z"/><path d="M12 8h6"/><path d="M12 12h6"/><path d="M12 16h4"/>',
+                potion: '<path d="M10 2v6.5L4 18a3 3 0 003 3h10a3 3 0 003-3l-6-9.5V2"/><path d="M8 2h8"/><path d="M7 15h10"/>',
+                shield2:'<path d="M12 3l8 4v5c0 5-3.5 9.7-8 11-4.5-1.3-8-6-8-11V7z"/><path d="M9 12l2 2 4-4"/>',
+                horse:  '<path d="M18 5l-3 6h3l-4 8"/><path d="M6 5l3 6H6l4 8"/><circle cx="12" cy="4" r="2"/>',
+                music:  '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+                gear:   '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>',
+                compass:'<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>',
+                anchor: '<circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0020 0h-3"/>',
+                fish:   '<path d="M6.5 12c2-5 6-7 12-7-1 3.5-1 7 0 10.5-6 0-10-2-12-7z"/><path d="M2 12c1.5 0 3-1 3.5-3C6 11 7.5 12 9 12c-1.5 0-3 1-3.5 3-.5-2-2-3-3.5-3z"/>',
+                paw:    '<circle cx="11" cy="4" r="2"/><circle cx="5" cy="8" r="2"/><circle cx="17" cy="8" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="14" cy="12" r="2"/><path d="M9 17c1.5 2 4.5 2 6 0"/>',
+                wolf:   '<path d="M12 20c-4 0-8-3-8-8l3-5 2 3h6l2-3 3 5c0 5-4 8-8 8z"/><circle cx="9" cy="11" r="1"/><circle cx="15" cy="11" r="1"/><path d="M10 15h4"/>',
+                ship:   '<path d="M2 20l1.5-3h17L22 20"/><path d="M5 17V9l7-5 7 5v8"/><path d="M12 4v13"/>',
+                chest:  '<rect x="3" y="10" width="18" height="10" rx="2"/><rect x="3" y="6" width="18" height="4" rx="1"/><circle cx="12" cy="15" r="1.5"/><line x1="12" y1="10" x2="12" y2="13"/>',
+                book:   '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>',
+                run:    '<circle cx="12" cy="4" r="2"/><path d="M7 22l3-7"/><path d="M10 15l4-5-3-2"/><path d="M14 10l3-1"/><path d="M11 8l-2-2"/>',
+                moon:   '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>',
+                sun:    '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
+                wrench: '<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94z"/>',
             };
             function svgIcon(key){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (IC[key]||'') + '</svg>'; }
 
@@ -949,7 +812,6 @@
                         rRows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
                             <span class="feat-row-cat-icon" title="${cm ? cm.name : item.cat}">${cm ? svgIcon(cm.icon) : ''}</span>
                             <span style="font-size:.7rem;color:hsl(var(--primary));white-space:nowrap;flex-shrink:0;min-width:70px">${cm ? cm.name : item.cat}</span>
-                            ${item.subcat ? `<span class="feat-row-sub">${item.subcat}</span>` : ''}
                             <span class="feat-row-text">${item.text}</span>
                             <span class="feat-row-date">${item.date}</span>
                         </div>`;
@@ -984,7 +846,6 @@
                         const isNew = daysAgo(item.date) <= 3;
                         rows += `<div class="feat-row${isNew ? ' feat-row--new' : ''}">
                             <span class="feat-row-check">\u2713</span>
-                            ${item.subcat ? `<span class="feat-row-sub">${item.subcat}</span>` : ''}
                             <span class="feat-row-text">${item.text}</span>
                             <span class="feat-row-date">${item.date}</span>
                         </div>`;
@@ -1037,49 +898,6 @@
     const rmTree   = document.getElementById('rmTree');
 
     let DATE_GROUPS = [];
-    const RANGE = { from: null, to: null };   // Date | null
-
-    /* ===== Фильтр периода ===== */
-    const rmFrom = document.getElementById('rmFrom');
-    const rmTo   = document.getElementById('rmTo');
-    const rangeBtns = document.querySelectorAll('.rm-range-btn');
-
-    function isoToDate(v) {               // 'yyyy-mm-dd' -> Date (локальная полночь)
-        if (!v) return null;
-        const p = v.split('-');
-        return new Date(+p[0], +p[1] - 1, +p[2]);
-    }
-    function dateToIso(d) {
-        const z = n => String(n).padStart(2, '0');
-        return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
-    }
-    function applyRange(activeBtn) {
-        RANGE.from = isoToDate(rmFrom.value);
-        RANGE.to   = isoToDate(rmTo.value);
-        rangeBtns.forEach(b => b.classList.toggle('active', b === activeBtn));
-        rmTree.style.display = 'none';
-        renderRoadmap();
-        rmTrack.scrollLeft = 0;
-    }
-    function initRangeLimits() {
-        const ds = STAGES.map(s => parseDate(s.date)).filter(Boolean);
-        if (!ds.length) return;
-        const min = new Date(Math.min(...ds)), max = new Date(Math.max(...ds));
-        [rmFrom, rmTo].forEach(inp => { inp.min = dateToIso(min); inp.max = dateToIso(max); });
-    }
-    rmFrom.addEventListener('change', () => applyRange(null));
-    rmTo.addEventListener('change', () => applyRange(null));
-    rangeBtns.forEach(btn => btn.addEventListener('click', () => {
-        const days = btn.dataset.days;
-        if (days === 'all') {
-            rmFrom.value = ''; rmTo.value = '';
-        } else {
-            const to = new Date(); to.setHours(0, 0, 0, 0);
-            const from = new Date(to); from.setDate(from.getDate() - (+days - 1));
-            rmFrom.value = dateToIso(from); rmTo.value = dateToIso(to);
-        }
-        applyRange(btn);
-    }));
 
     function renderRoadmap() {
         const catMap = {};
@@ -1104,7 +922,7 @@
         });
 
         /* Build date groups */
-        const allGroups = dates.map(date => {
+        DATE_GROUPS = dates.map(date => {
             const stages = byDate[date];
             const byCat = {};
             stages.forEach(s => {
@@ -1119,29 +937,9 @@
             return { date, stages, byCat, status };
         });
 
-        /* Фильтр периода: при заданных границах показываем только датированные события внутри них */
-        const rangeOn = RANGE.from || RANGE.to;
-        DATE_GROUPS = allGroups.filter(g => {
-            if (!rangeOn) return true;
-            const d = parseDate(g.date);
-            if (!d) return false;
-            if (RANGE.from && d < RANGE.from) return false;
-            if (RANGE.to && d > RANGE.to) return false;
-            return true;
-        });
-        const shownStages = DATE_GROUPS.reduce((n, g) => n + g.stages.length, 0);
-        document.getElementById('rmRangeCount').textContent =
-            rangeOn ? `— событий: ${shownStages}` : '';
-
         /* Clear previous nodes */
-        rmInner.querySelectorAll('.rm-node, .rm-empty').forEach(n => n.remove());
+        rmInner.querySelectorAll('.rm-node').forEach(n => n.remove());
         rmBar.innerHTML = '';
-        if (DATE_GROUPS.length === 0) {
-            const empty = document.createElement('div');
-            empty.className = 'rm-empty';
-            empty.textContent = 'Нет событий за выбранный период';
-            rmInner.appendChild(empty);
-        }
 
         /* Progress */
         const totalStages = STAGES.length;
@@ -1245,7 +1043,7 @@
                 html += `<div class="rm-tree-subcat">${subcat}</div>`;
                 bySubcat[subcat].forEach(s => {
                     const stCls = s.status === 'done' ? 'done' : (s.status === 'wip' ? 'wip' : 'plan');
-                    const stIcon = s.status === 'done' ? '[Выполнено]' : (s.status === 'wip' ? '[В работе]' : '[В планах]');
+                    const stIcon = s.status === 'done' ? '[x]' : (s.status === 'wip' ? '[~]' : '[ ]');
                     html += `<div class="rm-tree-stage">
                         <span class="rm-tree-status rm-tree-status--${stCls}">${stIcon}</span>
                         <span>${s.text}</span>
@@ -1261,7 +1059,6 @@
 
     function positionViking() {
         const nodes = rmInner.querySelectorAll('.rm-node');
-        rmViking.style.display = nodes.length ? '' : 'none';
         if (nodes.length === 0) return;
         let lastIdx = 0;
         DATE_GROUPS.forEach((g, i) => { if (g.status === 'done' || g.status === 'wip') lastIdx = i; });
@@ -1290,23 +1087,9 @@
         }
     }
 
-    /* Автопрокрутка не двигает карту, пока она вне экрана или пока
-       пользователь прокручивает страницу — иначе страница «мигает». */
-    let rmVisible = true;
-    let pageScrollUntil = 0;
-    let autoPos = null;   // дробная позиция, чтобы не терять 0.6px при округлении scrollLeft
-    if ('IntersectionObserver' in window) {
-        new IntersectionObserver(es => { rmVisible = es[0].isIntersecting; })
-            .observe(document.getElementById('roadmapWrap'));
-    }
-    window.addEventListener('scroll', () => { pageScrollUntil = performance.now() + 250; }, { passive: true });
-
-    function autoScrollTick(now) {
-        const maxLeft = rmTrack.scrollWidth - rmTrack.clientWidth - 10;
-        if (autoScroll && rmVisible && now > pageScrollUntil && rmTrack.scrollLeft < maxLeft) {
-            if (autoPos === null || Math.abs(autoPos - rmTrack.scrollLeft) > 2) autoPos = rmTrack.scrollLeft;
-            autoPos += scrollSpeed;
-            rmTrack.scrollLeft = autoPos;
+    function autoScrollTick() {
+        if (autoScroll && rmTrack.scrollLeft < rmTrack.scrollWidth - rmTrack.clientWidth - 10) {
+            rmTrack.scrollLeft += scrollSpeed;
         }
         animFrame = requestAnimationFrame(autoScrollTick);
     }
@@ -1385,7 +1168,6 @@
             ]);
             CAT_META = cats;
             STAGES = stages;
-            initRangeLimits();
             renderRoadmap();
             renderFeaturesSection();
         } catch(e) {
