@@ -16,6 +16,21 @@ const escapeHtml = (str) => String(str).replace(/[&<>"']/g, (ch) => ({
     "'": '&#39;'
 }[ch]));
 
+/* Значки кнопок и плашек — контур 24×24 по общему стандарту (/style/icons/eve/ui-*.svg) */
+const UI_SVG = {
+    light: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3Z"/>',
+    sync: '<path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 21v-5h-5"/>',
+    edit: '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16Z"/><path d="m13.5 6.5 4 4"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    minus: '<path d="M5 12h14"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>',
+    isk: '<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>',
+    day: '<path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
+    plex: '<path d="M12 2.5 20.5 7v10L12 21.5 3.5 17V7Z"/><path d="M10 16V8h3a2.5 2.5 0 0 1 0 5h-3"/>'
+};
+const uiIcon = (name) => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${UI_SVG[name]}</svg>`;
+const iskBadge = (name, title) => `<span class="eve-isk-badge" title="${title}">${uiIcon(name)}</span>`;
+
 // Иконка ресурса, если она есть в RESOURCE_ICONS.
 // alt="" — название и так идёт рядом текстом, чтобы не дублировать для скринридера
 const iconFor = (name) => {
@@ -726,11 +741,11 @@ function buildCard(name, level) {
                                     <span class="ct-system-label">Корабль:</span>
                                     <select class="ct-input" data-role="ship" aria-label="Корабль">${optionsHtml(SHIP_OPTIONS, SHIP_OPTIONS[0])}</select>
                                 </span>
-                                ${mix ? '' : '<button type="button" class="card-light" aria-pressed="false" title="Подсветить карточку" aria-label="Подсветить карточку">💡</button>'}
+                                ${mix ? '' : '<button type="button" class="card-light" aria-pressed="false" title="Подсветить карточку" aria-label="Подсветить карточку">' + uiIcon('light') + '</button>'}
                                 ${mix ? '<button type="button" class="card-save" data-role="card-save" title="Сохранить и показать карточку">Сохранить</button>' : ''}
                                 <button type="button" class="account-del" data-role="card-del"
                                         title="Удалить карточку"
-                                        aria-label="Удалить карточку ${safe}">&times;</button>
+                                        aria-label="Удалить карточку ${safe}">${uiIcon('close')}</button>
                             </div>
                         </td>
                     </tr>
@@ -3687,7 +3702,7 @@ function warehouseHtml(owners) {
         return `
             <div class="uv wh-card" data-find="${escapeHtml([place.region, place.system, station].join(' ').toLowerCase())}">
                 <div class="uv-head wh-card-head">
-                    <button type="button" class="uv-fold uv-fold-all wh-fold" data-role="wh-fold" aria-expanded="true" title="Свернуть" aria-label="Свернуть">−</button>
+                    <button type="button" class="uv-fold uv-fold-all wh-fold" data-role="wh-fold" aria-expanded="true" title="Свернуть" aria-label="Свернуть">${uiIcon('minus')}</button>
                     <span class="wh-loc">${whSecHtml(place)}<span class="wh-region">${escapeHtml(place.region || 'Регион ?')}</span><span class="uv-sep">›</span><span class="uv-sys">${escapeHtml(place.system || 'Система ?')}</span><span class="uv-sep">›</span><span class="wh-station">${escapeHtml(station)}</span></span>
                 </div>
                 <div class="uv-body">${Array.from(spots.values()).map(({ segs, items }) => `
@@ -3853,7 +3868,7 @@ async function renderWarehouse() {
         const open = fold.getAttribute('aria-expanded') !== 'true';
         fold.closest('.wh-card').querySelector('.uv-body').hidden = !open;
         fold.setAttribute('aria-expanded', String(open));
-        fold.textContent = open ? '−' : '+';
+        fold.innerHTML = uiIcon(open ? 'minus' : 'plus');
         fold.title = open ? 'Свернуть' : 'Развернуть';
         fold.setAttribute('aria-label', fold.title);
     });
@@ -4499,7 +4514,7 @@ function applyViewVisibility(card) {
         const hasKids = Boolean(top.querySelector(':scope > .uv-kids'));
         const isOpen = top.dataset.open === '1' || top.dataset.auto === '1';
         fold.hidden = !hasKids;
-        fold.textContent = isOpen ? '−' : '+';
+        fold.innerHTML = uiIcon(isOpen ? 'minus' : 'plus');
         fold.setAttribute('aria-expanded', String(isOpen));
         fold.title = isOpen ? 'Свернуть колонию' : 'Развернуть колонию';
         fold.setAttribute('aria-label', fold.title);
@@ -4511,7 +4526,7 @@ function applyViewVisibility(card) {
     if (top) top.setAttribute('aria-pressed', String(!shown.size && !opened));
     const all = view.querySelector('[data-role="uv-fold-all"]');
     if (all) {
-        all.textContent = opened ? '−' : '+';
+        all.innerHTML = uiIcon(opened ? 'minus' : 'plus');
         all.title = opened ? 'Свернуть все колонии' : 'Развернуть все колонии';
         all.setAttribute('aria-label', all.title);
     }
@@ -4535,9 +4550,9 @@ function cardViewHtml(card) {
             <div class="uv-colony" data-planet="${escapeHtml(key)}" data-prod="${escapeHtml(c.prod)}">
                 ${viewNodeHtml(c.prod, c.p0, where)}
                 <button type="button" class="uv-fold" data-role="uv-fold" aria-expanded="false"
-                        title="Развернуть колонию" aria-label="Развернуть колонию">+</button>
+                        title="Развернуть колонию" aria-label="Развернуть колонию">${uiIcon('plus')}</button>
             </div>`;
-    }).join('') || '<p class="uv-empty">Колоний нет — нажмите ✎ и добавьте их</p>';
+    }).join('') || '<p class="uv-empty">Колоний нет — нажмите «Редактировать» и добавьте их</p>';
     const safe = escapeHtml(name);
     return `
         <div class="uv">
@@ -4547,12 +4562,12 @@ function cardViewHtml(card) {
                     <button type="button" class="uv-top" data-role="uv-top" aria-pressed="true" title="Только главные товары колоний">TOP</button>
                     ${VIEW_TIERS.map((t) => `<button type="button" class="ct-tier ct-tier-${t.toLowerCase()} uv-tier" data-role="uv-tier" data-tier="${t}" aria-pressed="false" title="Показать все ${t}">${t}</button>`).join('')}
                 </span>
-                <button type="button" class="card-light" aria-pressed="${card.classList.contains('is-lit')}" title="Подсветить карточку" aria-label="Подсветить карточку">💡</button>
-                <button type="button" class="uv-edit uv-sync" data-role="card-sync" title="Восстановить из EVE: план карточки заменится тем, что сейчас в колониях (нажать дважды)" aria-label="Восстановить карточку из EVE">⟲</button>
-                <button type="button" class="uv-edit" data-role="card-edit" title="Редактировать план карточки" aria-label="Редактировать карточку">✎</button>
-                <button type="button" class="uv-fold uv-fold-all" data-role="uv-fold-all" title="Развернуть все колонии" aria-label="Развернуть все колонии">+</button>
+                <button type="button" class="card-light" aria-pressed="${card.classList.contains('is-lit')}" title="Подсветить карточку" aria-label="Подсветить карточку">${uiIcon('light')}</button>
+                <button type="button" class="uv-edit uv-sync" data-role="card-sync" title="Восстановить из EVE: план карточки заменится тем, что сейчас в колониях (нажать дважды)" aria-label="Восстановить карточку из EVE">${uiIcon('sync')}</button>
+                <button type="button" class="uv-edit" data-role="card-edit" title="Редактировать план карточки" aria-label="Редактировать карточку">${uiIcon('edit')}</button>
+                <button type="button" class="uv-fold uv-fold-all" data-role="uv-fold-all" title="Развернуть все колонии" aria-label="Развернуть все колонии">${uiIcon('plus')}</button>
                 <button type="button" class="account-del" data-role="card-del"
-                        title="Удалить карточку" aria-label="Удалить карточку ${safe}">&times;</button>
+                        title="Удалить карточку" aria-label="Удалить карточку ${safe}">${uiIcon('close')}</button>
             </div>
             <div class="uv-body">${body}</div>
         </div>`;
@@ -5755,7 +5770,7 @@ async function eveIskRefresh() {
     if (!chars.length) { eveIskBox.hidden = true; return; }
 
     eveIskBox.hidden = false;
-    eveIskTotalEl.innerHTML = '<span class="eve-isk-badge">ISK</span> …';
+    eveIskTotalEl.innerHTML = iskBadge('isk', 'ISK') + ' …';
     eveIskDailyEl.textContent = '';
 
     if (eveIskBusy) return;
@@ -5769,7 +5784,7 @@ async function eveIskRefresh() {
         balances.forEach((r) => {
             if (r.status === 'fulfilled' && typeof r.value === 'number') totalIsk += r.value;
         });
-        eveIskTotalEl.innerHTML = '<span class="eve-isk-badge">ISK</span> ' + escapeHtml(eveIskFmt(totalIsk));
+        eveIskTotalEl.innerHTML = iskBadge('isk', 'ISK') + ' ' + escapeHtml(eveIskFmt(totalIsk));
         eveIskTotalEl.title = 'Общий баланс: ' + Math.round(totalIsk).toLocaleString('ru-RU') + ' ISK';
 
         // 2) Суточное изменение только для отмеченных
@@ -5779,7 +5794,7 @@ async function eveIskRefresh() {
             eveIskDailyEl.textContent = '';
             return;
         }
-        eveIskDailyEl.innerHTML = '<span class="eve-isk-badge">24ч</span> …';
+        eveIskDailyEl.innerHTML = iskBadge('day', 'За 24 часа') + ' …';
         const journals = await Promise.allSettled(
             dailyChars.map((c) => eveWalletJournal24h(c.characterId))
         );
@@ -5789,11 +5804,11 @@ async function eveIskRefresh() {
         });
         const sign = dailyIsk >= 0 ? '+' : '';
         eveIskDailyEl.className = 'eve-isk-daily' + (dailyIsk > 0 ? ' is-positive' : dailyIsk < 0 ? ' is-negative' : '');
-        eveIskDailyEl.innerHTML = `<span class="eve-isk-badge">24ч</span> ${escapeHtml(sign + eveIskFmt(dailyIsk))}`;
+        eveIskDailyEl.innerHTML = `${iskBadge('day', 'За 24 часа')} ${escapeHtml(sign + eveIskFmt(dailyIsk))}`;
         eveIskDailyEl.title = `Изменение за 24 ч: ${sign}${Math.round(dailyIsk).toLocaleString('ru-RU')} ISK`
             + `\nПерсонажи: ${dailyChars.map((c) => c.characterName).join(', ')}`;
     } catch (e) {
-        eveIskTotalEl.innerHTML = '<span class="eve-isk-badge">ISK</span> ошибка';
+        eveIskTotalEl.innerHTML = iskBadge('isk', 'ISK') + ' ошибка';
         eveIskTotalEl.title = String(e);
     } finally {
         eveIskBusy = false;

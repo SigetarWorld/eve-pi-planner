@@ -6265,3 +6265,32 @@ input.eve-plex-input {
     .esc-toolbar { gap: 0.3rem; }
     .esc-tb-input, .esc-tb-select { max-width: 120px; }
 }
+
+/* ============================================================
+   Значки в кнопках карточек и в плашках ISK / 24ч / PLEX —
+   контурные SVG по общему стандарту (/style/icons/eve/ui-*.svg).
+   Контур, толщину и концы задаёт общее правило svg.icon (base.css).
+   ============================================================ */
+.card-light svg,
+.uv-edit svg,
+.uv-fold svg,
+.account-del svg {
+    display: block;
+    width: 15px;
+    height: 15px;
+}
+.card > .uv .uv-fold svg {
+    width: 13px;
+    height: 13px;
+}
+.eve-isk-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+}
+.eve-isk-badge svg {
+    display: block;
+    width: 14px;
+    height: 14px;
+}

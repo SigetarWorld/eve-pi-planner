@@ -1824,5 +1824,158 @@
   "used_in": [
    "valheim/index.html: аватар на дорожной карте"
   ]
+ },
+ {
+  "file": "eve/ui-light.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "текстовый символ «💡»"
+  ],
+  "used_in": [
+   "eveonline/js/app.js: кнопка «Подсветить карточку» (.card-light) (UI_SVG.light)"
+  ],
+  "standard": true,
+  "redrawn": "нарисована по стандарту вместо символа «💡»"
+ },
+ {
+  "file": "eve/ui-sync.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "текстовый символ «⟲»"
+  ],
+  "used_in": [
+   "eveonline/js/app.js: кнопка «Восстановить из EVE» (.uv-sync) (UI_SVG.sync)"
+  ],
+  "standard": true,
+  "redrawn": "нарисована по стандарту вместо символа «⟲»"
+ },
+ {
+  "file": "eve/ui-edit.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "текстовый символ «✎»"
+  ],
+  "used_in": [
+   "eveonline/js/app.js: кнопка «Редактировать карточку» (.uv-edit) (UI_SVG.edit)"
+  ],
+  "standard": true,
+  "redrawn": "нарисована по стандарту вместо символа «✎»"
+ },
+ {
+  "file": "eve/ui-plus.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "текстовый символ «+»"
+  ],
+  "used_in": [
+   "eveonline/js/app.js: кнопки «Развернуть колонию / все колонии» (.uv-fold) (UI_SVG.plus)"
+  ],
+  "standard": true,
+  "redrawn": "нарисована по стандарту вместо символа «+»"
+ },
+ {
+  "file": "eve/ui-minus.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "текстовый символ «−»"
+  ],
+  "used_in": [
+   "eveonline/js/app.js: кнопки «Свернуть» (.uv-fold, .wh-fold) (UI_SVG.minus)"
+  ],
+  "standard": true,
+  "redrawn": "нарисована по стандарту вместо символа «−»"
+ },
+ {
+  "file": "eve/ui-close.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "текстовый символ «×»"
+  ],
+  "used_in": [
+   "eveonline/js/app.js: кнопка «Удалить карточку» (.account-del) (UI_SVG.close)"
+  ],
+  "standard": true,
+  "redrawn": "нарисована по стандарту вместо символа «×»"
+ },
+ {
+  "file": "eve/ui-isk.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "текстовый символ «ISK»"
+  ],
+  "used_in": [
+   "eveonline/js/app.js: плашка общего баланса ISK (.eve-isk-badge) (UI_SVG.isk)"
+  ],
+  "standard": true,
+  "redrawn": "нарисована по стандарту вместо символа «ISK»"
+ },
+ {
+  "file": "eve/ui-day.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "текстовый символ «24ч»"
+  ],
+  "used_in": [
+   "eveonline/js/app.js: плашка дохода за 24 часа (.eve-isk-badge) (UI_SVG.day)"
+  ],
+  "standard": true,
+  "redrawn": "нарисована по стандарту вместо символа «24ч»"
+ },
+ {
+  "file": "eve/ui-plex.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "текстовый символ «PLEX»"
+  ],
+  "used_in": [
+   "eveonline/js/app.js: плашка PLEX (.eve-isk-badge, index.html) (UI_SVG.plex)"
+  ],
+  "standard": true,
+  "redrawn": "нарисована по стандарту вместо символа «PLEX»"
  }
 ]
