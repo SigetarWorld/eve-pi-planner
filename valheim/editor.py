@@ -251,8 +251,19 @@ class EditorApp(tk.Tk):
         s.configure('TEntry', fieldbackground=BG2, foreground=FG,
                     insertcolor=FG, borderwidth=1, relief='solid')
         s.configure('TCheckbutton', background=BG, foreground=FG)
-        s.configure('TCombobox', fieldbackground=BG2, foreground=FG,
+        s.configure('TCombobox', fieldbackground=BG2, foreground=FG, background=BG3,
+                    arrowcolor=FG, insertcolor=FG,
                     selectbackground='#1f6feb', selectforeground='#fff')
+        # Тема clam в фокусе/readonly подставляет светлые цвета — задаём тёмные явно
+        s.map('TCombobox',
+              fieldbackground=[('readonly', 'focus', BG3), ('readonly', BG2),
+                               ('disabled', BG), ('focus', BG2)],
+              foreground=[('disabled', FG2), ('readonly', 'focus', FG),
+                          ('readonly', FG), ('focus', FG)],
+              background=[('active', BG3), ('pressed', BG3), ('readonly', BG3)],
+              selectbackground=[('readonly', 'focus', BG3), ('focus', '#1f6feb')],
+              selectforeground=[('readonly', 'focus', ACCENT), ('focus', '#fff')],
+              arrowcolor=[('disabled', FG2), ('active', ACCENT)])
 
     # === Дорожная карта =====================================================
     def _build_roadmap_tab(self):
