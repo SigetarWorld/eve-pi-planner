@@ -15,3 +15,15 @@ desktop.ini
 .env.local
 node_modules/
 __pycache__/
+
+# Valheim: редактор и его сборка — на сайте не нужны
+# (папка E:\WebSite\Valheim копируется в публикацию целиком)
+*.exe
+*.spec
+valheim/build/
+valheim/dist/
+valheim/build_editor.bat
+valheim/editor.py
+valheim/editor_error.log
+valheim/valera-icons/
+valheim/data/features.json
