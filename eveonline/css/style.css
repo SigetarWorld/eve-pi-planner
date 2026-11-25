@@ -3,61 +3,49 @@
    Структура рассчитана на текущую разметку Index.html
    Дизайн повторяет визитку из E:\WebSite\Start (стиль
    scan-stakan.com): Orbitron / Rajdhani / Inter, янтарь +
-   #2F497D, острые углы, сканлайны и свечения.
+   hsl(var(--secondary)), острые углы, сканлайны и свечения.
    ============================================================ */
 
 /* ---------- Переменные ---------- */
 :root {
-    --bg-deep:      #04060c;
-    --bg-base:      #080d18;
-    --bg-panel:     #0c1424;
-    --bg-panel-2:   #101d36;
-    --bg-hover:     #1a2b4d;
+    /* EVE Planner: свои имена переменных, значения — из общего стиля
+       (/style/tokens.css, E:\WebSite\Style). Новые цвета задаём там. */
+    --bg-deep:      hsl(var(--space-deep));
+    --bg-base:      hsl(var(--background));
+    --bg-panel:     hsl(var(--card));
+    --bg-panel-2:   hsl(var(--card-2));
+    --bg-hover:     hsl(var(--hover));
 
-    --border:       #1d3452;
-    --border-lit:   #2c4a75;
+    --eve-border:   hsl(var(--border));
+    --border-lit:   hsl(var(--secondary));
 
-    --text:         #d3def0;
-    --text-dim:     #8fa2bd;
-    --text-faint:   #5e6f8c;
+    --text:         hsl(var(--foreground));
+    --text-dim:     hsl(var(--muted-foreground));
+    --text-faint:   hsl(var(--faint-foreground));
 
-    /* Янтарь — главный акцент, как на оригинале */
-    --accent:       #ff9d2e;
-    --accent-soft:  rgba(255, 157, 46, 0.12);
-    --accent-line:  rgba(255, 157, 46, 0.35);
+    --accent:       hsl(var(--primary));
+    --accent-soft:  hsl(var(--primary) / .12);
+    --accent-line:  hsl(var(--primary) / .35);
 
-    /* Тёмно-синий — вторичный цвет: рамки, заливки, ховеры */
-    --blue:         #2f497d;
-    --blue-ink:     #3f61a6;
-    --blue-soft:    rgba(47, 73, 125, 0.35);
+    --blue:         hsl(var(--secondary));
+    --blue-ink:     hsl(var(--secondary-ink));
+    --blue-soft:    hsl(var(--secondary) / .35);
 
-    /* Бирюза остаётся в подсветке схемы и цене: там она несёт смысл,
-       и с янтарём она читается так же, как на оригинале */
-    --cyan:         #4ec9e0;
-    --cyan-soft:    rgba(78, 201, 224, 0.12);
+    --cyan:         hsl(var(--info));
+    --cyan-soft:    hsl(var(--info) / .12);
 
-    --green:        #4fd18b;
-    --red:          #ff6b6b;
-
-    --radius:       6px;
-    --radius-sm:    4px;
+    --green:        hsl(var(--success));
+    --red:          hsl(var(--danger));
 
     --gap:          1.25rem;
-    --shadow:       0 10px 30px rgba(0, 0, 0, 0.45);
-
-    --glow-amber:   0 0 18px rgba(255, 157, 46, 0.35), 0 0 44px rgba(255, 157, 46, 0.18);
-    --glow-blue:    0 0 18px rgba(47, 73, 125, 0.55), 0 0 44px rgba(47, 73, 125, 0.3);
-
-    /* Типографика как на оригинале: Orbitron — заголовки,
-       Rajdhani — подписи, Inter — основной текст */
-    --font-display: "Orbitron", "Rajdhani", sans-serif;
-    --font-heading: "Rajdhani", sans-serif;
-    --font-body:    "Inter", system-ui, sans-serif;
+    --glow-blue:    var(--glow-teal);
 
     /* --font оставлен как синоним основного: его держат многие правила */
     --font:         var(--font-body);
 
-    --header-h: 64px;
+    /* Высота общей шапки + панели планировщика (панель меряет скрипт в index.html) */
+    --eve-appbar-h: 64px;
+    --eve-bars-h:   calc(var(--site-header-h) + var(--eve-appbar-h));
 }
 
 /* ---------- Сброс ---------- */
@@ -74,55 +62,22 @@ body {
 }
 
 body {
-    min-height: 100vh;
     font-family: var(--font);
     font-size: 15px;
     line-height: 1.55;
     color: var(--text);
-    background-color: var(--bg-deep);
-    background-image:
-        radial-gradient(1100px 520px at 12% -8%, rgba(78, 201, 224, 0.07), transparent 60%),
-        radial-gradient(900px 460px at 88% 0%, rgba(255, 157, 46, 0.06), transparent 62%),
-        radial-gradient(1.4px 1.4px at 18% 26%, rgba(255, 255, 255, 0.5), transparent),
-        radial-gradient(1.2px 1.2px at 64% 12%, rgba(255, 255, 255, 0.38), transparent),
-        radial-gradient(1.6px 1.6px at 82% 58%, rgba(255, 255, 255, 0.32), transparent),
-        radial-gradient(1.1px 1.1px at 32% 74%, rgba(255, 255, 255, 0.3), transparent),
-        radial-gradient(1.3px 1.3px at 48% 44%, rgba(255, 255, 255, 0.26), transparent);
-    background-attachment: fixed;
-    -webkit-font-smoothing: antialiased;
-}
-
-/* Сканлайны поверх фона, но под содержимым — как на оригинале.
-   Содержимое (main, header) лежит выше по z-index. */
-body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background-image: repeating-linear-gradient(
-        0deg,
-        rgba(47, 73, 125, 0.05) 0px,
-        rgba(47, 73, 125, 0.05) 1px,
-        transparent 1px,
-        transparent 3px
-    );
 }
 
 /* ---------- Шапка ---------- */
-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
+.eve-appbar {
+    position: sticky;
+    top: var(--site-header-h);
     z-index: 50;
-    background: rgba(4, 7, 14, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(29, 52, 82, 0.6);
+    background: hsl(var(--background) / .94);
+    border-bottom: 1px solid hsl(var(--border) / .5);
 }
 
-.container {
+.eve-appbar .container {
     width: 100%;
     max-width: 1600px;
     margin: 0 auto;
@@ -134,7 +89,7 @@ header {
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem 1rem;
-    min-height: var(--header-h);
+    min-height: 64px;
 }
 
 /* Торговая марка — как на оригинале: имя крупным Orbitron и
@@ -158,7 +113,7 @@ header {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    filter: drop-shadow(0 0 12px rgba(255, 157, 46, 0.35));
+    filter: drop-shadow(0 0 12px hsl(var(--primary) / 0.35));
 }
 
 .brand-tag {
@@ -207,7 +162,7 @@ body:has(#chains.active)     nav button[data-tab="chains"],
 body:has(#calculator.active) nav button[data-tab="calculator"],
 body:has(#colonies.active)   nav button[data-tab="colonies"] {
     color: var(--accent);
-    text-shadow: 0 0 14px rgba(255, 157, 46, 0.55);
+    text-shadow: 0 0 14px hsl(var(--primary) / 0.55);
 }
 
 body:has(#planets.active)    nav button[data-tab="planets"]::after,
@@ -221,7 +176,7 @@ body:has(#colonies.active)   nav button[data-tab="colonies"]::after {
     bottom: 2px;
     height: 2px;
     background: var(--accent);
-    box-shadow: 0 0 12px rgba(255, 157, 46, 0.8);
+    box-shadow: 0 0 12px hsl(var(--primary) / 0.8);
 }
 
 /* Клавиатурный фокус — отдельный, более заметный индикатор */
@@ -238,7 +193,7 @@ main {
     z-index: 1;
     max-width: none;
     margin: 0 auto;
-    padding: calc(var(--header-h) + 1.25rem) clamp(0.75rem, 2vw, 1.5rem) 4rem;
+    padding: 1.25rem clamp(0.75rem, 2vw, 1.5rem) 4rem;
 }
 
 /* Производство — на всю ширину */
@@ -249,7 +204,7 @@ main {
     display: none;
     padding: clamp(0.9rem, 2vw, 1.4rem);
     background: linear-gradient(180deg, var(--bg-panel), var(--bg-base));
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
 }
@@ -304,7 +259,7 @@ main {
     text-transform: uppercase;
     color: var(--text);
     padding-bottom: 0.7rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
 }
 
 /* ---------- Поля ввода ---------- */
@@ -317,7 +272,7 @@ input[type="text"] {
     font: inherit;
     color: var(--text);
     background: var(--bg-deep);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
     transition: border-color 0.16s, box-shadow 0.16s;
 }
@@ -382,17 +337,17 @@ form button,
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--accent);
-    background: rgba(255, 157, 46, 0.05);
-    border: 1px solid rgba(255, 157, 46, 0.55);
+    background: hsl(var(--primary) / 0.05);
+    border: 1px solid hsl(var(--primary) / 0.55);
     border-radius: var(--radius-sm);
-    box-shadow: 0 0 24px -8px rgba(255, 157, 46, 0.6);
+    box-shadow: 0 0 24px -8px hsl(var(--primary) / 0.6);
     transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.08s;
 }
 
 form button:hover,
 #add-colony:hover {
     color: #150d04;
-    background: linear-gradient(135deg, hsl(36 95% 55%), hsl(28 95% 50%));
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-2)));
     border-color: var(--accent);
     box-shadow: var(--glow-amber);
 }
@@ -416,7 +371,7 @@ form button:focus-visible,
     gap: 0.6rem;
     padding: 0.7rem 0.8rem;
     background: var(--bg-panel-2);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
 }
 
@@ -457,7 +412,7 @@ form button:focus-visible,
     color: var(--text);
     background: var(--bg-deep);
     border: 1px solid var(--border-lit);
-    border-radius: 6px;
+    border-radius: 0;
     cursor: pointer;
 }
 
@@ -521,7 +476,7 @@ form button:focus-visible,
     font-size: 0.78rem;
     color: var(--text);
     background: var(--bg-deep);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-left: 3px solid var(--mm-color);
     border-radius: 999px;
     cursor: pointer;
@@ -547,14 +502,14 @@ form button:focus-visible,
 /* Окно карты: тянется на высоту экрана, внутри — SVG с масштабом */
 .mm-view {
     position: relative;
-    height: calc(100vh - var(--header-h) - 15rem);
+    height: calc(100vh - var(--eve-bars-h) - 15rem);
     min-height: 420px;
     margin-top: 0.6rem;
     overflow: hidden;
     background:
         radial-gradient(circle at 50% 50%, rgba(78, 140, 220, 0.08), transparent 60%),
         var(--bg-deep);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
     cursor: grab;
     touch-action: none;
@@ -598,7 +553,7 @@ form button:focus-visible,
 }
 
 .mm-jump-ext {
-    stroke: rgba(255, 157, 46, 0.55);
+    stroke: hsl(var(--primary) / 0.55);
     stroke-width: 1.5;
     stroke-dasharray: 5 4;
 }
@@ -606,7 +561,7 @@ form button:focus-visible,
 /* Система соседнего региона — как в игре: точка и подпись, приглушённо */
 .mm-ext-dot {
     fill: #1a1a12;
-    stroke: rgba(255, 157, 46, 0.7);
+    stroke: hsl(var(--primary) / 0.7);
     stroke-width: 1.5;
 }
 
@@ -705,7 +660,7 @@ form button:focus-visible,
     font-weight: 700;
     fill: var(--text);
     paint-order: stroke;
-    stroke: #0b1220;
+    stroke: hsl(var(--card));
     stroke-width: 2.5px;
     stroke-linejoin: round;
     pointer-events: none;
@@ -723,7 +678,7 @@ form button:focus-visible,
     height: 14px;
     margin: 0 3px 0 0;
     vertical-align: -3px;
-    border-radius: 2px;
+    border-radius: 0;
     background: none;
 }
 
@@ -731,7 +686,7 @@ form button:focus-visible,
 .mm-pop-sync {
     margin: 0.35rem 0 0;
     font-size: 0.72rem;
-    color: #5fd38d;
+    color: hsl(var(--success));
 }
 
 .mm-pop-sync:empty {
@@ -748,7 +703,7 @@ form button:focus-visible,
     color: var(--text-dim);
     background: transparent;
     border: 1px dashed var(--border-lit);
-    border-radius: 5px;
+    border-radius: 0;
     cursor: pointer;
 }
 
@@ -762,7 +717,7 @@ form button:focus-visible,
 }
 
 .mm-colony-badge circle {
-    fill: #0b1220;
+    fill: hsl(var(--card));
     stroke: var(--accent);
     stroke-width: 1.2;
 }
@@ -771,7 +726,7 @@ form button:focus-visible,
    Квадраты — чтобы не путать с круглыми планетами; цвета уровней как
    у значков на карточках */
 .mm-colony-badge .mm-sq {
-    fill: #0b1220;
+    fill: hsl(var(--card));
     stroke: rgba(150, 185, 230, 0.55);
     stroke-width: 0.8;
 }
@@ -784,13 +739,13 @@ form button:focus-visible,
 }
 
 .mm-colony-badge .mm-tier {
-    fill: rgba(255, 157, 46, 0.14);
-    stroke: rgba(255, 157, 46, 0.8);
+    fill: hsl(var(--primary) / 0.14);
+    stroke: hsl(var(--primary) / 0.8);
 }
 
 .mm-colony-badge .mm-tier-p0,
 .mm-colony-badge .mm-tier-px {
-    fill: rgba(255, 255, 255, 0.07);
+    fill: hsl(var(--foreground) / 0.07);
     stroke: rgba(150, 185, 230, 0.55);
 }
 
@@ -801,7 +756,7 @@ form button:focus-visible,
 
 .mm-colony-badge .mm-tier-p2,
 .mm-colony-badge .mm-tier-p3 {
-    fill: color-mix(in srgb, var(--cyan) 14%, #0b1220);
+    fill: color-mix(in srgb, var(--cyan) 14%, hsl(var(--card)));
     stroke: color-mix(in srgb, var(--cyan) 80%, transparent);
 }
 
@@ -811,12 +766,12 @@ form button:focus-visible,
 }
 
 .mm-colony-badge .mm-tier-p4 {
-    fill: rgba(201, 167, 255, 0.14);
-    stroke: rgba(201, 167, 255, 0.8);
+    fill: hsl(var(--rare) / 0.14);
+    stroke: hsl(var(--rare) / 0.8);
 }
 
 .mm-colony-badge .mm-tier-p4 + .mm-sq-text {
-    fill: #c9a7ff;
+    fill: hsl(var(--rare));
 }
 
 /* Общий блок персонажа на карте: имя и под линией его строки */
@@ -825,7 +780,7 @@ form button:focus-visible,
 }
 
 .mm-colony-sep {
-    stroke: rgba(255, 157, 46, 0.35);
+    stroke: hsl(var(--primary) / 0.35);
     stroke-width: 0.6;
     pointer-events: none;
 }
@@ -855,7 +810,7 @@ form button:focus-visible,
     background: var(--bg-panel-2);
     border: 1px solid var(--border-lit);
     border-radius: var(--radius-sm);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 10px 30px hsl(var(--space-deep) / 0.55);
     cursor: default;
 }
 
@@ -884,7 +839,7 @@ form button:focus-visible,
     line-height: 1;
     color: var(--text-faint);
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: 50%;
     cursor: pointer;
 }
@@ -924,8 +879,8 @@ form button:focus-visible,
     font-weight: 700;
     color: var(--text-dim);
     background: var(--bg-deep);
-    border: 1px solid var(--border);
-    border-radius: 5px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
     cursor: pointer;
 }
 
@@ -949,7 +904,7 @@ form button:focus-visible,
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #5fd38d;
+    background: hsl(var(--success));
 }
 
 /* Список ресурсов с картинками */
@@ -962,8 +917,8 @@ form button:focus-visible,
     gap: 2px;
     padding: 2px;
     background: var(--bg-deep);
-    border: 1px solid var(--border);
-    border-radius: 5px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
 }
 
 .mm-pop-item {
@@ -978,7 +933,7 @@ form button:focus-visible,
     color: var(--text);
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 4px;
+    border-radius: 0;
     cursor: pointer;
 }
 
@@ -987,8 +942,8 @@ form button:focus-visible,
     flex: 0 0 auto;
     width: 26px;
     height: 26px;
-    border-radius: 3px;
-    background: radial-gradient(circle at 30% 25%, #2a3648, #131b28);
+    border-radius: 0;
+    background: radial-gradient(circle at 30% 25%, #2a3648, hsl(var(--card)));
 }
 
 .mm-pop-item span {
@@ -1002,12 +957,12 @@ form button:focus-visible,
 
 .mm-pop-item.is-picked {
     border-color: var(--accent);
-    background: rgba(255, 157, 46, 0.14);
+    background: hsl(var(--primary) / 0.14);
 }
 
 .mm-pop-own {
     font-style: normal;
-    color: #5fd38d;
+    color: hsl(var(--success));
 }
 
 .mm-pop-empty {
@@ -1048,8 +1003,8 @@ form button:focus-visible,
     padding: 0.25rem 0.3rem;
     margin-top: 2px;
     background: var(--bg-deep);
-    border: 1px solid var(--border);
-    border-radius: 5px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
 }
 
 .mm-pop-colony.is-editing {
@@ -1061,8 +1016,8 @@ form button:focus-visible,
     flex: 0 0 auto;
     width: 24px;
     height: 24px;
-    border-radius: 3px;
-    background: radial-gradient(circle at 30% 25%, #2a3648, #131b28);
+    border-radius: 0;
+    background: radial-gradient(circle at 30% 25%, #2a3648, hsl(var(--card)));
 }
 
 .mm-pop-colony-text {
@@ -1099,7 +1054,7 @@ form button:focus-visible,
     line-height: 1;
     color: var(--text-faint);
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: 50%;
     cursor: pointer;
 }
@@ -1121,7 +1076,7 @@ form button:focus-visible,
     gap: 0.5rem;
     margin-top: 0.6rem;
     padding-top: 0.5rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--eve-border);
 }
 
 .mm-pop-colonies:empty + .mm-pop-formhead {
@@ -1230,7 +1185,7 @@ form button:focus-visible,
 .mm-planet-letter {
     font-size: 11px;
     font-weight: 700;
-    fill: #0b1220;
+    fill: hsl(var(--card));
 }
 
 .mm-system:hover .mm-system-pill {
@@ -1269,10 +1224,10 @@ form button:focus-visible,
     height: 24px;
     margin-right: 0.6rem;
     vertical-align: -6px;
-    border-radius: 3px;
+    border-radius: 0;
     /* тёмная подложка, чтобы светлые иконки не сливались с фоном строки */
-    background: radial-gradient(circle at 30% 25%, #2a3648, #131b28);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    background: radial-gradient(circle at 30% 25%, #2a3648, hsl(var(--card)));
+    box-shadow: inset 0 0 0 1px hsl(var(--foreground) / 0.07);
     object-fit: contain;
 }
 
@@ -1285,7 +1240,7 @@ form button:focus-visible,
     color: var(--text-faint);
     text-align: center;
     background: var(--bg-deep);
-    border: 1px dashed var(--border);
+    border: 1px dashed var(--eve-border);
     border-radius: var(--radius-sm);
 }
 
@@ -1318,9 +1273,9 @@ form button:focus-visible,
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--border);
+    background: var(--eve-border);
     border: 2px solid var(--bg-deep);
-    border-radius: 6px;
+    border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -1336,7 +1291,7 @@ form button:focus-visible,
     margin-top: 1.4rem;
     padding: 0.7rem 0.8rem;
     background: var(--bg-panel-2);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
 }
 
@@ -1462,7 +1417,7 @@ form button:focus-visible,
     gap: 0.5rem;
     padding: 0.7rem 0.8rem;
     background: var(--bg-panel-2);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
 }
 
@@ -1658,7 +1613,7 @@ form button:focus-visible,
     background: var(--bg-panel);
     border: 1px solid var(--accent);
     border-radius: var(--radius-sm);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 8px 24px hsl(var(--space-deep) / 0.45);
     cursor: default;
 }
 
@@ -1724,7 +1679,7 @@ form button:focus-visible,
     flex-direction: column;
     padding: 0.7rem 0.9rem;
     background: var(--bg-panel-2);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
 }
 
@@ -1737,7 +1692,7 @@ form button:focus-visible,
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--accent);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
 }
 
 /* Заголовок «Статистика» — кнопка: сворачивает и разворачивает таблицу */
@@ -1799,7 +1754,7 @@ form button:focus-visible,
 .stats-p1 th,
 .stats-p1 td {
     padding: 0.18rem 0.4rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     text-align: center;
     white-space: nowrap;
     vertical-align: middle;
@@ -1809,7 +1764,7 @@ form button:focus-visible,
     font-family: var(--font-heading);
     font-weight: 700;
     color: var(--accent);
-    background: rgba(255, 255, 255, 0.03);
+    background: hsl(var(--foreground) / 0.03);
 }
 
 /* Буквы типов планет и счётчики под ними */
@@ -1863,7 +1818,7 @@ form button:focus-visible,
 }
 
 .stats-p1 .st-diff.is-more {
-    color: #5fd38d;
+    color: hsl(var(--success));
 }
 
 .stats-p1 .st-diff.is-less {
@@ -1882,8 +1837,8 @@ form button:focus-visible,
     text-align: right;
     color: var(--text);
     background: var(--bg-deep);
-    border: 1px solid var(--border);
-    border-radius: 3px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
 }
 
 .stats-p1 .st-manual:focus {
@@ -2031,7 +1986,7 @@ form button:focus-visible,
     background: var(--bg-panel);
     border: 1px solid var(--border-lit);
     border-radius: var(--radius-sm);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 8px 24px hsl(var(--space-deep) / 0.45);
 }
 
 .eve-char {
@@ -2039,18 +1994,18 @@ form button:focus-visible,
     align-items: center;
     gap: 0.5rem;
     padding: 0.2rem 0.3rem;
-    border-radius: 4px;
+    border-radius: 0;
 }
 
 .eve-char:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: hsl(var(--foreground) / 0.04);
 }
 
 .eve-char-img {
     flex: 0 0 auto;
     width: 24px;
     height: 24px;
-    border-radius: 3px;
+    border-radius: 0;
 }
 
 .eve-char-name {
@@ -2088,7 +2043,7 @@ form button:focus-visible,
     font-size: 0.7rem;
     line-height: 1.35;
     color: var(--text-faint);
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--eve-border);
 }
 
 /* Кнопка в шапке чуть ниже оригинала (195×30 → высота 26px) */
@@ -2133,7 +2088,7 @@ form button:focus-visible,
     line-height: 0;
     background: none;
     border: none;
-    border-radius: 4px;
+    border-radius: 0;
     cursor: pointer;
     transition: filter 0.15s, box-shadow 0.15s;
 }
@@ -2243,7 +2198,7 @@ form button:focus-visible,
     line-height: 1;
     color: var(--text-faint);
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: 50%;
     transition: color 0.16s, border-color 0.16s, background 0.16s;
 }
@@ -2251,7 +2206,7 @@ form button:focus-visible,
 .account-del:hover {
     color: var(--red);
     border-color: var(--red);
-    background: rgba(255, 107, 107, 0.12);
+    background: hsl(var(--danger) / 0.12);
 }
 
 .account-del:focus-visible {
@@ -2262,7 +2217,7 @@ form button:focus-visible,
 /* Поле имени персонажа: подсветка, если имя не введено */
 .ct-invalid {
     border-color: var(--red);
-    box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.22);
+    box-shadow: 0 0 0 2px hsl(var(--danger) / 0.22);
 }
 
 /* ---------- Таблица карточки 7×7 ---------- */
@@ -2274,7 +2229,7 @@ form button:focus-visible,
     border-collapse: separate;
     border-spacing: 0;
     background: var(--bg-deep);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
     font-size: 0.86rem;
 }
@@ -2283,8 +2238,8 @@ form button:focus-visible,
 .colony-table td {
     padding: 0.4rem 0.35rem;
     text-align: left;
-    border-bottom: 1px solid var(--border);
-    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
+    border-right: 1px solid var(--eve-border);
     vertical-align: middle;
     /* Содержимое не должно раздувать узкую колонку */
     overflow: hidden;
@@ -2360,8 +2315,8 @@ form button:focus-visible,
 /* Карточка подсвечена: красим таблицу целиком.
    Подложка таблицы и ячеек своя у каждой, поэтому переопределяем их все. */
 .card.is-lit .colony-table {
-    background: rgba(78, 201, 224, 0.10);
-    border-color: rgba(78, 201, 224, 0.38);
+    background: hsl(var(--info) / 0.10);
+    border-color: hsl(var(--info) / 0.38);
 }
 
 /* Фон ячеек у всех колонок одинаковый, поэтому перечисляем их здесь
@@ -2375,14 +2330,14 @@ form button:focus-visible,
 .card.is-lit .colony-table td.ct-p0,
 .card.is-lit .colony-table td.ct-p1,
 .card.is-lit .colony-table td.ct-p2 {
-    background: rgba(78, 201, 224, 0.15);
+    background: hsl(var(--info) / 0.15);
 }
 
 /* Ячейку корабля красим отдельно и через background-color: картинка
    корабля лежит в background-image, а сокращение background обнуляет
    его — с ним подсветка гасила бы картинку. */
 .card.is-lit .colony-table td.ct-ship {
-    background-color: rgba(78, 201, 224, 0.15);
+    background-color: hsl(var(--info) / 0.15);
 }
 
 /* Шапка карточки в подсвеченном состоянии подкрашивается вместе с таблицей */
@@ -2392,7 +2347,7 @@ form button:focus-visible,
 
 .card.is-lit .account-del {
     color: var(--cyan);
-    border-color: rgba(78, 201, 224, 0.45);
+    border-color: hsl(var(--info) / 0.45);
 }
 
 /* Подсвеченная кнопка — состояние «включено» */
@@ -2400,7 +2355,7 @@ form button:focus-visible,
     color: var(--bg-deep);
     background: var(--cyan);
     border-color: var(--cyan);
-    box-shadow: 0 0 12px rgba(78, 201, 224, 0.55);
+    box-shadow: 0 0 12px hsl(var(--info) / 0.55);
 }
 
 /* Крестик карточки — это тот же .account-del: круглый, у правого края
@@ -2424,8 +2379,8 @@ form button:focus-visible,
     font-size: 0.84rem;
     color: var(--text);
     background: var(--bg-deep);
-    border: 1px solid var(--border);
-    border-radius: 5px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
 }
 
 .ct-input:focus {
@@ -2643,7 +2598,7 @@ form button:focus-visible,
 }
 
 .colony-table .ct-recipe {
-    --zone-a: rgba(255, 255, 255, 0.08);
+    --zone-a: hsl(var(--foreground) / 0.08);
     --zone-b: rgba(78, 140, 220, 0.24);
     --zone-line: 1.5px solid rgba(150, 185, 230, 0.6);
     display: grid;
@@ -2653,7 +2608,7 @@ form button:focus-visible,
     line-height: 1.2;
     color: var(--text);
     border: var(--zone-line);
-    border-radius: 4px;
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -2776,7 +2731,7 @@ form button:focus-visible,
 
 .colony-table .ct-recipe > .ct-zone-0 { background: var(--zone-a); }
 .colony-table .ct-recipe > .ct-zone-1 { background: var(--zone-b); }
-.colony-table .ct-recipe > .ct-zone-2 { background: rgba(255, 157, 46, 0.12); }
+.colony-table .ct-recipe > .ct-zone-2 { background: hsl(var(--primary) / 0.12); }
 
 .colony-table .ct-line > .ct-icon-cell {
     display: flex;
@@ -2794,7 +2749,7 @@ form button:focus-visible,
    P1 и P0 карточки P2. Пустые места блока (у рецепта 2–3 входа из 4
    мест) — затемнённый фон без текста. */
 .colony-table .ct-recipe > .ct-slot-empty {
-    background: rgba(0, 0, 0, 0.22);
+    background: hsl(var(--space-deep) / 0.22);
 }
 
 /* Пустая картинка на месте недостающего ресурса — полностью прозрачная:
@@ -2877,18 +2832,18 @@ form button:focus-visible,
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--accent);
-    background: rgba(255, 157, 46, 0.06);
-    border: 1px dashed rgba(255, 157, 46, 0.55);
-    border-radius: 4px;
+    background: hsl(var(--primary) / 0.06);
+    border: 1px dashed hsl(var(--primary) / 0.55);
+    border-radius: 0;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 
 .colony-table .ct-mix-add:hover,
 .colony-table .ct-mix-add[aria-expanded="true"] {
-    background: rgba(255, 157, 46, 0.14);
+    background: hsl(var(--primary) / 0.14);
     border-style: solid;
-    box-shadow: 0 0 12px rgba(255, 157, 46, 0.3);
+    box-shadow: 0 0 12px hsl(var(--primary) / 0.3);
 }
 
 .colony-table .ct-mix-menu {
@@ -2911,9 +2866,9 @@ form button:focus-visible,
     line-height: 1.2;
     font-weight: 700;
     color: var(--text);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    background: hsl(var(--foreground) / 0.05);
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
     cursor: pointer;
 }
 
@@ -3035,8 +2990,8 @@ form button:focus-visible,
     padding: 1.15rem 1.25rem 1.25rem;
     background: var(--bg-panel);
     border: 1px solid var(--border-lit);
-    border-radius: 10px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+    border-radius: 0;
+    box-shadow: 0 12px 36px hsl(var(--space-deep) / 0.5);
 }
 
 .ct-modal-title {
@@ -3092,7 +3047,7 @@ form button:focus-visible,
 
 .ct-modal-actions .btn:hover {
     color: #150d04;
-    background: linear-gradient(135deg, hsl(36 95% 55%), hsl(28 95% 50%));
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-2)));
     border-color: var(--accent);
     box-shadow: var(--glow-amber);
 }
@@ -3109,7 +3064,7 @@ form button:focus-visible,
     line-height: 1;
     color: var(--text-faint);
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: 50%;
     cursor: pointer;
 }
@@ -3123,11 +3078,6 @@ form button:focus-visible,
 @media (max-width: 640px) {
     body {
         font-size: 14px;
-    }
-
-    /* Фиксированная шапка на мобильном ниже: главное — навигация */
-    :root {
-        --header-h: 56px;
     }
 
     .header-inner {
@@ -3354,7 +3304,7 @@ input.chain-amount {
     text-align: right;
     color: var(--text);
     background: var(--bg-deep);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
     transition: border-color 0.16s, box-shadow 0.16s;
 }
@@ -3446,7 +3396,7 @@ input.chain-amount:focus {
     text-align: left;
     color: var(--text);
     background: var(--bg-panel-2);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
     transition: opacity 0.16s, border-color 0.16s, background-color 0.16s, box-shadow 0.16s;
 }
@@ -3619,14 +3569,14 @@ input.chain-amount:focus {
     text-transform: uppercase;
     text-decoration: none;
     color: var(--text-dim);
-    border: 1px solid rgba(29, 52, 82, 0.8);
+    border: 1px solid hsl(var(--border) / 0.8);
     transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 
 .home-link:hover {
     color: var(--accent);
     border-color: var(--accent);
-    box-shadow: 0 0 14px rgba(255, 157, 46, 0.35);
+    box-shadow: 0 0 14px hsl(var(--primary) / 0.35);
 }
 
 .home-link:focus-visible {
@@ -3684,7 +3634,7 @@ input.chain-amount:focus {
     flex-wrap: wrap;
     background: var(--bg-panel-2);
     /* линия под строкой — на всю ширину, даже если клеток состава меньше четырёх */
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
 }
 
 .card.ct-two-line .colony-table tbody td {
@@ -3720,7 +3670,7 @@ input.chain-amount:focus {
        поэтому «Планета» везде стоит в одном месте */
     width: calc(var(--icon) + var(--prod-w, 16rem) + 1.3rem + 3 * var(--gap) + 0.7rem);
     border-right: none;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
 }
 
 .card.ct-two-line .colony-table tbody td.ct-planet {
@@ -3728,7 +3678,7 @@ input.chain-amount:focus {
     flex: 1 1 auto;
     gap: 0.4rem;
     border-right: none;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
 }
 
 /* Вторая линия: состав — по четверти ширины на клетку */
@@ -3772,7 +3722,7 @@ input.chain-amount:focus {
 
 .card.ct-two-line .colony-table tbody td.ct-split[data-sep="bar"]::before {
     content: "|";
-    color: var(--border);
+    color: var(--eve-border);
     font-size: 1.05rem;
 }
 
@@ -3865,7 +3815,7 @@ input.chain-amount:focus {
     height: var(--icon);
     padding: 0;
     font-size: 0.64rem;
-    border-radius: 3px;
+    border-radius: 0;
 }
 
 /* Клетки состава: значок | картинка | название, зазоры --gap */
@@ -3989,23 +3939,23 @@ input.chain-amount:focus {
     line-height: 1;
     letter-spacing: 0.02em;
     color: var(--accent);
-    border: 1px solid rgba(255, 157, 46, 0.55);
-    border-radius: 3px;
-    background: rgba(255, 157, 46, 0.08);
+    border: 1px solid hsl(var(--primary) / 0.55);
+    border-radius: 0;
+    background: hsl(var(--primary) / 0.08);
 }
 
 .colony-table .ct-tier-p0,
 .evetest-body .ct-tier-p0 {
     color: var(--text-dim);
-    border-color: var(--border);
-    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--eve-border);
+    background: hsl(var(--foreground) / 0.04);
 }
 
 .colony-table .ct-tier-p4,
 .evetest-body .ct-tier-p4 {
-    color: #c9a7ff;
-    border-color: rgba(201, 167, 255, 0.55);
-    background: rgba(201, 167, 255, 0.08);
+    color: hsl(var(--rare));
+    border-color: hsl(var(--rare) / 0.55);
+    background: hsl(var(--rare) / 0.08);
 }
 
 .colony-table .ct-tier-p2,
@@ -4047,7 +3997,7 @@ input.chain-amount:focus {
 .evt-card {
     padding: 0.8rem 0.9rem;
     background: var(--bg-panel-2);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
 }
 
@@ -4068,18 +4018,18 @@ input.chain-amount:focus {
 
 .evt-bad {
     font-size: 0.78rem;
-    color: #ff7a6b;
+    color: hsl(var(--danger));
 }
 
 .evt-ok {
     font-size: 0.78rem;
-    color: #5fd38d;
+    color: hsl(var(--success));
 }
 
 .evt-colony {
     margin-top: 0.7rem;
     padding-top: 0.6rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--eve-border);
 }
 
 .evt-colony h5 {
@@ -4142,8 +4092,8 @@ input.chain-amount:focus {
     padding: 0.5rem;
     font-size: 0.7rem;
     background: var(--bg-deep);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
 }
 
 .evt-note {
@@ -4161,8 +4111,8 @@ input.chain-amount:focus {
     font-size: 0.68rem;
     color: var(--accent);
     background: transparent;
-    border: 1px dashed rgba(255, 157, 46, 0.55);
-    border-radius: 4px;
+    border: 1px dashed hsl(var(--primary) / 0.55);
+    border-radius: 0;
     cursor: pointer;
 }
 
@@ -4183,8 +4133,8 @@ input.chain-amount:focus {
     font-size: 0.74rem;
     color: var(--text);
     background: var(--bg-deep);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
     padding: 0.35rem;
 }
 
@@ -4193,8 +4143,8 @@ input.chain-amount:focus {
     font-size: 0.74rem;
     color: var(--text);
     background: var(--bg-deep);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
     padding: 0.1rem 0.3rem;
 }
 
@@ -4238,7 +4188,7 @@ input.chain-amount:focus {
     line-height: 1;
     color: var(--text-faint);
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: 50%;
     cursor: pointer;
     transition: color 0.16s, border-color 0.16s, background 0.16s;
@@ -4258,7 +4208,7 @@ input.chain-amount:focus {
     flex: 1 1 auto;
     min-width: 0;
     background: var(--bg-deep);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
     font-size: 0.86rem;
 }
@@ -4267,7 +4217,7 @@ input.chain-amount:focus {
     align-items: center;
     gap: 0.5rem;
     padding: 0.4rem 0.6rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
     min-width: 0;
 }
 .uv-head .ct-pilot-name {
@@ -4296,20 +4246,20 @@ input.chain-amount:focus {
     font-weight: 700;
     line-height: 1;
     color: var(--accent);
-    border: 1px solid rgba(255, 157, 46, 0.55);
-    border-radius: 3px;
-    background: rgba(255, 157, 46, 0.08);
+    border: 1px solid hsl(var(--primary) / 0.55);
+    border-radius: 0;
+    background: hsl(var(--primary) / 0.08);
 }
-.uv .ct-tier-p0 { color: var(--text-dim); border-color: var(--border); background: rgba(255, 255, 255, 0.04); }
+.uv .ct-tier-p0 { color: var(--text-dim); border-color: var(--eve-border); background: hsl(var(--foreground) / 0.04); }
 .uv .ct-tier-p2,
 .uv .ct-tier-p3 { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 55%, transparent); background: color-mix(in srgb, var(--cyan) 8%, transparent); }
-.uv .ct-tier-p4 { color: #c9a7ff; border-color: rgba(201, 167, 255, 0.55); background: rgba(201, 167, 255, 0.08); }
+.uv .ct-tier-p4 { color: hsl(var(--rare)); border-color: hsl(var(--rare) / 0.55); background: hsl(var(--rare) / 0.08); }
 .uv-tier { cursor: pointer; }
 .uv-tier[aria-pressed="false"] { opacity: 0.35; }
 
 .uv-body { padding: 0.2rem 0.6rem 0.4rem; }
 .uv-colony { padding: 0.35rem 0; }
-.uv-colony + .uv-colony { border-top: 1px solid var(--border); }
+.uv-colony + .uv-colony { border-top: 1px solid var(--eve-border); }
 .uv-where {
     flex: 0 0 auto;
     display: inline-flex;
@@ -4379,14 +4329,14 @@ input.chain-amount:focus {
     font-size: 0.82rem;
     line-height: 1.45;
     color: var(--text);
-    background: rgba(255, 107, 107, 0.08);
-    border: 1px solid rgba(255, 107, 107, 0.45);
+    background: hsl(var(--danger) / 0.08);
+    border: 1px solid hsl(var(--danger) / 0.45);
     border-radius: var(--radius-sm);
 }
 .ce-host tbody tr.ce-bad {
     outline: 1px solid var(--red);
     outline-offset: -1px;
-    background: rgba(255, 107, 107, 0.07);
+    background: hsl(var(--danger) / 0.07);
 }
 .ce-actions {
     display: flex;
@@ -4411,7 +4361,7 @@ input.chain-amount:focus {
     flex: 1 1 auto;
     padding: 1rem;
     color: var(--text-dim);
-    border: 1px dashed var(--border);
+    border: 1px dashed var(--eve-border);
     border-radius: var(--radius-sm);
 }
 
@@ -4419,8 +4369,8 @@ input.chain-amount:focus {
 /* 💡 в шапке просмотра — рядом с ✎; подсветка красит и просмотр */
 .uv-head .card-light { margin-left: 0; }
 .card.is-lit .uv {
-    background: rgba(78, 201, 224, 0.10);
-    border-color: rgba(78, 201, 224, 0.38);
+    background: hsl(var(--info) / 0.10);
+    border-color: hsl(var(--info) / 0.38);
 }
 
 /* «+» перед первым ресурсом строки — размером с иконку ресурса */
@@ -4440,7 +4390,7 @@ input.chain-amount:focus {
     color: var(--accent);
     background: var(--accent-soft);
     border: 1px dashed var(--accent-line);
-    border-radius: 3px;
+    border-radius: 0;
     cursor: pointer;
 }
 .ct-row-plus:hover { border-style: solid; filter: brightness(1.15); }
@@ -4456,7 +4406,7 @@ input.chain-amount:focus {
     width: 11.5rem;
     gap: 0.4rem;
     border-right: none;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
 }
 .card.ct-two-line[data-level="MIX"] .colony-table tbody td.ct-planet {
     order: -2;
@@ -4495,7 +4445,7 @@ input.chain-amount:focus {
 }
 .card.ct-two-line[data-level="MIX"] .colony-table tbody tr.ct-row-p1 td.ct-split {
     order: -1;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
 }
 .card.ct-two-line[data-level="MIX"] .colony-table tbody tr.ct-row-p1::before,
 .card.ct-two-line[data-level="MIX"] .colony-table tbody tr.ct-row-p1::after { display: none; }
@@ -4511,9 +4461,9 @@ input.chain-amount:focus {
     font-weight: 700;
     letter-spacing: 0.04em;
     color: var(--text-dim);
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--border);
-    border-radius: 3px;
+    background: hsl(var(--foreground) / 0.04);
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
     cursor: pointer;
 }
 .uv-top[aria-pressed="true"] {
@@ -4533,14 +4483,14 @@ input.chain-amount:focus {
     width: 1.4rem;
     height: 1.4rem;
     color: var(--text-dim);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
+    background: hsl(var(--foreground) / 0.04);
 }
 .uv-store svg { width: 0.95rem; height: 0.95rem; }
-.uv-store-lp { color: var(--accent); border-color: rgba(255, 157, 46, 0.55); background: rgba(255, 157, 46, 0.08); }
-.uv-store-sf { color: var(--green); border-color: rgba(79, 209, 139, 0.55); background: rgba(79, 209, 139, 0.08); }
-.uv-store-cc { color: #c9a7ff; border-color: rgba(201, 167, 255, 0.55); background: rgba(201, 167, 255, 0.08); }
+.uv-store-lp { color: var(--accent); border-color: hsl(var(--primary) / 0.55); background: hsl(var(--primary) / 0.08); }
+.uv-store-sf { color: var(--green); border-color: hsl(var(--success) / 0.55); background: hsl(var(--success) / 0.08); }
+.uv-store-cc { color: hsl(var(--rare)); border-color: hsl(var(--rare) / 0.55); background: hsl(var(--rare) / 0.08); }
 
 /* Версия под кнопкой «← Sigetar.ru» */
 .home-box {
@@ -4567,16 +4517,16 @@ input.chain-amount:focus {
 .uv-store-btn.is-empty {
     color: var(--red);
     border-color: var(--red);
-    background: rgba(255, 107, 107, 0.15);
+    background: hsl(var(--danger) / 0.15);
     animation: uv-empty-pulse 1.6s ease-in-out infinite;
 }
 @keyframes uv-empty-pulse {
-    50% { box-shadow: 0 0 8px rgba(255, 107, 107, 0.7); }
+    50% { box-shadow: 0 0 8px hsl(var(--danger) / 0.7); }
 }
 .uv-store-list {
     margin: 0.2rem 0 0.35rem 1.6rem;
     padding: 0.3rem 0.5rem;
-    border: 1px dashed var(--border);
+    border: 1px dashed var(--eve-border);
     border-radius: var(--radius-sm);
 }
 .uv-store-title { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 0.15rem; }
@@ -4598,7 +4548,7 @@ input.chain-amount:focus {
     text-align: center;
     font-size: 0.82rem;
     color: var(--text-dim);
-    border: 2px dashed var(--border);
+    border: 2px dashed var(--eve-border);
     border-radius: var(--radius-sm);
 }
 .cards-drop-new.is-over {
@@ -4635,7 +4585,7 @@ input.chain-amount:focus {
     line-height: 1;
     color: var(--text-faint);
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: 50%;
     cursor: pointer;
     opacity: 0;
@@ -4647,7 +4597,7 @@ input.chain-amount:focus {
 .uv-fold:hover {
     color: var(--text);
     border-color: var(--border-lit);
-    background: rgba(255, 255, 255, 0.05);
+    background: hsl(var(--foreground) / 0.05);
 }
 
 /* Код склада из игры — поле в списке склада */
@@ -4661,8 +4611,8 @@ input.chain-amount:focus {
     text-transform: uppercase;
     color: var(--text);
     background: var(--bg-deep);
-    border: 1px solid var(--border);
-    border-radius: 3px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
 }
 .uv-pin-code:focus { outline: none; border-color: var(--accent-line); }
 
@@ -4760,7 +4710,7 @@ input.chain-amount:focus {
     gap: 0.2rem;
     padding: 0.35rem 0.5rem;
     background: var(--bg-panel);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
     min-width: 7rem;
     min-height: 1.8rem;
@@ -4773,7 +4723,7 @@ input.chain-amount:focus {
     cursor: grab;
     user-select: none;
     padding: 0.15rem 0.2rem;
-    border-radius: 3px;
+    border-radius: 0;
     transition: background 0.1s;
 }
 .eve-group-char:hover {
@@ -4836,8 +4786,8 @@ input.chain-amount:focus {
     position: relative;
 }
 .eve-isk-daily:hover { opacity: 0.8; }
-.eve-isk-daily.is-positive { color: #2ecc40; }
-.eve-isk-daily.is-negative { color: #e74c3c; }
+.eve-isk-daily.is-positive { color: hsl(var(--success)); }
+.eve-isk-daily.is-negative { color: hsl(var(--danger)); }
 
 /* ---------- Модальное окно: график дохода за 7 дней ---------- */
 .isk-chart-modal {
@@ -4857,8 +4807,8 @@ input.chain-amount:focus {
     padding: 1.15rem 1.25rem 1.25rem;
     background: var(--bg-panel);
     border: 1px solid var(--border-lit);
-    border-radius: 10px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+    border-radius: 0;
+    box-shadow: 0 12px 36px hsl(var(--space-deep) / 0.5);
 }
 .isk-chart-box h3 {
     margin: 0 0 0.75rem;
@@ -4883,7 +4833,7 @@ input.chain-amount:focus {
     align-items: center;
     gap: 0;
     padding-bottom: 0.4rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
     margin-bottom: 0.5rem;
 }
 /* Пустое место под аватар в шапке */
@@ -4915,7 +4865,7 @@ input.chain-amount:focus {
     align-items: flex-end;
     gap: 0;
     padding: 0.6rem 0;
-    border-bottom: 1px solid var(--border-dim, rgba(255,255,255,0.04));
+    border-bottom: 1px solid var(--border-dim, hsl(var(--foreground) / 0.04));
 }
 .isk-chart-row:last-child { border-bottom: none; }
 /* Портрет + имя (вертикально: аватар сверху, имя снизу) */
@@ -4930,7 +4880,7 @@ input.chain-amount:focus {
 .isk-chart-avatar {
     width: 40px;
     height: 40px;
-    border-radius: 6px;
+    border-radius: 0;
     flex-shrink: 0;
 }
 .isk-chart-char-name {
@@ -4957,7 +4907,7 @@ input.chain-amount:focus {
 .isk-chart-vbar {
     width: 70%;
     min-height: 2px;
-    border-radius: 8px 8px 2px 2px;
+    border-radius: 0;
     transition: height 0.6s cubic-bezier(.4,0,.2,1);
 }
 .isk-chart-val {
@@ -4976,15 +4926,15 @@ input.chain-amount:focus {
     justify-content: space-between;
     margin-top: 0.75rem;
     padding-top: 0.55rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--eve-border);
 }
 .isk-chart-total {
     font-size: 0.88rem;
     font-weight: 600;
     color: var(--text);
 }
-.isk-chart-total.is-positive { color: #2ecc40; }
-.isk-chart-total.is-negative { color: #e74c3c; }
+.isk-chart-total.is-positive { color: hsl(var(--success)); }
+.isk-chart-total.is-negative { color: hsl(var(--danger)); }
 .isk-chart-hint {
     font-size: 0.65rem;
     color: var(--text-faint);
@@ -4997,7 +4947,7 @@ input.chain-amount:focus {
     font-weight: 700;
     line-height: 1.25;
     letter-spacing: 0.04em;
-    border-radius: 3px;
+    border-radius: 0;
     background: var(--accent);
     color: var(--bg-deep);
     vertical-align: baseline;
@@ -5006,8 +4956,8 @@ input.chain-amount:focus {
 .eve-isk-daily .eve-isk-badge {
     background: var(--text-dim);
 }
-.eve-isk-daily.is-positive .eve-isk-badge { background: #2ecc40; }
-.eve-isk-daily.is-negative .eve-isk-badge { background: #e74c3c; }
+.eve-isk-daily.is-positive .eve-isk-badge { background: hsl(var(--success)); }
+.eve-isk-daily.is-negative .eve-isk-badge { background: hsl(var(--danger)); }
 .eve-isk-plex {}
 .eve-isk-plex .eve-isk-badge { background: #e8a33d; }
 input.eve-plex-input {
@@ -5023,7 +4973,7 @@ input.eve-plex-input {
     color: var(--text);
     background: var(--bg-panel-2);
     border: 1px solid var(--border, #1a2b4d);
-    border-radius: 3px;
+    border-radius: 0;
     text-align: right;
     -moz-appearance: textfield;
     appearance: textfield;
@@ -5046,7 +4996,7 @@ input.eve-plex-input {
     color: var(--text-dim);
     margin-top: 0.3rem;
     padding-top: 0.3rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--eve-border);
 }
 
 /* ---------- Статистика сервера EVE в шапке ---------- */
@@ -5075,13 +5025,13 @@ input.eve-plex-input {
    Пустой — серый, заполнен от 75 % — жёлтый, переполнен (от 99 %) —
    красный. Выделяется кнопка склада, строка колонии (полоса слева)
    и вся карточка (рамка) — по самому тревожному складу. */
-:root { --yellow: #ffd23f; --store-grey: #9aa6b8; }
+:root { --yellow: hsl(var(--attention)); --store-grey: hsl(var(--muted-foreground)); }
 
 /* пустой — серый, без мигания (раньше был красный) */
 .uv-store-btn.is-empty {
     color: var(--store-grey);
     border-color: var(--store-grey);
-    background: rgba(154, 166, 184, 0.14);
+    background: hsl(var(--muted-foreground) / 0.14);
     animation: none;
     opacity: 1;
     filter: none;
@@ -5089,20 +5039,20 @@ input.eve-plex-input {
 .uv-store-btn.is-warn {
     color: var(--yellow);
     border-color: var(--yellow);
-    background: rgba(255, 210, 63, 0.16);
+    background: hsl(var(--attention) / 0.16);
     opacity: 1;
     filter: none;
 }
 .uv-store-btn.is-full {
     color: var(--red);
     border-color: var(--red);
-    background: rgba(255, 107, 107, 0.18);
+    background: hsl(var(--danger) / 0.18);
     opacity: 1;
     filter: none;
     animation: uv-full-pulse 1.6s ease-in-out infinite;
 }
 @keyframes uv-full-pulse {
-    50% { box-shadow: 0 0 8px rgba(255, 107, 107, 0.75); }
+    50% { box-shadow: 0 0 8px hsl(var(--danger) / 0.75); }
 }
 
 /* полоса слева у колонии: красный > жёлтый > серый */
@@ -5111,21 +5061,21 @@ input.eve-plex-input {
 .uv-colony.has-store-full { padding-left: 0.45rem; }
 .uv-colony.has-store-empty {
     box-shadow: inset 3px 0 0 var(--store-grey);
-    background: linear-gradient(90deg, rgba(154, 166, 184, 0.07), transparent 60%);
+    background: linear-gradient(90deg, hsl(var(--muted-foreground) / 0.07), transparent 60%);
 }
 .uv-colony.has-store-warn {
     box-shadow: inset 3px 0 0 var(--yellow);
-    background: linear-gradient(90deg, rgba(255, 210, 63, 0.08), transparent 60%);
+    background: linear-gradient(90deg, hsl(var(--attention) / 0.08), transparent 60%);
 }
 .uv-colony.has-store-full {
     box-shadow: inset 3px 0 0 var(--red);
-    background: linear-gradient(90deg, rgba(255, 107, 107, 0.09), transparent 60%);
+    background: linear-gradient(90deg, hsl(var(--danger) / 0.09), transparent 60%);
 }
 
 /* рамка карточки: красный > жёлтый > серый */
 .card.has-store-empty > .uv { border-color: var(--store-grey); }
-.card.has-store-warn > .uv  { border-color: var(--yellow); box-shadow: 0 0 0 1px rgba(255, 210, 63, 0.3), 0 0 14px rgba(255, 210, 63, 0.12); }
-.card.has-store-full > .uv  { border-color: var(--red);    box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.35), 0 0 14px rgba(255, 107, 107, 0.15); }
+.card.has-store-warn > .uv  { border-color: var(--yellow); box-shadow: 0 0 0 1px hsl(var(--attention) / 0.3), 0 0 14px hsl(var(--attention) / 0.12); }
+.card.has-store-full > .uv  { border-color: var(--red);    box-shadow: 0 0 0 1px hsl(var(--danger) / 0.35), 0 0 14px hsl(var(--danger) / 0.15); }
 
 /* заполненность в раскрытом списке склада */
 .uv-store-fill { margin-left: 0.4rem; color: var(--text-faint); }
@@ -5147,7 +5097,7 @@ input.eve-plex-input {
 .wh-table .wh-col .wh-ico { margin-right: 0.3rem; vertical-align: middle; }
 .wh-table .wh-n { text-align: right; min-width: 3.5rem; color: var(--text); font-variant-numeric: tabular-nums; }
 .wh-table .wh-sum { font-weight: 700; color: var(--accent); }
-.wh-table .wh-tier th { text-align: left; background: rgba(255, 255, 255, 0.04); }
+.wh-table .wh-tier th { text-align: left; background: hsl(var(--foreground) / 0.04); }
 /* Где лежит — справа от итоговой таблицы; колонка на владельца,
    в ней карточки станций в стиле карточек персонажей */
 .wh-layout { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1rem; }
@@ -5166,10 +5116,10 @@ input.eve-plex-input {
 .wh-station { color: var(--text); }
 /* Hi / Low / Null и число — значки как [P1]: квадрат с рамкой */
 .uv .ct-tier.wh-sec { width: auto; min-width: 1.4rem; padding: 0 0.25rem; font-variant-numeric: tabular-nums; }
-.uv .ct-tier.wh-sec-hi   { color: var(--green);  border-color: rgba(79, 209, 139, 0.55); background: rgba(79, 209, 139, 0.08); }
-.uv .ct-tier.wh-sec-low  { color: var(--yellow); border-color: rgba(255, 210, 63, 0.55); background: rgba(255, 210, 63, 0.08); }
-.uv .ct-tier.wh-sec-null { color: var(--red);    border-color: rgba(255, 107, 107, 0.55); background: rgba(255, 107, 107, 0.08); }
-.uv .ct-tier.wh-sec-w    { color: #c9a7ff;       border-color: rgba(201, 167, 255, 0.55); background: rgba(201, 167, 255, 0.08); }
+.uv .ct-tier.wh-sec-hi   { color: var(--green);  border-color: hsl(var(--success) / 0.55); background: hsl(var(--success) / 0.08); }
+.uv .ct-tier.wh-sec-low  { color: var(--yellow); border-color: hsl(var(--attention) / 0.55); background: hsl(var(--attention) / 0.08); }
+.uv .ct-tier.wh-sec-null { color: var(--red);    border-color: hsl(var(--danger) / 0.55); background: hsl(var(--danger) / 0.08); }
+.uv .ct-tier.wh-sec-w    { color: hsl(var(--rare));       border-color: hsl(var(--rare) / 0.55); background: hsl(var(--rare) / 0.08); }
 .wh-loc .wh-sec + .wh-sec { margin-left: -0.15rem; }
 .wh-loc .wh-sec + .wh-region { margin-left: 0.15rem; }
 /* кнопки-вкладки под заголовком: «Сводная таблица» / «Планетарное имущество» */
@@ -5200,13 +5150,13 @@ input.eve-plex-input {
     overflow: hidden;
     color: var(--ico);
     border: 1px solid color-mix(in srgb, var(--ico) 55%, transparent);
-    border-radius: 3px;
+    border-radius: 0;
     background: color-mix(in srgb, var(--ico) 8%, transparent);
 }
 .wh-ico svg { width: 0.95rem; height: 0.95rem; }
-.wh-ico img { width: 1.05rem; height: 1.05rem; border-radius: 2px; }
+.wh-ico img { width: 1.05rem; height: 1.05rem; border-radius: 0; }
 .wh-ico-hangar { --ico: var(--green); }
-.wh-ico-office { --ico: #c9a7ff; }
+.wh-ico-office { --ico: hsl(var(--rare)); }
 .wh-ico-hold   { --ico: var(--cyan); }
 .wh-ico-box    { --ico: var(--accent); }
 .wh-ico-ship   { --ico: #7fb0ff; }
@@ -5228,17 +5178,17 @@ input.eve-plex-input {
 .wh-owner-sel { min-width: 12rem; }
 .wh-sum-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1.2rem; }
 .wh-table .wh-vol { color: var(--text-dim); }
-.wh-table .wh-tier-vol { font-weight: 600; color: var(--text-dim); background: rgba(255, 255, 255, 0.04); }
+.wh-table .wh-tier-vol { font-weight: 600; color: var(--text-dim); background: hsl(var(--foreground) / 0.04); }
 .wh-table tfoot .wh-vol { color: var(--accent); }
 /* График объёма */
-.wh-chart { margin: 0; padding: 0.5rem 0.6rem 0.4rem; background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.wh-chart { margin: 0; padding: 0.5rem 0.6rem 0.4rem; background: var(--bg-deep); border: 1px solid var(--eve-border); border-radius: var(--radius-sm); }
 .wh-ch-title { margin-bottom: 0.3rem; font-size: 0.8rem; color: var(--text-dim); }
 .wh-chart svg { display: block; max-width: 100%; height: auto; }
 .wh-ch-axis { stroke: var(--border-lit); stroke-width: 1; }
 .wh-ch-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .wh-ch-dot { fill: var(--accent); stroke: var(--bg-deep); stroke-width: 2; }
 .wh-ch-hit { fill: transparent; cursor: default; }
-.wh-ch-hit:hover { fill: rgba(255, 255, 255, 0.04); }
+.wh-ch-hit:hover { fill: hsl(var(--foreground) / 0.04); }
 .wh-ch-note { margin: 0.3rem 0 0; font-size: 0.74rem; color: var(--text-faint); max-width: 420px; }
 
 /* Уровни сворачиваются: строки скрыты через visibility: collapse — ширина
@@ -5271,7 +5221,7 @@ input.eve-plex-input {
 .wh-charts > .wh-ch-note { grid-column: 1 / -1; }
 .wh-ch-range { margin-left: 0.4rem; color: var(--text-faint); }
 .wh-ch-svg { display: block; width: 100%; height: auto; }
-.wh-ch-gridline { stroke: var(--border); stroke-width: 1; }
+.wh-ch-gridline { stroke: var(--eve-border); stroke-width: 1; }
 .wh-ch-ytick, .wh-ch-xtick { fill: var(--text-faint); font-size: 10px; font-variant-numeric: tabular-nums; }
 .wh-ch-ytick { text-anchor: end; }
 .wh-ch-xtick { text-anchor: middle; }
@@ -5284,7 +5234,7 @@ input.eve-plex-input {
 .wh-chart.has-hl .wh-ch-series.is-hl .wh-ch-line { stroke-width: 3; }
 .wh-legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.15rem 0.8rem; margin: 0.4rem 0 0; padding: 0; list-style: none; font-size: 0.76rem; }
 .wh-lg-item { display: flex; align-items: center; gap: 0.3rem; min-width: 0; cursor: default; }
-.wh-lg-swatch { flex: 0 0 auto; width: 12px; height: 2px; border-radius: 1px; background: var(--c); }
+.wh-lg-swatch { flex: 0 0 auto; width: 12px; height: 2px; border-radius: 0; background: var(--c); }
 .wh-lg-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
 .wh-lg-last { margin-left: auto; color: var(--text-dim); font-variant-numeric: tabular-nums; }
 .uv.wh-sum-box { flex: 1 1 100%; min-width: 0; }
@@ -5316,7 +5266,7 @@ input.eve-plex-input {
 .wh-picker-panel { position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; width: min(560px, 90vw); max-height: 60vh; overflow: auto;
     padding: 0.5rem 0.6rem; background: var(--bg-panel); border: 1px solid var(--border-lit); border-radius: var(--radius-sm); box-shadow: var(--shadow); }
 .wh-picker-actions { margin-bottom: 0.4rem; }
-.wh-pick-group { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.8rem; padding: 0.3rem 0; border-top: 1px solid var(--border); }
+.wh-pick-group { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.8rem; padding: 0.3rem 0; border-top: 1px solid var(--eve-border); }
 .wh-pick-group:first-of-type { border-top: 0; }
 .wh-pick { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; cursor: pointer; }
 .wh-pick .uv-icon { width: 1.1rem; height: 1.1rem; }
@@ -5369,11 +5319,11 @@ input.eve-plex-input {
 
 /* панели (планировщик, точки, параметры…) — слева, карта и маршрут — справа */
 .jm-main, .jm-side { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; }
-.jm-panel { padding: 0.6rem 0.75rem 0.7rem; background: var(--bg-panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.jm-panel { padding: 0.6rem 0.75rem 0.7rem; background: var(--bg-panel-2); border: 1px solid var(--eve-border); border-radius: var(--radius-sm); }
 .jm-h { margin: 0 0 0.5rem; font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; letter-spacing: 0.06em; color: var(--accent); display: flex; align-items: center; }
 .jm-wp-actions { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.4rem; }
 .jm-ret-check { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.82rem; font-family: var(--font-body); font-weight: 500; color: var(--text); cursor: pointer; white-space: nowrap; }
-.jm-ret-check input { margin: 0; accent-color: #e8a63e; }
+.jm-ret-check input { margin: 0; accent-color: hsl(var(--primary)); }
 .jm-map { cursor: grab; touch-action: none; user-select: none; }
 .jm-map:active { cursor: grabbing; }
 .jm-h4 { margin: 0.6rem 0 0.35rem; font-family: var(--font-heading); font-size: 0.82rem; color: var(--text-dim); }
@@ -5390,28 +5340,28 @@ input.eve-plex-input {
 .jm-msg:empty { display: none; }
 .jm-hint { margin: 0.3rem 0 0; font-size: 0.72rem; color: var(--text-faint); }
 .jm-empty { list-style: none; font-size: 0.78rem; color: var(--text-faint); }
-.jm-x { flex: 0 0 auto; width: 20px; height: 20px; padding: 0; margin-left: auto; font: inherit; line-height: 1; color: var(--text-faint); background: none; border: 1px solid var(--border); border-radius: 50%; cursor: pointer; }
+.jm-x { flex: 0 0 auto; width: 20px; height: 20px; padding: 0; margin-left: auto; font: inherit; line-height: 1; color: var(--text-faint); background: none; border: 1px solid var(--eve-border); border-radius: 50%; cursor: pointer; }
 .jm-x:hover { color: var(--red); border-color: var(--red); }
 
 .jm-wps { margin: 0; padding: 0; list-style: none; counter-reset: wp; }
 .jm-wp { display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.4rem; margin-bottom: 0.25rem; font-size: 0.82rem;
-    background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: grab; counter-increment: wp; }
+    background: var(--bg-deep); border: 1px solid var(--eve-border); border-radius: var(--radius-sm); cursor: grab; counter-increment: wp; }
 .jm-wp::before { content: counter(wp) "."; width: 1.2rem; color: var(--text-faint); font-size: 0.74rem; }
 .jm-wp-name { font-weight: 600; color: var(--text); }
 .jm-wp-reg { font-size: 0.74rem; color: var(--text-dim); }
 
 .jm-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.3rem 0 0; padding: 0; list-style: none; }
 .jm-tag { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.15rem 0.25rem 0.15rem 0.5rem; font-size: 0.78rem;
-    background: var(--bg-deep); border: 1px solid var(--border); border-radius: 999px; }
+    background: var(--bg-deep); border: 1px solid var(--eve-border); border-radius: 999px; }
 .jm-tag-kind { font-size: 0.68rem; color: var(--text-faint); }
 .jm-tag .jm-x { width: 18px; height: 18px; margin-left: 0.1rem; }
 
 /* значок безопасности — как [P1] */
 .jm .ct-tier.jm-sec { display: inline-flex; align-items: center; justify-content: center; min-width: 1.9rem; height: 1.25rem; padding: 0 0.2rem;
-    font-size: 0.66rem; font-weight: 700; border: 1px solid currentColor; border-radius: 3px; font-variant-numeric: tabular-nums; }
-.jm-sec-hi { color: var(--green); background: rgba(79, 209, 139, 0.08); }
-.jm-sec-low { color: var(--yellow); background: rgba(255, 210, 63, 0.08); }
-.jm-sec-null { color: var(--red); background: rgba(255, 107, 107, 0.08); }
+    font-size: 0.66rem; font-weight: 700; border: 1px solid currentColor; border-radius: 0; font-variant-numeric: tabular-nums; }
+.jm-sec-hi { color: var(--green); background: hsl(var(--success) / 0.08); }
+.jm-sec-low { color: var(--yellow); background: hsl(var(--attention) / 0.08); }
+.jm-sec-null { color: var(--red); background: hsl(var(--danger) / 0.08); }
 
 .jm-table { width: 100%; }
 .jm-table td, .jm-table th { text-align: left; }
@@ -5420,14 +5370,14 @@ input.eve-plex-input {
 .jm-table .jm-holder { color: var(--text-dim); }
 .jm-table .jm-num { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-dim); }
 .jm-table tr.is-wp .jm-name { color: var(--accent); }
-.jm-table .jm-leg-row td { padding-top: 0.1rem; padding-bottom: 0.1rem; font-size: 0.76rem; color: var(--text-dim); background: rgba(255, 255, 255, 0.02); }
+.jm-table .jm-leg-row td { padding-top: 0.1rem; padding-bottom: 0.1rem; font-size: 0.76rem; color: var(--text-dim); background: hsl(var(--foreground) / 0.02); }
 .jm-table .jm-leg-row b { color: var(--text); font-variant-numeric: tabular-nums; }
 .jm-st { color: var(--cyan); font-size: 0.7rem; }
-.jm-alt { margin-left: 0.4rem; padding: 0 0.35rem; font: inherit; color: var(--accent); background: none; border: 1px solid var(--accent-line); border-radius: 3px; cursor: pointer; }
+.jm-alt { margin-left: 0.4rem; padding: 0 0.35rem; font: inherit; color: var(--accent); background: none; border: 1px solid var(--accent-line); border-radius: 0; cursor: pointer; }
 .jm-alt-pop { display: flex; flex-direction: column; gap: 0.15rem; margin-top: 0.3rem; padding: 0.35rem; max-height: 260px; overflow: auto;
     background: var(--bg-panel); border: 1px solid var(--border-lit); border-radius: var(--radius-sm); }
 .jm-alt-pick { display: flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.3rem; font: inherit; font-size: 0.78rem; text-align: left;
-    color: var(--text); background: none; border: 0; border-radius: 3px; cursor: pointer; }
+    color: var(--text); background: none; border: 0; border-radius: 0; cursor: pointer; }
 .jm-alt-pick:hover { background: var(--bg-hover); }
 .jm-total { display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 0.9rem; margin: 0.7rem 0 0; font-size: 0.82rem; }
 .jm-total dt { color: var(--text-dim); }
@@ -5435,7 +5385,7 @@ input.eve-plex-input {
 .jm-warn { margin: 0 0 0.5rem; font-size: 0.8rem; }
 
 /* Jump Map — схема маршрута */
-.jm-map { background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.jm-map { background: var(--bg-deep); border: 1px solid var(--eve-border); border-radius: var(--radius-sm); }
 .jm-map > p { margin: 0; padding: 1.2rem; }
 .jm-svg { display: block; width: 100%; height: auto; }
 .jm-dot { opacity: 0.55; }
@@ -5453,20 +5403,20 @@ input.eve-plex-input {
 
 /* Прыжковая карта: навыки — только показ, связи систем, перелёты дугами */
 .jm-lvl-out { display: inline-flex; align-items: center; justify-content: center; min-width: 2rem; height: 1.6rem; padding: 0 0.4rem;
-    font-weight: 700; color: var(--accent); border: 1px solid var(--accent-line); border-radius: 3px; background: var(--accent-soft); font-variant-numeric: tabular-nums; }
+    font-weight: 700; color: var(--accent); border: 1px solid var(--accent-line); border-radius: 0; background: var(--accent-soft); font-variant-numeric: tabular-nums; }
 .jm-gate { stroke: #3f5677; stroke-width: 1; opacity: 0.7; }
 .jm-arc { fill: none; stroke: var(--cyan); stroke-width: 2.2; stroke-linecap: round; }
-.jm-ret { stroke: #e8a63e; stroke-dasharray: 6 3; }
-.jm-ret-t { fill: #e8a63e; }
-.jm-ret-row td { color: #e8a63e !important; }
+.jm-ret { stroke: hsl(var(--primary)); stroke-dasharray: 6 3; }
+.jm-ret-t { fill: hsl(var(--primary)); }
+.jm-ret-row td { color: hsl(var(--primary)) !important; }
 .jm-ret-leg td { background: rgba(232, 166, 62, 0.06) !important; }
-.jm-ret-leg b { color: #e8a63e !important; }
-.jm-ret-fuel { color: #e8a63e; font-weight: 700; }
+.jm-ret-leg b { color: hsl(var(--primary)) !important; }
+.jm-ret-fuel { color: hsl(var(--primary)); font-weight: 700; }
 .jm-map-legend { display: flex; align-items: center; gap: 0.4rem; margin: 0.3rem 0 0; font-size: 0.74rem; color: var(--text-dim); }
-.jm-lg-gate, .jm-lg-arc, .jm-lg-ret { display: inline-block; width: 18px; height: 2px; border-radius: 1px; }
+.jm-lg-gate, .jm-lg-arc, .jm-lg-ret { display: inline-block; width: 18px; height: 2px; border-radius: 0; }
 .jm-lg-gate { background: #3f5677; }
 .jm-lg-arc { margin-left: 0.6rem; background: var(--cyan); }
-.jm-lg-ret { margin-left: 0.6rem; background: #e8a63e; border-style: dashed; border-width: 0 0 2px; height: 0; }
+.jm-lg-ret { margin-left: 0.6rem; background: hsl(var(--primary)); border-style: dashed; border-width: 0 0 2px; height: 0; }
 
 /* Прыжковая карта: четыре столбца — два с панелями, карта и маршрут.
    Пары по строкам: планировщик — точки, параметры — обход и маяки,
@@ -5516,30 +5466,30 @@ input.eve-plex-input {
 .pm-side-head { display: flex; align-items: center; gap: 0.6rem; }
 .pm-side-title { margin: 0 0 0.4rem; font-family: var(--font-heading); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
 .pm-side-head .pm-side-title { margin: 0; }
-.pm-clear { margin-left: auto; padding: 0.2rem 0.55rem; font-size: 0.72rem; color: var(--text-faint); background: transparent; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; }
+.pm-clear { margin-left: auto; padding: 0.2rem 0.55rem; font-size: 0.72rem; color: var(--text-faint); background: transparent; border: 1px solid var(--eve-border); border-radius: 0; cursor: pointer; }
 .pm-clear:hover { color: var(--red); border-color: var(--red); }
 /* Кнопки таблиц плана */
 .pm-panel-btns { display: flex; gap: 0.3rem; }
-.pm-panel-btn { height: 32px; padding: 0 0.7rem; font-size: 0.78rem; color: var(--text-dim); background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
+.pm-panel-btn { height: 32px; padding: 0 0.7rem; font-size: 0.78rem; color: var(--text-dim); background: var(--bg-deep); border: 1px solid var(--eve-border); border-radius: 0; cursor: pointer; }
 .pm-panel-btn:hover { color: var(--accent); border-color: var(--accent); }
 .pm-panel-btn[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 .pm-panel-btn b { margin-left: 0.2rem; color: var(--accent); }
 /* .pm-body: таблицы слева, карта справа */
 .pm-body { display: flex; align-items: stretch; gap: 0; flex: 1 1 auto; min-height: 0; }
-.pm-panels { flex: 0 0 auto; display: flex; flex-direction: column; gap: 0.5rem; max-height: calc(100vh - var(--header-h) - 6rem); overflow-y: auto; scrollbar-width: thin; }
+.pm-panels { flex: 0 0 auto; display: flex; flex-direction: column; gap: 0.5rem; max-height: calc(100vh - var(--eve-bars-h) - 6rem); overflow-y: auto; scrollbar-width: thin; }
 .pm-panels:has(.pm-panel:not([hidden])) { padding: 0.5rem 0.5rem 0.5rem 0; }
 .pm-panels:not(:has(.pm-panel:not([hidden]))) { display: none; }
-.pm-panel { padding: 0.5rem 0.6rem; background: var(--bg-panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.pm-panel { padding: 0.5rem 0.6rem; background: var(--bg-panel-2); border: 1px solid var(--eve-border); border-radius: var(--radius-sm); }
 .pm-panel[hidden] { display: none; }
 .pm-table { font-size: 0.72rem; }
 .pm-table tbody tr.is-zero { opacity: 0.55; }
-.pm-table tbody tr.is-hl { background: rgba(255, 157, 46, 0.14); opacity: 1; }
+.pm-table tbody tr.is-hl { background: hsl(var(--primary) / 0.14); opacity: 1; }
 .pm-table .st-name-inner { cursor: pointer; }
 .pm-table .st-name-inner:hover { color: var(--accent); }
 .pm-table .pm-in-inner { display: inline-flex; align-items: center; gap: 0.25rem; }
 .pm-table .pm-in .res-icon { width: 16px; height: 16px; margin: 0; }
 .pm-table .pm-in b { min-width: 0.8rem; font-weight: 700; color: var(--text-faint); }
-.pm-table .pm-in.is-ok b { color: #5fd38d; }
+.pm-table .pm-in.is-ok b { color: hsl(var(--success)); }
 .pm-table .pm-in.is-missing { background: rgba(255, 80, 80, 0.16); }
 .pm-table .pm-in.is-missing b { color: var(--red); }
 /* Модалка персонажей — как «Склад» */
@@ -5547,11 +5497,11 @@ input.eve-plex-input {
 .pm-modal-box { width: min(900px, calc(100vw - 2rem)); max-height: calc(100vh - 4rem); overflow-y: auto; scrollbar-width: thin; }
 .pm-modal .pm-side-head { margin-bottom: 0.5rem; }
 .pm-pilots { display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.78rem; }
-.pm-pilot { min-width: 200px; padding: 0.35rem 0.5rem; background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; }
+.pm-pilot { min-width: 200px; padding: 0.35rem 0.5rem; background: var(--bg-deep); border: 1px solid var(--eve-border); border-radius: 0; }
 .pm-pilot-head { display: flex; gap: 0.5rem; justify-content: space-between; margin-bottom: 0.25rem; }
 .pm-pilot-head b { color: var(--text); }
 .pm-pilot-head span { font-weight: 700; color: var(--accent); }
-.pm-pilot.is-full { border-color: rgba(255, 157, 46, 0.6); }
+.pm-pilot.is-full { border-color: hsl(var(--primary) / 0.6); }
 .pm-pilot ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; }
 .pm-pilot li { display: flex; align-items: center; gap: 0.35rem; color: var(--text-dim); }
 .pm-pilot li .res-icon { width: 16px; height: 16px; margin: 0; }
@@ -5560,52 +5510,52 @@ input.eve-plex-input {
 /* Цепочки P3/P4 */
 .pm-chain-head { display: flex; align-items: center; gap: 0.4rem; margin: 0.6rem 0 0.35rem; font-size: 0.82rem; font-weight: 700; color: var(--text); }
 .pm-chain-head:first-child { margin-top: 0; }
-.pm-chain-row { padding: 0.3rem 0.4rem; border-bottom: 1px solid var(--border); }
+.pm-chain-row { padding: 0.3rem 0.4rem; border-bottom: 1px solid var(--eve-border); }
 .pm-chain-row:last-child { border-bottom: none; }
 .pm-chain-out { display: flex; align-items: center; gap: 0.3rem; font-size: 0.82rem; }
 .pm-chain-out b { color: var(--text); }
 .pm-chain-out small { color: var(--text-faint); font-size: 0.72rem; font-weight: 400; }
 .pm-chain-out .res-icon { width: 20px; height: 20px; }
 .pm-chain-inputs { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem; margin-top: 0.2rem; padding-left: 1.4rem; font-size: 0.75rem; color: var(--text-dim); }
-.pm-chain-in { display: inline-flex; align-items: center; gap: 0.2rem; padding: 0.1rem 0.3rem; border-radius: 4px; background: rgba(255, 255, 255, 0.04); }
+.pm-chain-in { display: inline-flex; align-items: center; gap: 0.2rem; padding: 0.1rem 0.3rem; border-radius: 0; background: hsl(var(--foreground) / 0.04); }
 .pm-chain-in .res-icon { width: 16px; height: 16px; }
 .pm-chain-in .ct-tier { font-size: 0.6rem; min-width: 1.4rem; height: 1rem; padding: 0 0.15rem; }
 .pm-chain-plus { color: var(--text-faint); font-size: 0.7rem; }
 .pm-chain-none { color: var(--text-faint); font-size: 0.8rem; display: block; padding: 0.5rem 0; }
 .pm-tiers { display: flex; gap: 0.3rem; }
-.pm-tiers button { display: inline-flex; align-items: center; height: 32px; padding: 0 0.45rem; background: var(--bg-deep); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; opacity: 0.6; }
+.pm-tiers button { display: inline-flex; align-items: center; height: 32px; padding: 0 0.45rem; background: var(--bg-deep); border: 1px solid var(--eve-border); border-radius: 0; cursor: pointer; opacity: 0.6; }
 .pm-tiers button:hover { opacity: 1; }
 .pm-tiers button[aria-pressed="true"] { opacity: 1; border-color: var(--accent); background: var(--accent-soft); }
-.pm .ct-tier { display: inline-flex; align-items: center; justify-content: center; min-width: 1.7rem; height: 1.25rem; padding: 0 0.25rem; font-size: 0.7rem; font-weight: 700; line-height: 1; color: var(--accent); border: 1px solid rgba(255, 157, 46, 0.55); border-radius: 3px; background: rgba(255, 157, 46, 0.08); }
-.pm .ct-tier-p0 { color: var(--text-dim); border-color: var(--border); background: rgba(255, 255, 255, 0.04); }
+.pm .ct-tier { display: inline-flex; align-items: center; justify-content: center; min-width: 1.7rem; height: 1.25rem; padding: 0 0.25rem; font-size: 0.7rem; font-weight: 700; line-height: 1; color: var(--accent); border: 1px solid hsl(var(--primary) / 0.55); border-radius: 0; background: hsl(var(--primary) / 0.08); }
+.pm .ct-tier-p0 { color: var(--text-dim); border-color: var(--eve-border); background: hsl(var(--foreground) / 0.04); }
 .pm .ct-tier-p2 { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 55%, transparent); background: color-mix(in srgb, var(--cyan) 8%, transparent); }
 .pm .ct-tier-p3 { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 55%, transparent); background: color-mix(in srgb, var(--cyan) 8%, transparent); }
-.pm .ct-tier-p4 { color: #c9a7ff; border-color: rgba(201, 167, 255, 0.55); background: rgba(201, 167, 255, 0.08); }
+.pm .ct-tier-p4 { color: hsl(var(--rare)); border-color: hsl(var(--rare) / 0.55); background: hsl(var(--rare) / 0.08); }
 /* Кнопка «Скрыть пустые» */
 .pm-hide-btn { font-size: 0.72rem; }
 /* Карта: ветки к планетам, тонкие линии к значкам, имена персонажей */
-.pm-view { flex: 1 1 0%; height: calc(100vh - var(--header-h) - 6rem); min-width: 0; }
+.pm-view { flex: 1 1 0%; height: calc(100vh - var(--eve-bars-h) - 6rem); min-width: 0; }
 .pm-branch { stroke-width: 1.4; opacity: 0.55; }
 .pm-twig { stroke: rgba(150, 185, 230, 0.35); stroke-width: 1; }
 .pm-planet-body { cursor: grab; }
-.pm-num { font-size: 8.5px; font-weight: 700; fill: var(--text-dim); paint-order: stroke; stroke: #0b1220; stroke-width: 2.5px; }
-.pm-type-label { font-size: 7px; fill: var(--text-dim); opacity: 0.7; paint-order: stroke; stroke: #0b1220; stroke-width: 2px; pointer-events: none; }
+.pm-num { font-size: 8.5px; font-weight: 700; fill: var(--text-dim); paint-order: stroke; stroke: hsl(var(--card)); stroke-width: 2.5px; }
+.pm-type-label { font-size: 7px; fill: var(--text-dim); opacity: 0.7; paint-order: stroke; stroke: hsl(var(--card)); stroke-width: 2px; pointer-events: none; }
 .pm-planet.is-empty .pm-planet-body { opacity: 0.4; }
-.pm-planet.is-plan .pm-num { fill: #ff9d2e; }
+.pm-planet.is-plan .pm-num { fill: hsl(var(--primary)); }
 .pm-res { cursor: pointer; }
-.pm-res-box { fill: #0b1220; stroke: rgba(150, 185, 230, 0.4); stroke-width: 1; }
+.pm-res-box { fill: hsl(var(--card)); stroke: rgba(150, 185, 230, 0.4); stroke-width: 1; }
 .pm-res:hover .pm-res-box, .pm-res:focus-visible .pm-res-box { stroke: var(--accent); stroke-width: 1.5; }
 .pm-res:focus { outline: none; }
-.pm-res.is-plan .pm-res-box { stroke: #ff9d2e; stroke-width: 2; fill: rgba(255, 157, 46, 0.18); }
-.pm-res.is-hl .pm-res-box { stroke: #5fd38d; stroke-width: 2.2; }
+.pm-res.is-plan .pm-res-box { stroke: hsl(var(--primary)); stroke-width: 2; fill: hsl(var(--primary) / 0.18); }
+.pm-res.is-hl .pm-res-box { stroke: hsl(var(--success)); stroke-width: 2.2; }
 /* бейдж уровня P0/P1/P2 — в правом верхнем углу ресурса, стиль как mm-tier на планетарной карте */
-.pm-tier-sq { fill: rgba(255, 157, 46, 0.14); stroke: rgba(255, 157, 46, 0.8); stroke-width: 0.8; pointer-events: none; }
-.pm-tier-sq-p0 { fill: rgba(255, 255, 255, 0.07); stroke: rgba(150, 185, 230, 0.55); }
-.pm-tier-sq-p2 { fill: color-mix(in srgb, var(--cyan) 14%, #0b1220); stroke: color-mix(in srgb, var(--cyan) 80%, transparent); }
+.pm-tier-sq { fill: hsl(var(--primary) / 0.14); stroke: hsl(var(--primary) / 0.8); stroke-width: 0.8; pointer-events: none; }
+.pm-tier-sq-p0 { fill: hsl(var(--foreground) / 0.07); stroke: rgba(150, 185, 230, 0.55); }
+.pm-tier-sq-p2 { fill: color-mix(in srgb, var(--cyan) 14%, hsl(var(--card))); stroke: color-mix(in srgb, var(--cyan) 80%, transparent); }
 .pm-tier-sq-text { font-size: 8px; font-weight: 700; fill: var(--accent); pointer-events: none; }
 .pm-tier-sq-p0 + .pm-tier-sq-text { fill: var(--text-dim); }
 .pm-tier-sq-p2 + .pm-tier-sq-text { fill: var(--cyan); }
-.pm-who { font-size: 9px; font-weight: 700; fill: #ffb45c; paint-order: stroke; stroke: #0b1220; stroke-width: 3px; pointer-events: none; }
+.pm-who { font-size: 9px; font-weight: 700; fill: #ffb45c; paint-order: stroke; stroke: hsl(var(--card)); stroke-width: 3px; pointer-events: none; }
 .pm-pop-res { display: inline-flex; align-items: center; gap: 0.35rem; }
 .pm-pop-res .res-icon { width: 20px; height: 20px; margin: 0; }
 .pm-pop-sub { font-size: 0.75rem; color: var(--text-faint); }
@@ -5613,17 +5563,17 @@ input.eve-plex-input {
 .pm-pop-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.2rem; }
 .pm-pop-list li { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--text); }
 .pm-pop-cnt { font-size: 0.72rem; color: var(--text-faint); }
-.pm-pop-list li button { margin-left: auto; width: 22px; height: 22px; padding: 0; color: var(--text-faint); background: transparent; border: 1px solid var(--border); border-radius: 50%; cursor: pointer; }
+.pm-pop-list li button { margin-left: auto; width: 22px; height: 22px; padding: 0; color: var(--text-faint); background: transparent; border: 1px solid var(--eve-border); border-radius: 50%; cursor: pointer; }
 .pm-pop-list li button:hover { color: var(--red); border-color: var(--red); }
 .pm-pop-list .pm-pop-none { color: var(--text-faint); }
 .pm-pop-add { display: flex; gap: 0.35rem; }
 .pm-pop-add .btn { flex: none; padding: 0.3rem 0.6rem; }
 .pm-pop-quick { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.4rem; }
-.pm-pop-quick button { padding: 0.15rem 0.5rem; font-size: 0.75rem; color: var(--text-dim); background: var(--bg-deep); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
+.pm-pop-quick button { padding: 0.15rem 0.5rem; font-size: 0.75rem; color: var(--text-dim); background: var(--bg-deep); border: 1px solid var(--eve-border); border-radius: 999px; cursor: pointer; }
 .pm-pop-quick button small { color: var(--text-faint); }
 .pm-pop-quick button:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
 .pm-pop-quick button:disabled { opacity: 0.4; cursor: not-allowed; }
-.pm-pop-note { margin: 0.4rem 0 0; font-size: 0.74rem; color: #ff9d2e; }
+.pm-pop-note { margin: 0.4rem 0 0; font-size: 0.74rem; color: hsl(var(--primary)); }
 .pm-pop-note:empty { display: none; }
 
 /* ---------- Вкладка «Производство» ---------- */
@@ -5636,7 +5586,7 @@ input.eve-plex-input {
     gap: 0.6rem 1rem;
     padding: 0.8rem 1rem;
     background: var(--bg-panel);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
 }
 .prod-title {
     margin: 0;
@@ -5665,13 +5615,13 @@ input.eve-plex-input {
     flex: 0 0 300px;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--border);
+    border-right: 1px solid var(--eve-border);
     background: var(--bg-deep);
     overflow: hidden;
 }
 .prod-tree-head {
     padding: 0.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
 }
 .prod-tree-input {
     width: 100%;
@@ -5742,8 +5692,8 @@ input.eve-plex-input {
 .prod-ti img {
     width: 20px;
     height: 20px;
-    border-radius: 3px;
-    background: rgba(0,0,0,0.2);
+    border-radius: 0;
+    background: hsl(var(--space-deep) / 0.2);
     flex-shrink: 0;
 }
 .prod-ti-name { overflow: hidden; text-overflow: ellipsis; }
@@ -5762,13 +5712,13 @@ input.eve-plex-input {
     align-items: center;
     gap: 0.75rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
     margin-bottom: 0.75rem;
 }
 .bp-detail-icon {
     width: 48px; height: 48px;
-    border-radius: 6px;
-    background: rgba(0,0,0,0.2);
+    border-radius: 0;
+    background: hsl(var(--space-deep) / 0.2);
     flex-shrink: 0;
 }
 .bp-detail-name {
@@ -5792,8 +5742,8 @@ input.eve-plex-input {
     margin-bottom: 1rem;
     padding: 0.6rem 0.75rem;
     background: var(--bg-deep);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
 }
 .bp-act-title {
     margin: 0 0 0.5rem;
@@ -5819,8 +5769,8 @@ input.eve-plex-input {
 }
 .bp-product-row img {
     width: 24px; height: 24px;
-    border-radius: 3px;
-    background: rgba(0,0,0,0.2);
+    border-radius: 0;
+    background: hsl(var(--space-deep) / 0.2);
 }
 
 /* Таблица материалов */
@@ -5834,7 +5784,7 @@ input.eve-plex-input {
     font-weight: 500;
     color: var(--text-faint);
     padding: 0.2rem 0.4rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -5844,12 +5794,12 @@ input.eve-plex-input {
 .bp-mat-table td {
     padding: 0.3rem 0.4rem;
     vertical-align: middle;
-    border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--eve-border) 40%, transparent);
 }
 .bp-mat-table img {
     width: 24px; height: 24px;
-    border-radius: 3px;
-    background: rgba(0,0,0,0.2);
+    border-radius: 0;
+    background: hsl(var(--space-deep) / 0.2);
     display: block;
 }
 .bp-mat-name { color: var(--text); }
@@ -5872,7 +5822,7 @@ input.eve-plex-input {
     font-size: 0.75rem;
     padding: 0.15rem 0.5rem;
     background: color-mix(in srgb, var(--accent) 10%, transparent);
-    border-radius: 4px;
+    border-radius: 0;
     color: var(--text-dim);
 }
 
@@ -5884,7 +5834,7 @@ input.eve-plex-input {
 }
 @media (max-width: 800px) {
     .prod-layout { flex-direction: column; height: auto; }
-    .prod-tree { flex: 0 0 auto; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--border); }
+    .prod-tree { flex: 0 0 auto; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--eve-border); }
 }
 
 .prod-body {
@@ -5916,7 +5866,7 @@ input.eve-plex-input {
     font-size: 0.82rem;
     color: var(--text);
     background: var(--bg-panel-2);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
 }
 .prod-stat b { color: var(--accent); }
@@ -5936,12 +5886,12 @@ input.eve-plex-input {
     color: var(--text-dim);
     text-align: left;
     background: var(--bg-deep);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
     white-space: nowrap;
 }
 .prod-table td {
     padding: 0.45rem 0.6rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--eve-border) 50%, transparent);
     vertical-align: middle;
 }
 .prod-table tr:hover td {
@@ -5956,8 +5906,8 @@ input.eve-plex-input {
 .prod-product img {
     width: 28px;
     height: 28px;
-    border-radius: 4px;
-    background: rgba(0,0,0,0.25);
+    border-radius: 0;
+    background: hsl(var(--space-deep) / 0.25);
 }
 .prod-activity {
     display: inline-block;
@@ -5967,13 +5917,13 @@ input.eve-plex-input {
     border-radius: 999px;
     white-space: nowrap;
 }
-.prod-act-1 { background: rgba(80,180,120,0.18); color: #5fd38d; }  /* Manufacturing */
+.prod-act-1 { background: hsl(var(--success) / 0.18); color: hsl(var(--success)); }  /* Manufacturing */
 .prod-act-3 { background: rgba(100,160,255,0.15); color: #7ab8ff; } /* TE Research */
 .prod-act-4 { background: rgba(100,160,255,0.15); color: #7ab8ff; } /* ME Research */
-.prod-act-5 { background: rgba(200,160,60,0.15); color: #ddb94e; }  /* Copying */
-.prod-act-8 { background: rgba(180,100,220,0.15); color: #c78ef0; } /* Invention */
-.prod-act-9 { background: rgba(180,100,220,0.15); color: #c78ef0; } /* Reactions */
-.prod-act-11 { background: rgba(180,100,220,0.15); color: #c78ef0; } /* Reverse Eng. */
+.prod-act-5 { background: hsl(var(--primary) / 0.15); color: hsl(var(--attention)); }  /* Copying */
+.prod-act-8 { background: hsl(var(--rare) / 0.15); color: hsl(var(--rare)); } /* Invention */
+.prod-act-9 { background: hsl(var(--rare) / 0.15); color: hsl(var(--rare)); } /* Reactions */
+.prod-act-11 { background: hsl(var(--rare) / 0.15); color: hsl(var(--rare)); } /* Reverse Eng. */
 
 .prod-status {
     display: inline-block;
@@ -5983,24 +5933,24 @@ input.eve-plex-input {
     border-radius: 999px;
     white-space: nowrap;
 }
-.prod-st-active   { background: rgba(80,180,120,0.18); color: #5fd38d; }
-.prod-st-ready    { background: rgba(255,180,40,0.18); color: #ffb428; }
-.prod-st-paused   { background: rgba(200,160,60,0.15); color: #ddb94e; }
+.prod-st-active   { background: hsl(var(--success) / 0.18); color: hsl(var(--success)); }
+.prod-st-ready    { background: hsl(var(--primary) / 0.18); color: hsl(var(--primary)); }
+.prod-st-paused   { background: hsl(var(--primary) / 0.15); color: hsl(var(--attention)); }
 .prod-st-delivered { background: rgba(100,160,255,0.12); color: #7ab8ff; }
-.prod-st-cancelled { background: rgba(255,100,100,0.12); color: #ff7a6b; }
+.prod-st-cancelled { background: rgba(255,100,100,0.12); color: hsl(var(--danger)); }
 
 .prod-time-left { font-size: 0.8rem; }
 .prod-cost { font-size: 0.8rem; color: var(--text-dim); white-space: nowrap; }
 .prod-runs { white-space: nowrap; }
 .prod-none { padding: 2rem; text-align: center; color: var(--text-faint); }
-.prod-error { padding: 1rem; color: #ff7a6b; }
+.prod-error { padding: 1rem; color: hsl(var(--danger)); }
 .prod-scope-warn {
     padding: 0.6rem 1rem;
     margin-bottom: 0.8rem;
     font-size: 0.84rem;
-    color: #ffb428;
-    background: rgba(255,180,40,0.08);
-    border: 1px solid rgba(255,180,40,0.25);
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.08);
+    border: 1px solid hsl(var(--primary) / 0.25);
     border-radius: var(--radius-sm);
 }
 
@@ -6018,7 +5968,7 @@ input.eve-plex-input {
 .p2-card {
     min-width: 0;
     background: var(--bg-panel);
-    border: 1px solid var(--border);
+    border: 1px solid var(--eve-border);
     border-radius: var(--radius-sm);
     font-size: 12px;
     font-weight: 400;
@@ -6036,7 +5986,7 @@ input.eve-plex-input {
 .p2-group-sep {
     grid-column: 1 / -1;
     height: 0;
-    border-top: 1px dashed var(--border);
+    border-top: 1px dashed var(--eve-border);
     margin: 0.15rem 0;
 }
 
@@ -6049,7 +5999,7 @@ input.eve-plex-input {
     align-items: center;
     gap: 0.25rem;
     padding: 0.1rem 0.3rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--eve-border);
 }
 #planets2-cards .ct-pilot-name {
     flex: 1 1 auto;
@@ -6067,7 +6017,7 @@ input.eve-plex-input {
 /* Тело — колонии списком вниз */
 #planets2-cards .uv-body { padding: 0.05rem 0.3rem 0.1rem 0.5rem; }
 #planets2-cards .uv-colony { padding: 0.06rem 0; }
-#planets2-cards .uv-colony + .uv-colony { border-top: 1px solid var(--border); }
+#planets2-cards .uv-colony + .uv-colony { border-top: 1px solid var(--eve-border); }
 
 /* Строки данных */
 #planets2-cards .uv-line {
@@ -6100,26 +6050,26 @@ input.eve-plex-input {
     font-size: 8px;
     line-height: 1;
     color: var(--accent);
-    border: 1px solid rgba(255, 157, 46, 0.55);
-    border-radius: 3px;
-    background: rgba(255, 157, 46, 0.08);
+    border: 1px solid hsl(var(--primary) / 0.55);
+    border-radius: 0;
+    background: hsl(var(--primary) / 0.08);
 }
-#planets2-cards .ct-tier-p0 { color: var(--text-dim); border-color: var(--border); background: rgba(255, 255, 255, 0.04); }
+#planets2-cards .ct-tier-p0 { color: var(--text-dim); border-color: var(--eve-border); background: hsl(var(--foreground) / 0.04); }
 #planets2-cards .ct-tier-p2,
 #planets2-cards .ct-tier-p3 { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 55%, transparent); background: color-mix(in srgb, var(--cyan) 8%, transparent); }
-#planets2-cards .ct-tier-p4 { color: #c9a7ff; border-color: rgba(201, 167, 255, 0.55); background: rgba(201, 167, 255, 0.08); }
+#planets2-cards .ct-tier-p4 { color: hsl(var(--rare)); border-color: hsl(var(--rare) / 0.55); background: hsl(var(--rare) / 0.08); }
 
 /* Склады — размер как P0, интерактивные */
 #planets2-cards .uv-stores { display: inline-flex; align-items: center; gap: 2px; margin-left: 0.15rem; }
 #planets2-cards .uv-store {
     width: 1.1rem;
     height: 1.1rem;
-    border-radius: 2px;
+    border-radius: 0;
 }
 #planets2-cards .uv-store svg { width: 0.7rem; height: 0.7rem; }
 /* Градиент переполнения — слева до середины */
-#planets2-cards .uv-colony.p2-warn { background: linear-gradient(to right, rgba(255,210,63,0.18), transparent 50%); }
-#planets2-cards .uv-colony.p2-full { background: linear-gradient(to right, rgba(255,107,107,0.22), transparent 50%); }
+#planets2-cards .uv-colony.p2-warn { background: linear-gradient(to right, hsl(var(--attention) / 0.18), transparent 50%); }
+#planets2-cards .uv-colony.p2-full { background: linear-gradient(to right, hsl(var(--danger) / 0.22), transparent 50%); }
 
 /* Тиры в заголовке */
 #planets2-cards .uv-tiers { display: none; }
@@ -6135,7 +6085,7 @@ input.eve-plex-input {
 #planets2-cards .uv-kids { padding-left: 0.6rem; }
 #planets2-cards .uv-toggle-gap { width: 0; }
 /* Дефицит P4 — цепочка P3→P2→P1 */
-#planets2-cards .p2-deficit { border-top: 1px dashed var(--border); margin-top: 0.3rem; padding-top: 0.3rem; }
+#planets2-cards .p2-deficit { border-top: 1px dashed var(--eve-border); margin-top: 0.3rem; padding-top: 0.3rem; }
 #planets2-cards .p2-deficit-title { color: var(--accent); font-size: 11px; font-weight: 600 !important; margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #planets2-cards .p2-deficit .uv-qty { font-size: 11px; }
 #planets2-cards .p2-def-row .uv-name { color: var(--red); }
@@ -6147,13 +6097,13 @@ input.eve-plex-input {
 #planets2-cards .p2-chain-1 .uv-name,
 #planets2-cards .p2-chain-1 .uv-qty  { color: var(--text-dim); }
 #planets2-cards .p2-deficit .res-icon { width: 1rem; height: 1rem; margin: 0 0.15rem; vertical-align: middle; }
-#planets2-cards .p2-deficit-sub { color: var(--accent); font-size: 11px; font-weight: 600 !important; margin-top: 0.3rem; border-top: 1px dotted var(--border); padding-top: 0.2rem; }
-#planets2-cards .p2-deficit-sub.p2-ok { color: var(--green, #4caf50); }
+#planets2-cards .p2-deficit-sub { color: var(--accent); font-size: 11px; font-weight: 600 !important; margin-top: 0.3rem; border-top: 1px dotted var(--eve-border); padding-top: 0.2rem; }
+#planets2-cards .p2-deficit-sub.p2-ok { color: var(--green, hsl(var(--success))); }
 #planets2-cards .p2-have { color: var(--text-dim); font-size: 10px; margin-left: 0.3rem; }
 #planets2-cards .p2-add { color: var(--yellow, #ffc107) !important; font-weight: 600; }
 #planets2-cards .p2-warn-tag { color: var(--red); font-weight: 400; font-size: 10px; }
-#planets2-cards .p2-info-row .uv-name { color: var(--green, #4caf50); }
-#planets2-cards .p2-info-row .uv-qty  { color: var(--green, #4caf50); font-weight: 600; }
+#planets2-cards .p2-info-row .uv-name { color: var(--green, hsl(var(--success))); }
+#planets2-cards .p2-info-row .uv-qty  { color: var(--green, hsl(var(--success))); font-weight: 600; }
 
 /* ==================== Эскалации ==================== */
 #map-esc { display: flex; flex-direction: column; gap: 0; height: calc(100vh - 10rem); min-height: 400px; }
@@ -6165,8 +6115,8 @@ input.eve-plex-input {
     gap: 0.4rem;
     padding: 0.35rem 0.5rem;
     background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
     margin-bottom: 0.5rem;
     flex-wrap: wrap;
     flex-shrink: 0;
@@ -6203,8 +6153,8 @@ input.eve-plex-input {
     text-transform: uppercase;
     color: var(--text-main);
     background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
     cursor: pointer;
     padding: 0.35rem 0.6rem;
     text-align: left;
@@ -6224,9 +6174,9 @@ input.eve-plex-input {
     overflow-y: auto;
     padding: 0.4rem;
     background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
+    box-shadow: 0 8px 24px hsl(var(--space-deep) / 0.5);
 }
 .esc-chars-popup[hidden] { display: none; }
 .esc-char-row {
@@ -6234,14 +6184,14 @@ input.eve-plex-input {
     align-items: center;
     gap: 0.4rem;
     padding: 0.2rem 0.3rem;
-    border-radius: 4px;
+    border-radius: 0;
     cursor: pointer;
     font-size: 12px;
     color: var(--text-main);
 }
-.esc-char-row:hover { background: rgba(255,255,255,0.04); }
-.esc-char-row.is-selected { background: rgba(255,157,46,0.12); border-left: 2px solid var(--accent); }
-.esc-char-img { width: 24px; height: 24px; border-radius: 3px; flex-shrink: 0; }
+.esc-char-row:hover { background: hsl(var(--foreground) / 0.04); }
+.esc-char-row.is-selected { background: hsl(var(--primary) / 0.12); border-left: 2px solid var(--accent); }
+.esc-char-img { width: 24px; height: 24px; border-radius: 0; flex-shrink: 0; }
 .esc-char-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .esc-char-cb { accent-color: var(--accent); cursor: pointer; flex-shrink: 0; margin-left: auto; }
 
@@ -6251,21 +6201,21 @@ input.eve-plex-input {
 
 .esc-item {
     background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    border: 1px solid var(--eve-border);
+    border-radius: 0;
     padding: 0.5rem 0.6rem;
     transition: opacity 0.3s, border-color 0.3s;
 }
 /* Цвет по оставшемуся времени */
 .esc-item.esc-time-green  { border-left: 3px solid #40c060; }
 .esc-item.esc-time-yellow { border-left: 3px solid #c0a020; }
-.esc-item.esc-time-red    { border-left: 3px solid #e04040; }
+.esc-item.esc-time-red    { border-left: 3px solid hsl(var(--danger)); }
 .esc-item.esc-time-grey   { border-left: 3px solid #555; opacity: 0.4; }
 .esc-item.esc-sold        { background: var(--bg-deep); }
 
 .esc-time-green .esc-timer  { color: #40c060; }
 .esc-time-yellow .esc-timer { color: #c0a020; }
-.esc-time-red .esc-timer    { color: #e04040; }
+.esc-time-red .esc-timer    { color: hsl(var(--danger)); }
 .esc-time-grey .esc-timer   { color: var(--text-dim); }
 
 .esc-item-head { display: flex; align-items: center; gap: 0.3rem; }
@@ -6283,7 +6233,7 @@ input.eve-plex-input {
 .esc-timer { font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* Кнопка «Продано» */
-.esc-sold-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); font-size: 11px; font-weight: 700; cursor: pointer; padding: 0 0.3rem; border-radius: 3px; line-height: 1.4; }
+.esc-sold-btn { background: none; border: 1px solid var(--eve-border); color: var(--text-dim); font-size: 11px; font-weight: 700; cursor: pointer; padding: 0 0.3rem; border-radius: 0; line-height: 1.4; }
 .esc-sold-btn:hover { border-color: var(--cyan); color: var(--cyan); }
 .esc-sold-btn.is-sold { background: var(--cyan); color: var(--bg-deep); border-color: var(--cyan); }
 
@@ -6300,7 +6250,7 @@ input.eve-plex-input {
 .esc-time-cancel:hover { color: var(--red); }
 
 /* Карта */
-.esc-map-wrap { flex: 1; min-width: 0; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; position: relative; }
+.esc-map-wrap { flex: 1; min-width: 0; background: var(--bg-panel); border: 1px solid var(--eve-border); border-radius: 0; overflow: hidden; position: relative; }
 .esc-svg { width: 100%; height: 100%; display: block; user-select: none; }
 .esc-map-label { font-family: 'Rajdhani', sans-serif; pointer-events: none; }
 

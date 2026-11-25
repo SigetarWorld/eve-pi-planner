@@ -108,74 +108,9 @@
     updateActive();
 })();
 
-/* ============================================================
-   Общая картинка на ряд карточек (.grid--shared-bg)
-   Картинка вписывается в весь ряд «по cover», прижата вправо,
-   а каждой карточке передаётся её сдвиг относительно ряда —
-   так все карточки вместе показывают одно изображение.
-   ============================================================ */
-(function () {
-    "use strict";
+/* Общая картинка на ряд плиток (.grid--shared-bg) теперь раскладывается
+   в /style/layout.js — общем скрипте всех страниц. */
 
-    var grids = Array.prototype.slice.call(
-        document.querySelectorAll(".grid--shared-bg")
-    );
-
-    grids.forEach(function (grid) {
-        var cards = grid.querySelectorAll(".panel--shared");
-        if (!cards.length) {
-            return;
-        }
-        /* Адрес картинки берём из уже посчитанного фона карточки —
-           так путь из CSS разрешается браузером правильно */
-        var m = getComputedStyle(cards[0]).backgroundImage.match(/url\(["']?([^"')]+)["']?\)/);
-        if (!m) {
-            return;
-        }
-        var url = m[1];
-
-        var img = new Image();
-        var ratio = 0;
-
-        function layout() {
-            if (!ratio) {
-                return;
-            }
-            var g = grid.getBoundingClientRect();
-
-            /* cover: картинка закрывает весь ряд целиком */
-            var w = g.width;
-            var h = w / ratio;
-            if (h < g.height) {
-                h = g.height;
-                w = h * ratio;
-            }
-            /* прижата вправо, по вертикали — по центру */
-            var left = g.width - w;
-            var top = (g.height - h) / 2;
-
-            Array.prototype.forEach.call(cards, function (card) {
-                var x = left - (card.offsetLeft - grid.offsetLeft) - card.clientLeft;
-                var y = top - (card.offsetTop - grid.offsetTop) - card.clientTop;
-                card.style.setProperty("--bg-w", w + "px");
-                card.style.setProperty("--bg-h", h + "px");
-                card.style.setProperty("--bg-x", x + "px");
-                card.style.setProperty("--bg-y", y + "px");
-            });
-        }
-
-        img.onload = function () {
-            ratio = img.naturalWidth / img.naturalHeight;
-            layout();
-        };
-        img.src = url;
-
-        if (window.ResizeObserver) {
-            new ResizeObserver(layout).observe(grid);
-        }
-        window.addEventListener("resize", layout);
-    });
-})();
 
 /* С диска (file://) ссылки вида /eveonline/ не работают — подставляем data-local */
 (function () {

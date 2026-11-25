@@ -5,10 +5,7 @@
     <title>Companion AI — Valheim Mod — Sigetar</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Companion AI — самообучающийся компаньон Валера для Valheim. Дорожная карта, возможности и план развития.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style.css?v=10">
+    <link rel="stylesheet" href="/style/site.css?v=1">
     <style>
         /* ===== Roadmap horizontal timeline ===== */
 
@@ -17,8 +14,8 @@
             width: 100%;
             overflow: hidden;
             background:
-                radial-gradient(ellipse at 60% 40%, rgba(47, 73, 125, 0.15) 0%, transparent 60%),
-                radial-gradient(ellipse at 20% 80%, hsl(36 95% 55% / .04) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 40%, hsl(var(--secondary) / .15) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, hsl(var(--primary) / .04) 0%, transparent 50%),
                 hsl(var(--space-deep));
             border: 1px solid hsl(var(--border));
             cursor: grab;
@@ -30,7 +27,7 @@
         /* Terminal header */
         .rm-terminal {
             padding: 20px 24px 0;
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             color: hsl(var(--secondary-ink));
             font-size: 0.78rem;
         }
@@ -195,7 +192,7 @@
             gap: 6px;
         }
         .rm-ver .check {
-            color: hsl(150 60% 50%);
+            color: hsl(var(--success));
         }
         .rm-ver .pending {
             color: hsl(var(--muted-foreground));
@@ -212,7 +209,7 @@
             border-radius: var(--radius);
             background: hsl(var(--card));
         }
-        .rm-badge--done { color: hsl(150 60% 55%); }
+        .rm-badge--done { color: hsl(var(--success)); }
         .rm-badge--wip  { color: hsl(var(--primary)); }
         .rm-badge--plan { color: hsl(var(--foreground)); }
         .rm-ver-left {
@@ -221,7 +218,7 @@
             gap: 4px;
         }
         .rm-date {
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 0.58rem;
             color: hsl(var(--muted-foreground));
             opacity: 0.65;
@@ -255,9 +252,9 @@
         .rm-feat-row .check, .rm-feat-row .pending { font-size: .65rem; flex-shrink: 0; }
         .rm-feat-icon { width: 14px; height: 14px; flex-shrink: 0; color: hsl(var(--primary)); }
         .rm-feat-icon svg { width: 14px; height: 14px; }
-        .rm-feat-done { color: #4ade80; }
-        .rm-feat-done .check { color: #4ade80; }
-        .rm-feat-done .rm-feat-icon { color: #4ade80; }
+        .rm-feat-done { color: hsl(var(--success)); }
+        .rm-feat-done .check { color: hsl(var(--success)); }
+        .rm-feat-done .rm-feat-icon { color: hsl(var(--success)); }
         .rm-feat-more { font-size: .65rem; color: hsl(var(--primary)); opacity: .6; padding-left: 18px; }
 
         /* Viking avatar walking along */
@@ -284,7 +281,7 @@
             justify-content: center;
             gap: 16px;
             padding: 12px 24px 18px;
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 0.82rem;
             color: hsl(var(--primary) / .7);
         }
@@ -296,7 +293,6 @@
             width: 10px;
             height: 16px;
             border: 1px solid hsl(var(--border));
-            border-radius: 2px;
         }
         .rm-bar-block--filled {
             background: var(--gradient-amber);
@@ -322,7 +318,7 @@
             font-size: 0.82rem;
             cursor: pointer;
             transition: all .2s;
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             padding: 0;
             flex-shrink: 0;
         }
@@ -346,7 +342,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 0.72rem;
             color: hsl(var(--muted-foreground));
             cursor: pointer;
@@ -377,7 +373,7 @@
         /* Scroll hint */
         .rm-hint {
             text-align: center;
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 0.72rem;
             color: hsl(var(--primary) / .3);
             padding: 0 0 6px;
@@ -411,7 +407,7 @@
         }
         .feat-sidebar {
             flex: 0 0 240px; display: flex; flex-direction: column;
-            border-right: 1px solid hsl(var(--border)); background: hsl(220 40% 5%);
+            border-right: 1px solid hsl(var(--border)); background: hsl(var(--space-mid));
             overflow-y: auto;
         }
         .feat-tab {
@@ -422,19 +418,19 @@
             border: none; border-bottom: 1px solid hsl(var(--border) / .4);
             cursor: pointer; text-align: left; transition: background .15s, color .15s;
         }
-        .feat-tab:hover { background: hsl(220 40% 8%); color: hsl(var(--foreground)); }
-        .feat-tab.active { background: hsl(220 40% 9%); color: hsl(var(--primary)); border-left: 3px solid hsl(var(--primary)); }
+        .feat-tab:hover { background: hsl(var(--card)); color: hsl(var(--foreground)); }
+        .feat-tab.active { background: hsl(var(--card-2) / .6); color: hsl(var(--primary)); border-left: 3px solid hsl(var(--primary)); }
         .feat-tab .ft-icon { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; }
         .feat-tab .ft-icon svg {
             width: 18px; height: 18px;
             stroke: currentColor; fill: none;
             stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
         }
-        .feat-tab .ft-count { margin-left: auto; font-size: .7rem; opacity: .5; font-family: 'Share Tech Mono', monospace; }
-        .feat-tab .ft-new { width:8px; height:8px; border-radius:50%; background:hsl(150 70% 45%); flex-shrink:0; margin-left:6px; box-shadow:0 0 6px hsl(150 70% 45% / .6); }
-        .feat-tab.feat-tab--recent { color: hsl(150 70% 55%); }
-        .feat-tab.feat-tab--recent .ft-icon { color: hsl(150 70% 55%); }
-        .feat-row--new { background: hsl(150 70% 45% / .06); }
+        .feat-tab .ft-count { margin-left: auto; font-size: .7rem; opacity: .5; font-family: var(--font-mono); }
+        .feat-tab .ft-new { width:8px; height:8px; border-radius:50%; background:hsl(var(--success)); flex-shrink:0; margin-left:6px; box-shadow:0 0 6px hsl(var(--success) / .6); }
+        .feat-tab.feat-tab--recent { color: hsl(var(--success)); }
+        .feat-tab.feat-tab--recent .ft-icon { color: hsl(var(--success)); }
+        .feat-row--new { background: hsl(var(--success) / .06); }
         .feat-row-cat-icon { width:18px; height:18px; color:hsl(var(--primary)); flex-shrink:0; opacity:.7; }
         .feat-panel { flex: 1; overflow-y: auto; padding: 0; }
         .feat-panel-cat { display: none; }
@@ -445,10 +441,10 @@
             border-bottom: 1px solid hsl(var(--border) / .2);
             font-size: .82rem; line-height: 1.45;
         }
-        .feat-row:hover { background: hsl(220 40% 6%); }
+        .feat-row:hover { background: hsl(var(--space-mid)); }
         .feat-row-check { color: hsl(var(--primary)); font-size: .75rem; flex-shrink: 0; }
         .feat-row-text  { flex: 1; color: hsl(var(--foreground) / .85); }
-        .feat-row-date  { font-family: 'Share Tech Mono', monospace; font-size: .7rem; color: hsl(var(--muted-foreground)); opacity: .6; white-space: nowrap; }
+        .feat-row-date  { font-family: var(--font-mono); font-size: .7rem; color: hsl(var(--muted-foreground)); opacity: .6; white-space: nowrap; }
         @media (max-width: 640px) {
             .feat-wrap { flex-direction: column; }
             .feat-sidebar { flex: none; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid hsl(var(--border)); }
@@ -470,13 +466,13 @@
             padding: 5px 14px;
             border: 1px solid hsl(var(--border));
             border-radius: var(--radius);
-            color: rgba(255,255,255,0.55);
+            color: hsl(var(--foreground) / .55);
             background: hsl(var(--card));
         }
         .vm-footer {
             text-align: center;
             padding: 48px 0 64px;
-            color: rgba(255,255,255,0.3);
+            color: hsl(var(--foreground) / .3);
             font-size: 0.82rem;
         }
         .vm-footer a {
@@ -516,7 +512,7 @@
             justify-content: space-between;
         }
         .rm-tree-close {
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 0.75rem;
             color: hsl(var(--muted-foreground));
             cursor: pointer;
@@ -598,12 +594,12 @@
             background: hsl(var(--border) / .4);
         }
         .rm-tree-status {
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 0.68rem;
             flex-shrink: 0;
             min-width: 11.5ch;
         }
-        .rm-tree-status--done { color: hsl(150 60% 50%); }
+        .rm-tree-status--done { color: hsl(var(--success)); }
         .rm-tree-status--wip  { color: hsl(var(--primary)); }
         .rm-tree-status--plan { color: hsl(var(--muted-foreground)); }
         .rm-card.active {
@@ -618,7 +614,7 @@
             align-items: center;
             gap: 8px;
             padding: 12px 24px 4px;
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 0.78rem;
             color: hsl(var(--muted-foreground));
             cursor: default;
@@ -626,7 +622,7 @@
         .rm-range label { display: inline-flex; align-items: center; gap: 6px; }
         .rm-range input[type="date"] {
             color-scheme: dark;
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 0.78rem;
             color: hsl(var(--foreground));
             background: hsl(var(--card));
@@ -636,7 +632,7 @@
         }
         .rm-range input[type="date"]:focus { outline: none; border-color: hsl(var(--primary)); }
         .rm-range-btn {
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 0.72rem;
             color: hsl(var(--muted-foreground));
             background: hsl(var(--card));
@@ -670,7 +666,6 @@
         }
         .vm-links { margin-top: 20px; max-width: 760px; }
         .vm-social.stats--social { grid-template-columns: repeat(6, 1fr); gap: 10px; }
-        .vm-social .stat { backdrop-filter: none; -webkit-backdrop-filter: none; } /* без размытия — против мигания */
         .vm-social .stat-icon { width: 26px; height: 26px; }
         .vm-social .stat--logo { padding: 10px 6px; }
         .vm-donate-note {
@@ -683,7 +678,6 @@
         @media (max-width: 600px) { .vm-social.stats--social { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 600px) {
             .vm-about-grid { grid-template-columns: 1fr; }
-            .brand-tag { display: none; }   /* длинное название не помещается в шапку вместе с подписью */
         }
         .vm-about-item {
             padding: 14px 16px;
@@ -706,7 +700,7 @@
             color-scheme: dark;
             margin-left: 8px;
             max-width: 260px;
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             font-size: 0.78rem;
             color: hsl(var(--foreground));
             background: hsl(var(--card));
@@ -727,7 +721,7 @@
             left: 0; right: 0; top: 50%;
             transform: translateY(-50%);
             text-align: center;
-            font-family: 'Share Tech Mono', monospace;
+            font-family: var(--font-mono);
             color: hsl(var(--muted-foreground));
             z-index: 5;
         }
@@ -744,49 +738,15 @@
             border: 1px solid hsl(var(--border) / .6);
             border-radius: var(--radius);
         }
-
-        /* ===== Против мигания при прокрутке =====
-           Фон с background-attachment: fixed перерисовывается на каждом шаге прокрутки.
-           Переносим его в отдельный закреплённый слой, а слои звёзд/сканлайнов
-           выносим на собственный композитный слой. */
-        body { background: hsl(var(--space-deep)); background-attachment: scroll; }
-        .vm-bg {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            background: var(--gradient-hero);
-            pointer-events: none;
-            will-change: transform;
-            transform: translateZ(0);
-        }
-        body::before, body::after { will-change: transform; transform: translateZ(0); }
-        /* Размытие под шапкой (backdrop-filter) пересчитывается на каждом кадре прокрутки
-           и в Chrome/Edge на Windows даёт мигание — на этой странице заменяем его плотным фоном */
-        .site-header {
-            backdrop-filter: none;
-            -webkit-backdrop-filter: none;
-            background: hsl(220 40% 4% / .94);
-        }
     </style>
 </head>
 <body>
-    <div class="vm-bg" aria-hidden="true"></div>
-    <header class="site-header">
-        <div class="container header-inner">
-            <div class="home-box" style="display:flex;align-items:center;gap:12px;">
-                <a class="home-link" href="/" data-local="../Start/index.html" title="На главную sigetar.ru" style="color:hsl(var(--primary));text-decoration:none;font-family:var(--font-display);font-weight:700;letter-spacing:0.05em;">← Sigetar.ru</a>
-            </div>
-            <a class="brand" href="/valheim/" data-local="index.html">
-                <span class="brand-name">Companion [AI] Валера</span>
-                <span class="brand-tag">[ Valheim Mod ]</span>
-            </a>
-        </div>
-    </header>
+    <script src="/style/layout.js?v=1"></script>
 
     <main>
 
     <!-- =============== HORIZONTAL ROADMAP =============== -->
-    <div class="container" style="padding-top:48px">
+    <div class="container">
         <section class="vm-about">
             <p class="eyebrow">// 01 — Описание мода [AI] Валера для игры Valheim</p>
             <h2 class="vm-section-title"><span>[AI]</span> Валера — компаньон, который учится</h2>

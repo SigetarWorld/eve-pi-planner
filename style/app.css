@@ -1,0 +1,11 @@
+/* ============================================================
+   Sigetar.ru — ОБЩИЙ СТИЛЬ ДЛЯ ПРИЛОЖЕНИЙ (EVE Planner и т. п.)
+   Шрифты, токены, основа, шапка и подвал — без компонентов страниц
+   (.panel, .btn, .grid…), чтобы не конфликтовать с компонентами приложения.
+       <link rel="stylesheet" href="/style/app.css?v=1">
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap");
+@import url("tokens.css?v=1");
+@import url("base.css?v=1");
+@import url("layout.css?v=1");

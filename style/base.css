@@ -1,0 +1,152 @@
+/* ============================================================
+   Sigetar.ru — ОСНОВА: сброс, фон, текст, контейнер
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    /* якоря не прячутся под липкой шапкой */
+    scroll-padding-top: calc(var(--site-header-h) + 1rem);
+    background: hsl(var(--space-deep));
+}
+
+/* Атрибут hidden всегда скрывает элемент, даже если у него задан display */
+[hidden] {
+    display: none !important;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    color: hsl(var(--foreground));
+    background: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+    background: hsl(var(--primary) / .4);
+    color: hsl(var(--foreground));
+}
+
+/* ---------- Фон: градиент + звёзды и сканлайны ----------
+   Отдельные неподвижные слои на своём композитном уровне.
+   Не используем background-attachment: fixed — он заставляет браузер
+   перерисовывать весь экран при прокрутке, и страница «мигает». */
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+body::before {
+    background-image:
+        radial-gradient(1px 1px at 20% 30%, hsl(0 0% 100% / .7), transparent 50%),
+        radial-gradient(1px 1px at 75% 80%, hsl(0 0% 100% / .6), transparent 50%),
+        radial-gradient(1.5px 1.5px at 50% 50%, hsl(0 0% 100% / .8), transparent 50%),
+        radial-gradient(1px 1px at 10% 70%, hsl(var(--secondary) / .7), transparent 50%),
+        radial-gradient(1px 1px at 90% 20%, hsl(36 95% 70% / .5), transparent 50%),
+        radial-gradient(1px 1px at 35% 85%, hsl(0 0% 100% / .5), transparent 50%),
+        radial-gradient(1px 1px at 60% 10%, hsl(0 0% 100% / .6), transparent 50%),
+        var(--gradient-hero);
+    background-size: 800px 800px, 800px 800px, 800px 800px, 800px 800px,
+                     800px 800px, 800px 800px, 800px 800px, 100% 100%;
+}
+
+body::after {
+    background-image: repeating-linear-gradient(
+        0deg,
+        hsl(var(--secondary) / .04) 0px,
+        hsl(var(--secondary) / .04) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+}
+
+/* ---------- Контейнер и основная область ---------- */
+.container {
+    width: 100%;
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+main {
+    position: relative;
+    z-index: 1;
+    flex: 1 0 auto;
+    width: 100%;
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+}
+
+/* Разделы одностраничника: якорь не уходит под шапку, плавное появление */
+.page-section {
+    scroll-margin-top: calc(var(--site-header-h) + 1.5rem);
+    animation: fade-up 0.5s ease both;
+}
+
+@keyframes fade-up {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* ---------- Ссылки ---------- */
+a {
+    color: hsl(var(--primary));
+}
+
+/* ---------- Скроллбар ---------- */
+::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+}
+
+::-webkit-scrollbar-track {
+    background: hsl(var(--space-deep));
+}
+
+::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border: 2px solid hsl(var(--space-deep));
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--secondary) / .7);
+}
+
+/* ---------- Уважение к настройкам движения ---------- */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

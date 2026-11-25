@@ -1,0 +1,324 @@
+/* ============================================================
+   Главная sigetar.ru — стили только этой страницы.
+   Общий стиль: /style/site.css (E:\WebSite\Style).
+   ============================================================ */
+
+/* Плитка «Контакты» — цель кнопок «Связаться» */
+#contact-card {
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
+}
+
+/* ---------- Герой (первая вкладка) ---------- */
+.hero {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 2.5rem;
+    align-items: center;
+    padding-bottom: 2.5rem;
+}
+
+.hero-kicker {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-family: var(--font-heading);
+    font-size: clamp(14px, 2vw, 24px);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: hsl(var(--secondary-ink));
+    text-shadow: 0 0 14px hsl(var(--secondary-ink) / .6);
+}
+
+.hero-title {
+    margin: 0 0 1rem;
+    font-family: var(--font-display);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.hero-title .t-small {
+    display: block;
+    font-size: clamp(1.75rem, 4vw, 3.75rem);
+    color: hsl(var(--foreground) / .9);
+}
+
+/* Имя — с янтарным бликом, как заголовок на оригинале */
+.hero-title .t-shimmer {
+    display: block;
+    font-size: clamp(2.25rem, 7vw, 4.5rem);
+    background: linear-gradient(110deg,
+        hsl(var(--primary)) 0%,
+        hsl(var(--primary-glow)) 25%,
+        hsl(var(--primary)) 50%,
+        hsl(var(--primary-glow)) 75%,
+        hsl(var(--primary)) 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 18px hsl(var(--primary) / .45));
+    animation: shimmer 6s linear infinite;
+}
+
+@keyframes shimmer {
+    to {
+        background-position: 200% center;
+    }
+}
+
+.hero-role {
+    margin: 0 0 1.25rem;
+    font-family: var(--font-heading);
+    font-size: clamp(1rem, 2vw, 1.35rem);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+}
+
+.hero-text {
+    max-width: 52ch;
+    margin: 0 0 1.75rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.hero-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 1.75rem;
+    padding: 6px 14px;
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--secondary) / .55);
+    box-shadow: 0 0 0 1px hsl(var(--secondary) / .3), inset 0 0 24px hsl(var(--secondary) / .06);
+}
+
+.hero-status::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background: hsl(var(--secondary));
+    box-shadow: 0 0 10px hsl(var(--secondary));
+}
+
+
+/* QR-код */
+.qr-block {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+}
+.qr-img {
+    width: 120px;
+    height: 120px;
+    opacity: 0.7;
+    transition: opacity .25s;
+}
+.qr-img:hover { opacity: 1; }
+
+/* ---------- Картинки-обложки ---------- */
+/* Панель с фоновой картинкой: изображение под затемняющей подложкой,
+   чтобы светлый текст читался поверх любой части кадра.
+   Конкретная картинка задаётся переменной --cover-img, у базового
+   класса значение по умолчанию (EVE Online). */
+.panel--cover {
+    --cover-img: url("../img/eveonline.jpg");
+    background-image:
+        linear-gradient(180deg, hsl(var(--card) / .55), hsl(var(--card) / .88)),
+        var(--cover-img);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.panel--cover--cr {
+    --cover-img: url("../img/ClashRoyale.jpg");
+}
+
+.panel--cover h3,
+.panel--cover p {
+    position: relative;
+    text-shadow: 0 1px 10px hsl(var(--space-deep) / .95);
+}
+
+
+/* ---------- Картинки для общих рядов плиток (.grid--shared-bg) ---------- */
+.grid--shared-bg {
+    --shared-img: url("../img/eveonline.jpg");
+}
+
+.grid--shared-bg--cr {
+    --shared-img: url("../img/ClashRoyale.jpg");
+}
+
+.grid--shared-bg--vh {
+    --shared-img: url("../img/valheim.jpg");
+}
+
+
+/* ---------- Навыки ---------- */
+.skill {
+    margin-bottom: 1rem;
+}
+
+.skill:last-child {
+    margin-bottom: 0;
+}
+
+.skill-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.skill-name {
+    color: hsl(var(--foreground));
+}
+
+.skill-val {
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    color: hsl(var(--primary));
+    text-shadow: 0 0 12px hsl(var(--primary) / .5);
+    font-variant-numeric: tabular-nums;
+}
+
+.skill-bar {
+    height: 6px;
+    background: hsl(var(--space-deep));
+    border: 1px solid hsl(var(--border) / .7);
+    overflow: hidden;
+}
+
+.skill-fill {
+    height: 100%;
+    background: var(--gradient-amber);
+    box-shadow: 0 0 12px hsl(var(--primary) / .55);
+    transition: width 0.8s ease;
+}
+
+
+/* ---------- Контакты ---------- */
+.contacts-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-width: 720px;
+}
+
+.contacts-list li + li {
+    margin-top: 10px;
+}
+
+.contact-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 14px 18px;
+    color: hsl(var(--foreground));
+    text-decoration: none;
+    background: hsl(var(--card) / .7);
+    border: 1px solid hsl(var(--border) / .7);
+    transition: border-color 0.4s, transform 0.4s, box-shadow 0.4s;
+}
+
+.contact-link:hover {
+    border-color: hsl(var(--secondary));
+    transform: translateX(4px);
+    box-shadow: var(--glow-teal);
+}
+
+.contact-link:focus-visible {
+    outline: 1px solid hsl(var(--primary));
+    outline-offset: 2px;
+}
+
+.contact-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    font-size: 1rem;
+    background: hsl(var(--space-deep));
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--primary));
+}
+
+.contact-text {
+    min-width: 0;
+}
+
+.contact-title {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: hsl(var(--secondary-ink));
+}
+
+.contact-value {
+    display: block;
+    font-size: 1rem;
+    color: hsl(var(--foreground));
+    overflow-wrap: anywhere;
+}
+
+/* Тот же список контактов, но внутри карточки — компактнее */
+.contacts-list--card {
+    position: relative;
+    margin-top: 1rem;
+}
+
+.contacts-list--card li + li {
+    margin-top: 8px;
+}
+
+.contacts-list--card .contact-link {
+    gap: 0.75rem;
+    padding: 10px 14px;
+    background: hsl(var(--space-deep) / .8);
+}
+
+.contacts-list--card .contact-icon {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    font-size: 0.85rem;
+    font-family: var(--font-heading);
+    font-weight: 700;
+}
+
+.contacts-list--card .contact-title {
+    font-size: 10px;
+    letter-spacing: 0.24em;
+}
+
+.contacts-list--card .contact-value {
+    font-size: 0.9rem;
+}
+
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 900px) {
+    .hero {
+        grid-template-columns: 1fr;
+        gap: 1.75rem;
+    }
+}

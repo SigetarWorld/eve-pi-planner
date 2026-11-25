@@ -4,17 +4,15 @@
     <meta charset="UTF-8">
     <title>EVE Planner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=274">
+    <link rel="stylesheet" href="/style/app.css?v=1">
+    <link rel="stylesheet" href="css/style.css?v=275">
 </head>
 <body>
-    <header>
+    <script src="/style/layout.js?v=1"></script>
+    <!-- Панель планировщика — под общей шапкой сайта -->
+    <div class="eve-appbar" id="eve-appbar">
         <div class="container header-inner">
-            <!-- Возврат на главную sigetar.ru. При открытии с диска ведёт на ../Start/index.html -->
             <div class="home-box">
-                <a class="home-link" href="/" data-local="../Start/index.html" title="На главную sigetar.ru">← Sigetar.ru</a>
                 <span id="app-version" class="app-version"></span>
             </div>
             <h1 class="brand">
@@ -44,7 +42,16 @@
                 <button data-tab="production">Производство</button>
             </nav>
         </div>
-    </header>
+    </div>
+    <script>
+        /* Высота панели планировщика -> --eve-appbar-h (для расчёта высоты карт) */
+        (function () {
+            var bar = document.getElementById("eve-appbar");
+            function sync() { document.documentElement.style.setProperty("--eve-appbar-h", bar.offsetHeight + "px"); }
+            sync();
+            if (window.ResizeObserver) { new ResizeObserver(sync).observe(bar); } else { window.addEventListener("resize", sync); }
+        })();
+    </script>
 
     <main>
         <!-- Вкладка: выбор типа планеты -->

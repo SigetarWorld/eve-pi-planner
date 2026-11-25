@@ -5,31 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sigetar.ru — визитная карточка</title>
     <meta name="description" content="Визитная карточка: frontend-разработчик, навыки, контакты.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=11">
+    <link rel="stylesheet" href="/style/site.css?v=1">
+    <link rel="stylesheet" href="css/home.css?v=1">
 </head>
 <body>
-    <header class="site-header">
-        <div class="container header-inner">
-            <a class="brand" href="#about">
-                <span class="brand-name">Sigetar</span>
-                <span class="brand-tag">[ Sigetar ]</span>
-            </a>
-            <nav class="tabs">
-                <button type="button" data-tab="about">Обо мне</button>
-                <!-- Переходы на другие разделы сайта. На сервере — /eveonline/ и /clashroyale/,
-                     при открытии файла с диска js/app.js подставляет data-local -->
-                <a class="nav-link" href="/valheim/" data-local="../Valheim/index.html">Valheim</a>
-                <a class="nav-link" href="/eveonline/" data-local="../EVE/index.html">EVE Online</a>
-                <a class="nav-link" href="/clashroyale/" data-local="../ClashRoyale/index.html">Clash Royale</a>
-                <a class="nav-link" href="/log/" data-local="log/index.html">Log</a>
-                <!-- Скрыто: «Навыки». Чтобы вернуть, уберите hidden -->
-                <button type="button" data-tab="skills" hidden>Навыки</button>
-            </nav>
-        </div>
-    </header>
+    <script src="/style/layout.js?v=1"></script>
 
     <main>
         <!-- Раздел: обо мне -->
@@ -73,7 +53,7 @@
 
             <hr class="rule">
 
-            <p class="eyebrow">// 01 — Valheim Mod</p>
+            <p class="eyebrow" id="valheim">// 01 — Valheim Mod</p>
             <h2 class="section-title">Valheim Mod</h2>
             <p class="section-lead">
                 Valheim — кооперативная survival-игра в скандинавском сеттинге.
@@ -223,7 +203,7 @@
 
             <hr class="rule">
 
-            <p class="eyebrow">// 02 — EVE Online</p>
+            <p class="eyebrow" id="eveonline">// 02 — EVE Online</p>
             <h2 class="section-title">EVE Online</h2>
             <p class="section-lead">
                 EVE Online - это массовая многопользовательская онлайн-игра (ММО) с научно-фантастическим сеттингом, 
@@ -362,7 +342,7 @@
 			
 			 <hr class="rule">
 
-            <p class="eyebrow">// 03 — Clash Royale</p>
+            <p class="eyebrow" id="clashroyale">// 03 — Clash Royale</p>
             <h2 class="section-title">Clash Royale</h2>
             <p class="section-lead">
                 Clash Royale - игра в жанре стратегии с элементами коллекционных карточных игр (ККИ).
@@ -621,10 +601,6 @@
         </section>
 
     </main>
-
-    <footer>
-        © 2026 Sigetar · [ Sigetar ]
-    </footer>
 
     <script src="js/app.js"></script>
 </body>
