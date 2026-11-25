@@ -102,6 +102,7 @@
 
 .log-item[data-area="eve"] .log-tag  { color: hsl(var(--info)); }
 .log-item[data-area="cr"] .log-tag   { color: hsl(var(--rare)); }
+.log-item[data-area="vh"] .log-tag   { color: hsl(var(--success)); }
 .log-item[data-area="site"] .log-tag { color: hsl(var(--primary)); }
 
 @media (max-width: 640px) {

@@ -6,7 +6,7 @@
     <title>Log — Sigetar.ru</title>
     <meta name="description" content="Список доработок и изменений на всех страницах sigetar.ru.">
     <link rel="stylesheet" href="/style/site.css?v=2">
-    <link rel="stylesheet" href="log.css?v=1">
+    <link rel="stylesheet" href="log.css?v=2">
 </head>
 <body>
     <script src="/style/layout.js?v=1"></script>
@@ -20,11 +20,12 @@
 
         <!-- Фильтр по разделам. Чтобы добавить запись, скопируйте <li class="log-item">
              в нужный день (или новый <section class="log-day"> сверху) и укажите
-             data-area: main | eve | cr | site -->
+             data-area: main | eve | vh | cr | site -->
         <div class="log-filter" role="group" aria-label="Фильтр по разделам">
             <button type="button" class="log-chip is-on" data-filter="all">Все</button>
             <button type="button" class="log-chip" data-filter="main">Главная</button>
             <button type="button" class="log-chip" data-filter="eve">EVE Planner</button>
+            <button type="button" class="log-chip" data-filter="vh">Valheim</button>
             <button type="button" class="log-chip" data-filter="cr">Clash Royale</button>
             <button type="button" class="log-chip" data-filter="site">Сайт</button>
         </div>
@@ -32,50 +33,107 @@
         <div class="log">
 
             <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-11-25">25:11:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="site"><span class="log-tag">Сайт</span>Общий стиль для всех страниц: одна шапка и подвал, единые цвета, шрифты и квадратные углы. Убрано мигание фона при прокрутке.</li>
+                    <li class="log-item" data-area="site"><span class="log-tag">Сайт</span>Все значки сайта собраны в одну библиотеку и приведены к одному виду: сетка 24×24, только контур, линия 1.8, скруглённые концы.</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Шапка — общая для сайта, цвета и шрифты — из общего стиля. (v249 · css v275)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Значки маршрута и складов перерисованы контуром в общем стиле. (v250 · css v276)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Кнопки карточек (подсветка, восстановление из EVE, редактирование, развернуть/свернуть, удаление) и плашки ISK / 24ч / PLEX — значками вместо символов и текста. (v251 · css v277)</li>
+                    <li class="log-item" data-area="main"><span class="log-tag">Главная</span>Раздел «Valheim Mod»: о моде [AI] Валера, прогресс по дорожной карте и последние обновления — данные берутся с дорожной карты. Общая картинка Valheim на три плитки.</li>
+                    <li class="log-item" data-area="main"><span class="log-tag">Главная</span>Ссылка на Telegram — t.me/nubyra_play.</li>
+                    <li class="log-item" data-area="cr"><span class="log-tag">Clash Royale</span>Страница переведена на общий стиль сайта.</li>
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>Раздел «Описание мода [AI] Валера для игры Valheim»: что умеет мод, ссылки на каналы и донат. В шапке — «Companion [AI] Валера».</li>
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>Дорожная карта: выбор периода (с / по, 7 дней, 30 дней, всё) и фильтр по категориям и подкатегориям. События стоят плотнее, вокруг карты — рамка.</li>
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>Дорожная карта: на карточках — статус в рамке (Выполнено / В работе / В планах), над картой — счётчик «Выполнено: N | В работе: N | В планах: N».</li>
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>Возможности: перед описанием показывается подкатегория.</li>
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>Новый формат данных: этапы без вложенности, подкатегории, версии категорий считаются по выполненным этапам.</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-11-23">23:11:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>Дорожная карта и возможности загружаются из файлов на сайте, без Firebase. Данные правятся в редакторе на компьютере.</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-11-19">19:11:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>Админ-панель: редакторы возможностей и дорожной карты объединены, возможности можно редактировать. Выполненные — зелёным, у этапа две даты.</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-11-18">18:11:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>Дорожная карта, возможности и категории загружаются сразу при открытии страницы. Исправлена ошибка доступа к данным.</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-11-17">17:11:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Окно «Доход за 7 дней» по клику на «24ч»: персонажи × дни, столбики дохода, сумма за каждый день. (v244 · css v262)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Панель вкладки «Планеты» перестроена: слева Регион, Персонаж + Добавить, Статистика / Склад / Масштаб, справа — персонажи EVE. Элементы одной высоты. (v246 · css v272)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Персонажи группируются по аккаунтам перетаскиванием. (v248 · css v273, planets2.js v22)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Компактные карточки: две колонии на одной планете — одной строкой через «|». (css v274, planets2.js v24)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Вход через EVE: новые адреса SSO v2, вход работает и во встроенных браузерах, разрешения запрашиваются заново. (eveauth.js v18)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>В карточке до 12 строк колоний (было 6). (v249)</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-11-16">16:11:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Компактные карточки на вкладке «Планеты»: кнопки подсветки, восстановления, редактирования и удаления работают как на полных карточках; карточка обновляется сама, когда приходят данные ESI. (v236 · css v257, planets2.js v20)</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-11-15">15:11:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>Единый источник данных для дорожной карты и возможностей, управление категориями через админ-панель.</li>
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>40 SVG-значков для категорий, выбор значка с превью и названием.</li>
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>Вкладка «Последние изменения» и отметки новизны. Карточки дорожной карты шире (350px), сайдбар категорий — 240px.</li>
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>Возможности отсортированы по дате (новые сверху), текст выровнен по значку. Исправлены даты 2024 → 2026.</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-11-14">14:11:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Исправлено: Transmitter и Silicate Glass считались P3 вместо P2. (planets2.js v16)</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
+                <h3 class="log-date"><time datetime="2026-11-13">13:11:2026</time></h3>
+                <ul class="log-list">
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Дефицит для P4 считается по всему складу (колонии + ангары) и по полной цепочке P4→P3→P2→P1. (css v253, planets2.js v15)</li>
+                    <li class="log-item" data-area="vh"><span class="log-tag">Valheim</span>Дорожная карта: стрелки — в строке прогресса, переключатель автопрокрутки — в шапке карты, подсказка больше не сдвигает страницу.</li>
+                </ul>
+            </section>
+
+            <section class="log-day">
                 <h3 class="log-date"><time datetime="2026-11-10">10:11:2026</time></h3>
                 <ul class="log-list">
-                    <li class="log-item" data-area="eve">
-                        <span class="log-badge eve">EVE Planner</span>
-                        v225 — Эскалации: одинаковая высота элементов в панели инструментов, кнопка «Маршрут» — BFS-маршрут по звёздным вратам через все активные эскалации (nearest-neighbor), маршрутные линии на карте пунктиром.
-                    </li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Эскалации: одинаковая высота элементов в панели инструментов, кнопка «Маршрут» — BFS-маршрут по звёздным вратам через все активные эскалации (nearest-neighbor), маршрутные линии на карте пунктиром. (v225)</li>
                 </ul>
             </section>
 
             <section class="log-day">
                 <h3 class="log-date"><time datetime="2026-11-06">06:11:2026</time></h3>
                 <ul class="log-list">
-                    <li class="log-item" data-area="eve">
-                        <span class="log-badge eve">EVE Planner</span>
-                        v224 — Эскалации: верхняя панель инструментов (система, персонажи, эскалация, добавить, масштаб), карточки слева без формы, убран «Игрок» (заменён персонажами), клик на строку персонажа переключает галочку, продано на карте серым маркером с «$» внутри.
-                    </li>
-                    <li class="log-item" data-area="eve">
-                        <span class="log-badge eve">EVE Planner</span>
-                        v223 — Эскалации: выпадающий список «Персонажи: N» с портретами и чекбоксами (как на вкладке Планеты), отмеченные персонажи вверху списка.
-                    </li>
-                    <li class="log-item" data-area="eve">
-                        <span class="log-badge eve">EVE Planner</span>
-                        v222 — Эскалации: убран приоритет, персонажи через чекбоксы (как на вкладке Планеты), цвет карточки по времени (зелёный &gt;15ч / жёлтый 10-15ч / красный &lt;10ч / серый), кнопка «Продано» ($) на карточке, подтверждение времени по Enter.
-                    </li>
-                    <li class="log-item" data-area="eve">
-                        <span class="log-badge eve">EVE Planner</span>
-                        v221 — Карта эскалаций: линии звёздных врат между системами (из MAP_REGIONS), точки систем по статусу безопасности (зелёный/жёлтый/красный), названия всех регионов с подсветкой активных, свечение вокруг маркеров эскалаций, отсечка невидимых элементов для производительности.
-                    </li>
-                    <li class="log-item" data-area="eve">
-                        <span class="log-badge eve">EVE Planner</span>
-                        v220 — Карта эскалаций: полноценный пан (перетаскивание) и зум (колёсико мыши), кнопки +/−/⌂, сохранение позиции и масштаба в localStorage, адаптивные размеры маркеров и шрифтов, тач-поддержка, двойной клик для сброса.
-                    </li>
-                    <li class="log-item" data-area="eve">
-                        <span class="log-badge eve">EVE Planner</span>
-                        v219 — Эскалации: все подключённые персонажи в списке пилотов (через eveChars), редактирование оставшегося времени (✎), карта зумится к регионам с активными эскалациями.
-                    </li>
-                    <li class="log-item" data-area="eve">
-                        <span class="log-badge eve">EVE Planner</span>
-                        v218 — Доработки трекера эскалаций: авто-определение региона и фракции при вводе системы, настраиваемый список пилотов (⚙ — чеклист, кто отображается в выпадающем меню), фильтрация эскалаций по фракции региона.
-                    </li>
-                    <li class="log-item" data-area="eve">
-                        <span class="log-badge eve">EVE Planner</span>
-                        v217 — Трекер эскалаций DED-комплексов. Новая вкладка «Эскалации» в разделе «Карты»: SVG-карта галактики с маркерами, панель со списком активных эскалаций и таймерами 24 ч, ручной ввод (система, пилот, тип DED), справочник 31 DED-комплекса всех фракций (3/10–10/10), приоритет галочкой, цвета фракций, localStorage.
-                    </li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Эскалации: верхняя панель инструментов (система, персонажи, эскалация, добавить, масштаб), карточки слева без формы, убран «Игрок» (заменён персонажами), клик на строку персонажа переключает галочку, продано на карте серым маркером с «$» внутри. (v224)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Эскалации: выпадающий список «Персонажи: N» с портретами и чекбоксами (как на вкладке Планеты), отмеченные персонажи вверху списка. (v223)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Эскалации: убран приоритет, персонажи через чекбоксы (как на вкладке Планеты), цвет карточки по времени (зелёный &gt;15ч / жёлтый 10-15ч / красный &lt;10ч / серый), кнопка «Продано» ($) на карточке, подтверждение времени по Enter. (v222)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Карта эскалаций: линии звёздных врат между системами (из MAP_REGIONS), точки систем по статусу безопасности (зелёный/жёлтый/красный), названия всех регионов с подсветкой активных, свечение вокруг маркеров эскалаций, отсечка невидимых элементов для производительности. (v221)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Карта эскалаций: полноценный пан (перетаскивание) и зум (колёсико мыши), кнопки +/−/⌂, сохранение позиции и масштаба в localStorage, адаптивные размеры маркеров и шрифтов, тач-поддержка, двойной клик для сброса. (v220)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Эскалации: все подключённые персонажи в списке пилотов (через eveChars), редактирование оставшегося времени (✎), карта зумится к регионам с активными эскалациями. (v219)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Доработки трекера эскалаций: авто-определение региона и фракции при вводе системы, настраиваемый список пилотов (⚙ — чеклист, кто отображается в выпадающем меню), фильтрация эскалаций по фракции региона. (v218)</li>
+                    <li class="log-item" data-area="eve"><span class="log-tag">EVE Planner</span>Трекер эскалаций DED-комплексов. Новая вкладка «Эскалации» в разделе «Карты»: SVG-карта галактики с маркерами, панель со списком активных эскалаций и таймерами 24 ч, ручной ввод (система, пилот, тип DED), справочник 31 DED-комплекса всех фракций (3/10–10/10), приоритет галочкой, цвета фракций, localStorage. (v217)</li>
                 </ul>
             </section>
 
