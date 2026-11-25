@@ -653,6 +653,26 @@
             background: hsl(var(--primary) / .08);
         }
         .rm-range-count { margin-left: 4px; opacity: .7; }
+        .rm-cat-select {
+            color-scheme: dark;
+            margin-left: 8px;
+            max-width: 260px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.78rem;
+            color: hsl(var(--foreground));
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+        .rm-cat-select:focus { outline: none; border-color: hsl(var(--primary)); }
+        .rm-cat-select.active { border-color: hsl(var(--primary) / .5); color: hsl(var(--primary)); }
+        .rm-cat-select option, .rm-cat-select optgroup {
+            background: hsl(var(--card));
+            color: hsl(var(--foreground));
+        }
+        .rm-cat-select optgroup { color: hsl(var(--primary)); font-style: normal; }
         .rm-empty {
             position: absolute;
             left: 0; right: 0; top: 50%;
@@ -740,6 +760,9 @@
             <button class="rm-range-btn" data-days="7">7 дней</button>
             <button class="rm-range-btn" data-days="30">30 дней</button>
             <button class="rm-range-btn active" data-days="all">Всё</button>
+            <select class="rm-cat-select" id="rmCatFilter" title="Фильтр по категориям и подкатегориям">
+                <option value="">Все категории</option>
+            </select>
             <span class="rm-range-count" id="rmRangeCount"></span>
         </div>
 
@@ -1023,7 +1046,7 @@
         <hr class="rule">
 
         <div class="vm-section" style="padding-bottom: 16px;">
-            <p class="eyebrow">// 02 — Стек</p>
+            <p class="eyebrow">// 03 — Стек</p>
             <h2 class="vm-section-title"><span>&lt;/&gt;</span> Технологии</h2>
             <div class="tech-row">
                 <span class="tech-tag">C#</span>
@@ -1063,6 +1086,38 @@
     let DATE_GROUPS = [];
     const RANGE = { from: null, to: null };   // Date | null
     const STATUS_LABEL = { done: 'Выполнено', wip: 'В работе', plan: 'В планах' };
+    const CAT_FILTER = { cat: null, sub: null };   // sub: null = все подкатегории
+
+    /* ===== Фильтр по категориям / подкатегориям ===== */
+    const rmCatFilter = document.getElementById('rmCatFilter');
+    function initCatFilter() {
+        CAT_META.slice().sort((a, b) => (a.order || 0) - (b.order || 0)).forEach(c => {
+            const used = new Set(STAGES.filter(s => s.cat === c.id).map(s => s.subcat || ''));
+            if (!used.size) return;                       // категории без этапов не показываем
+            const grp = document.createElement('optgroup');
+            grp.label = c.name;
+            const all = new Option(`${c.name} — все`, '');
+            all.dataset.cat = c.id;
+            grp.appendChild(all);
+            const subs = (c.subcategories || []).filter(sc => used.has(sc));
+            used.forEach(sc => { if (sc && !subs.includes(sc)) subs.push(sc); });
+            subs.forEach(sc => {
+                const o = new Option(sc, '');
+                o.dataset.cat = c.id; o.dataset.sub = sc;
+                grp.appendChild(o);
+            });
+            rmCatFilter.appendChild(grp);
+        });
+    }
+    rmCatFilter.addEventListener('change', () => {
+        const o = rmCatFilter.selectedOptions[0];
+        CAT_FILTER.cat = o.dataset.cat || null;
+        CAT_FILTER.sub = o.dataset.sub !== undefined ? o.dataset.sub : null;
+        rmCatFilter.classList.toggle('active', !!CAT_FILTER.cat);
+        rmTree.style.display = 'none';
+        renderRoadmap();
+        rmTrack.scrollLeft = 0;
+    });
 
     /* ===== Фильтр периода ===== */
     const rmFrom = document.getElementById('rmFrom');
@@ -1110,9 +1165,16 @@
         const catMap = {};
         CAT_META.forEach(c => { catMap[c.id] = c; });
 
+        /* Фильтр категории/подкатегории: применяется до группировки, поэтому
+           карточки, их статусы и список под картой учитывают только выбранное */
+        const catOn = !!CAT_FILTER.cat;
+        const visibleStages = STAGES.filter(s =>
+            (!CAT_FILTER.cat || s.cat === CAT_FILTER.cat) &&
+            (CAT_FILTER.sub === null || s.subcat === CAT_FILTER.sub));
+
         /* Group stages by date */
         const byDate = {};
-        STAGES.forEach(s => {
+        visibleStages.forEach(s => {
             const d = s.date || '';
             (byDate[d] = byDate[d] || []).push(s);
         });
@@ -1155,7 +1217,7 @@
         });
         const shownStages = DATE_GROUPS.reduce((n, g) => n + g.stages.length, 0);
         document.getElementById('rmRangeCount').textContent =
-            rangeOn ? `— событий: ${shownStages}` : '';
+            (rangeOn || catOn) ? `— событий: ${shownStages}` : '';
 
         /* Clear previous nodes */
         rmInner.querySelectorAll('.rm-node, .rm-empty').forEach(n => n.remove());
@@ -1231,8 +1293,8 @@
 
         /* Status label */
         const plannedCount = STAGES.filter(s => s.status === 'planned').length;
-        const nextLabel = wipCount > 0 ? `WIP: ${wipCount} | PLAN: ${plannedCount}` : (plannedCount > 0 ? `PLAN: ${plannedCount}` : 'DONE');
-        document.getElementById('rmNext').textContent = nextLabel;
+        document.getElementById('rmNext').textContent =
+            `Выполнено: ${doneCount} | В работе: ${wipCount} | В планах: ${plannedCount}`;
     }
 
     /* Show tree detail below roadmap */
@@ -1410,6 +1472,7 @@
             CAT_META = cats;
             STAGES = stages;
             initRangeLimits();
+            initCatFilter();
             renderRoadmap();
             renderFeaturesSection();
         } catch(e) {
