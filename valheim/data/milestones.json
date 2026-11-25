@@ -908,5 +908,65 @@
     "date": "12.11.2026",
     "doneDate": "",
     "order": 90
+  },
+  {
+    "id": 92,
+    "order": 91,
+    "cat": "arena",
+    "subcat": "Статистика",
+    "text": "Ложа",
+    "status": "done",
+    "date": "23.11.2026",
+    "doneDate": "25.11.2026"
+  },
+  {
+    "id": 93,
+    "order": 92,
+    "cat": "arena",
+    "subcat": "Регистрация на матч",
+    "text": "Вход через портал на моем сервере",
+    "status": "done",
+    "date": "23.11.2026",
+    "doneDate": "24.11.2026"
+  },
+  {
+    "id": 94,
+    "order": 93,
+    "cat": "arena",
+    "subcat": "Вход на арену",
+    "text": "Вход друзей которые со мной играют через портал на моем сервере",
+    "status": "done",
+    "date": "2311.2026",
+    "doneDate": "24.11.2026"
+  },
+  {
+    "id": 95,
+    "order": 94,
+    "cat": "arena",
+    "subcat": "Вход на арену",
+    "text": "Просмотр боя",
+    "status": "planned",
+    "date": "23.11.2026",
+    "doneDate": ""
+  },
+  {
+    "id": 96,
+    "order": 95,
+    "cat": "arena",
+    "subcat": "Участие в бою",
+    "text": "Заявка на участие",
+    "status": "wip",
+    "date": "25.11.2026",
+    "doneDate": ""
+  },
+  {
+    "id": 97,
+    "order": 96,
+    "cat": "arena",
+    "subcat": "Участие в бою",
+    "text": "Экипировка для боя",
+    "status": "wip",
+    "date": "25.11.2026",
+    "doneDate": ""
   }
 ]
