@@ -1028,13 +1028,9 @@ class EditorApp(tk.Tk):
             if os.path.exists(PUBLISH_BAT):
                 subprocess.Popen(['cmd', '/c', 'start', 'cmd', '/k', PUBLISH_BAT],
                                  cwd=os.path.dirname(PUBLISH_BAT), shell=False)
-                self._status('publish.bat запущен')
-                messagebox.showinfo('Публикация',
-                    'publish.bat запущен в отдельном окне.\nСледите за ходом в консоли.')
+                self._status('publish.bat запущен в отдельном окне')
             else:
-                self._status('Файлы скопированы. publish.bat не найден.')
-                messagebox.showinfo('Публикация',
-                    f'Файлы скопированы в:\n{PUBLISH_DIR}\n\npublish.bat не найден.')
+                self._status(f'Файлы скопированы в {PUBLISH_DIR}. publish.bat не найден.')
         except Exception as e:
             self._status(f'Ошибка: {e}')
             messagebox.showerror('Ошибка', str(e))
