@@ -173,6 +173,10 @@ class EditorApp(tk.Tk):
 
         reload_data()
 
+        self._pending = {}       # отложенные автосохранения: ключ -> (after_id, функция)
+        self._cur_cat_id = None  # ID редактируемой категории (None — новая)
+        self.protocol('WM_DELETE_WINDOW', self._on_close)
+
         # Цвета выпадающих списков (Combobox Listbox)
         self.option_add('*TCombobox*Listbox.background', BG2)
         self.option_add('*TCombobox*Listbox.foreground', FG)
@@ -203,8 +207,6 @@ class EditorApp(tk.Tk):
         # Кнопки
         bottom = tk.Frame(self, bg=BG, height=48)
         bottom.pack(fill='x', padx=8, pady=8)
-        ttk.Button(bottom, text='Сохранить все', style='Accent.TButton',
-                   command=self._save_all).pack(side='left', padx=(0, 8))
         ttk.Button(bottom, text='Перезагрузить', command=self._reload).pack(side='left', padx=(0, 8))
         ttk.Button(bottom, text='Опубликовать на сайт', style='Green.TButton',
                    command=self._publish).pack(side='right')
@@ -380,16 +382,24 @@ class EditorApp(tk.Tk):
                                      width=14, font=('Segoe UI', 9))
         self.e_done_date.pack(side='left', padx=6)
 
-        # Кнопка сохранить
         r = tk.Frame(ef, bg=BG); r.pack(fill='x', padx=10, pady=(8, 10))
-        ttk.Button(r, text='Сохранить этап', style='Accent.TButton',
-                   command=self._save_stage).pack(side='left')
+        tk.Label(r, text='Изменения сохраняются автоматически', bg=BG, fg=FG2,
+                 font=('Segoe UI', 8, 'italic')).pack(side='left')
 
         self._editing_id = None  # ID текущего редактируемого этапа
+
+        # Автосохранение этапа при любом изменении
+        stage_changed = lambda e=None: self._schedule('stage', self._save_stage)
+        for w in (self.e_date, self.e_done_date, self.e_text, self.e_subcat_combo):
+            w.bind('<KeyRelease>', stage_changed, add='+')
+        self.e_subcat_combo.bind('<<ComboboxSelected>>', stage_changed, add='+')
+        self.e_subcat_combo.bind('<FocusOut>', lambda e: self._schedule(
+            'stage', lambda: self._save_stage(add_subcat=True), 0), add='+')
 
     # --- Обновление списка этапов -------------------------------------------
     def _refresh_stages(self):
         self.stage_tree.delete(*self.stage_tree.get_children())
+        keep_sel = str(self._editing_id) if self._editing_id is not None else None
 
         # Обновляем фильтр
         sorted_cats = sorted(categories, key=lambda x: x.get('order', 0))
@@ -427,6 +437,8 @@ class EditorApp(tk.Tk):
                                    values=(status, cat_name, m.get('subcat', ''),
                                            m.get('text', ''), m.get('date', ''),
                                            m.get('doneDate', '')))
+        if keep_sel and self.stage_tree.exists(keep_sel):
+            self.stage_tree.selection_set(keep_sel)
 
     def _refresh_versions(self):
         parts = []
@@ -454,11 +466,15 @@ class EditorApp(tk.Tk):
         if not sel:
             return
         sid = sel[0]
+        if self._editing_id is not None and sid == str(self._editing_id):
+            return  # уже открыт (выделение восстановлено после автосохранения)
+        self._flush()  # дописать изменения предыдущего этапа
         m = next((x for x in milestones if str(x.get('id', '')) == sid), None)
         if not m:
             return
 
         self._editing_id = m['id']
+        self.stage_tree.selection_set(sid)
 
         self.e_date.delete(0, 'end')
         self.e_date.insert(0, m.get('date', ''))
@@ -489,6 +505,7 @@ class EditorApp(tk.Tk):
         cat_str = self.e_cat_var.get()
         cat_id = cat_str.split(' \u2014 ')[0] if ' \u2014 ' in cat_str else cat_str
         self._update_subcat_combo(cat_id)
+        self._schedule('stage', self._save_stage, 0)
 
     def _update_subcat_combo(self, cat_id):
         subcats = get_subcats(cat_id)
@@ -503,10 +520,13 @@ class EditorApp(tk.Tk):
                 self.e_done_date.insert(0, datetime.now().strftime('%d.%m.%Y'))
         elif self.e_status_var.get() != 'done':
             self.e_done_date.delete(0, 'end')
+        self._schedule('stage', self._save_stage, 0)
 
     # --- CRUD этапов --------------------------------------------------------
     def _add_stage(self):
+        self._flush()
         self._editing_id = None
+        self.stage_tree.selection_remove(*self.stage_tree.selection())
         self.e_date.delete(0, 'end')
         self.e_date.insert(0, datetime.now().strftime('%d.%m.%Y'))
         self.e_cat_var.set('')
@@ -517,21 +537,19 @@ class EditorApp(tk.Tk):
         # Фокус на категорию
         self.e_cat_combo.focus_set()
 
-    def _save_stage(self):
+    def _save_stage(self, add_subcat=False):
+        """Автосохранение этапа из формы (вызывается при любом изменении)."""
         cat_str = self.e_cat_var.get()
         cat_id = cat_str.split(' \u2014 ')[0] if ' \u2014 ' in cat_str else cat_str
-        if not cat_id:
-            messagebox.showwarning('Ошибка', 'Выберите категорию')
-            return
-
         text = self.e_text.get('1.0', 'end').strip()
-        if not text:
-            messagebox.showwarning('Ошибка', 'Укажите описание')
+        if not cat_id or not text:
+            if self._editing_id is None and (cat_id or text):
+                self._status('Новый этап сохранится, когда будут заданы категория и описание')
             return
 
         subcat = self.e_subcat_var.get().strip()
-        # Автоматически добавляем подкатегорию если новая
-        if subcat:
+        # Новую подкатегорию добавляем в категорию, когда ввод закончен (уход из поля)
+        if subcat and add_subcat:
             c = next((x for x in categories if x['id'] == cat_id), None)
             if c and subcat not in c.get('subcategories', []):
                 c.setdefault('subcategories', []).append(subcat)
@@ -543,29 +561,24 @@ class EditorApp(tk.Tk):
         if self._editing_id is not None:
             m = next((x for x in milestones if x['id'] == self._editing_id), None)
             if not m:
-                messagebox.showerror('Ошибка', 'Этап не найден')
                 return
         else:
             m = {'id': next_id(), 'order': max((x.get('order', 0) for x in milestones), default=-1) + 1}
             milestones.append(m)
             self._editing_id = m['id']
 
-        m['cat'] = cat_id
-        m['subcat'] = subcat
-        m['text'] = text
-        m['status'] = status
-        m['date'] = date_val
-        m['doneDate'] = done_date
+        new_vals = {'cat': cat_id, 'subcat': subcat, 'text': text, 'status': status,
+                    'date': date_val, 'doneDate': done_date}
+        if all(m.get(k) == v for k, v in new_vals.items()) and not add_subcat:
+            return  # ничего не изменилось
+        m.update(new_vals)
 
         self._refresh_stages()
         self._refresh_versions()
-        # Выбрать сохранённый элемент
-        try:
-            self.stage_tree.selection_set(str(m['id']))
+        self._refresh_categories()
+        if self.stage_tree.exists(str(m['id'])):
             self.stage_tree.see(str(m['id']))
-        except Exception:
-            pass
-        self._status('Этап сохранён (в памяти). Нажмите «Сохранить все» для записи в файл.')
+        self._persist('Этап сохранён')
 
     def _edit_stage_dialog(self):
         """Двойной клик — просто выбирает и заполняет форму (уже делает _on_stage_select)."""
@@ -581,11 +594,13 @@ class EditorApp(tk.Tk):
             return
         if not messagebox.askyesno('Удаление', f'Удалить этап «{m.get("text", "")}»?'):
             return
+        self._cancel('stage')
         milestones.remove(m)
         self._editing_id = None
         self._refresh_stages()
         self._refresh_versions()
-        self._status('Этап удалён')
+        self._refresh_categories()
+        self._persist('Этап удалён')
 
     def _move_up(self):
         sel = self.stage_tree.selection()
@@ -602,6 +617,7 @@ class EditorApp(tk.Tk):
         self._refresh_stages()
         self.stage_tree.selection_set(sid)
         self.stage_tree.see(sid)
+        self._persist('Порядок сохранён')
 
     def _move_down(self):
         sel = self.stage_tree.selection()
@@ -617,6 +633,7 @@ class EditorApp(tk.Tk):
         self._refresh_stages()
         self.stage_tree.selection_set(sid)
         self.stage_tree.see(sid)
+        self._persist('Порядок сохранён')
 
     # === Категории ==========================================================
     def _load_cat_icons(self):
@@ -699,9 +716,10 @@ class EditorApp(tk.Tk):
 
         r = tk.Frame(ef, bg=BG); r.pack(fill='x', padx=10, pady=4)
         self.c_visible_var = tk.BooleanVar(value=True)
-        tk.Checkbutton(r, text='Видима на сайте', variable=self.c_visible_var,
+        self.c_visible_cb = tk.Checkbutton(r, text='Видима на сайте', variable=self.c_visible_var,
                        bg=BG, fg=FG, selectcolor=BG2, activebackground=BG,
-                       activeforeground=FG, font=('Segoe UI', 9)).pack(side='left')
+                       activeforeground=FG, font=('Segoe UI', 9))
+        self.c_visible_cb.pack(side='left')
         tk.Label(r, text='Порядок:', bg=BG, fg=FG, font=('Segoe UI', 9)).pack(side='left', padx=(16, 0))
         self.c_order = tk.Entry(r, bg=BG2, fg=FG, insertbackground=FG, bd=1,
                                 relief='solid', width=5, font=('Segoe UI', 9))
@@ -732,8 +750,15 @@ class EditorApp(tk.Tk):
         ttk.Button(sc_btns, text='\u270e', command=self._rename_subcat, width=3).pack(side='left', padx=4)
 
         r = tk.Frame(ef, bg=BG); r.pack(fill='x', padx=10, pady=(4, 10))
-        ttk.Button(r, text='Сохранить категорию', style='Accent.TButton',
-                   command=self._save_category).pack(side='left')
+        tk.Label(r, text='Изменения сохраняются автоматически', bg=BG, fg=FG2,
+                 font=('Segoe UI', 8, 'italic')).pack(side='left')
+
+        # Автосохранение категории при любом изменении
+        cat_changed = lambda e=None: self._schedule('cat', self._save_category)
+        for w in (self.c_id, self.c_name, self.c_order):
+            w.bind('<KeyRelease>', cat_changed, add='+')
+        self.c_icon_combo.bind('<<ComboboxSelected>>', cat_changed, add='+')
+        self.c_visible_cb.config(command=cat_changed)
 
     def _on_icon_selected(self, event=None):
         """Показать превью выбранной иконки."""
@@ -753,15 +778,22 @@ class EditorApp(tk.Tk):
             self.cat_tree.insert('', 'end', iid=c['id'],
                                  values=(c['id'], c.get('icon', ''), c['name'],
                                          f'v{v}', subcats))
+        if self._cur_cat_id and self.cat_tree.exists(self._cur_cat_id):
+            self.cat_tree.selection_set(self._cur_cat_id)
 
     def _on_category_select(self, event=None):
         sel = self.cat_tree.selection()
         if not sel:
             return
         cid = sel[0]
+        if cid == self._cur_cat_id:
+            return  # уже открыта (выделение восстановлено после автосохранения)
+        self._flush()  # дописать изменения предыдущей категории
         c = next((x for x in categories if x['id'] == cid), None)
         if not c:
             return
+        self._cur_cat_id = cid
+        self.cat_tree.selection_set(cid)
         self.c_id.delete(0, 'end'); self.c_id.insert(0, c['id'])
         self.c_icon_var.set(c.get('icon', ''))
         self._on_icon_selected()
@@ -799,36 +831,59 @@ class EditorApp(tk.Tk):
         self.subcat_listbox.insert(idx, new)
         self.subcat_listbox.selection_set(idx)
         self._subcat_renames.append((old, new))
-        self._status(f'«{old}» → «{new}». Нажмите «Сохранить категорию»')
+        self._schedule('cat', self._save_category, 0)
 
     def _add_subcat(self):
         name = self.sc_entry.get().strip()
-        if not name:
+        if not name or name in self.subcat_listbox.get(0, 'end'):
             return
         self.subcat_listbox.insert('end', name)
         self.sc_entry.delete(0, 'end')
+        self._schedule('cat', self._save_category, 0)
 
     def _remove_subcat(self):
         sel = self.subcat_listbox.curselection()
         if sel:
             self.subcat_listbox.delete(sel[0])
+            self._schedule('cat', self._save_category, 0)
 
     def _save_category(self):
+        """Автосохранение категории из формы (вызывается при любом изменении)."""
         cid = self.c_id.get().strip()
-        if not cid:
-            messagebox.showwarning('Ошибка', 'Укажите ID')
+        name = self.c_name.get().strip()
+        if not cid or not name:
+            if self._cur_cat_id is None and (cid or name):
+                self._status('Новая категория сохранится, когда будут заданы ID и название')
             return
-        c = next((x for x in categories if x['id'] == cid), None)
-        if c is None:
-            c = {'id': cid}
+        other = next((x for x in categories if x['id'] == cid), None)
+        if self._cur_cat_id is None:
+            if other is not None:
+                self._status(f'ID «{cid}» уже занят — введите другой')
+                return
+            c = {'id': cid, 'subcategories': []}
             categories.append(c)
+        else:
+            c = next((x for x in categories if x['id'] == self._cur_cat_id), None)
+            if c is None:
+                return
+            if cid != self._cur_cat_id:
+                if other is not None:
+                    self._status(f'ID «{cid}» уже занят — введите другой')
+                    return
+                # Смена ID: переносим этапы на новый ID
+                for m in milestones:
+                    if m.get('cat') == self._cur_cat_id:
+                        m['cat'] = cid
+                c['id'] = cid
+        self._cur_cat_id = cid
+
         c['icon'] = self.c_icon_var.get().strip()
-        c['name'] = self.c_name.get().strip()
+        c['name'] = name
         c['visible'] = self.c_visible_var.get()
         try:
             c['order'] = int(self.c_order.get())
         except ValueError:
-            c['order'] = 0
+            c.setdefault('order', 0)
         # Подкатегории из листбокса
         c['subcategories'] = list(self.subcat_listbox.get(0, 'end'))
         # Переименовать подкатегорию у этапов этой категории
@@ -839,9 +894,12 @@ class EditorApp(tk.Tk):
         self._subcat_renames = []
 
         self._refresh_all()
-        self._status('Категория сохранена (в памяти)')
+        self._persist('Категория сохранена')
 
     def _new_category(self):
+        self._flush()
+        self._cur_cat_id = None
+        self.cat_tree.selection_remove(*self.cat_tree.selection())
         self.c_id.delete(0, 'end')
         self.c_icon_var.set('')
         self.c_icon_preview.config(image='')
@@ -866,9 +924,51 @@ class EditorApp(tk.Tk):
             msg += f'\n\nВ ней {count} этапов, они останутся без категории.'
         if not messagebox.askyesno('Удаление', msg):
             return
+        self._cancel('cat')
         categories.remove(c)
+        self._cur_cat_id = None
         self._refresh_all()
-        self._status(f'Категория «{c["name"]}» удалена')
+        self._persist(f'Категория «{c["name"]}» удалена')
+
+    # === Автосохранение =====================================================
+    def _schedule(self, key, fn, delay=600):
+        """Отложенное сохранение: при быстром вводе пишем на диск один раз."""
+        self._cancel(key)
+        self._pending[key] = (self.after(delay, lambda: self._run_pending(key)), fn)
+
+    def _run_pending(self, key):
+        item = self._pending.pop(key, None)
+        if item:
+            item[1]()
+
+    def _cancel(self, key):
+        item = self._pending.pop(key, None)
+        if item:
+            self.after_cancel(item[0])
+
+    def _flush(self):
+        """Немедленно выполнить все отложенные сохранения."""
+        for key in list(self._pending):
+            after_id, fn = self._pending.pop(key)
+            self.after_cancel(after_id)
+            fn()
+
+    def _persist(self, msg='Сохранено'):
+        try:
+            save_all()
+            self._status(f'✅ {msg} — {datetime.now().strftime("%H:%M:%S")}')
+        except Exception as e:
+            self._status(f'Ошибка сохранения: {e}')
+            messagebox.showerror('Ошибка сохранения', str(e))
+
+    def _on_close(self):
+        try:
+            self._flush()
+            # Если поле подкатегории этапа ещё в фокусе — добавить новую подкатегорию
+            if self.focus_get() is self.e_subcat_combo:
+                self._save_stage(add_subcat=True)
+        finally:
+            self.destroy()
 
     # === Общие действия =====================================================
     def _save_all(self):
@@ -876,11 +976,16 @@ class EditorApp(tk.Tk):
         self._status('\u2705 Все данные сохранены в JSON')
 
     def _reload(self):
+        for key in list(self._pending):
+            self._cancel(key)
         reload_data()
+        self._editing_id = None
+        self._cur_cat_id = None
         self._refresh_all()
         self._status('\U0001f504 Данные перезагружены из файлов')
 
     def _publish(self):
+        self._flush()
         save_all()
         try:
             pub_root = os.path.normpath(os.path.join(PUBLISH_DIR, '..'))
