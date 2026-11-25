@@ -200,29 +200,21 @@
         .rm-ver .pending {
             color: hsl(var(--muted-foreground));
         }
-        /* Отметка статуса карточки (вверху справа).
-           Вариант 1 (по умолчанию): текст в квадратных скобках.
-           Вариант 2 (body.badge-box): текст в рамке. */
+        /* Отметка статуса карточки (вверху справа), в рамке цвета статуса */
         .rm-badge {
             font-family: var(--font-heading);
             font-size: 0.74rem;
             font-weight: 700;
             letter-spacing: 0.02em;
             white-space: nowrap;
-        }
-        .rm-badge::before { content: '['; }
-        .rm-badge::after  { content: ']'; }
-        .rm-badge--done { color: hsl(150 60% 55%); }
-        .rm-badge--wip  { color: hsl(var(--primary)); }
-        .rm-badge--plan { color: hsl(var(--foreground)); }
-        body.badge-box .rm-badge {
             padding: 1px 8px;
             border: 1px solid currentColor;
             border-radius: var(--radius);
             background: hsl(var(--card));
         }
-        body.badge-box .rm-badge::before,
-        body.badge-box .rm-badge::after { content: none; }
+        .rm-badge--done { color: hsl(150 60% 55%); }
+        .rm-badge--wip  { color: hsl(var(--primary)); }
+        .rm-badge--plan { color: hsl(var(--foreground)); }
         .rm-ver-left {
             display: flex;
             align-items: center;
