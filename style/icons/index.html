@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Иконки — Sigetar.ru</title>
-    <link rel="stylesheet" href="/style/site.css?v=1">
+    <link rel="stylesheet" href="/style/site.css?v=2">
     <style>
         /* Обзор всех иконок сайта. Данные — icons.json рядом (откуда взята, где используется). */
         .ic-summary {
@@ -91,7 +91,7 @@
         <h1 class="section-title">Иконки сайта</h1>
         <p class="section-lead">Все иконки, найденные на страницах sigetar.ru. Каждая лежит отдельным SVG в папке
             <code>Style\icons</code>; откуда она взята и где используется — в <code>icons.json</code>.
-            Рамкой янтарного цвета отмечены иконки, нарисованные не так, как большинство в своей группе.</p>
+            Стандарт: сетка 24×24, только контур, линия <code>--icon-stroke</code> (1.8), скруглённые концы. Рамкой янтарного цвета отмечены иконки, которые ему не соответствуют.</p>
 
         <div class="ic-summary" id="summary"></div>
         <div class="ic-tools">
@@ -132,13 +132,14 @@
             const grid = root.lastElementChild;
             items.forEach(([i, svg]) => {
                 const odd = g === 'site' && styleKey(i) !== common;
-                const mixed = i.styles_in_use.length > 1;
+                const mixed = i.styles_in_use.length > 1 && !i.standard;
                 const view = ['s18', 's24', 's48'].map(c => svg.replace('<svg ', `<svg class="${c}" `)).join('');
                 grid.insertAdjacentHTML('beforeend', `
                     <div class="ic-tile${odd || mixed ? ' is-odd' : ''}" title="${i.used_in.join('\n').replace(/"/g, '&quot;')}">
                         <div class="ic-view">${view}</div>
                         <div class="ic-name">${i.file}${i.aliases.length ? ' <span class="ic-meta">(= ' + i.aliases.join(', ') + ')</span>' : ''}</div>
                         <div class="ic-meta">${odd ? '<span class="odd">' + styleKey(i) + '</span>' : styleKey(i)}${mixed ? '<br><span class="odd">на сайте в ' + i.styles_in_use.length + ' вариантах толщины</span>' : ''}</div>
+                        ${i.redrawn ? '<div class="ic-meta">' + i.redrawn + '</div>' : ''}
                         <div class="ic-used">${i.used_in.length > 1 ? i.used_in.length + ' мест: ' : ''}${i.used_in[0].replace(/^[^:]+: /, '')}</div>
                     </div>`);
             });

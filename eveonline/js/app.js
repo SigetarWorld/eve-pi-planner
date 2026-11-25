@@ -3290,9 +3290,10 @@ let whView = 'sum';
 /* Значки пути: ангар и офис — свои рисунки (как значки складов колонии),
    контейнер и корабль — иконка типа с сервера картинок EVE. */
 const WH_SEG_SVG = {
-    hangar: '<path d="M1.5 6.2 8 2.2l6.5 4V14h-2.2V8.4H3.7V14H1.5Z"/><path d="M4.6 9.3h6.8v1.1H4.6Zm0 2h6.8v1.1H4.6Zm0 2h6.8V14H4.6Z"/>',
-    office: '<path fill-rule="evenodd" d="M3 1.5h10V14.5H9.6v-3H6.4v3H3Zm2 2v1.6h1.6V3.5Zm4.4 0v1.6H11V3.5ZM5 6.7v1.6h1.6V6.7Zm4.4 0v1.6H11V6.7Z"/>',
-    hold: '<path d="M2 4.5 8 2l6 2.5v7L8 14l-6-2.5Z M2 4.5 8 7l6-2.5M8 7v7" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>'
+    /* Контурные значки 24×24 по общему стандарту (/style/icons/eve/) */
+    hangar: '<path d="M3 10 12 4l9 6v10h-4v-7H7v7H3Z"/><path d="M9.5 16.5h5M9.5 19.5h5"/>',
+    office: '<path d="M5 21V3h14v18"/><path d="M3 21h18"/><path d="M9 7h1.5M13.5 7H15M9 11h1.5M13.5 11H15"/><path d="M10 21v-4h4v4"/>',
+    hold: '<path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5Z"/><path d="m3 7.5 9 4.5 9-4.5M12 12v9"/>'
 };
 function whPathHtml(segs) {
     return segs.map((g) => {
@@ -3302,7 +3303,7 @@ function whPathHtml(segs) {
         if (g.typeId && (g.kind === 'box' || g.kind === 'ship')) {
             inner = `<img src="https://images.evetech.net/types/${g.typeId}/icon?size=32" alt="" width="16" height="16" loading="lazy" onerror="this.remove()">`;
         } else if (WH_SEG_SVG[g.kind]) {
-            inner = `<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${WH_SEG_SVG[g.kind]}</svg>`;
+            inner = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${WH_SEG_SVG[g.kind]}</svg>`;
         }
         const icon = inner ? `<span class="wh-ico wh-ico-${g.kind}">${inner}</span>` : '';
         return `<span class="wh-seg wh-seg-k-${g.kind}">${icon}<span>${escapeHtml(g.label)}</span></span>`;
@@ -4562,9 +4563,10 @@ function cardViewHtml(card) {
    Квадрат с рамкой, как значок уровня; цвет — свой у вида склада. Вид
    берём из названия типа («Barren Launchpad», «Lava Storage Facility»). */
 const STORE_SVG = {
-    lp: '<path d="M8 .4 9.8 4.7H6.2Z"/><path fill-rule="evenodd" d="M6.2 5.4h3.6v9.9H6.2ZM7.4 10.6h1.2v4.7H7.4Z"/><path d="M5.4 9.4 2.4 15.3h3ZM10.6 9.4l3 5.9h-3Z"/>',
-    sf: '<path d="M8 1.8 13.6 5v6.2L8 14.4 2.4 11.2V5Z M2.4 5 8 8.2 13.6 5 M8 8.2v6.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>',
-    cc: '<circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2.3"/>'
+    /* Контурные значки 24×24 по общему стандарту (/style/icons/eve/) */
+    lp: '<path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M7 18h10M4 21h16"/>',
+    sf: '<path d="M12 2.5 20.5 7.4v9.2L12 21.5l-8.5-4.9V7.4Z"/><path d="M3.5 7.4 12 12.3l8.5-4.9M12 12.3v9.2"/>',
+    cc: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/>'
 };
 const STORE_ORDER = { lp: 0, sf: 1, cc: 2, '': 3 };
 
@@ -4654,7 +4656,7 @@ const storeHintOf = (st) => {
 };
 const storeIconHtml = (typeId, title) => {
     const kind = storeKindOf(typeId);
-    return `<span class="uv-store uv-store-${kind}" title="${escapeHtml(title)}"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${STORE_SVG[kind]}</svg></span>`;
+    return `<span class="uv-store uv-store-${kind}" title="${escapeHtml(title)}"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${STORE_SVG[kind]}</svg></span>`;
 };
 
 function renderCardView(card) {
@@ -4680,7 +4682,7 @@ function renderCardView(card) {
                     const cls = fill.state ? ` is-${fill.state}` : '';
                     // подсказка — название и код, под ними % заполнения; что внутри — по нажатию
                     const title = storeHintOf(st);
-                    return `<button type="button" class="uv-store uv-store-${kind} uv-store-btn${cls}" data-role="uv-store" data-i="${i}" data-fill="${fill.state || 'ok'}" title="${escapeHtml(title)}" aria-expanded="false"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">${STORE_SVG[kind]}</svg></button>`;
+                    return `<button type="button" class="uv-store uv-store-${kind} uv-store-btn${cls}" data-role="uv-store" data-i="${i}" data-fill="${fill.state || 'ok'}" title="${escapeHtml(title)}" aria-expanded="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${STORE_SVG[kind]}</svg></button>`;
                 }).join('');
                 col.storeData = data.stores;
                 // колония с пустым / переполненным складом выделяется целиком

@@ -112,6 +112,20 @@ main {
     to   { opacity: 1; transform: none; }
 }
 
+/* ---------- Иконки ----------
+   Все значки сайта рисуются по одному стандарту: сетка 24×24, контур
+   толщиной --icon-stroke, скруглённые концы. Класс .icon (или .glyph)
+   на <svg> — и правило ниже перекрывает атрибуты самого файла.
+   Библиотека значков: /style/icons/. */
+svg.icon,
+svg.glyph {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--icon-stroke);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 /* ---------- Ссылки ---------- */
 a {
     color: hsl(var(--primary));

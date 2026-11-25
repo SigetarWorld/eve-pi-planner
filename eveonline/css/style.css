@@ -434,10 +434,7 @@ form button:focus-visible,
     width: 18px;
     height: 18px;
     margin: auto;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.6;
-    stroke-linecap: round;
+    /* контур, толщина и концы — общий стандарт иконок (svg.icon в /style/base.css) */
 }
 
 /* Включённый фильтр */

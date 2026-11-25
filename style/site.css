@@ -1,6 +1,6 @@
 /* ============================================================
    Sigetar.ru — ОБЩИЙ СТИЛЬ ДЛЯ СТРАНИЦ. Подключается одной строкой:
-       <link rel="stylesheet" href="/style/site.css?v=1">
+       <link rel="stylesheet" href="/style/site.css?v=2">
    и сразу после <body>:
        <script src="/style/layout.js?v=1"></script>
    Для приложений со своими компонентами (EVE Planner) — app.css.
@@ -8,7 +8,7 @@
    ============================================================ */
 
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap");
-@import url("tokens.css?v=1");
-@import url("base.css?v=1");
+@import url("tokens.css?v=2");
+@import url("base.css?v=2");
 @import url("layout.css?v=1");
 @import url("components.css?v=1");
