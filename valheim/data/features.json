@@ -1,93 +1,821 @@
 [
-  { "id": "companion_001", "cat": "companion", "ver": "v0.01", "text": "Спавн рядом с игроком", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_002", "cat": "companion", "ver": "v0.01", "text": "Метка Валеры на карте", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_003", "cat": "companion", "ver": "v0.01", "text": "Догоняет бегом", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_004", "cat": "companion", "ver": "v0.01", "text": "Команды: иди сюда, стой, за мной", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_005", "cat": "companion", "ver": "v0.02", "text": "Авто-экипировка оружия и брони из сумки", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_006", "cat": "companion", "ver": "v0.02", "text": "Сумка [E] — ванильное окно сундука 8×4", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_007", "cat": "companion", "ver": "v0.02", "text": "Подбор добычи в 12 м — подходит и берёт", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_008", "cat": "companion", "ver": "v0.02", "text": "Есть перегруз — замедление", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_009", "cat": "companion", "ver": "v0.03", "text": "Появляется у кровати после смерти", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_010", "cat": "companion", "ver": "v0.03", "text": "Ждёт или идёт по команде после смерти", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_011", "cat": "companion", "ver": "v0.03", "text": "Навыки падают как у игрока", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_012", "cat": "companion", "ver": "v0.04", "text": "Телепорт и подземелья с Валерой", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_013", "cat": "companion", "ver": "v0.04", "text": "Корабль и плот — залезает и сидит на лавке", "date": "01.11.2026", "done": true, "doneDate": "" },
-  { "id": "companion_014", "cat": "companion", "ver": "v0.04", "text": "Обход препятствий — не лезет в костёр", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_015", "cat": "companion", "ver": "v0.05", "text": "Сам следит за едой — ест до трёх блюд", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_016", "cat": "companion", "ver": "v0.05", "text": "Ищет еду в сундуках", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_017", "cat": "companion", "ver": "v0.05", "text": "Отдыхает у огня", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_018", "cat": "companion", "ver": "v0.06", "text": "Не видит сквозь стены", "date": "27.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_019", "cat": "companion", "ver": "v0.06", "text": "Зрение под ноги — ступени, обрывы, вода", "date": "27.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_020", "cat": "companion", "ver": "v0.06", "text": "Обходит огонь и опасные объекты", "date": "27.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_021", "cat": "companion", "ver": "v0.08", "text": "Крафтит по просьбе — говорит, чего не хватает", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_022", "cat": "companion", "ver": "v0.08", "text": "Надевает скрафченное", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_023", "cat": "companion", "ver": "v0.15", "text": "Собирает добычу после боя", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_024", "cat": "companion", "ver": "v0.15", "text": "Не подбирает в бою — только после", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "companion_025", "cat": "companion", "ver": "v0.15", "text": "Подбирает стрелы с тел", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "combat_001", "cat": "combat", "ver": "v0.12", "text": "Нейросеть PPO выбирает приём по ситуации", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "combat_002", "cat": "combat", "ver": "v0.12", "text": "6 приёмов: удар, блок, уклон, отступ, кружение, особый", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "combat_003", "cat": "combat", "ver": "v0.12", "text": "Танк-варианты: щит / перекаты / натиск / лук", "date": "02.11.2026", "done": true, "doneDate": "" },
-  { "id": "combat_004", "cat": "combat", "ver": "v0.12", "text": "Серии ударов — как игрок «держит кнопку»", "date": "02.11.2026", "done": true, "doneDate": "" },
-  { "id": "combat_005", "cat": "combat", "ver": "v0.13", "text": "Лук — баллистика, упреждение, самообучение", "date": "27.10.2026", "done": true, "doneDate": "" },
-  { "id": "combat_006", "cat": "combat", "ver": "v0.13", "text": "Стрельба на ходу с поправкой по дистанции", "date": "27.10.2026", "done": true, "doneDate": "" },
-  { "id": "combat_007", "cat": "combat", "ver": "v0.14", "text": "Спасение заранее по запомненному урону врага", "date": "26.10.2026", "done": true, "doneDate": "" },
-  { "id": "combat_008", "cat": "combat", "ver": "v0.14", "text": "Парирование — учит замах каждого врага", "date": "26.10.2026", "done": true, "doneDate": "" },
-  { "id": "combat_009", "cat": "combat", "ver": "v0.14", "text": "Медовуха в бою — по нехватке здоровья", "date": "26.10.2026", "done": true, "doneDate": "" },
-  { "id": "combat_010", "cat": "combat", "ver": "v0.14", "text": "Меньше 20% HP — спасается, меняет оружие", "date": "26.10.2026", "done": true, "doneDate": "" },
-  { "id": "combat_011", "cat": "combat", "ver": "v0.27", "text": "Масса костей — булава и ледяная медовуха", "date": "11.11.2026", "done": true, "doneDate": "" },
-  { "id": "combat_012", "cat": "combat", "ver": "v0.27", "text": "Подготовка к каждому боссу: стрелы, медовухи, оружие", "date": "08.11.2026", "done": true, "doneDate": "" },
-  { "id": "combat_013", "cat": "combat", "ver": "v0.28", "text": "«Стой на месте» — охраняет позицию", "date": "12.11.2026", "done": true, "doneDate": "" },
-  { "id": "combat_014", "cat": "combat", "ver": "v0.28", "text": "Бьёт врагов в радиусе 10 м", "date": "12.11.2026", "done": true, "doneDate": "" },
-  { "id": "voice_001", "cat": "voice", "ver": "v0.16", "text": "Whisper (офлайн) + Vosk — двойное распознавание", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "voice_002", "cat": "voice", "ver": "v0.16", "text": "Silero TTS — озвучка офлайн", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "voice_003", "cat": "voice", "ver": "v0.16", "text": "40+ голосовых команд: бой, сбор, готовка, огород", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "voice_004", "cat": "voice", "ver": "v0.16", "text": "Три режима: по имени (wake), рация (ptt), всегда", "date": "22.10.2026", "done": true, "doneDate": "" },
-  { "id": "voice_005", "cat": "voice", "ver": "v0.16", "text": "Обучение голосом — «запомни: X значит Y»", "date": "22.10.2026", "done": true, "doneDate": "" },
-  { "id": "voice_006", "cat": "voice", "ver": "v0.16", "text": "Новый голос Silero TTS — мужской, чёткий", "date": "30.10.2026", "done": true, "doneDate": "" },
-  { "id": "voice_007", "cat": "voice", "ver": "v0.17", "text": "Друзья могут давать команды через ValeraListener", "date": "22.10.2026", "done": true, "doneDate": "" },
-  { "id": "voice_008", "cat": "voice", "ver": "v0.19", "text": "Claude Haiku — реплики по контексту и ситуации", "date": "28.10.2026", "done": true, "doneDate": "" },
-  { "id": "voice_009", "cat": "voice", "ver": "v0.20", "text": "Ollama (локально, бесплатно) — qwen3:4b-instruct", "date": "04.11.2026", "done": true, "doneDate": "" },
-  { "id": "base_001", "cat": "base", "ver": "v0.05", "text": "Починка у верстака / кузницы", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "base_002", "cat": "base", "ver": "v0.09", "text": "Память ящиков — таблички и содержимое", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "base_003", "cat": "base", "ver": "v0.09", "text": "Запоминает базу", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "base_004", "cat": "base", "ver": "v0.09", "text": "«Отнеси добычу» / «Сложи в ящики»", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "base_005", "cat": "base", "ver": "v0.24", "text": "Переплавка руды, жжение угля", "date": "01.11.2026", "done": true, "doneDate": "" },
-  { "id": "base_006", "cat": "base", "ver": "v0.24", "text": "Готовка — вертел, сковорода, котёл, бочка", "date": "02.11.2026", "done": true, "doneDate": "" },
-  { "id": "base_007", "cat": "base", "ver": "v0.24", "text": "Сортировка ящиков по табличкам", "date": "03.11.2026", "done": true, "doneDate": "" },
-  { "id": "base_008", "cat": "base", "ver": "v0.24", "text": "Огород — сбор, пересадка, семена из ящиков", "date": "05.11.2026", "done": true, "doneDate": "" },
-  { "id": "base_009", "cat": "base", "ver": "v0.24", "text": "Домашние дела по порядку из настроек", "date": "08.11.2026", "done": true, "doneDate": "" },
-  { "id": "base_010", "cat": "base", "ver": "v0.24", "text": "Патруль базы — обход и доклад", "date": "08.11.2026", "done": true, "doneDate": "" },
-  { "id": "base_011", "cat": "base", "ver": "v0.26", "text": "Загоны — звери у табличек, кормёжка", "date": "10.11.2026", "done": true, "doneDate": "" },
-  { "id": "base_012", "cat": "base", "ver": "v0.26", "text": "Светильники — заправка топливом", "date": "10.11.2026", "done": true, "doneDate": "" },
-  { "id": "base_013", "cat": "base", "ver": "v0.26", "text": "«Где репа?» — ищет в ящиках по имени", "date": "10.11.2026", "done": true, "doneDate": "" },
-  { "id": "base_014", "cat": "base", "ver": "v0.26", "text": "Мёд из ульев и перья с птиц", "date": "11.11.2026", "done": true, "doneDate": "" },
-  { "id": "mining_001", "cat": "mining", "ver": "v0.07", "text": "Рубка деревьев, копка камня и руды", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "mining_002", "cat": "mining", "ver": "v0.07", "text": "Поиск ресурсов в заданном радиусе (15–70 м)", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "mining_003", "cat": "mining", "ver": "v0.07", "text": "Задания «найди / добудь» с оценкой опасности", "date": "21.10.2026", "done": true, "doneDate": "" },
-  { "id": "mining_004", "cat": "mining", "ver": "v0.10", "text": "Метки ресурсов на карте по команде", "date": "25.10.2026", "done": true, "doneDate": "" },
-  { "id": "mining_005", "cat": "mining", "ver": "v0.10", "text": "Пинг на карте — «встречаемся там»", "date": "25.10.2026", "done": true, "doneDate": "" },
-  { "id": "mining_006", "cat": "mining", "ver": "v0.10", "text": "Ведёт к могиле игрока", "date": "25.10.2026", "done": true, "doneDate": "" },
-  { "id": "mining_007", "cat": "mining", "ver": "v0.11", "text": "Силы боссов — своя сила, значок и перезарядка", "date": "25.10.2026", "done": true, "doneDate": "" },
-  { "id": "mining_008", "cat": "mining", "ver": "v0.11", "text": "Берёт силу у камня, решает когда применить", "date": "25.10.2026", "done": true, "doneDate": "" },
-  { "id": "training_001", "cat": "training", "ver": "v0.25", "text": "Манекены — отработка парирования и перекатов", "date": "05.11.2026", "done": true, "doneDate": "" },
-  { "id": "training_002", "cat": "training", "ver": "v0.25", "text": "Стрельбище — лесенка дистанций и углов", "date": "08.11.2026", "done": true, "doneDate": "" },
-  { "id": "training_003", "cat": "training", "ver": "v0.25", "text": "Стрельба из-за укрытия", "date": "08.11.2026", "done": true, "doneDate": "" },
-  { "id": "training_004", "cat": "training", "ver": "v0.25", "text": "Настраиваемые подходы, перерывы, время", "date": "08.11.2026", "done": true, "doneDate": "" },
-  { "id": "mp_001", "cat": "mp", "ver": "v0.17", "text": "Друг видит и слышит Валеру через ValeraListener.dll", "date": "22.10.2026", "done": true, "doneDate": "" },
-  { "id": "mp_002", "cat": "mp", "ver": "v0.17", "text": "Голос сжимается и идёт по сети (~16 КБ/с)", "date": "22.10.2026", "done": true, "doneDate": "" },
-  { "id": "mp_003", "cat": "mp", "ver": "v0.17", "text": "Командует только хозяин", "date": "22.10.2026", "done": true, "doneDate": "" },
-  { "id": "mp_004", "cat": "mp", "ver": "v0.17", "text": "Совместим с выделенными серверами", "date": "22.10.2026", "done": true, "doneDate": "" },
-  { "id": "ui_001", "cat": "ui", "ver": "v0.11", "text": "Сила босса — значок и таймер перезарядки", "date": "25.10.2026", "done": true, "doneDate": "" },
-  { "id": "ui_002", "cat": "ui", "ver": "v0.18", "text": "Чувства и эмоции — радуется, огорчается, благодарит", "date": "27.10.2026", "done": true, "doneDate": "" },
-  { "id": "ui_003", "cat": "ui", "ver": "v0.18", "text": "Эмоции по NumPad и голосом", "date": "27.10.2026", "done": true, "doneDate": "" },
-  { "id": "ui_004", "cat": "ui", "ver": "v0.21", "text": "HUD Валеры — здоровье, еда, выносливость, эффекты", "date": "27.10.2026", "done": true, "doneDate": "" },
-  { "id": "ui_005", "cat": "ui", "ver": "v0.21", "text": "Окно навыков — вкладки: навыки, ящики, настройки", "date": "27.10.2026", "done": true, "doneDate": "" },
-  { "id": "ui_006", "cat": "ui", "ver": "v0.21", "text": "Кольцевое меню на [E] — приказы и подменю", "date": "08.11.2026", "done": true, "doneDate": "" },
-  { "id": "ui_007", "cat": "ui", "ver": "v0.22", "text": "Автозапуск тренера и голоса с игрой", "date": "10.11.2026", "done": true, "doneDate": "" },
-  { "id": "ui_008", "cat": "ui", "ver": "v0.22", "text": "«Сбросить Валеру» — полный сброс", "date": "10.11.2026", "done": true, "doneDate": "" },
-  { "id": "ui_009", "cat": "ui", "ver": "v0.23", "text": "Каждый мир — свои данные", "date": "29.10.2026", "done": true, "doneDate": "" },
-  { "id": "ui_010", "cat": "ui", "ver": "v0.23", "text": "BackUp инвентаря — «Верни шмот»", "date": "29.10.2026", "done": true, "doneDate": "" },
-  { "id": "ui_011", "cat": "ui", "ver": "v0.23", "text": "Навыки сохраняются между сессиями", "date": "29.10.2026", "done": true, "doneDate": "" },
-  { "id": "ui_012", "cat": "ui", "ver": "v0.28", "text": "Иконки рун в кольцевом меню", "date": "11.11.2026", "done": true, "doneDate": "" },
-  { "id": "ui_013", "cat": "ui", "ver": "v0.28", "text": "Смерть: «идти к тебе?» — диалог", "date": "12.11.2026", "done": true, "doneDate": "" }
+  {
+    "id": "companion_001",
+    "cat": "companion",
+    "ver": "v0.01",
+    "text": "Спавн рядом с игроком",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_002",
+    "cat": "companion",
+    "ver": "v0.01",
+    "text": "Метка Валеры на карте",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_003",
+    "cat": "companion",
+    "ver": "v0.01",
+    "text": "Догоняет бегом",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_004",
+    "cat": "companion",
+    "ver": "v0.01",
+    "text": "Команды: иди сюда, стой, за мной",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_005",
+    "cat": "companion",
+    "ver": "v0.02",
+    "text": "Авто-экипировка оружия и брони из сумки",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_006",
+    "cat": "companion",
+    "ver": "v0.02",
+    "text": "Сумка [E] — ванильное окно сундука 8×4",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_007",
+    "cat": "companion",
+    "ver": "v0.02",
+    "text": "Подбор добычи в 12 м — подходит и берёт",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_008",
+    "cat": "companion",
+    "ver": "v0.02",
+    "text": "Есть перегруз — замедление",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_009",
+    "cat": "companion",
+    "ver": "v0.03",
+    "text": "Появляется у кровати после смерти",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_010",
+    "cat": "companion",
+    "ver": "v0.03",
+    "text": "Ждёт или идёт по команде после смерти",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_011",
+    "cat": "companion",
+    "ver": "v0.03",
+    "text": "Навыки падают как у игрока",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_012",
+    "cat": "companion",
+    "ver": "v0.04",
+    "text": "Телепорт и подземелья с Валерой",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_013",
+    "cat": "companion",
+    "ver": "v0.04",
+    "text": "Корабль и плот — залезает и сидит на лавке",
+    "date": "01.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_014",
+    "cat": "companion",
+    "ver": "v0.04",
+    "text": "Обход препятствий — не лезет в костёр",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_015",
+    "cat": "companion",
+    "ver": "v0.05",
+    "text": "Сам следит за едой — ест до трёх блюд",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_016",
+    "cat": "companion",
+    "ver": "v0.05",
+    "text": "Ищет еду в сундуках",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_017",
+    "cat": "companion",
+    "ver": "v0.05",
+    "text": "Отдыхает у огня",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_018",
+    "cat": "companion",
+    "ver": "v0.06",
+    "text": "Не видит сквозь стены",
+    "date": "27.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_019",
+    "cat": "companion",
+    "ver": "v0.06",
+    "text": "Зрение под ноги — ступени, обрывы, вода",
+    "date": "27.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_020",
+    "cat": "companion",
+    "ver": "v0.06",
+    "text": "Обходит огонь и опасные объекты",
+    "date": "27.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_021",
+    "cat": "companion",
+    "ver": "v0.08",
+    "text": "Крафтит по просьбе — говорит, чего не хватает",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_022",
+    "cat": "companion",
+    "ver": "v0.08",
+    "text": "Надевает скрафченное",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_023",
+    "cat": "companion",
+    "ver": "v0.15",
+    "text": "Собирает добычу после боя",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_024",
+    "cat": "companion",
+    "ver": "v0.15",
+    "text": "Не подбирает в бою — только после",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "companion_025",
+    "cat": "companion",
+    "ver": "v0.15",
+    "text": "Подбирает стрелы с тел",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_001",
+    "cat": "combat",
+    "ver": "v0.12",
+    "text": "Нейросеть PPO выбирает приём по ситуации",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_002",
+    "cat": "combat",
+    "ver": "v0.12",
+    "text": "6 приёмов: удар, блок, уклон, отступ, кружение, особый",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_003",
+    "cat": "combat",
+    "ver": "v0.12",
+    "text": "Танк-варианты: щит / перекаты / натиск / лук",
+    "date": "02.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_004",
+    "cat": "combat",
+    "ver": "v0.12",
+    "text": "Серии ударов — как игрок «держит кнопку»",
+    "date": "02.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_005",
+    "cat": "combat",
+    "ver": "v0.13",
+    "text": "Лук — баллистика, упреждение, самообучение",
+    "date": "27.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_006",
+    "cat": "combat",
+    "ver": "v0.13",
+    "text": "Стрельба на ходу с поправкой по дистанции",
+    "date": "27.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_007",
+    "cat": "combat",
+    "ver": "v0.14",
+    "text": "Спасение заранее по запомненному урону врага",
+    "date": "26.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_008",
+    "cat": "combat",
+    "ver": "v0.14",
+    "text": "Парирование — учит замах каждого врага",
+    "date": "26.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_009",
+    "cat": "combat",
+    "ver": "v0.14",
+    "text": "Медовуха в бою — по нехватке здоровья",
+    "date": "26.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_010",
+    "cat": "combat",
+    "ver": "v0.14",
+    "text": "Меньше 20% HP — спасается, меняет оружие",
+    "date": "26.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_011",
+    "cat": "combat",
+    "ver": "v0.27",
+    "text": "Масса костей — булава и ледяная медовуха",
+    "date": "11.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_012",
+    "cat": "combat",
+    "ver": "v0.27",
+    "text": "Подготовка к каждому боссу: стрелы, медовухи, оружие",
+    "date": "08.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_013",
+    "cat": "combat",
+    "ver": "v0.28",
+    "text": "«Стой на месте» — охраняет позицию",
+    "date": "12.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "combat_014",
+    "cat": "combat",
+    "ver": "v0.28",
+    "text": "Бьёт врагов в радиусе 10 м",
+    "date": "12.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "voice_001",
+    "cat": "voice",
+    "ver": "v0.16",
+    "text": "Whisper (офлайн) + Vosk — двойное распознавание",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "voice_002",
+    "cat": "voice",
+    "ver": "v0.16",
+    "text": "Silero TTS — озвучка офлайн",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "voice_003",
+    "cat": "voice",
+    "ver": "v0.16",
+    "text": "40+ голосовых команд: бой, сбор, готовка, огород",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "voice_004",
+    "cat": "voice",
+    "ver": "v0.16",
+    "text": "Три режима: по имени (wake), рация (ptt), всегда",
+    "date": "22.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "voice_005",
+    "cat": "voice",
+    "ver": "v0.16",
+    "text": "Обучение голосом — «запомни: X значит Y»",
+    "date": "22.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "voice_006",
+    "cat": "voice",
+    "ver": "v0.16",
+    "text": "Новый голос Silero TTS — мужской, чёткий",
+    "date": "30.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "voice_007",
+    "cat": "voice",
+    "ver": "v0.17",
+    "text": "Друзья могут давать команды через ValeraListener",
+    "date": "22.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "voice_008",
+    "cat": "voice",
+    "ver": "v0.19",
+    "text": "Claude Haiku — реплики по контексту и ситуации",
+    "date": "28.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "voice_009",
+    "cat": "voice",
+    "ver": "v0.20",
+    "text": "Ollama (локально, бесплатно) — qwen3:4b-instruct",
+    "date": "04.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_001",
+    "cat": "base",
+    "ver": "v0.05",
+    "text": "Починка у верстака / кузницы",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_002",
+    "cat": "base",
+    "ver": "v0.09",
+    "text": "Память ящиков — таблички и содержимое",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_003",
+    "cat": "base",
+    "ver": "v0.09",
+    "text": "Запоминает базу",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_004",
+    "cat": "base",
+    "ver": "v0.09",
+    "text": "«Отнеси добычу» / «Сложи в ящики»",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_005",
+    "cat": "base",
+    "ver": "v0.24",
+    "text": "Переплавка руды, жжение угля",
+    "date": "01.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_006",
+    "cat": "base",
+    "ver": "v0.24",
+    "text": "Готовка — вертел, сковорода, котёл, бочка",
+    "date": "02.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_007",
+    "cat": "base",
+    "ver": "v0.24",
+    "text": "Сортировка ящиков по табличкам",
+    "date": "03.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_008",
+    "cat": "base",
+    "ver": "v0.24",
+    "text": "Огород — сбор, пересадка, семена из ящиков",
+    "date": "05.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_009",
+    "cat": "base",
+    "ver": "v0.24",
+    "text": "Домашние дела по порядку из настроек",
+    "date": "08.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_010",
+    "cat": "base",
+    "ver": "v0.24",
+    "text": "Патруль базы — обход и доклад",
+    "date": "08.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_011",
+    "cat": "base",
+    "ver": "v0.26",
+    "text": "Загоны — звери у табличек, кормёжка",
+    "date": "10.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_012",
+    "cat": "base",
+    "ver": "v0.26",
+    "text": "Светильники — заправка топливом",
+    "date": "10.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_013",
+    "cat": "base",
+    "ver": "v0.26",
+    "text": "«Где репа?» — ищет в ящиках по имени",
+    "date": "10.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "base_014",
+    "cat": "base",
+    "ver": "v0.26",
+    "text": "Мёд из ульев и перья с птиц",
+    "date": "11.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "mining_001",
+    "cat": "mining",
+    "ver": "v0.07",
+    "text": "Рубка деревьев, копка камня и руды",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "mining_002",
+    "cat": "mining",
+    "ver": "v0.07",
+    "text": "Поиск ресурсов в заданном радиусе (15–70 м)",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "mining_003",
+    "cat": "mining",
+    "ver": "v0.07",
+    "text": "Задания «найди / добудь» с оценкой опасности",
+    "date": "21.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "mining_004",
+    "cat": "mining",
+    "ver": "v0.10",
+    "text": "Метки ресурсов на карте по команде",
+    "date": "25.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "mining_005",
+    "cat": "mining",
+    "ver": "v0.10",
+    "text": "Пинг на карте — «встречаемся там»",
+    "date": "25.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "mining_006",
+    "cat": "mining",
+    "ver": "v0.10",
+    "text": "Ведёт к могиле игрока",
+    "date": "25.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "mining_007",
+    "cat": "mining",
+    "ver": "v0.11",
+    "text": "Силы боссов — своя сила, значок и перезарядка",
+    "date": "25.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "mining_008",
+    "cat": "mining",
+    "ver": "v0.11",
+    "text": "Берёт силу у камня, решает когда применить",
+    "date": "25.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "training_001",
+    "cat": "training",
+    "ver": "v0.25",
+    "text": "Манекены — отработка парирования и перекатов",
+    "date": "05.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "training_002",
+    "cat": "training",
+    "ver": "v0.25",
+    "text": "Стрельбище — лесенка дистанций и углов",
+    "date": "08.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "training_003",
+    "cat": "training",
+    "ver": "v0.25",
+    "text": "Стрельба из-за укрытия",
+    "date": "08.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "training_004",
+    "cat": "training",
+    "ver": "v0.25",
+    "text": "Настраиваемые подходы, перерывы, время",
+    "date": "08.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "mp_001",
+    "cat": "mp",
+    "ver": "v0.17",
+    "text": "Друг видит и слышит Валеру через ValeraListener.dll",
+    "date": "22.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "mp_002",
+    "cat": "mp",
+    "ver": "v0.17",
+    "text": "Голос сжимается и идёт по сети (~16 КБ/с)",
+    "date": "22.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "mp_003",
+    "cat": "mp",
+    "ver": "v0.17",
+    "text": "Командует только хозяин",
+    "date": "22.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "mp_004",
+    "cat": "mp",
+    "ver": "v0.17",
+    "text": "Совместим с выделенными серверами",
+    "date": "22.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_001",
+    "cat": "ui",
+    "ver": "v0.11",
+    "text": "Сила босса — значок и таймер перезарядки",
+    "date": "25.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_002",
+    "cat": "ui",
+    "ver": "v0.18",
+    "text": "Чувства и эмоции — радуется, огорчается, благодарит",
+    "date": "27.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_003",
+    "cat": "ui",
+    "ver": "v0.18",
+    "text": "Эмоции по NumPad и голосом",
+    "date": "27.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_004",
+    "cat": "ui",
+    "ver": "v0.21",
+    "text": "HUD Валеры — здоровье, еда, выносливость, эффекты",
+    "date": "27.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_005",
+    "cat": "ui",
+    "ver": "v0.21",
+    "text": "Окно навыков — вкладки: навыки, ящики, настройки",
+    "date": "27.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_006",
+    "cat": "ui",
+    "ver": "v0.21",
+    "text": "Кольцевое меню на [E] — приказы и подменю",
+    "date": "08.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_007",
+    "cat": "ui",
+    "ver": "v0.22",
+    "text": "Автозапуск тренера и голоса с игрой",
+    "date": "10.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_008",
+    "cat": "ui",
+    "ver": "v0.22",
+    "text": "«Сбросить Валеру» — полный сброс",
+    "date": "10.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_009",
+    "cat": "ui",
+    "ver": "v0.23",
+    "text": "Каждый мир — свои данные",
+    "date": "29.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_010",
+    "cat": "ui",
+    "ver": "v0.23",
+    "text": "BackUp инвентаря — «Верни шмот»",
+    "date": "29.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_011",
+    "cat": "ui",
+    "ver": "v0.23",
+    "text": "Навыки сохраняются между сессиями",
+    "date": "29.10.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_012",
+    "cat": "ui",
+    "ver": "v0.28",
+    "text": "Иконки рун в кольцевом меню",
+    "date": "11.11.2026",
+    "done": true,
+    "doneDate": ""
+  },
+  {
+    "id": "ui_013",
+    "cat": "ui",
+    "ver": "v0.28",
+    "text": "Смерть: «идти к тебе?» — диалог",
+    "date": "12.11.2026",
+    "done": true,
+    "doneDate": ""
+  }
 ]

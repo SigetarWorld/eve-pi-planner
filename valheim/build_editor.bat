@@ -1,36 +1,37 @@
 @echo off
+chcp 65001 >nul
 echo ==========================================
-echo   Build ValheimEditor.exe
+echo   Sborka: Valera - Redaktor dorozhnoy karty
 echo ==========================================
 echo.
 
-where python >nul 2>&1
+python --version
 if errorlevel 1 (
-    echo ERROR: Python not found in PATH!
-    echo Install Python 3.8+ from https://python.org
-    echo Check "Add Python to PATH" during install!
-    echo.
+    echo [OSHIBKA] Python ne nayden! Ustanovite Python 3.8+ s python.org
     pause
     exit /b 1
 )
 
-echo Python found:
-python --version
-echo.
-
-echo Installing PyInstaller...
-pip install pyinstaller
-echo.
-
-echo Building EXE...
-echo.
-python -m PyInstaller --onefile --windowed --name "ValheimEditor" editor.py
-
-echo.
-if exist "dist\ValheimEditor.exe" (
-    echo SUCCESS! File: %cd%\dist\ValheimEditor.exe
-) else (
-    echo BUILD FAILED - check errors above
+pip show pyinstaller >nul 2>&1
+if errorlevel 1 (
+    echo Ustanavlivaem PyInstaller...
+    pip install pyinstaller
 )
+
+echo.
+echo Sobiraem EXE...
+echo.
+
+pyinstaller --onefile --windowed --name "ValheimEditor" editor.py
+
+if errorlevel 1 (
+    echo.
+    echo [OSHIBKA] Sborka ne udalas!
+    pause
+    exit /b 1
+)
+
+echo.
+echo Gotovo! EXE fayl: dist\ValheimEditor.exe
 echo.
 pause
