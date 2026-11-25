@@ -653,6 +653,43 @@
             background: hsl(var(--primary) / .08);
         }
         .rm-range-count { margin-left: 4px; opacity: .7; }
+
+        /* ===== 01 — Описание мода ===== */
+        .vm-about-lead {
+            max-width: 860px;
+            font-family: var(--font-body);
+            font-size: 0.98rem;
+            line-height: 1.7;
+            color: hsl(var(--foreground) / .85);
+            margin: 0 0 20px;
+        }
+        .vm-about-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        @media (max-width: 900px) { .vm-about-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) {
+            .vm-about-grid { grid-template-columns: 1fr; }
+            .brand-tag { display: none; }   /* длинное название не помещается в шапку вместе с подписью */
+        }
+        .vm-about-item {
+            padding: 14px 16px;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            font-family: var(--font-body);
+            font-size: 0.84rem;
+            line-height: 1.55;
+            color: hsl(var(--muted-foreground));
+        }
+        .vm-about-item b {
+            display: block;
+            margin-bottom: 4px;
+            font-family: var(--font-heading);
+            font-size: 0.95rem;
+            color: hsl(var(--primary));
+        }
         .rm-cat-select {
             color-scheme: dark;
             margin-left: 8px;
@@ -728,7 +765,7 @@
                 <a class="home-link" href="/" data-local="../Start/index.html" title="На главную sigetar.ru" style="color:hsl(var(--primary));text-decoration:none;font-family:var(--font-display);font-weight:700;letter-spacing:0.05em;">← Sigetar.ru</a>
             </div>
             <a class="brand" href="/valheim/" data-local="index.html">
-                <span class="brand-name">Companion AI</span>
+                <span class="brand-name">Companion [AI] Валера</span>
                 <span class="brand-tag">[ Valheim Mod ]</span>
             </a>
         </div>
@@ -738,7 +775,28 @@
 
     <!-- =============== HORIZONTAL ROADMAP =============== -->
     <div class="container" style="padding-top:48px">
-        <p class="eyebrow">// 01 — Дорожная карта</p>
+        <section class="vm-about">
+            <p class="eyebrow">// 01 — Описание мода [AI] Валера для игры Valheim</p>
+            <h2 class="vm-section-title"><span>[AI]</span> Валера — компаньон, который учится</h2>
+            <p class="vm-about-lead">
+                [AI] Валера — мод-напарник для Valheim: викинг, который ходит с тобой по миру,
+                сражается рядом, работает на базе и понимает голосовые команды.
+                В бою им управляет нейросеть PPO, а замахи врагов и стрельбу из лука он запоминает
+                и улучшает с опытом. Реплики по ситуации придумывает языковая модель —
+                Claude Haiku или бесплатная локальная Ollama.
+            </p>
+            <div class="vm-about-grid">
+                <div class="vm-about-item"><b>Бой</b>Нейросеть выбирает из шести приёмов, учит замах каждого врага, стреляет из лука с упреждением и заранее готовится к боссам.</div>
+                <div class="vm-about-item"><b>Голос</b>40+ команд, офлайн-распознавание Whisper + Vosk и озвучка Silero TTS. Новым словам можно научить: «запомни: X значит Y».</div>
+                <div class="vm-about-item"><b>База</b>Плавит руду, готовит, ухаживает за огородом и загонами, сортирует ящики по табличкам и патрулирует дом.</div>
+                <div class="vm-about-item"><b>Походы</b>Рубит, копает, ищет ресурсы, ставит метки на карте, плывёт с тобой на корабле и спускается в подземелья.</div>
+                <div class="vm-about-item"><b>Характер</b>Сам ест и отдыхает у огня, радуется и огорчается, говорит по ситуации.</div>
+                <div class="vm-about-item"><b>С друзьями</b>Работает в мультиплеере и на выделенных серверах: друзья видят и слышат Валеру, командует только хозяин.</div>
+            </div>
+        </section>
+    </div>
+    <div class="container" style="padding-top:48px">
+        <p class="eyebrow">// 02 — Дорожная карта</p>
     </div>
     <div class="rm-wrap" id="roadmapWrap">
         <div class="rm-header">
@@ -827,7 +885,7 @@
     <!-- =============== FEATURES (kept) =============== -->
     <div class="container">
         <div class="vm-section">
-            <p class="eyebrow">// 02 — Что сделано</p>
+            <p class="eyebrow">// 03 — Что сделано</p>
             <h2 class="vm-section-title"><span>✓</span> Реализованные возможности</h2>
 
             <div class="feat-wrap" id="featWrap">
@@ -1046,7 +1104,7 @@
         <hr class="rule">
 
         <div class="vm-section" style="padding-bottom: 16px;">
-            <p class="eyebrow">// 03 — Стек</p>
+            <p class="eyebrow">// 04 — Стек</p>
             <h2 class="vm-section-title"><span>&lt;/&gt;</span> Технологии</h2>
             <div class="tech-row">
                 <span class="tech-tag">C#</span>
