@@ -1,0 +1,1714 @@
+[
+ {
+  "file": "anchor.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «anchor» (IC)"
+  ]
+ },
+ {
+  "file": "arrow-right.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "index.html: «Страница мода»"
+  ]
+ },
+ {
+  "file": "assist.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «assist» (IC)"
+  ]
+ },
+ {
+  "file": "axe.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «axe» (IC)"
+  ]
+ },
+ {
+  "file": "bag.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «bag» (IC)"
+  ]
+ },
+ {
+  "file": "bolt.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «bolt» (IC)"
+  ]
+ },
+ {
+  "file": "book.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «book» (IC)"
+  ]
+ },
+ {
+  "file": "boss.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «boss» (IC)"
+  ]
+ },
+ {
+  "file": "bow.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «bow» (IC)"
+  ]
+ },
+ {
+  "file": "brain.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «brain» (IC)"
+  ]
+ },
+ {
+  "file": "calendar.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "square",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"square\" stroke-linejoin=\"miter\""
+  ],
+  "used_in": [
+   "index.html: «Обновлено:»",
+   "index.html: «В игре:»",
+   "index.html: «В игре:»"
+  ]
+ },
+ {
+  "file": "chat.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "square",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"square\" stroke-linejoin=\"miter\""
+  ],
+  "used_in": [
+   "index.html: «Группа Steam»",
+   "index.html: «Группа Steam»"
+  ]
+ },
+ {
+  "file": "check.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "index.html: «Выполнено»",
+   "index.html: «Вход друзей через портал на моём сервере»",
+   "index.html: «Вход через портал на моём сервере»",
+   "index.html: «Ложа»",
+   "index.html: «Смерть: «идти к тебе?» — диалог»",
+   "index.html: «Бьёт врагов в радиусе 10 м»",
+   "index.html: «Последнее (галочка)»"
+  ]
+ },
+ {
+  "file": "chest.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «chest» (IC)"
+  ]
+ },
+ {
+  "file": "clan.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "square",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"square\" stroke-linejoin=\"miter\""
+  ],
+  "used_in": [
+   "index.html: «Клан»"
+  ]
+ },
+ {
+  "file": "cmd.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «cmd» (IC)"
+  ]
+ },
+ {
+  "file": "collect.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «collect» (IC)"
+  ]
+ },
+ {
+  "file": "combo.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «combo» (IC)"
+  ]
+ },
+ {
+  "file": "compass.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «compass» (IC)"
+  ]
+ },
+ {
+  "file": "cook.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «cook» (IC)"
+  ]
+ },
+ {
+  "file": "cover.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «cover» (IC)"
+  ]
+ },
+ {
+  "file": "craft.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «craft» (IC)"
+  ]
+ },
+ {
+  "file": "crown.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «crown» (IC)"
+  ]
+ },
+ {
+  "file": "dummy.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «dummy» (IC)"
+  ]
+ },
+ {
+  "file": "emotion.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «emotion» (IC)"
+  ]
+ },
+ {
+  "file": "equip.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «equip» (IC)"
+  ]
+ },
+ {
+  "file": "eye.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «eye» (IC)"
+  ]
+ },
+ {
+  "file": "fire.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «fire» (IC)"
+  ]
+ },
+ {
+  "file": "fish.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «fish» (IC)"
+  ]
+ },
+ {
+  "file": "flag.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «flag» (IC)"
+  ]
+ },
+ {
+  "file": "follow.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «follow» (IC)"
+  ]
+ },
+ {
+  "file": "food.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «food» (IC)"
+  ]
+ },
+ {
+  "file": "friends.svg",
+  "group": "site",
+  "aliases": [
+   "multi"
+  ],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"",
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "index.html: «С друзьями»",
+   "valheim/index.html: иконка категории «multi» (IC)"
+  ]
+ },
+ {
+  "file": "garden.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «garden» (IC)"
+  ]
+ },
+ {
+  "file": "gear.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «gear» (IC)"
+  ]
+ },
+ {
+  "file": "gem.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «gem» (IC)"
+  ]
+ },
+ {
+  "file": "guard.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «guard» (IC)"
+  ]
+ },
+ {
+  "file": "hammer.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «hammer» (IC)"
+  ]
+ },
+ {
+  "file": "headset.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "square",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"square\" stroke-linejoin=\"miter\""
+  ],
+  "used_in": [
+   "index.html: «Discord»",
+   "index.html: «Discord»"
+  ]
+ },
+ {
+  "file": "heal.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «heal» (IC)"
+  ]
+ },
+ {
+  "file": "heart.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «heart» (IC)"
+  ]
+ },
+ {
+  "file": "home.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"",
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "index.html: «База»",
+   "valheim/index.html: иконка категории «home» (IC)"
+  ]
+ },
+ {
+  "file": "honey.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «honey» (IC)"
+  ]
+ },
+ {
+  "file": "horse.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «horse» (IC)"
+  ]
+ },
+ {
+  "file": "hud.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «hud» (IC)"
+  ]
+ },
+ {
+  "file": "lamp.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «lamp» (IC)"
+  ]
+ },
+ {
+  "file": "launch.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «launch» (IC)"
+  ]
+ },
+ {
+  "file": "level.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "square",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"square\" stroke-linejoin=\"miter\""
+  ],
+  "used_in": [
+   "index.html: «Уровень»"
+  ]
+ },
+ {
+  "file": "loot.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «loot» (IC)"
+  ]
+ },
+ {
+  "file": "map.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"",
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "index.html: «Дорожная карта»",
+   "valheim/index.html: иконка категории «map» (IC)"
+  ]
+ },
+ {
+  "file": "marker.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «marker» (IC)"
+  ]
+ },
+ {
+  "file": "memory.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «memory» (IC)"
+  ]
+ },
+ {
+  "file": "mic.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"",
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "index.html: «Голос»",
+   "valheim/index.html: иконка категории «mic» (IC)"
+  ]
+ },
+ {
+  "file": "mine.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «mine» (IC)"
+  ]
+ },
+ {
+  "file": "moon.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «moon» (IC)"
+  ]
+ },
+ {
+  "file": "music.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «music» (IC)"
+  ]
+ },
+ {
+  "file": "nav.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «nav» (IC)"
+  ]
+ },
+ {
+  "file": "net.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «net» (IC)"
+  ]
+ },
+ {
+  "file": "npc.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «npc» (IC)"
+  ]
+ },
+ {
+  "file": "patrol.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «patrol» (IC)"
+  ]
+ },
+ {
+  "file": "paw.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «paw» (IC)"
+  ]
+ },
+ {
+  "file": "pen.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «pen» (IC)"
+  ]
+ },
+ {
+  "file": "pick.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «pick» (IC)"
+  ]
+ },
+ {
+  "file": "portal.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «portal» (IC)"
+  ]
+ },
+ {
+  "file": "potion.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «potion» (IC)"
+  ]
+ },
+ {
+  "file": "ppo.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «ppo» (IC)"
+  ]
+ },
+ {
+  "file": "reset.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «reset» (IC)"
+  ]
+ },
+ {
+  "file": "ring.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «ring» (IC)"
+  ]
+ },
+ {
+  "file": "run.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «run» (IC)"
+  ]
+ },
+ {
+  "file": "rune.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «rune» (IC)"
+  ]
+ },
+ {
+  "file": "scroll.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «scroll» (IC)"
+  ]
+ },
+ {
+  "file": "search.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «search» (IC)"
+  ]
+ },
+ {
+  "file": "shield.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «shield» (IC)"
+  ]
+ },
+ {
+  "file": "shield2.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «shield2» (IC)"
+  ]
+ },
+ {
+  "file": "ship.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «ship» (IC)"
+  ]
+ },
+ {
+  "file": "sit.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «sit» (IC)"
+  ]
+ },
+ {
+  "file": "skill.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «skill» (IC)"
+  ]
+ },
+ {
+  "file": "skull.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «skull» (IC)"
+  ]
+ },
+ {
+  "file": "smelt.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «smelt» (IC)"
+  ]
+ },
+ {
+  "file": "sort.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «sort» (IC)"
+  ]
+ },
+ {
+  "file": "speaker.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «speaker» (IC)"
+  ]
+ },
+ {
+  "file": "star.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «star» (IC)"
+  ]
+ },
+ {
+  "file": "stopwatch.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "index.html: «В планах»"
+  ]
+ },
+ {
+  "file": "store.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «store» (IC)"
+  ]
+ },
+ {
+  "file": "sun.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «sun» (IC)"
+  ]
+ },
+ {
+  "file": "sword.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"",
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "index.html: «Бой»",
+   "valheim/index.html: иконка категории «sword» (IC)"
+  ]
+ },
+ {
+  "file": "swords.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "square",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"square\" stroke-linejoin=\"miter\""
+  ],
+  "used_in": [
+   "index.html: «Победы»"
+  ]
+ },
+ {
+  "file": "target.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «target» (IC)"
+  ]
+ },
+ {
+  "file": "telegram.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "square",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"square\" stroke-linejoin=\"miter\""
+  ],
+  "used_in": [
+   "index.html: «Telegram»",
+   "index.html: «Telegram»"
+  ]
+ },
+ {
+  "file": "three-crowns.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "square",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"square\" stroke-linejoin=\"miter\""
+  ],
+  "used_in": [
+   "index.html: «Три короны»"
+  ]
+ },
+ {
+  "file": "timer.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «timer» (IC)"
+  ]
+ },
+ {
+  "file": "tree.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «tree» (IC)"
+  ]
+ },
+ {
+  "file": "trophy.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "square",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"square\" stroke-linejoin=\"miter\""
+  ],
+  "used_in": [
+   "index.html: «Трофеи»"
+  ]
+ },
+ {
+  "file": "user.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "square",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"square\" stroke-linejoin=\"miter\""
+  ],
+  "used_in": [
+   "index.html: «Игрок»"
+  ]
+ },
+ {
+  "file": "users.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "square",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"square\" stroke-linejoin=\"miter\""
+  ],
+  "used_in": [
+   "index.html: «Группа ВКонтакте»",
+   "index.html: «Группа ВКонтакте»"
+  ]
+ },
+ {
+  "file": "video.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "square",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"square\" stroke-linejoin=\"miter\""
+  ],
+  "used_in": [
+   "index.html: «Яндекс Телемост»",
+   "index.html: «Яндекс Телемост»"
+  ]
+ },
+ {
+  "file": "wolf.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "valheim/index.html: иконка категории «wolf» (IC)"
+  ]
+ },
+ {
+  "file": "wrench.svg",
+  "group": "site",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"",
+   "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\""
+  ],
+  "used_in": [
+   "index.html: «В работе»",
+   "valheim/index.html: иконка категории «wrench» (IC)"
+  ]
+ },
+ {
+  "file": "brands/boosty.svg",
+  "group": "brands",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "currentColor",
+  "stroke_width": "—",
+  "linecap": "—",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\""
+  ],
+  "used_in": [
+   "index.html: логотип boosty",
+   "valheim/index.html: логотип boosty"
+  ]
+ },
+ {
+  "file": "brands/rutube.svg",
+  "group": "brands",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "currentColor",
+  "stroke_width": "—",
+  "linecap": "—",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\""
+  ],
+  "used_in": [
+   "index.html: логотип rutube",
+   "valheim/index.html: логотип rutube"
+  ]
+ },
+ {
+  "file": "brands/telegram.svg",
+  "group": "brands",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "currentColor",
+  "stroke_width": "—",
+  "linecap": "—",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\""
+  ],
+  "used_in": [
+   "index.html: логотип telegram",
+   "valheim/index.html: логотип telegram"
+  ]
+ },
+ {
+  "file": "brands/vk.svg",
+  "group": "brands",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "currentColor",
+  "stroke_width": "—",
+  "linecap": "—",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\""
+  ],
+  "used_in": [
+   "index.html: логотип vk",
+   "valheim/index.html: логотип vk"
+  ]
+ },
+ {
+  "file": "brands/youtube.svg",
+  "group": "brands",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "currentColor",
+  "stroke_width": "—",
+  "linecap": "—",
+  "styles_in_use": [
+   "viewBox=\"0 0 24 24\""
+  ],
+  "used_in": [
+   "index.html: логотип youtube",
+   "valheim/index.html: логотип youtube"
+  ]
+ },
+ {
+  "file": "eve/map-hide-planets.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 20 20",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 20 20\""
+  ],
+  "used_in": [
+   "eveonline/index.html: кнопка карты «Скрыть все планеты»"
+  ]
+ },
+ {
+  "file": "eve/map-pilots-only.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 20 20",
+  "fill": "none",
+  "stroke_width": "1.6",
+  "linecap": "round",
+  "styles_in_use": [
+   "viewBox=\"0 0 20 20\""
+  ],
+  "used_in": [
+   "eveonline/index.html: кнопка карты «Скрыть планеты без персонажей»"
+  ]
+ },
+ {
+  "file": "eve/route-hangar.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 16 16",
+  "fill": "currentColor",
+  "stroke_width": "—",
+  "linecap": "—",
+  "styles_in_use": [
+   "viewBox=\"0 0 16 16\" fill=\"currentColor\""
+  ],
+  "used_in": [
+   "eveonline/js/app.js: сегмент маршрута «hangar» (WH_SEG_SVG)"
+  ]
+ },
+ {
+  "file": "eve/route-hold.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 16 16",
+  "fill": "currentColor",
+  "stroke_width": "—",
+  "linecap": "—",
+  "styles_in_use": [
+   "viewBox=\"0 0 16 16\" fill=\"currentColor\""
+  ],
+  "used_in": [
+   "eveonline/js/app.js: сегмент маршрута «hold» (WH_SEG_SVG)"
+  ]
+ },
+ {
+  "file": "eve/route-office.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 16 16",
+  "fill": "currentColor",
+  "stroke_width": "—",
+  "linecap": "—",
+  "styles_in_use": [
+   "viewBox=\"0 0 16 16\" fill=\"currentColor\""
+  ],
+  "used_in": [
+   "eveonline/js/app.js: сегмент маршрута «office» (WH_SEG_SVG)"
+  ]
+ },
+ {
+  "file": "eve/store-cc.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 16 16",
+  "fill": "currentColor",
+  "stroke_width": "—",
+  "linecap": "—",
+  "styles_in_use": [
+   "viewBox=\"0 0 16 16\" fill=\"currentColor\""
+  ],
+  "used_in": [
+   "eveonline/js/app.js: тип склада «cc» (STORE_SVG)"
+  ]
+ },
+ {
+  "file": "eve/store-lp.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 16 16",
+  "fill": "currentColor",
+  "stroke_width": "—",
+  "linecap": "—",
+  "styles_in_use": [
+   "viewBox=\"0 0 16 16\" fill=\"currentColor\""
+  ],
+  "used_in": [
+   "eveonline/js/app.js: тип склада «lp» (STORE_SVG)"
+  ]
+ },
+ {
+  "file": "eve/store-sf.svg",
+  "group": "eve",
+  "aliases": [],
+  "viewBox": "0 0 16 16",
+  "fill": "currentColor",
+  "stroke_width": "—",
+  "linecap": "—",
+  "styles_in_use": [
+   "viewBox=\"0 0 16 16\" fill=\"currentColor\""
+  ],
+  "used_in": [
+   "eveonline/js/app.js: тип склада «sf» (STORE_SVG)"
+  ]
+ },
+ {
+  "file": "art/viking.svg",
+  "group": "art",
+  "aliases": [],
+  "viewBox": "0 0 60 70",
+  "fill": "none",
+  "stroke_width": "—",
+  "linecap": "—",
+  "styles_in_use": [
+   "viewBox=\"0 0 60 70\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\""
+  ],
+  "used_in": [
+   "valheim/index.html: аватар на дорожной карте"
+  ]
+ }
+]

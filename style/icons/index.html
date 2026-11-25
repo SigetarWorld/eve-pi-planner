@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Иконки — Sigetar.ru</title>
+    <link rel="stylesheet" href="/style/site.css?v=1">
+    <style>
+        /* Обзор всех иконок сайта. Данные — icons.json рядом (откуда взята, где используется). */
+        .ic-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 0 0 1.5rem;
+        }
+        .ic-chip {
+            padding: 4px 10px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: hsl(var(--muted-foreground));
+            border: 1px solid hsl(var(--border));
+            background: hsl(var(--card));
+        }
+        .ic-chip b { color: hsl(var(--primary)); font-weight: 400; }
+        .ic-tools {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 1.5rem;
+            font-family: var(--font-heading);
+            font-size: 12px;
+            letter-spacing: .15em;
+            text-transform: uppercase;
+            color: hsl(var(--muted-foreground));
+        }
+        .ic-tools button.is-on {
+            color: hsl(var(--primary));
+            border-color: hsl(var(--primary));
+        }
+        .ic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 10px;
+            margin-bottom: 3rem;
+        }
+        .ic-tile {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
+            background: hsl(var(--card) / .8);
+            border: 1px solid hsl(var(--border) / .7);
+        }
+        .ic-tile.is-odd { border-color: hsl(var(--warning) / .7); }
+        .ic-view {
+            display: flex;
+            align-items: flex-end;
+            gap: 14px;
+            color: hsl(var(--primary));
+        }
+        .ic-view svg { display: block; }
+        .ic-view .s18 { width: 18px; height: 18px; }
+        .ic-view .s24 { width: 24px; height: 24px; }
+        .ic-view .s48 { width: 48px; height: 48px; }
+        .ic-name {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: hsl(var(--foreground));
+            word-break: break-all;
+        }
+        .ic-meta {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            line-height: 1.5;
+            color: hsl(var(--faint-foreground));
+        }
+        .ic-meta .odd { color: hsl(var(--warning)); }
+        .ic-used {
+            font-size: 11px;
+            line-height: 1.4;
+            color: hsl(var(--muted-foreground));
+        }
+        body.ic-white .ic-view { color: hsl(var(--foreground)); }
+    </style>
+</head>
+<body>
+    <script src="/style/layout.js?v=1"></script>
+    <main>
+        <p class="eyebrow">// Style — иконки</p>
+        <h1 class="section-title">Иконки сайта</h1>
+        <p class="section-lead">Все иконки, найденные на страницах sigetar.ru. Каждая лежит отдельным SVG в папке
+            <code>Style\icons</code>; откуда она взята и где используется — в <code>icons.json</code>.
+            Рамкой янтарного цвета отмечены иконки, нарисованные не так, как большинство в своей группе.</p>
+
+        <div class="ic-summary" id="summary"></div>
+        <div class="ic-tools">
+            Цвет:
+            <button class="btn btn--sm is-on" data-color="amber">янтарь</button>
+            <button class="btn btn--sm" data-color="white">белый</button>
+        </div>
+        <div id="groups"></div>
+    </main>
+
+    <script>
+    (async function () {
+        const GROUPS = [
+            ['site',   'Общий набор: значки главной и иконки Valheim'],
+            ['brands', 'Логотипы сервисов (brands/)'],
+            ['eve',    'EVE Planner (eve/)'],
+            ['art',    'Иллюстрации (art/)']
+        ];
+        const list = await fetch('icons.json').then(r => r.json());
+        const styleKey = i => i.group === 'site' || i.group === 'eve'
+            ? `${i.viewBox} · ${i.fill === 'none' ? 'контур ' + i.stroke_width + ' ' + i.linecap : 'заливка'}`
+            : i.viewBox;
+
+        /* сводка по стилям рисования */
+        const counts = {};
+        list.filter(i => i.group === 'site').forEach(i => { const k = styleKey(i); counts[k] = (counts[k] || 0) + 1; });
+        const common = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+        document.getElementById('summary').innerHTML =
+            `<span class="ic-chip">всего: <b>${list.length}</b></span>` +
+            Object.entries(counts).map(([k, n]) => `<span class="ic-chip">${k}: <b>${n}</b></span>`).join('');
+
+        const svgs = await Promise.all(list.map(i => fetch(i.file).then(r => r.text())));
+        const root = document.getElementById('groups');
+        GROUPS.forEach(([g, title]) => {
+            const items = list.map((i, n) => [i, svgs[n]]).filter(([i]) => i.group === g);
+            if (!items.length) return;
+            root.insertAdjacentHTML('beforeend', `<h2 class="eyebrow" style="margin-top:2rem">// ${title} — ${items.length}</h2><div class="ic-grid"></div>`);
+            const grid = root.lastElementChild;
+            items.forEach(([i, svg]) => {
+                const odd = g === 'site' && styleKey(i) !== common;
+                const mixed = i.styles_in_use.length > 1;
+                const view = ['s18', 's24', 's48'].map(c => svg.replace('<svg ', `<svg class="${c}" `)).join('');
+                grid.insertAdjacentHTML('beforeend', `
+                    <div class="ic-tile${odd || mixed ? ' is-odd' : ''}" title="${i.used_in.join('\n').replace(/"/g, '&quot;')}">
+                        <div class="ic-view">${view}</div>
+                        <div class="ic-name">${i.file}${i.aliases.length ? ' <span class="ic-meta">(= ' + i.aliases.join(', ') + ')</span>' : ''}</div>
+                        <div class="ic-meta">${odd ? '<span class="odd">' + styleKey(i) + '</span>' : styleKey(i)}${mixed ? '<br><span class="odd">на сайте в ' + i.styles_in_use.length + ' вариантах толщины</span>' : ''}</div>
+                        <div class="ic-used">${i.used_in.length > 1 ? i.used_in.length + ' мест: ' : ''}${i.used_in[0].replace(/^[^:]+: /, '')}</div>
+                    </div>`);
+            });
+        });
+
+        document.querySelectorAll('[data-color]').forEach(b => b.addEventListener('click', () => {
+            document.body.classList.toggle('ic-white', b.dataset.color === 'white');
+            document.querySelectorAll('[data-color]').forEach(x => x.classList.toggle('is-on', x === b));
+        }));
+    })();
+    </script>
+</body>
+</html>

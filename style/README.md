@@ -64,3 +64,17 @@
 - Строки «название — значение»: `<ul class="ships">` → `<a class="ship">` с `ship-img ship-img--glyph`, `ship-name`, `ship-val` / `ship-kills`.
 - Кнопки: `.btn`, `.btn--teal`, `.btn--sm`; группа — `.actions`.
 - Ссылки на каналы: `.stats.stats--social` + `.stat.stat--logo`, донат — `.stat--donate`.
+
+## Иконки — `icons/`
+
+Все иконки сайта собраны в `icons/`, по одной в SVG-файле. Обзор со всеми иконками сразу: `icons/index.html`
+(локально — `http://localhost:8000/style/icons/` через `preview.bat`). Откуда взята каждая и где используется — `icons/icons.json`.
+
+| Папка | Что |
+|---|---|
+| `icons/` | общий набор контурных значков (главная + категории Valheim) |
+| `icons/brands/` | логотипы сервисов (YouTube, Rutube, VK, Telegram, Boosty) |
+| `icons/eve/` | значки EVE Planner (сегменты маршрута, склады, кнопки карты) |
+| `icons/art/` | иллюстрации (викинг на дорожной карте Valheim) |
+
+Пока иконки лежат «как есть» — в том виде, в каком они сейчас на страницах; страницы их ещё не подключают из этой папки.
