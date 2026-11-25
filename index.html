@@ -77,16 +77,148 @@
             <h2 class="section-title">Valheim Mod</h2>
             <p class="section-lead">
                 Valheim — кооперативная survival-игра в скандинавском сеттинге.
-                Здесь собраны моды и инструменты для улучшения игрового опыта.
+                Я делаю для неё мод [AI] Валера: это компаньон, который ходит с тобой по миру,
+                сражается рядом, работает на базе и понимает голосовые команды.
+                Он учится в бою и с каждым обновлением умеет больше.
             </p>
+
+            <style>
+                /* Плитка «Последнее»: длинный текст этапа обрезается многоточием, дата справа */
+                .vh-updates .ship:has(.ship-val) .ship-name {
+                    flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis;
+                }
+                .vh-updates .ship-val { flex: 0 0 auto; }
+            </style>
 
             <div class="grid">
                 <div class="panel">
-                    <h3 class="h-split">Моды <span>mods</span></h3>
-                    <p class="panel-text">Коллекция модов для Valheim — улучшения геймплея, новые предметы, настройки сервера и многое другое.</p>
-                    <a class="panel-link" href="/valheim/" data-local="../Valheim/index.html">Перейти →</a>
+                    <h3 class="h-split">[AI] Валера <span>companion</span></h3>
+                    <ul class="ships">
+                        <li>
+                            <a class="ship" href="/valheim/" data-local="../Valheim/index.html">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14.5 3.5L21 10l-2 2-6.5-6.5z"/><path d="M10 14l-7 7"/><path d="M8 12l4 4"/><path d="M3 21l2-2"/></svg></span>
+                                <span class="ship-name">Бой</span>
+                                <span class="ship-val">учится на врагах</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="/valheim/" data-local="../Valheim/index.html">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="2" width="6" height="10" rx="3"/><path d="M5 10a7 7 0 0014 0"/><path d="M12 17v5"/><path d="M8 22h8"/></svg></span>
+                                <span class="ship-name">Голос</span>
+                                <span class="ship-val">40+ команд</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="/valheim/" data-local="../Valheim/index.html">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V12h6v9"/></svg></span>
+                                <span class="ship-name">База</span>
+                                <span class="ship-val">сам по хозяйству</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="/valheim/" data-local="../Valheim/index.html">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 18v-1a5 5 0 0110 0v1"/><path d="M13 18v-1a5 5 0 0110 0v1"/></svg></span>
+                                <span class="ship-name">С друзьями</span>
+                                <span class="ship-val">мультиплеер</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="ship" href="/valheim/" data-local="../Valheim/index.html">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
+                                <span class="ship-name">Страница мода</span>
+                                <span class="ship-val">ПЕРЕЙТИ</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Прогресс и последние этапы: значения ниже — запасные (на 25.11.2026),
+                     при загрузке страницы подставляются актуальные из valheim/data/milestones.json -->
+                <div class="panel">
+                    <h3 class="h-split">Прогресс <span>roadmap</span></h3>
+                    <ul class="ships">
+                        <li>
+                            <div class="ship ship--static">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12l5 5 9-10"/></svg></span>
+                                <span class="ship-name">Выполнено</span>
+                                <span class="ship-kills" id="vhDone">96</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="ship ship--static">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94z"/></svg></span>
+                                <span class="ship-name">В работе</span>
+                                <span class="ship-kills" id="vhWip">3</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="ship ship--static">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg></span>
+                                <span class="ship-name">В планах</span>
+                                <span class="ship-kills" id="vhPlan">5</span>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="ship ship--static">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M7.5 14h3v3h-3z" fill="currentColor" stroke="none"/></svg></span>
+                                <span class="ship-name">Обновлено:</span>
+                                <span class="ship-val" id="vhLast">23.11.2026</span>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="ship" href="/valheim/#roadmapWrap" data-local="../Valheim/index.html">
+                                <span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></span>
+                                <span class="ship-name">Дорожная карта</span>
+                                <span class="ship-val">ОТКРЫТЬ</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="panel vh-updates">
+                    <h3 class="h-split">Последнее <span>updates</span></h3>
+                    <ul class="ships" id="vhUpdates">
+                        <li><a class="ship" href="/valheim/" data-local="../Valheim/index.html"><span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12l5 5 9-10"/></svg></span><span class="ship-name">Вход друзей через портал на моём сервере</span><span class="ship-val">23.11</span></a></li>
+                        <li><a class="ship" href="/valheim/" data-local="../Valheim/index.html"><span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12l5 5 9-10"/></svg></span><span class="ship-name">Вход через портал на моём сервере</span><span class="ship-val">23.11</span></a></li>
+                        <li><a class="ship" href="/valheim/" data-local="../Valheim/index.html"><span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12l5 5 9-10"/></svg></span><span class="ship-name">Ложа</span><span class="ship-val">23.11</span></a></li>
+                        <li><a class="ship" href="/valheim/" data-local="../Valheim/index.html"><span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12l5 5 9-10"/></svg></span><span class="ship-name">Смерть: «идти к тебе?» — диалог</span><span class="ship-val">12.11</span></a></li>
+                        <li><a class="ship" href="/valheim/" data-local="../Valheim/index.html"><span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12l5 5 9-10"/></svg></span><span class="ship-name">Бьёт врагов в радиусе 10 м</span><span class="ship-val">12.11</span></a></li>
+                    </ul>
                 </div>
             </div>
+
+            <script>
+            /* Актуальные цифры и последние этапы из данных дорожной карты Valheim */
+            (function () {
+                const CHECK = '<span class="ship-img ship-img--glyph" aria-hidden="true"><svg class="glyph" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12l5 5 9-10"/></svg></span>';
+                const pd = s => { const p = (s || '').split('.'); return p.length === 3 ? new Date(+p[2], p[1] - 1, +p[0]) : null; };
+                fetch('valheim/data/milestones.json').then(r => r.json()).then(ms => {
+                    const n = st => ms.filter(m => m.status === st).length;
+                    document.getElementById('vhDone').textContent = n('done');
+                    document.getElementById('vhWip').textContent  = n('wip');
+                    document.getElementById('vhPlan').textContent = n('planned');
+                    const done = ms.filter(m => m.status === 'done' && pd(m.date))
+                        .sort((a, b) => (pd(b.date) - pd(a.date)) || ((b.order || 0) - (a.order || 0)));
+                    if (!done.length) return;
+                    document.getElementById('vhLast').textContent = done[0].date;
+                    const ul = document.getElementById('vhUpdates');
+                    ul.innerHTML = '';
+                    done.slice(0, 5).forEach(m => {
+                        const li = document.createElement('li');
+                        const a = document.createElement('a');
+                        a.className = 'ship'; a.href = '/valheim/';
+                        if (location.protocol === 'file:') a.href = '../Valheim/index.html';
+                        const name = document.createElement('span');
+                        name.className = 'ship-name'; name.textContent = m.text;
+                        name.title = (m.subcat ? m.subcat + ': ' : '') + m.text;
+                        const val = document.createElement('span');
+                        val.className = 'ship-val'; val.textContent = m.date.slice(0, 5);
+                        a.insertAdjacentHTML('afterbegin', CHECK);
+                        a.append(name, val); li.appendChild(a); ul.appendChild(li);
+                    });
+                }).catch(() => { /* оставляем запасные значения */ });
+            })();
+            </script>
 
             <hr class="rule">
 
