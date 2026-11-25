@@ -108,10 +108,11 @@
             ['site',   'Общий набор: значки главной и иконки Valheim'],
             ['brands', 'Логотипы сервисов (brands/)'],
             ['eve',    'EVE Planner (eve/)'],
+            ['nubyra', 'Набор Nubyra: Valheim, боссы, биомы, канал (nubyra/)'],
             ['art',    'Иллюстрации (art/)']
         ];
         const list = await fetch('icons.json').then(r => r.json());
-        const styleKey = i => i.group === 'site' || i.group === 'eve'
+        const styleKey = i => i.group === 'site' || i.group === 'eve' || i.group === 'nubyra'
             ? `${i.viewBox} · ${i.fill === 'none' ? 'контур ' + i.stroke_width + ' ' + i.linecap : 'заливка'}`
             : i.viewBox;
 

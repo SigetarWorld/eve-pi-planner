@@ -74,7 +74,8 @@
 |---|---|
 | `icons/` | общий набор контурных значков (главная + категории Valheim) |
 | `icons/brands/` | логотипы сервисов (YouTube, Rutube, VK, Telegram, Boosty) |
-| `icons/eve/` | значки EVE Planner (сегменты маршрута, склады, кнопки карты) |
+| `icons/eve/` | значки EVE Planner (сегменты маршрута, склады, кнопки карточек и карты, плашки ISK / 24ч / PLEX) |
+| `icons/nubyra/` | набор Nubyra: Valheim (боссы, биомы, оружие, предметы) и значки канала (logo, valera, sigetar, terminal, microphone, video, subscribe) |
 | `icons/art/` | иллюстрации (викинг на дорожной карте Valheim) |
 
 **Стандарт значков:** сетка 24×24, только контур, толщина линии `--icon-stroke` (1.8, в `tokens.css`), скруглённые концы и углы.

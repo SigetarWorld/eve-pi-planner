@@ -1977,5 +1977,725 @@
   ],
   "standard": true,
   "redrawn": "нарисована по стандарту вместо символа «PLEX»"
+ },
+ {
+  "file": "nubyra/ai-chip.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/ashlands.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/axe.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": "в общем наборе есть свой axe.svg — другой рисунок"
+ },
+ {
+  "file": "nubyra/bed.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/blackforest.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/boar.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/bonemass.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/bow.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": "в общем наборе есть свой bow.svg — другой рисунок"
+ },
+ {
+  "file": "nubyra/campfire.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/chest.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": "в общем наборе есть свой chest.svg — другой рисунок"
+ },
+ {
+  "file": "nubyra/coin.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/colosseum.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/deaths.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/deepnorth.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/draugr.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/eikthyr.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/elder.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/fader.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/gladiator.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/hammer.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": "в общем наборе есть свой hammer.svg — другой рисунок"
+ },
+ {
+  "file": "nubyra/helmet.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/laurel.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/logo.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/longship.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/mead.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/meadows.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/microphone.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/mistlands.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/moder.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/mountains.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/ocean.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/plains.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/portal.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": "в общем наборе есть свой portal.svg — другой рисунок"
+ },
+ {
+  "file": "nubyra/queen.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/rune.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": "в общем наборе есть свой rune.svg — другой рисунок"
+ },
+ {
+  "file": "nubyra/serpent.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/shield.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": "в общем наборе есть свой shield.svg — другой рисунок"
+ },
+ {
+  "file": "nubyra/sigetar.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/subscribe.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/swamp.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/swords.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": "в общем наборе есть свой swords.svg — другой рисунок"
+ },
+ {
+  "file": "nubyra/terminal.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/torch.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/troll.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/valera.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
+ },
+ {
+  "file": "nubyra/video.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": "в общем наборе есть свой video.svg — другой рисунок"
+ },
+ {
+  "file": "nubyra/wolf.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": "в общем наборе есть свой wolf.svg — другой рисунок"
+ },
+ {
+  "file": "nubyra/yagluth.svg",
+  "group": "nubyra",
+  "aliases": [],
+  "viewBox": "0 0 24 24",
+  "fill": "none",
+  "stroke_width": "1.8",
+  "linecap": "round",
+  "styles_in_use": [],
+  "used_in": [
+   "пока не используется на сайте (набор F:\\Nubyra\\Style)"
+  ],
+  "standard": true,
+  "redrawn": ""
  }
 ]
